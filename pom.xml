@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ~ /* ~ * Copyright (C) 2013 StarTIC ~ */ -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.bq.oss</groupId>
+        <artifactId>corbel-parent</artifactId>
+        <version>0.7.0-SNAPSHOT</version>
+    </parent>
+
+    <groupId>com.bq.oss.corbel</groupId>
+    <artifactId>corbel</artifactId>
+    <version>1.19.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>corbel</name>
+
+    <description>Corbel Platform</description>
+    <url>https://github.com/bq/corbel</url>
+
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <organization>
+        <name>bq</name>
+        <url>http://www.bq.com/</url>
+    </organization>
+
+    <scm>
+        <connection>scm:git:git@github.com:bq/corbel.git</connection>
+        <developerConnection>scm:git:git@github.com:bq/corbel.git</developerConnection>
+        <url>https://github.com/bq/corbel</url>
+        <tag>HEAD</tag>
+    </scm>
+
+    <properties>
+        <appassembler.plugin.version>1.6.1</appassembler.plugin.version>
+        <maven-surefire.plugin.version>2.17</maven-surefire.plugin.version>
+        <buildmetadata-maven-plugin.version>1.3.1</buildmetadata-maven-plugin.version>
+    </properties>
+
+    <modules>
+        <module>event-bus</module>
+        <module>events</module>
+    </modules>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.bq.oss.corbel</groupId>
+                <artifactId>events</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>**/version.properties</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+                <excludes>
+                    <exclude>**/version.properties</exclude>
+                </excludes>
+            </resource>
+        </resources>
+        <plugins>
+            <plugin>
+                <groupId>com.redhat.rcm.maven.plugin</groupId>
+                <artifactId>buildmetadata-maven-plugin</artifactId>
+                <version>${buildmetadata-maven-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>provide-buildmetadata</goal>
+                        </goals>
+                        <configuration>
+                            <addProjectInfo>true</addProjectInfo>
+                            <addScmInfo>true</addScmInfo>
+                            <connectionType>developerConnection</connectionType>
+                            <buildDatePattern>dd/MM/yyyy HH:mm:ss z</buildDatePattern>
+                            <activatePropertyOutputFileMapping>false</activatePropertyOutputFileMapping>
+                            <propertiesOutputFile>
+                                ${project.build.outputDirectory}/META-INF/${project.artifactId}-build.properties
+                            </propertiesOutputFile>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${maven-surefire.plugin.version}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>release-sign-artifacts</id>
+            <activation>
+                <property>
+                    <name>performRelease</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+    <ciManagement>
+        <system>Travis CI</system>
+        <url>https://travis-ci.org/bq/corbel</url>
+    </ciManagement>
+
+    <issueManagement>
+        <url>https://github.com/bq/corbel/issues</url>
+        <system>GitHub Issues</system>
+    </issueManagement>
+
+    <developers>
+        <developer>
+            <name>David Martínez</name>
+            <email>david.martinez@bq.com</email>
+            <timezone>Europe/Madrid</timezone>
+            <roles>
+                <role>committer</role>
+            </roles>
+        </developer>
+        <developer>
+            <name>Alexander de Leon</name>
+            <email>alexander.deleon@bq.com</email>
+            <timezone>Europe/Madrid</timezone>
+            <roles>
+                <role>committer</role>
+            </roles>
+        </developer>
+        <developer>
+            <name>Alberto J. Rubio</name>
+            <email>alberto.rubio@bq.com</email>
+            <timezone>Europe/Madrid</timezone>
+            <roles>
+                <role>committer</role>
+            </roles>
+        </developer>
+        <developer>
+            <name>Anthanh Pham</name>
+            <email>anthanh.pham@bq.com</email>
+            <timezone>Europe/Madrid</timezone>
+            <roles>
+                <role>committer</role>
+            </roles>
+        </developer>
+        <developer>
+            <name>Francisco Sánchez</name>
+            <email>francisco.sanchez@bq.com</email>
+            <timezone>Europe/Madrid</timezone>
+            <roles>
+                <role>committer</role>
+            </roles>
+        </developer>
+        <developer>
+            <name>Ismael Madirolas</name>
+            <email>ismael.madirolas@bq.com</email>
+            <timezone>Europe/Madrid</timezone>
+            <roles>
+                <role>committer</role>
+            </roles>
+        </developer>
+        <developer>
+            <name>Cristian del Cerro</name>
+            <email>cristian.delcerro@bq.com</email>
+            <timezone>Europe/Madrid</timezone>
+            <roles>
+                <role>committer</role>
+            </roles>
+        </developer>
+        <developer>
+            <name>Rubén Carrasco</name>
+            <email>rcarrasco@bq.com</email>
+            <timezone>Europe/Madrid</timezone>
+            <roles>
+                <role>committer</role>
+            </roles>
+        </developer>
+        <developer>
+            <name>Laura Sada</name>
+            <email>laura.sada@bq.com</email>
+            <timezone>Europe/Madrid</timezone>
+            <roles>
+                <role>committer</role>
+            </roles>
+        </developer>
+        <developer>
+            <name>Luis Miguel García</name>
+            <email>luismiguel.garcia@bq.com</email>
+            <timezone>Europe/Madrid</timezone>
+            <roles>
+                <role>committer</role>
+            </roles>
+        </developer>
+    </developers>
+</project>
