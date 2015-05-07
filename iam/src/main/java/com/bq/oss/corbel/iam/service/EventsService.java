@@ -14,4 +14,6 @@ public interface EventsService {
     void sendUserDeletedEvent(String id, String domain);
 
     void sendNotificationEvent(String notificationId, String recipient, Map<String, String> properties);
+
+    void sendDomainDeletedEvent(String domainId);
 }
