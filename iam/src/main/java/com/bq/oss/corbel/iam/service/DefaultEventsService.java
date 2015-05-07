@@ -5,6 +5,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.bq.oss.corbel.event.DomainDeletedEvent;
 import com.bq.oss.corbel.event.NotificationEvent;
 import com.bq.oss.corbel.event.UserCreatedEvent;
 import com.bq.oss.corbel.event.UserDeletedEvent;
@@ -41,5 +42,10 @@ public class DefaultEventsService implements EventsService {
         notificationEvent.setProperties(properties);
         eventBus.dispatch(notificationEvent);
         LOG.info("Sending email from IAM with notification: {}", notificationId);
+    }
+
+    @Override
+    public void sendDomainDeletedEvent(String domainId) {
+        eventBus.dispatch(new DomainDeletedEvent(domainId));
     }
 }

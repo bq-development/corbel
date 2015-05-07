@@ -104,7 +104,7 @@ import com.google.common.base.Strings;
 
     @DELETE
     @Path("/{domainId}")
-    public Response modifyDomain(@PathParam("domainId") String domain) {
+    public Response deleteDomain(@PathParam("domainId") String domain) {
         domainService.delete(domain);
         return Response.noContent().build();
     }

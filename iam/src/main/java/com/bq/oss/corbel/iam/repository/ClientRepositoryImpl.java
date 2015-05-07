@@ -43,6 +43,4 @@ public class ClientRepositoryImpl extends HasScopesRepositoryBase<Client, String
         mongo.insert(client);
     }
 
-
-
 }

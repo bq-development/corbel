@@ -42,6 +42,7 @@ import com.google.common.collect.Sets;
 
     @Mock private DomainRepository domainRepositoryMock;
     @Mock private DefaultScopeService defaultScopeServiceMock;
+    @Mock private EventsService eventsServiceMock;
 
     private DefaultDomainService domainService;
 
@@ -55,7 +56,7 @@ import com.google.common.collect.Sets;
         scopeB.setId(SCOPE_B);
         scopeC.setId(SCOPE_C);
 
-        domainService = new DefaultDomainService(domainRepositoryMock, defaultScopeServiceMock);
+        domainService = new DefaultDomainService(domainRepositoryMock, defaultScopeServiceMock, eventsServiceMock);
     }
 
     @Test
@@ -213,5 +214,8 @@ import com.google.common.collect.Sets;
     public void testDelete() {
         domainService.delete(TEST_DOMAIN.getId());
         verify(domainRepositoryMock).delete(TEST_DOMAIN.getId());
+        verify(eventsServiceMock).sendDomainDeletedEvent(TEST_DOMAIN.getId());
+
+        verifyNoMoreInteractions(domainRepositoryMock, eventsServiceMock);
     }
 }

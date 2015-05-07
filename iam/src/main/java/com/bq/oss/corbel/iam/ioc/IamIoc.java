@@ -246,8 +246,8 @@ import com.google.gson.Gson;
     }
 
     @Bean
-    public DomainService getDomainService(ScopeService scopeService) {
-        return new DefaultDomainService(domainRepository, scopeService);
+    public DomainService getDomainService(ScopeService scopeService, EventsService eventsService) {
+        return new DefaultDomainService(domainRepository, scopeService, eventsService);
     }
 
     @Bean

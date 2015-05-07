@@ -23,10 +23,12 @@ public class DefaultDomainService implements DomainService {
 
     private final DomainRepository domainRepository;
     private final ScopeService scopeService;
+    private final EventsService eventsService;
 
-    public DefaultDomainService(DomainRepository domainRepository, ScopeService scopeService) {
+    public DefaultDomainService(DomainRepository domainRepository, ScopeService scopeService, EventsService eventsService) {
         this.domainRepository = domainRepository;
         this.scopeService = scopeService;
+        this.eventsService = eventsService;
     }
 
     @Override
@@ -80,6 +82,7 @@ public class DefaultDomainService implements DomainService {
     @Override
     public void delete(String domain) {
         domainRepository.delete(domain);
+        eventsService.sendDomainDeletedEvent(domain);
     }
 
     @Override
@@ -95,6 +98,5 @@ public class DefaultDomainService implements DomainService {
         }
         return domainRepository.count(query);
     }
-
 
 }
