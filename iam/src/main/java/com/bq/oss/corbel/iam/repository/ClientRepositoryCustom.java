@@ -15,4 +15,6 @@ public interface ClientRepositoryCustom {
 
     void insert(Client client);
 
+    void deleteByDomain(String domain);
+
 }

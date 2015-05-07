@@ -17,7 +17,10 @@ import org.springframework.context.annotation.*;
 import org.springframework.context.annotation.Scope;
 import org.springframework.core.env.Environment;
 
+import com.bq.oss.corbel.event.DomainDeletedEvent;
+import com.bq.oss.corbel.eventbus.EventHandler;
 import com.bq.oss.corbel.eventbus.ioc.EventBusIoc;
+import com.bq.oss.corbel.eventbus.ioc.EventBusListeningIoc;
 import com.bq.oss.corbel.eventbus.service.EventBus;
 import com.bq.oss.corbel.iam.api.*;
 import com.bq.oss.corbel.iam.auth.AuthorizationRequestContextFactory;
@@ -25,6 +28,7 @@ import com.bq.oss.corbel.iam.auth.AuthorizationRule;
 import com.bq.oss.corbel.iam.auth.provider.*;
 import com.bq.oss.corbel.iam.auth.rule.*;
 import com.bq.oss.corbel.iam.cli.dsl.IamShell;
+import com.bq.oss.corbel.iam.eventbus.DomainDeletedEventHandler;
 import com.bq.oss.corbel.iam.jwt.ClientVerifierProvider;
 import com.bq.oss.corbel.iam.jwt.TokenUpgradeVerifierProvider;
 import com.bq.oss.corbel.iam.model.*;
@@ -59,7 +63,7 @@ import com.google.gson.Gson;
  */
 @SuppressWarnings("unused") @Configuration @Import({ConfigurationIoC.class, IamMongoIoc.class, IamProviderIoc.class,
         TokenVerifiersIoc.class, OneTimeAccessTokenIoc.class, DropwizardIoc.class, AuthorizationIoc.class, CorsIoc.class, QueriesIoc.class,
-        EventBusIoc.class}) public class IamIoc {
+        EventBusIoc.class, EventBusListeningIoc.class}) public class IamIoc {
 
     @Autowired(required = true) private Environment env;
 
@@ -75,6 +79,11 @@ import com.google.gson.Gson;
 
     private UserRepository getUserRepository() {
         return new LowerCaseDecorator(userRepository);
+    }
+
+    @Bean
+    public EventHandler<DomainDeletedEvent> domainDeletedEventHandler() {
+        return new DomainDeletedEventHandler(clientRepository);
     }
 
     @Bean
