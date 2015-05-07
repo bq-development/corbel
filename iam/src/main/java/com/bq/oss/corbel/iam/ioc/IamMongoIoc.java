@@ -11,7 +11,6 @@ import org.springframework.cache.support.SimpleCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.core.env.Environment;
 import org.springframework.data.mongodb.core.convert.CustomConversions;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
@@ -31,8 +30,7 @@ import com.google.gson.Gson;
  */
 @Configuration @Import({MongoHealthCheckIoc.class}) @EnableMongoRepositories(value = {"com.bq.oss.corbel.iam.repository",
         "com.bq.oss.lib.token.repository"}, repositoryFactoryBeanClass = QueriesRepositoryFactoryBean.class) @EnableCaching public class IamMongoIoc
-        extends
-            DefaultMongoConfiguration {
+        extends DefaultMongoConfiguration {
 
     @Autowired private Environment env;
 
@@ -57,7 +55,6 @@ import com.google.gson.Gson;
     }
 
     @Bean
-    @Lazy(false)
     public MongoIndexes getMongoIndexes() {
         return new MongoIndexes();
     }
