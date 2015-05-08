@@ -9,4 +9,7 @@ public interface UserRepositoryCustom {
     String findUserDomain(String id);
 
     boolean existsByUsernameAndDomain(String username, String domainId);
+
+    void deleteByDomain(String domainId);
+
 }

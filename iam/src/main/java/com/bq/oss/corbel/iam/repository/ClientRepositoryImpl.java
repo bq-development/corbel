@@ -17,6 +17,8 @@ import com.bq.oss.corbel.iam.model.ClientCredential;
  */
 public class ClientRepositoryImpl extends HasScopesRepositoryBase<Client, String> implements ClientRepositoryCustom {
 
+    private static final String FIELD_DOMAIN = "domain";
+
     private final MongoOperations mongo;
 
     @Autowired
@@ -35,7 +37,7 @@ public class ClientRepositoryImpl extends HasScopesRepositoryBase<Client, String
 
     @Override
     public void delete(String domain, String client) {
-        mongo.findAndRemove(query(where("id").is(client).and("domain").is(domain)), Client.class);
+        mongo.findAndRemove(query(where("id").is(client).and(FIELD_DOMAIN).is(domain)), Client.class);
     }
 
     @Override
@@ -45,7 +47,7 @@ public class ClientRepositoryImpl extends HasScopesRepositoryBase<Client, String
 
     @Override
     public void deleteByDomain(String domain) {
-        mongo.findAndRemove(query(where("domain").is(domain)), Client.class);
+        mongo.remove(query(where(FIELD_DOMAIN).is(domain)), Client.class);
     }
 
 }
