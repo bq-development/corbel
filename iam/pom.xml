@@ -105,30 +105,17 @@
 
     <build>
         <plugins>
-            <!-- Assembler plugin -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>appassembler-maven-plugin</artifactId>
                 <version>${appassembler.plugin.version}</version>
                 <configuration>
-                    <!-- Set the target configuration directory to be used in the bin scripts -->
-                    <configurationDirectory>etc</configurationDirectory>
-
-                    <!-- Copy the contents from "/src/main/resources" to the target configuration
-                        directory in the assembled application -->
-                    <copyConfigurationDirectory>true</copyConfigurationDirectory>
-
-                    <!-- Include the target configuration directory in the beginning of
-                        the classpath declaration in the bin scripts -->
-                    <includeConfigurationDirectoryInClasspath>true</includeConfigurationDirectoryInClasspath>
-
                     <!-- Set alternative assemble directory -->
-                    <assembleDirectory>${project.build.directory}/generated-resources/appassembler/jsw/iam</assembleDirectory>
-
+                    <assembleDirectory>${project.build.directory}/generated-resources/appassembler/jsw/iam
+                    </assembleDirectory>
                     <!-- Set the name of the source directory for configuration files -->
                     <configurationSourceDirectory>src/main/resources/</configurationSourceDirectory>
-
-                    <!-- folder name and structure of the lib contents -->
+                    <!-- Repository properties definition -->
                     <repositoryName>lib</repositoryName>
                     <repositoryLayout>default</repositoryLayout>
 
@@ -144,9 +131,7 @@
                         </program>
                     </programs>
 
-
                     <daemons>
-                        <!-- Daemon to launch service -->
                         <daemon>
                             <mainClass>com.bq.oss.corbel.iam.IamRunner</mainClass>
                             <commandLineArguments>
@@ -159,16 +144,15 @@
                             <generatorConfigurations>
                                 <generatorConfiguration>
                                     <generator>jsw</generator>
-                                    <!-- target plataformas -->
                                     <includes>
                                         <include>macosx-universal-64</include>
                                         <include>linux-x86-64</include>
                                     </includes>
                                     <configuration>
-					                     <property>
-						                      <name>configuration.directory.in.classpath.first</name>
-						                      <value>etc</value>
-					                    </property>
+                                        <property>
+                                            <name>configuration.directory.in.classpath.first</name>
+                                            <value>etc</value>
+                                        </property>
                                         <property>
                                             <name>wrapper.startup.timeout</name>
                                             <value>600</value>
@@ -185,7 +169,6 @@
                                             <name>wrapper.syslog.loglevel</name>
                                             <value>INFO</value>
                                         </property>
-                                        <!-- Chkconfig Daemon Configuration -->
                                         <property>
                                             <name>chkconfig.start</name>
                                             <value>99</value>
@@ -206,8 +189,6 @@
                         </daemon>
                     </daemons>
                 </configuration>
-
-                <!-- attach to package phase -->
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -218,7 +199,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <!-- Make binaries executables and create the plugins directory -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-antrun-plugin</artifactId>
@@ -243,20 +223,15 @@
                     </execution>
                 </executions>
             </plugin>
-            <!-- Assemble a tar.gz file for distribution -->
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>2.2.1</version>
-
                 <executions>
                     <execution>
                         <id>make-full-assembly</id>
-                        <!-- this is used for inheritance merges -->
                         <phase>package</phase>
-                        <!-- append to the packaging phase. -->
                         <goals>
                             <goal>single</goal>
-                            <!-- goals == mojos -->
                         </goals>
                         <configuration>
                             <descriptors>

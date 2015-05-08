@@ -21,13 +21,12 @@
 
         <!-- Include build metadata in the distro  -->
         <fileSet>
-            <directory>${project.build.directory}</directory>
+            <directory>${project.build.outputDirectory}/META-INF</directory>
             <outputDirectory>/etc</outputDirectory>
             <includes>
                 <include>buildmetadata.xml</include>
             </includes>
         </fileSet>
     </fileSets>
-
 
 </assembly>
