@@ -165,6 +165,10 @@
                                         <include>linux-x86-64</include>
                                     </includes>
                                     <configuration>
+					                     <property>
+						                      <name>configuration.directory.in.classpath.first</name>
+						                      <value>etc</value>
+					                    </property>
                                         <property>
                                             <name>wrapper.startup.timeout</name>
                                             <value>600</value>
