@@ -135,4 +135,9 @@ public class UserRepositoryDecorator implements UserRepository {
         return decoratedUserRepository.existsByUsernameAndDomain(username, domainId);
     }
 
+    @Override
+    public void deleteByDomain(String domainId) {
+        decoratedUserRepository.deleteByDomain(domainId);
+    }
+
 }
