@@ -21,24 +21,70 @@ import org.springframework.core.env.Environment;
 
 import com.bq.oss.corbel.event.DomainDeletedEvent;
 import com.bq.oss.corbel.eventbus.EventHandler;
-import com.bq.oss.corbel.eventbus.ioc.EventBusIoc;
 import com.bq.oss.corbel.eventbus.ioc.EventBusListeningIoc;
 import com.bq.oss.corbel.eventbus.service.EventBus;
-import com.bq.oss.corbel.iam.api.*;
+import com.bq.oss.corbel.iam.api.DomainResource;
+import com.bq.oss.corbel.iam.api.ScopeResource;
+import com.bq.oss.corbel.iam.api.TokenResource;
+import com.bq.oss.corbel.iam.api.UserResource;
+import com.bq.oss.corbel.iam.api.UsernameResource;
 import com.bq.oss.corbel.iam.auth.AuthorizationRequestContextFactory;
 import com.bq.oss.corbel.iam.auth.AuthorizationRule;
-import com.bq.oss.corbel.iam.auth.provider.*;
-import com.bq.oss.corbel.iam.auth.rule.*;
+import com.bq.oss.corbel.iam.auth.provider.AuthorizationProviderFactory;
+import com.bq.oss.corbel.iam.auth.provider.FacebookProvider;
+import com.bq.oss.corbel.iam.auth.provider.GoogleProvider;
+import com.bq.oss.corbel.iam.auth.provider.OAuthServerProvider;
+import com.bq.oss.corbel.iam.auth.provider.Provider;
+import com.bq.oss.corbel.iam.auth.provider.SpringAuthorizationProviderFactory;
+import com.bq.oss.corbel.iam.auth.provider.TwitterProvider;
+import com.bq.oss.corbel.iam.auth.rule.ClientSideAuthenticationAllowedAuthorizationRule;
+import com.bq.oss.corbel.iam.auth.rule.MaxExpireAuthorizationRule;
+import com.bq.oss.corbel.iam.auth.rule.PrincipalExistsAuthorizationRule;
+import com.bq.oss.corbel.iam.auth.rule.RequestDomainAuthorizationRule;
+import com.bq.oss.corbel.iam.auth.rule.ScopesAuthorizationRule;
+import com.bq.oss.corbel.iam.auth.rule.VersionAuthorizationRule;
 import com.bq.oss.corbel.iam.cli.dsl.IamShell;
 import com.bq.oss.corbel.iam.eventbus.DomainDeletedEventHandler;
 import com.bq.oss.corbel.iam.jwt.ClientVerifierProvider;
 import com.bq.oss.corbel.iam.jwt.TokenUpgradeVerifierProvider;
-import com.bq.oss.corbel.iam.model.*;
-import com.bq.oss.corbel.iam.repository.*;
+import com.bq.oss.corbel.iam.model.Client;
+import com.bq.oss.corbel.iam.model.ClientIdGenerator;
+import com.bq.oss.corbel.iam.model.Device;
+import com.bq.oss.corbel.iam.model.DeviceIdGenerator;
+import com.bq.oss.corbel.iam.model.Identity;
+import com.bq.oss.corbel.iam.model.IdentityIdGenerator;
+import com.bq.oss.corbel.iam.repository.ClientRepository;
+import com.bq.oss.corbel.iam.repository.DeviceRepository;
+import com.bq.oss.corbel.iam.repository.DomainRepository;
+import com.bq.oss.corbel.iam.repository.IdentityRepository;
+import com.bq.oss.corbel.iam.repository.ScopeRepository;
+import com.bq.oss.corbel.iam.repository.UserRepository;
+import com.bq.oss.corbel.iam.repository.UserTokenRepository;
 import com.bq.oss.corbel.iam.repository.decorator.LowerCaseDecorator;
 import com.bq.oss.corbel.iam.scope.MustacheScopeFillStrategy;
 import com.bq.oss.corbel.iam.scope.ScopeFillStrategy;
-import com.bq.oss.corbel.iam.service.*;
+import com.bq.oss.corbel.iam.service.AuthorizationService;
+import com.bq.oss.corbel.iam.service.ClientService;
+import com.bq.oss.corbel.iam.service.DefaultAuthorizationService;
+import com.bq.oss.corbel.iam.service.DefaultClientService;
+import com.bq.oss.corbel.iam.service.DefaultDeviceService;
+import com.bq.oss.corbel.iam.service.DefaultDomainService;
+import com.bq.oss.corbel.iam.service.DefaultEventsService;
+import com.bq.oss.corbel.iam.service.DefaultIdentityService;
+import com.bq.oss.corbel.iam.service.DefaultMailResetPasswordService;
+import com.bq.oss.corbel.iam.service.DefaultRefreshTokenService;
+import com.bq.oss.corbel.iam.service.DefaultScopeService;
+import com.bq.oss.corbel.iam.service.DefaultUpgradeTokenService;
+import com.bq.oss.corbel.iam.service.DefaultUserService;
+import com.bq.oss.corbel.iam.service.DeviceService;
+import com.bq.oss.corbel.iam.service.DomainService;
+import com.bq.oss.corbel.iam.service.EventsService;
+import com.bq.oss.corbel.iam.service.IdentityService;
+import com.bq.oss.corbel.iam.service.MailResetPasswordService;
+import com.bq.oss.corbel.iam.service.RefreshTokenService;
+import com.bq.oss.corbel.iam.service.ScopeService;
+import com.bq.oss.corbel.iam.service.UpgradeTokenService;
+import com.bq.oss.corbel.iam.service.UserService;
 import com.bq.oss.corbel.iam.utils.DefaultTokenCookieFactory;
 import com.bq.oss.corbel.iam.utils.TokenCookieFactory;
 import com.bq.oss.lib.config.ConfigurationIoC;
@@ -57,7 +103,9 @@ import com.bq.oss.lib.ws.cors.ioc.CorsIoc;
 import com.bq.oss.lib.ws.digest.DigesterFactory;
 import com.bq.oss.lib.ws.dw.ioc.DropwizardIoc;
 import com.bq.oss.lib.ws.ioc.QueriesIoc;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JSR310Module;
 import com.google.gson.Gson;
 
 /**
@@ -65,7 +113,7 @@ import com.google.gson.Gson;
  */
 @SuppressWarnings("unused") @Configuration @Import({ConfigurationIoC.class, IamMongoIoc.class, IamProviderIoc.class,
         TokenVerifiersIoc.class, OneTimeAccessTokenIoc.class, DropwizardIoc.class, AuthorizationIoc.class, CorsIoc.class, QueriesIoc.class,
-        EventBusIoc.class, EventBusListeningIoc.class}) public class IamIoc {
+        EventBusListeningIoc.class}) public class IamIoc {
 
     @Autowired(required = true) private Environment env;
 
@@ -284,7 +332,10 @@ import com.google.gson.Gson;
 
     @Bean
     public ObjectMapper getObjectMapper() {
-        return new ObjectMapper();
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        mapper.registerModule(new JSR310Module());
+        return mapper;
     }
 
     @Bean
