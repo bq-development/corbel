@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import com.bq.oss.lib.queries.parser.SortParser;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -37,6 +38,8 @@ public class UserResourceDevicesTest extends UserResourceTestBase {
     private static final int DEFAULT_LIMIT = 10;
     private static final int MAX_DEFAULT_LIMIT = 50;
 
+
+    private static final SortParser sortParserMock = mock(SortParser.class);
     private static final AggregationParser aggregationParserMock = mock(AggregationParser.class);
     private static final UserService userServiceMock = mock(UserService.class);
     private static final DomainService domainServiceMock = mock(DomainService.class);
@@ -53,7 +56,7 @@ public class UserResourceDevicesTest extends UserResourceTestBase {
     @ClassRule public static ResourceTestRule RULE = ResourceTestRule.builder()
             .addResource(new UserResource(userServiceMock, domainServiceMock, identityServiceMock, devicesServiceMock, Clock.systemUTC()))
             .addProvider(authorizationInfoProviderSpy)
-            .addProvider(new QueryParametersProvider(DEFAULT_LIMIT, MAX_DEFAULT_LIMIT, queryParserMock, aggregationParserMock))
+            .addProvider(new QueryParametersProvider(DEFAULT_LIMIT, MAX_DEFAULT_LIMIT, queryParserMock, aggregationParserMock, sortParserMock))
             .addProvider(GenericExceptionMapper.class).build();
 
     public UserResourceDevicesTest() throws Exception {

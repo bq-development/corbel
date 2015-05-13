@@ -45,6 +45,11 @@ public class UserRepositoryDecorator implements UserRepository {
     }
 
     @Override
+    public List<User> find(List<ResourceQuery> list, Pagination pagination, Sort sort) {
+        return decoratedUserRepository.find(list, pagination, sort);
+    }
+
+    @Override
     public AggregationResult count(ResourceQuery resourceQuery) {
         return decoratedUserRepository.count(resourceQuery);
     }

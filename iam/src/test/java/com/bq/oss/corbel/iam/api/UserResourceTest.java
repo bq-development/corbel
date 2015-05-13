@@ -13,6 +13,7 @@ import java.util.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import com.bq.oss.lib.queries.parser.SortParser;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -57,6 +58,8 @@ public class UserResourceTest extends UserResourceTestBase {
     private static final int MAX_DEFAULT_LIMIT = 50;
     private static final String TEST_AVATAR_URI = "http://jklsdfjklasdfjkl.com/jsdklfjasdkl.png";
 
+
+    private static final SortParser sortParserMock = mock(SortParser.class);
     private static final AggregationParser aggregationParserMock = mock(AggregationParser.class);
     private static final UserService userServiceMock = mock(UserService.class);
     private static final DomainService domainServiceMock = mock(DomainService.class);
@@ -69,7 +72,7 @@ public class UserResourceTest extends UserResourceTestBase {
     @ClassRule public static ResourceTestRule RULE = ResourceTestRule.builder()
             .addResource(new UserResource(userServiceMock, domainServiceMock, identityServiceMock, devicesServiceMock, Clock.systemUTC()))
             .addProvider(authorizationInfoProviderSpy)
-            .addProvider(new QueryParametersProvider(DEFAULT_LIMIT, MAX_DEFAULT_LIMIT, queryParserMock, aggregationParserMock))
+            .addProvider(new QueryParametersProvider(DEFAULT_LIMIT, MAX_DEFAULT_LIMIT, queryParserMock, aggregationParserMock, sortParserMock))
             .addProvider(GenericExceptionMapper.class).build();
 
     public UserResourceTest() throws Exception {
