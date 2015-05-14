@@ -205,9 +205,10 @@ public class UserResourceTest extends UserResourceTestBase {
     public void testGetUserInvalidAggregation() throws UnsupportedEncodingException, MalformedJsonQueryException {
         String aggRequest = "{\"$count\":\"*\"}";
         String queryString = "queryString";
-        class OtherAggretation implements Aggregation {
+        class OtherAggregation implements Aggregation {
+
             @Override
-            public ResourceQuery operate(ResourceQuery resourceQuery) {
+            public List<ResourceQuery> operate(List<ResourceQuery> list) {
                 return null;
             }
 
@@ -216,7 +217,7 @@ public class UserResourceTest extends UserResourceTestBase {
                 return null;
             }
         };
-        Aggregation operation = new OtherAggretation();
+        Aggregation operation = new OtherAggregation();
         ResourceQuery resourceQuery = new ResourceQuery();
         when(queryParserMock.parse(queryString)).thenReturn(resourceQuery);
         when(userServiceMock.findUserDomain(TEST_USER_ID)).thenReturn(TEST_DOMAIN_ID);
@@ -802,9 +803,11 @@ public class UserResourceTest extends UserResourceTestBase {
     public void testGetUserProfileInvalidAggregation() throws UnsupportedEncodingException, MalformedJsonQueryException {
         String aggRequest = "{\"$count\":\"*\"}";
         String queryString = "queryString";
+
         class OtherAggretation implements Aggregation {
+
             @Override
-            public ResourceQuery operate(ResourceQuery resourceQuery) {
+            public List<ResourceQuery> operate(List<ResourceQuery> list) {
                 return null;
             }
 

@@ -51,6 +51,8 @@
         <module>event-bus</module>
         <module>events</module>
         <module>iam</module>
+        <module>rem-api</module>
+        <module>resources</module>
     </modules>
 
     <dependencyManagement>
@@ -58,6 +60,11 @@
             <dependency>
                 <groupId>com.bq.oss.corbel</groupId>
                 <artifactId>events</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.bq.oss.corbel</groupId>
+                <artifactId>rem-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>
