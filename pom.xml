@@ -53,8 +53,9 @@
         <module>iam</module>
         <module>rem-api</module>
         <module>resources</module>
-        <module>restor</module>
         <module>rem-image</module>
+        <module>resmi</module>
+        <module>restor</module>
     </modules>
 
     <dependencyManagement>
