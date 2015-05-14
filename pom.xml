@@ -53,6 +53,7 @@
         <module>iam</module>
         <module>rem-api</module>
         <module>resources</module>
+        <module>restor</module>
     </modules>
 
     <dependencyManagement>
@@ -66,6 +67,11 @@
                 <groupId>com.bq.oss.corbel</groupId>
                 <artifactId>rem-api</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.amazonaws</groupId>
+                <artifactId>aws-java-sdk-s3</artifactId>
+                <version>1.9.7</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -92,19 +98,19 @@
                 <groupId>com.redhat.rcm.maven.plugin</groupId>
                 <artifactId>buildmetadata-maven-plugin</artifactId>
                 <version>${buildmetadata-maven-plugin.version}</version>
+                <configuration>
+                    <addProjectInfo>true</addProjectInfo>
+                    <addScmInfo>true</addScmInfo>
+                    <connectionType>developerConnection</connectionType>
+                    <buildDatePattern>dd/MM/yyyy HH:mm:ss z</buildDatePattern>
+                    <propertiesOutputFile>${project.artifactId}-build.properties</propertiesOutputFile>
+                </configuration>
                 <executions>
                     <execution>
                         <phase>initialize</phase>
                         <goals>
                             <goal>provide-buildmetadata</goal>
                         </goals>
-                        <configuration>
-                            <addProjectInfo>true</addProjectInfo>
-                            <addScmInfo>true</addScmInfo>
-                            <connectionType>developerConnection</connectionType>
-                            <buildDatePattern>dd/MM/yyyy HH:mm:ss z</buildDatePattern>
-                            <propertiesOutputFile>${project.artifactId}-build.properties</propertiesOutputFile>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>
