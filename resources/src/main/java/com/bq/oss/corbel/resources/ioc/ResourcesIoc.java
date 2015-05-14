@@ -56,8 +56,9 @@ import com.sun.jersey.spi.container.ContainerRequestFilter;
 @Configuration// import configuration mechanism
 @Import({ConfigurationIoC.class, CommonFiltersIoc.class, DropwizardIoc.class, OneTimeAccessTokenIoc.class, AuthorizationIoc.class,
         CorsIoc.class, QueriesIoc.class, MongoHealthCheckIoc.class, EventBusIoc.class})// scan package to discover REM implementations
-@ComponentScan({"com.bq.oss.corbel.resources.cli.dsl", "com.bq.oss.corbel.resources.rem.plugin"}) @EnableMongoRepositories(
-        value = "com.bq.oss.corbel.resources.repository", repositoryFactoryBeanClass = QueriesRepositoryFactoryBean.class) @EnableCaching @SuppressWarnings("unused") public class ResourcesIoc
+@ComponentScan({"com.bq.oss.corbel.resources.cli.dsl", "com.bq.oss.corbel.resources.rem.plugin", "com.bqreaders.silkroad.resources.rem.plugin"})
+@EnableMongoRepositories(value = "com.bq.oss.corbel.resources.repository", repositoryFactoryBeanClass = QueriesRepositoryFactoryBean.class)
+@EnableCaching @SuppressWarnings("unused") public class ResourcesIoc
         extends
             DefaultMongoConfiguration {
 
