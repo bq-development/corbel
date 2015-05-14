@@ -1,6 +1,3 @@
-/*
- * Copyright (C) 2014 StarTIC
- */
 package com.bq.oss.corbel.resources.rem.resmi;
 
 import static org.fest.assertions.api.Assertions.assertThat;
@@ -29,7 +26,7 @@ import com.google.gson.JsonPrimitive;
 
 /**
  * @author Alexander De Leon
- * 
+ *
  */
 public class ResmiGetRemTest extends ResmiRemTest {
 
