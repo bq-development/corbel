@@ -1,5 +1,6 @@
 package com.bq.oss.corbel.resources.rem.request;
 
+import java.util.List;
 import java.util.Optional;
 
 import com.bq.oss.lib.queries.jaxrs.QueryParameters;
@@ -15,7 +16,7 @@ public class RelationParametersImpl extends CollectionParametersImpl implements 
 
     private final Optional<String> predicate;
 
-    public RelationParametersImpl(int pageSize, int page, int maxPageSize, Optional<String> sort, Optional<String> query,
+    public RelationParametersImpl(int pageSize, int page, int maxPageSize, Optional<String> sort, Optional<List<String>> query,
             QueryParser queryParser, Optional<String> aggregation, AggregationParser aggregationParser, SortParser sortParser,
             Optional<String> predicate, Optional<String> search) {
         super(pageSize, page, maxPageSize, sort, query, queryParser, aggregation, aggregationParser, sortParser, search);
