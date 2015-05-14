@@ -54,6 +54,7 @@
         <module>rem-api</module>
         <module>resources</module>
         <module>restor</module>
+        <module>rem-image</module>
     </modules>
 
     <dependencyManagement>
