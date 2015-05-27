@@ -13,6 +13,8 @@ import java.util.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import com.bq.oss.lib.queries.builder.QueryParametersBuilder;
+import com.bq.oss.lib.queries.parser.PaginationParser;
 import com.bq.oss.lib.queries.parser.SortParser;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -61,6 +63,7 @@ public class UserResourceTest extends UserResourceTestBase {
 
     private static final SortParser sortParserMock = mock(SortParser.class);
     private static final AggregationParser aggregationParserMock = mock(AggregationParser.class);
+    private static final PaginationParser paginationParserMock = mock(PaginationParser.class);
     private static final UserService userServiceMock = mock(UserService.class);
     private static final DomainService domainServiceMock = mock(DomainService.class);
     private static final IdentityService identityServiceMock = mock(IdentityService.class);
@@ -69,11 +72,14 @@ public class UserResourceTest extends UserResourceTestBase {
     private static final DeviceService devicesServiceMock = mock(DeviceService.class);
     private static final AuthorizationInfoProvider authorizationInfoProviderSpy = spy(new AuthorizationInfoProvider());
 
-    @ClassRule public static ResourceTestRule RULE = ResourceTestRule.builder()
+    @ClassRule public static ResourceTestRule RULE = ResourceTestRule
+            .builder()
             .addResource(new UserResource(userServiceMock, domainServiceMock, identityServiceMock, devicesServiceMock, Clock.systemUTC()))
             .addProvider(authorizationInfoProviderSpy)
-            .addProvider(new QueryParametersProvider(DEFAULT_LIMIT, MAX_DEFAULT_LIMIT, queryParserMock, aggregationParserMock, sortParserMock))
-            .addProvider(GenericExceptionMapper.class).build();
+            .addProvider(
+                    new QueryParametersProvider(DEFAULT_LIMIT, MAX_DEFAULT_LIMIT, new QueryParametersBuilder(queryParserMock,
+                            aggregationParserMock, sortParserMock, paginationParserMock))).addProvider(GenericExceptionMapper.class)
+            .build();
 
     public UserResourceTest() throws Exception {
         when(authorizationInfoMock.getClientId()).thenReturn(TEST_CLIENT_ID);

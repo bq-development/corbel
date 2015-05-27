@@ -3,6 +3,7 @@ package com.bq.oss.corbel.resources.rem.resmi;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLDecoder;
+import java.util.List;
 import java.util.Optional;
 
 import javax.ws.rs.core.Response;
@@ -13,6 +14,7 @@ import com.bq.oss.corbel.resources.rem.dao.RelationMoveOperation;
 import com.bq.oss.corbel.resources.rem.request.*;
 import com.bq.oss.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
 import com.bq.oss.corbel.resources.rem.service.ResmiService;
+import com.bq.oss.lib.queries.request.ResourceQuery;
 import com.bq.oss.lib.ws.api.error.ErrorResponseFactory;
 import com.bq.oss.lib.ws.model.Error;
 import com.google.gson.JsonObject;
@@ -34,10 +36,17 @@ public class ResmiPutRem extends AbstractResmiRem {
 
     @Override
     public Response resource(String type, ResourceId id, RequestParameters<ResourceParameters> parameters, Optional<JsonObject> entity) {
-
         return entity.map(object -> {
             try {
-                resmiService.upsert(type, id.getId(), object);
+                Optional<List<ResourceQuery>> conditions = parameters.getApiParameters().getConditions();
+                if (conditions.isPresent()) {
+                    JsonObject result = resmiService.conditionalUpdate(type, id.getId(), object, conditions.get());
+                    if (result == null) {
+                        return ErrorResponseFactory.getInstance().notFound();
+                    }
+                } else {
+                    resmiService.upsert(type, id.getId(), object);
+                }
             } catch (StartsWithUnderscoreException e) {
                 return ErrorResponseFactory.getInstance().invalidEntity("Invalid attribute name \"" + e.getMessage() + "\"");
             }

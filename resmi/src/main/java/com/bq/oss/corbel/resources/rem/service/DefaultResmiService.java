@@ -16,10 +16,7 @@ import com.bq.oss.corbel.resources.rem.request.RelationParameters;
 import com.bq.oss.corbel.resources.rem.request.ResourceId;
 import com.bq.oss.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
 import com.bq.oss.corbel.resources.rem.search.ResmiSearch;
-import com.bq.oss.lib.queries.request.Aggregation;
-import com.bq.oss.lib.queries.request.AggregationResult;
-import com.bq.oss.lib.queries.request.Average;
-import com.bq.oss.lib.queries.request.Sum;
+import com.bq.oss.lib.queries.request.*;
 import com.google.common.collect.Sets;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -133,6 +130,19 @@ public class DefaultResmiService implements ResmiService {
         resmiDao.upsert(type, id, jsonObject);
         indexInSearchService(new ResourceUri(type, id), jsonObject);
         return jsonObject;
+    }
+
+    @Override
+    public JsonObject conditionalUpdate(String type, String id, JsonObject jsonObject, List<ResourceQuery> resourceQueries)
+            throws StartsWithUnderscoreException {
+        verifyNotUnderscore(jsonObject);
+        addDates(jsonObject);
+        boolean found = resmiDao.findAndModify(type, id, jsonObject, resourceQueries);
+        if (found) {
+            indexInSearchService(new ResourceUri(type, id), jsonObject);
+            return jsonObject;
+        }
+        return null;
     }
 
     private void indexInSearchService(ResourceUri resourceUri, JsonObject jsonObject) {

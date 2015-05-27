@@ -10,17 +10,16 @@ import com.bq.oss.lib.queries.parser.SortParser;
 import com.bq.oss.lib.queries.request.*;
 
 /**
- * @author Alexander De Leon
- *
+ * Created by Francisco Sanchez on 26/05/15.
  */
-public class CollectionParametersImpl extends QueryParameters implements CollectionParameters {
+public class ResourceParametersImpl extends QueryParameters implements ResourceParameters {
 
-    public CollectionParametersImpl(Pagination pagination, Optional<Sort> sort, Optional<List<ResourceQuery>> queries,
+    public ResourceParametersImpl(Pagination pagination, Optional<Sort> sort, Optional<List<ResourceQuery>> queries,
             Optional<List<ResourceQuery>> conditions, Optional<Aggregation> aggreagation, Optional<ResourceSearch> search) {
         super(pagination, sort, queries, conditions, aggreagation, search);
     }
 
-    public CollectionParametersImpl(QueryParameters queryParameters) {
+    public ResourceParametersImpl(QueryParameters queryParameters) {
         super(queryParameters);
     }
 

@@ -146,6 +146,26 @@ public class MongoResmiDao implements ResmiDao {
         upsert(namespaceNormalizer.normalize(type), Optional.of(id), entity);
     }
 
+    @Override
+    public boolean findAndModify(String type, String id, JsonObject entity, List<ResourceQuery> resourceQueries) {
+        String collection = namespaceNormalizer.normalize(type);
+        JsonElement created = entity.remove(CREATED_AT);
+
+        Update update = updateFromJsonObject(entity, Optional.of(id), Optional.ofNullable(created));
+
+        Query query = new MongoResmiQueryBuilder().id(id).query(resourceQueries).build();
+
+        JsonObject saved = mongoOperations.findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), JsonObject.class,
+                collection);
+
+        if (saved != null) {
+            entity.addProperty(ID, id);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     private void upsert(String collection, Optional<String> id, JsonObject entity) {
         JsonElement created = entity.remove(CREATED_AT);
 
