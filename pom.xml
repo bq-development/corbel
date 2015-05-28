@@ -70,6 +70,7 @@
         <module>rem-image</module>
         <module>resmi</module>
         <module>restor</module>
+        <module>i18n</module>
     </modules>
 
     <dependencies>
