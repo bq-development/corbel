@@ -374,6 +374,23 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>com.spotify</groupId>
+                <artifactId>docker-maven-plugin</artifactId>
+                <version>0.2.9</version>
+
+                <configuration>
+                    <imageName>bqreaders/corbel-${project.name}:${project.version}</imageName>
+                    <dockerDirectory>${project.build.directory}/docker</dockerDirectory>
+                    <resources>
+                        <resource>
+                            <targetPath>/</targetPath>
+                            <directory>${project.build.directory}</directory>
+                            <include>${project.name}-${project.version}-bin.tar.gz</include>
+                        </resource>
+                    </resources>
+                </configuration>
+            </plugin>
         </plugins>
         <pluginManagement>
             <plugins>

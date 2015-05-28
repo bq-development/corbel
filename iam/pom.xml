@@ -129,6 +129,12 @@
                 <artifactId>maven-assembly-plugin</artifactId>
             </plugin>
 
+            <!-- Docker -->
+            <plugin>
+                <groupId>com.spotify</groupId>
+                <artifactId>docker-maven-plugin</artifactId>
+            </plugin>
+
             <!-- Groovy support -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
