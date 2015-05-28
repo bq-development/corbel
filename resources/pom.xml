@@ -10,6 +10,11 @@
     <artifactId>resources</artifactId>
     <name>resources</name>
 
+    <properties>
+        <port>8080</port>
+        <port.admin>8081</port.admin>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>com.bq.oss.lib</groupId>
@@ -69,23 +74,11 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>appassembler-maven-plugin</artifactId>
-                <version>${appassembler.plugin.version}</version>
                 <configuration>
-                    <!-- Set alternative assemble directory -->
-                    <assembleDirectory>${project.build.directory}/generated-resources/appassembler/jsw/resources
-                    </assembleDirectory>
-                    <!-- Set the name of the source directory for configuration files -->
-                    <configurationSourceDirectory>src/main/resources/</configurationSourceDirectory>
-                    <!-- Repository properties definition -->
-                    <repositoryName>lib</repositoryName>
-                    <repositoryLayout>default</repositoryLayout>
-                    <!-- With this configuration, all jars dropped on the plugins directory get automatically loaded on the classpath -->
-                    <endorsedDir>plugins</endorsedDir>
-
                     <programs>
                         <program>
-                            <mainClass>com.bq.oss.corbel.resources.ResourcesConsoleRunner</mainClass>
-                            <id>resources-cli</id>
+                            <mainClass>com.bq.oss.corbel.resources.ResourcesRunner</mainClass>
+                            <id>${project.name}</id>
                             <jvmSettings>
                                 <extraArguments>
                                     <extraArgument>-Dfile.encoding=UTF-8</extraArgument>
@@ -93,180 +86,24 @@
                             </jvmSettings>
                         </program>
                     </programs>
-
-                    <daemons>
-                        <daemon>
-                            <mainClass>com.bq.oss.corbel.resources.ResourcesRunner</mainClass>
-                            <commandLineArguments>
-                                <commandLineArgument>server</commandLineArgument>
-                            </commandLineArguments>
-                            <id>resources</id>
-                            <platforms>
-                                <platform>jsw</platform>
-                            </platforms>
-                            <generatorConfigurations>
-                                <generatorConfiguration>
-                                    <generator>jsw</generator>
-                                    <includes>
-                                        <include>macosx-universal-64</include>
-                                        <include>linux-x86-64</include>
-                                    </includes>
-                                    <configuration>
-                                        <property>
-                                            <name>configuration.directory.in.classpath.first</name>
-                                            <value>etc</value>
-                                        </property>
-                                        <property>
-                                            <name>wrapper.startup.timeout</name>
-                                            <value>600</value>
-                                        </property>
-                                        <property>
-                                            <name>wrapper.java.additional.1</name>
-                                            <value>-Dfile.encoding=UTF-8</value>
-                                        </property>
-                                        <property>
-                                            <name>wrapper.logfile</name>
-                                            <value>logs/wrapper.log</value>
-                                        </property>
-                                        <property>
-                                            <name>wrapper.syslog.loglevel</name>
-                                            <value>INFO</value>
-                                        </property>
-                                        <property>
-                                            <name>chkconfig.start</name>
-                                            <value>99</value>
-                                        </property>
-                                        <property>
-                                            <name>chkconfig.stop</name>
-                                            <value>05</value>
-                                        </property>
-                                        <!-- This is needed otherwise it tries to create the PID in a directory
-                                            which does not exists -->
-                                        <property>
-                                            <name>wrapper.pidfile</name>
-                                            <value>/var/run</value>
-                                        </property>
-                                    </configuration>
-                                </generatorConfiguration>
-                            </generatorConfigurations>
-                        </daemon>
-                    </daemons>
                 </configuration>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>generate-daemons</goal>
-                            <goal>assemble</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
+            <!-- Assemble a tar.gz file for distribution -->
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-antrun-plugin</artifactId>
-                <version>1.6</version>
-                <executions>
-                    <execution>
-                        <id>patch.executable</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                        <configuration>
-                            <target>
-                                <exec executable="chmod" dir="${project.build.directory}/generated-resources/appassembler/jsw/resources">
-                                    <arg value="-R" />
-                                    <arg value="a+x" />
-                                    <arg value="bin" />
-                                </exec>
-                            </target>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>create.plugins</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                        <configuration>
-                            <target>
-                                <exec executable="mkdir" dir="${project.build.directory}/generated-resources/appassembler/jsw/resources">
-                                    <arg value="plugins" />
-                                </exec>
-                            </target>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.2.1</version>
-                <executions>
-                    <execution>
-                        <id>make-full-assembly</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/assembly/assembly.xml</descriptor>
-                            </descriptors>
-                            <finalName>resources-${project.version}</finalName>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
 
             <!-- Groovy support -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
-                <version>1.7</version>
-                <executions>
-                    <execution>
-                        <id>add-source</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>add-source</goal>
-                        </goals>
-                        <configuration>
-                            <sources>
-                                <source>src/main/groovy</source>
-                            </sources>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>add-test-source</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>add-test-source</goal>
-                        </goals>
-                        <configuration>
-                            <sources>
-                                <source>src/test/groovy</source>
-                            </sources>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.gmaven</groupId>
                 <artifactId>gmaven-plugin</artifactId>
-                <version>1.4</version>
-                <configuration>
-                    <providerSelection>2.0</providerSelection>
-                    <sourceEncoding>UTF-8</sourceEncoding>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>generateStubs</goal>
-                            <goal>compile</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <artifactId>maven-javadoc-plugin</artifactId>

@@ -345,7 +345,188 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>2.7</version>
+                <executions>
+                    <execution>
+                        <id>copy-resources</id>
+                        <!-- here the phase you need -->
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/docker</outputDirectory>
+                            <resources>
+                                <!-- Default Fockerfile -->
+                                <resource>
+                                    <directory>${project.basedir}/../src/docker</directory>
+                                    <filtering>true</filtering>
+                                </resource>
+                                <!-- Override by module Dockerfile if exists -->
+                                <resource>
+                                    <directory>${project.basedir}/src/docker</directory>
+                                    <filtering>true</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>appassembler-maven-plugin</artifactId>
+                    <version>1.8.1</version>
+                    <configuration>
+                        <!-- Set the target configuration directory to be used in the bin scripts -->
+                        <configurationDirectory>etc</configurationDirectory>
+
+                        <!-- Set the name of the source directory for configuration files -->
+                        <configurationSourceDirectory>src/main/resources/</configurationSourceDirectory>
+
+                        <!-- Copy the contents from "/src/main/resources" to the target configuration
+                            directory in the assembled application -->
+                        <copyConfigurationDirectory>true</copyConfigurationDirectory>
+
+                        <!-- Include the target configuration directory in the beginning of
+                            the classpath declaration in the bin scripts -->
+                        <includeConfigurationDirectoryInClasspath>true</includeConfigurationDirectoryInClasspath>
+
+                        <!-- folder name and structure of the lib contents -->
+                        <repositoryName>lib</repositoryName>
+                        <repositoryLayout>default</repositoryLayout>
+                        <!-- with this all jars droped on the plugins directory get automatically loaded on the classpath -->
+                        <endorsedDir>plugins</endorsedDir>
+
+                        <assembleDirectory>${project.build.directory}/generated-resources/appassembler/jsw/${project.name}</assembleDirectory>
+
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>make-assembly</id> <!-- this is used for inheritance merges -->
+                            <phase>package</phase> <!-- bind to the packaging phase -->
+                            <goals>
+                                <goal>assemble</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <!-- Make binaries executables and create the plugins directory -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-antrun-plugin</artifactId>
+                    <version>1.6</version>
+                    <executions>
+                        <execution>
+                            <id>patch.executable</id>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>run</goal>
+                            </goals>
+                            <configuration>
+                                <target>
+                                    <exec executable="chmod" dir="${project.build.directory}/generated-resources/appassembler/jsw/${project.name}">
+                                        <arg value="-R" />
+                                        <arg value="a+x" />
+                                        <arg value="bin" />
+                                    </exec>
+                                </target>
+                            </configuration>
+                        </execution>
+                        <execution>
+                            <id>create.plugins</id>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>run</goal>
+                            </goals>
+                            <configuration>
+                                <target>
+                                    <exec executable="mkdir" dir="${project.build.directory}/generated-resources/appassembler/jsw/${project.name}">
+                                        <arg value="plugins" />
+                                    </exec>
+                                </target>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>2.4.1</version>
+
+                    <executions>
+                        <execution>
+                            <id>make-full-assembly</id>
+                            <!-- this is used for inheritance merges -->
+                            <phase>package</phase>
+                            <!-- append to the packaging phase. -->
+                            <goals>
+                                <goal>single</goal>
+                                <!-- goals == mojos -->
+                            </goals>
+                            <configuration>
+                                <descriptors>
+                                    <descriptor>${project.basedir}/../src/assembly/corbel-module-assembly.xml</descriptor>
+                                </descriptors>
+                                <finalName>${project.name}-${project.version}</finalName>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+                <!-- Groovy support -->
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>build-helper-maven-plugin</artifactId>
+                    <version>1.7</version>
+                    <executions>
+                        <execution>
+                            <id>add-source</id>
+                            <phase>generate-sources</phase>
+                            <goals>
+                                <goal>add-source</goal>
+                            </goals>
+                            <configuration>
+                                <sources>
+                                    <source>src/main/groovy</source>
+                                </sources>
+                            </configuration>
+                        </execution>
+                        <execution>
+                            <id>add-test-source</id>
+                            <phase>generate-sources</phase>
+                            <goals>
+                                <goal>add-test-source</goal>
+                            </goals>
+                            <configuration>
+                                <sources>
+                                    <source>src/test/groovy</source>
+                                </sources>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.gmaven</groupId>
+                    <artifactId>gmaven-plugin</artifactId>
+                    <version>1.4</version>
+                    <configuration>
+                        <providerSelection>2.0</providerSelection>
+                        <sourceEncoding>UTF-8</sourceEncoding>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>generateStubs</goal>
+                                <goal>compile</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
     </build>
     <profiles>
         <profile>
