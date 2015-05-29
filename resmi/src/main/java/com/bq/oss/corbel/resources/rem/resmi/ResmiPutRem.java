@@ -45,7 +45,7 @@ public class ResmiPutRem extends AbstractResmiRem {
                 if (conditions.isPresent()) {
                     JsonObject result = resmiService.conditionalUpdate(type, id.getId(), object, conditions.get());
                     if (result == null) {
-                        return ErrorResponseFactory.getInstance().notFound();
+                                return ErrorResponseFactory.getInstance().preconditionFailed("Condition not satisfied.");
                     }
                 } else {
                     resmiService.upsert(type, id.getId(), object);

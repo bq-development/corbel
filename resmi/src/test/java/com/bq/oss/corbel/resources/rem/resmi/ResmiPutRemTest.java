@@ -60,6 +60,32 @@ public class ResmiPutRemTest extends ResmiRemTest {
     }
 
     @Test
+    public void updateResourceTestWithCondition() throws StartsWithUnderscoreException {
+        JsonObject json = new JsonObject();
+        json.add("a", new JsonPrimitive("1"));
+        List<ResourceQuery> resourceQueryListMock = mock(List.class);
+        RequestParameters<ResourceParameters> requestParametersMock = getResourceParametersMockWithCondition(Optional
+                .of(resourceQueryListMock));
+
+        when(resmiServiceMock.conditionalUpdate(TEST_TYPE, TEST_ID.getId(), json, resourceQueryListMock)).thenReturn(json);
+        Response response = putRem.resource(TEST_TYPE, TEST_ID, requestParametersMock, Optional.of(json));
+        assertThat(response.getStatus()).isEqualTo(204);
+    }
+
+    @Test
+    public void updateResourceTestWithFailCondition() throws StartsWithUnderscoreException {
+        JsonObject json = new JsonObject();
+        json.add("a", new JsonPrimitive("1"));
+        List<ResourceQuery> resourceQueryListMock = mock(List.class);
+        RequestParameters<ResourceParameters> requestParametersMock = getResourceParametersMockWithCondition(Optional
+                .of(resourceQueryListMock));
+
+        when(resmiServiceMock.conditionalUpdate(TEST_TYPE, TEST_ID.getId(), json, resourceQueryListMock)).thenReturn(null);
+        Response response = putRem.resource(TEST_TYPE, TEST_ID, requestParametersMock, Optional.of(json));
+        assertThat(response.getStatus()).isEqualTo(412);
+    }
+
+    @Test
     public void updateResourceWithUnderscoreInAttributeNameTest() throws StartsWithUnderscoreException {
         JsonObject json = new JsonObject();
         json.add("a", new JsonPrimitive("1"));
