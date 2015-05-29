@@ -38,7 +38,9 @@ public class ResmiPutRem extends AbstractResmiRem {
     public Response resource(String type, ResourceId id, RequestParameters<ResourceParameters> parameters, Optional<JsonObject> entity) {
         return entity.map(object -> {
             try {
-                Optional<List<ResourceQuery>> conditions = parameters.getApiParameters().getConditions();
+                Optional<List<ResourceQuery>> conditions = Optional.ofNullable(parameters.getApiParameters())
+                        .map(apiParameters -> apiParameters.getConditions())
+                        .orElse(Optional.empty());
                 if (conditions.isPresent()) {
                     JsonObject result = resmiService.conditionalUpdate(type, id.getId(), object, conditions.get());
                     if (result == null) {
