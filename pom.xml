@@ -29,8 +29,8 @@
     </organization>
 
     <scm>
-        <connection>scm:git:git@github.com:bq/corbel.git</connection>
-        <developerConnection>scm:git:git@github.com:bq/corbel.git</developerConnection>
+        <connection>scm:git:ssh://bq-devtools@git.dev.bqsoftware.net:29418/corbel</connection>
+        <developerConnection>scm:git:ssh://bq-devtools@git.dev.bqsoftware.net:29418/corbel</developerConnection>
         <url>https://github.com/bq/corbel</url>
         <tag>HEAD</tag>
     </scm>
