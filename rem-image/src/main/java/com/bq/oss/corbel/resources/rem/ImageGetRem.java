@@ -1,7 +1,12 @@
 package com.bq.oss.corbel.resources.rem;
 
-import java.io.*;
-import java.util.Arrays;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Optional;
 
 import javax.ws.rs.WebApplicationException;
@@ -15,83 +20,96 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 
+import com.bq.oss.corbel.resources.rem.exception.ImageOperationsException;
+import com.bq.oss.corbel.resources.rem.model.ImageOperationDescription;
 import com.bq.oss.corbel.resources.rem.request.RequestParameters;
 import com.bq.oss.corbel.resources.rem.request.ResourceId;
 import com.bq.oss.corbel.resources.rem.request.ResourceParameters;
 import com.bq.oss.corbel.resources.rem.service.ImageCacheService;
+import com.bq.oss.corbel.resources.rem.service.ImageOperationsService;
 import com.bq.oss.corbel.resources.rem.service.RemService;
-import com.bq.oss.corbel.resources.rem.service.ResizeImageService;
 import com.bq.oss.lib.ws.api.error.ErrorResponseFactory;
 import com.bq.oss.lib.ws.model.Error;
 
 
 public class ImageGetRem extends BaseRem<Void> {
 
+    public static final String OPERATIONS_PARAMETER = "image:operations";
+    public static final String IMAGE_WIDTH_PARAMETER = "image:width";
+    public static final String IMAGE_HEIGHT_PARAMETER = "image:height";
     private static final Logger LOG = LoggerFactory.getLogger(ImageGetRem.class);
-    private static final String RESIZE_IMAGE_NAME = "resizeImage";
-
-    private final ResizeImageService resizeImageService;
+    private static final String TEMP_IMAGE_NAME = "temp";
+    private final ImageOperationsService imageOperationsService;
     private final ImageCacheService imageCacheService;
     private RemService remService;
 
-    public ImageGetRem(ResizeImageService resizeImageService, ImageCacheService imageCacheService) {
-        this.resizeImageService = resizeImageService;
+    public ImageGetRem(ImageOperationsService imageOperationsService, ImageCacheService imageCacheService) {
+        this.imageOperationsService = imageOperationsService;
         this.imageCacheService = imageCacheService;
     }
 
     @Override
-    public Response resource(String collection, ResourceId resourceId, RequestParameters<ResourceParameters> parameters,
+    public Response resource(String collection, ResourceId resourceId, RequestParameters<ResourceParameters> requestParameters,
             Optional<Void> entity) {
-        Rem<?> restorGetRem = remService.getRem(collection, parameters.getAcceptedMediaTypes(), HttpMethod.GET, Arrays.<Rem>asList(this));
 
-        if (restorGetRem != null) {
+        Rem<?> restorGetRem = remService.getRem(collection, requestParameters.getAcceptedMediaTypes(), HttpMethod.GET,
+                Collections.singletonList(this));
 
-            Integer width = extractParam("image:width", parameters);
-            Integer height = extractParam("image:height", parameters);
-            MediaType mediaType = parameters.getAcceptedMediaTypes().get(0);
+        if (restorGetRem == null) {
+            LOG.warn("RESTOR not found. May  be is needed to install it?");
+            return ErrorResponseFactory.getInstance().notFound();
+        }
 
-            InputStream inputStream = imageCacheService.getFromCache(restorGetRem, resourceId, width, height, collection, parameters);
+        String operationsChain = getOperationsChain(requestParameters);
 
-            Response response = null;
+        if (operationsChain.isEmpty()) {
+            return restorGetRem.resource(collection, resourceId, requestParameters, Optional.empty());
+        }
 
-            if (inputStream != null) {
-                response = Response.ok(inputStream).type(javax.ws.rs.core.MediaType.valueOf(mediaType.toString())).build();
-            } else {
+        MediaType mediaType = requestParameters.getAcceptedMediaTypes().get(0);
 
-                Response restorResponse = restorGetRem.resource(collection, resourceId, parameters, Optional.empty());
-                response = restorResponse;
-                Rem<InputStream> restorPutRem = (Rem<InputStream>) remService.getRem(collection, parameters.getAcceptedMediaTypes(),
-                        HttpMethod.PUT);
+        InputStream inputStream = imageCacheService.getFromCache(restorGetRem, resourceId, operationsChain, collection, requestParameters);
 
-                if ((response.getStatus() == 200) && (width != null || height != null)) {
+        if (inputStream != null) {
+            return Response.ok(inputStream).type(javax.ws.rs.core.MediaType.valueOf(mediaType.toString())).build();
+        }
 
-                    StreamingOutput outputStream = output -> {
+        Response response = restorGetRem.resource(collection, resourceId, requestParameters, Optional.empty());
 
-                        File file = File.createTempFile(RESIZE_IMAGE_NAME, "");
+        @SuppressWarnings("unchecked")
+        Rem<InputStream> restorPutRem = (Rem<InputStream>) remService.getRem(collection, requestParameters.getAcceptedMediaTypes(),
+                HttpMethod.PUT);
 
-                        try (FileOutputStream fileOutputStream = new FileOutputStream(file);
-                                TeeOutputStream teeOutputStream = new TeeOutputStream(output, fileOutputStream);
-                                InputStream input = (InputStream) restorResponse.getEntity()) {
-                            resizeImageService.resizeImage(input, width, height, teeOutputStream);
-                        } catch (IOException | InterruptedException | IM4JavaException e) {
-                            LOG.error("Error while resizing a image", e);
-                            throw new WebApplicationException(ErrorResponseFactory.getInstance().serverError(e));
-                        }
-
-                        imageCacheService.saveInCacheAsync(restorPutRem, resourceId, width, height, file.length(), collection,
-                                parameters, file);
-                    };
-
-                    response = Response.ok(outputStream).type(javax.ws.rs.core.MediaType.valueOf(mediaType.toString())).build();
-                }
-            }
-
+        if (response.getStatus() != 200) {
             return response;
         }
 
-        LOG.warn("RESTOR not found. May be is needed to install it?");
-        return ErrorResponseFactory.getInstance().notFound();
+        List<ImageOperationDescription> operations;
 
+        try {
+            operations = getParameters(operationsChain);
+        } catch (ImageOperationsException e) {
+            return ErrorResponseFactory.getInstance().badRequest(new Error("bad_request", e.getMessage()));
+        }
+
+        StreamingOutput outputStream = output -> {
+
+            File file = File.createTempFile(TEMP_IMAGE_NAME, "");
+
+            try (FileOutputStream fileOutputStream = new FileOutputStream(file);
+                    TeeOutputStream teeOutputStream = new TeeOutputStream(output, fileOutputStream);
+                    InputStream input = (InputStream) response.getEntity()) {
+                imageOperationsService.applyConversion(operations, input, teeOutputStream);
+            } catch (IOException | InterruptedException | IM4JavaException | ImageOperationsException e) {
+                LOG.error("Error while resizing a image", e);
+                throw new WebApplicationException(ErrorResponseFactory.getInstance().serverError(e));
+            }
+
+            imageCacheService.saveInCacheAsync(restorPutRem, resourceId, operationsChain, file.length(), collection, requestParameters,
+                    file);
+        };
+
+        return Response.ok(outputStream).type(javax.ws.rs.core.MediaType.valueOf(mediaType.toString())).build();
     }
 
     @Override
@@ -99,26 +117,52 @@ public class ImageGetRem extends BaseRem<Void> {
         return Void.class;
     }
 
-    private Integer extractParam(String paramName, RequestParameters<?> parameters) {
-        Integer result = null;
-        String paramString = parameters.getCustomParameterValue(paramName);
-        if (paramString != null) {
-            try {
-                result = Integer.valueOf(paramString);
-                if (result <= 0) {
-                    throw new NumberFormatException();
-                }
-            } catch (NumberFormatException e) {
-                throw new WebApplicationException(ErrorResponseFactory.getInstance().badRequest(
-                        new Error("bad_request", paramName + " has an invalid value (integer in (0,MAX_INT]")));
-            }
-
-        }
-        return result;
-    }
-
     public void setRemService(RemService remService) {
         this.remService = remService;
     }
 
+    private String getOperationsChain(RequestParameters<ResourceParameters> parameters) {
+        String operationsChain = "";
+
+        String imageWidth = parameters.getCustomParameterValue(IMAGE_WIDTH_PARAMETER);
+        String imageHeight = parameters.getCustomParameterValue(IMAGE_HEIGHT_PARAMETER);
+
+        if (imageWidth != null) {
+            if (imageHeight != null) {
+                operationsChain += "resize=(" + imageWidth + ", " + imageHeight + ")";
+            } else {
+                operationsChain += "resizeWidth=" + imageWidth;
+            }
+        } else if (imageHeight != null) {
+            operationsChain += "resizeHeight=" + imageHeight;
+        }
+
+        String operationsParameters = parameters.getCustomParameterValue(OPERATIONS_PARAMETER);
+
+        if (operationsParameters != null) {
+            operationsChain += (operationsChain.isEmpty()) ? operationsParameters : ";" + operationsParameters;
+        }
+
+        return operationsChain;
+    }
+
+    public List<ImageOperationDescription> getParameters(String parametersString) throws ImageOperationsException {
+        List<ImageOperationDescription> parameters = new LinkedList<>();
+
+        for (String rawParameter : parametersString.split(";")) {
+            if (rawParameter.trim().isEmpty()) {
+                continue;
+            }
+
+            String splittedParameter[] = rawParameter.split("=");
+
+            if (splittedParameter.length != 2) {
+                throw new ImageOperationsException("Invalid image operation: " + rawParameter);
+            }
+
+            parameters.add(new ImageOperationDescription(splittedParameter[0].trim(), splittedParameter[1].trim()));
+        }
+
+        return parameters;
+    }
 }
