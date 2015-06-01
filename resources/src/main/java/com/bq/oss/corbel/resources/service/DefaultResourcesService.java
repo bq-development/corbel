@@ -24,9 +24,6 @@ import com.bq.oss.corbel.resources.rem.Rem;
 import com.bq.oss.corbel.resources.rem.request.*;
 import com.bq.oss.corbel.resources.rem.service.RemService;
 import com.bq.oss.lib.queries.jaxrs.QueryParameters;
-import com.bq.oss.lib.queries.parser.AggregationParser;
-import com.bq.oss.lib.queries.parser.QueryParser;
-import com.bq.oss.lib.queries.parser.SortParser;
 import com.bq.oss.lib.token.TokenInfo;
 import com.bq.oss.lib.ws.api.error.ApiRequestException;
 import com.bq.oss.lib.ws.api.error.ErrorResponseFactory;
@@ -122,8 +119,9 @@ public class DefaultResourcesService implements ResourcesService {
             result = ErrorResponseFactory.getInstance().badRequest(e);
         }
 
-        if (tokenInfo != null
-                && (result.getStatus() == org.eclipse.jetty.http.HttpStatus.NO_CONTENT_204 || result.getStatus() == org.eclipse.jetty.http.HttpStatus.OK_200)) {
+        if (method == HttpMethod.PUT &&
+                tokenInfo != null &&
+                (result.getStatus() == org.eclipse.jetty.http.HttpStatus.NO_CONTENT_204 || result.getStatus() == org.eclipse.jetty.http.HttpStatus.OK_200)) {
             eventBus.dispatch(ResourceEvent.updateResourceEvent(type, id.getId(), tokenInfo.getDomainId()));
         }
         return result;
