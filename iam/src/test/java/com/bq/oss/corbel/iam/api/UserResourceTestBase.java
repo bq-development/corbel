@@ -1,9 +1,5 @@
 package com.bq.oss.corbel.iam.api;
 
-import java.util.Set;
-
-import javax.ws.rs.core.MediaType;
-
 import com.bq.oss.corbel.iam.model.Domain;
 import com.bq.oss.corbel.iam.model.Identity;
 import com.bq.oss.corbel.iam.model.User;
@@ -12,9 +8,11 @@ import com.google.common.collect.Sets;
 import com.sun.jersey.api.client.WebResource.Builder;
 import io.dropwizard.testing.junit.ResourceTestRule;
 
+import javax.ws.rs.core.MediaType;
+import java.util.Set;
+
 /**
  * @author Alexander De Leon
- *
  */
 public abstract class UserResourceTestBase {
 
@@ -23,7 +21,7 @@ public abstract class UserResourceTestBase {
     protected static final String TEST_DOMAIN_ID = "domain";
     protected static final Domain TEST_DOMAIN = new Domain();
     protected static final String TEST_OTHER_DOMAIN = "other_domain";
-    protected static final String TEST_USER_EMAIL = "email";
+    protected static final String TEST_USER_EMAIL = "some@email.com";
     protected static final String TEST_USER_FIRST_NAME = "firstname";
     protected static final String TEST_USER_LAST_NAME = "lastname";
     protected static final String TEST_USER_PHONE = "phone";
