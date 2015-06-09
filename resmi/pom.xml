@@ -174,7 +174,6 @@
                             <goal>jar</goal>
                         </goals>
                         <configuration>
-                            <includeDependencySources>true</includeDependencySources>
                             <dependencySourceExcludes>
                                 <dependencySourceExclude>groovy-stubs:*</dependencySourceExclude>
                             </dependencySourceExcludes>
