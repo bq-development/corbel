@@ -10,10 +10,10 @@ import com.bq.oss.corbel.resources.rem.request.ResourceParameters;
 
 public interface ImageCacheService {
 
-    InputStream getFromCache(Rem<?> restorRem, ResourceId resourceId, Integer width, Integer height, String type,
+    InputStream getFromCache(Rem<?> restorRem, ResourceId resourceId, String operationsChain, String type,
             RequestParameters<ResourceParameters> parameters);
 
-    void saveInCacheAsync(Rem<InputStream> restorPutRem, ResourceId resourceId, Integer width, Integer height, Long newSize,
-            String collection, RequestParameters<ResourceParameters> parameters, File file);
+    void saveInCacheAsync(Rem<InputStream> restorPutRem, ResourceId resourceId, String operationsChain, Long newSize, String collection,
+            RequestParameters<ResourceParameters> parameters, File file);
 
 }
