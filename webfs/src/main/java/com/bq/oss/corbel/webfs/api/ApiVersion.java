@@ -5,6 +5,6 @@ package com.bq.oss.corbel.webfs.api;
  * 
  */
 public interface ApiVersion {
-	String V1_0 = "v1.0";
-	String CURRENT = V1_0;
+    String V1_0 = "v1.0";
+    String CURRENT = V1_0;
 }

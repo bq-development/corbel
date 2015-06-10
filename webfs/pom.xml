@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -11,24 +12,24 @@
     <artifactId>webfs</artifactId>
     <name>webfs</name>
 
-	<dependencies>
+    <dependencies>
         <dependency>
             <groupId>com.bq.oss.lib</groupId>
             <artifactId>ws</artifactId>
         </dependency>
-		<dependency>
-			<groupId>io.dropwizard</groupId>
-			<artifactId>dropwizard-auth</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.amazonaws</groupId>
-			<artifactId>aws-java-sdk-s3</artifactId>
-		</dependency>
+        <dependency>
+            <groupId>io.dropwizard</groupId>
+            <artifactId>dropwizard-auth</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-s3</artifactId>
+        </dependency>
         <dependency>
             <groupId>io.dropwizard</groupId>
             <artifactId>dropwizard-testing</artifactId>
         </dependency>
-	</dependencies>
+    </dependencies>
 
     <build>
         <plugins>
@@ -129,10 +130,11 @@
                         </goals>
                         <configuration>
                             <target>
-                                <exec executable="chmod" dir="${project.build.directory}/generated-resources/appassembler/jsw/webfs">
-                                    <arg value="-R" />
-                                    <arg value="a+x" />
-                                    <arg value="bin" />
+                                <exec executable="chmod"
+                                      dir="${project.build.directory}/generated-resources/appassembler/jsw/webfs">
+                                    <arg value="-R"/>
+                                    <arg value="a+x"/>
+                                    <arg value="bin"/>
                                 </exec>
                             </target>
                         </configuration>
@@ -153,7 +155,7 @@
                             <descriptors>
                                 <descriptor>src/assembly/assembly.xml</descriptor>
                             </descriptors>
-                            <finalName>iam-${project.version}</finalName>
+                            <finalName>webfs-${project.version}</finalName>
                         </configuration>
                     </execution>
                 </executions>

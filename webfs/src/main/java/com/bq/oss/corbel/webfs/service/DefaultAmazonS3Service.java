@@ -11,27 +11,27 @@ import com.amazonaws.services.s3.model.S3Object;
  */
 public class DefaultAmazonS3Service implements AmazonS3Service {
 
-	private final AmazonS3 amazonS3Client;
-	private final String bucket;
+    private final AmazonS3 amazonS3Client;
+    private final String bucket;
 
-	public DefaultAmazonS3Service(AmazonS3 amazonS3Client, String bucket) {
-		this.amazonS3Client = amazonS3Client;
-		this.bucket = bucket;
-	}
+    public DefaultAmazonS3Service(AmazonS3 amazonS3Client, String bucket) {
+        this.amazonS3Client = amazonS3Client;
+        this.bucket = bucket;
+    }
 
-	@Override
-	public S3Object getObject(String key) {
+    @Override
+    public S3Object getObject(String key) {
 
-		GetObjectRequest objectRequest = new GetObjectRequest(bucket, key);
-		try {
-			return amazonS3Client.getObject(objectRequest);
-		} catch (AmazonS3Exception e) {
-			if (e.getStatusCode() == 404) {
-				return null;
-			} else {
-				throw e;
-			}
-		}
-	}
+        GetObjectRequest objectRequest = new GetObjectRequest(bucket, key);
+        try {
+            return amazonS3Client.getObject(objectRequest);
+        } catch (AmazonS3Exception e) {
+            if (e.getStatusCode() == 404) {
+                return null;
+            } else {
+                throw e;
+            }
+        }
+    }
 
 }

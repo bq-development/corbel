@@ -8,6 +8,6 @@ import com.amazonaws.services.s3.model.S3Object;
  */
 public interface AmazonS3Service {
 
-	public S3Object getObject(String uri);
+    public S3Object getObject(String uri);
 
 }
