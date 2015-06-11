@@ -18,15 +18,6 @@
                 <include>**</include>
             </includes>
         </fileSet>
-
-        <!-- Include build metadata in the distro  -->
-        <fileSet>
-            <directory>${project.build.directory}</directory>
-            <outputDirectory>/etc</outputDirectory>
-            <includes>
-                <include>buildmetadata.xml</include>
-            </includes>
-        </fileSet>
     </fileSets>
 
 
