@@ -1,9 +1,8 @@
 package com.bq.oss.corbel.resources.rem.operation;
 
+import com.bq.oss.corbel.resources.rem.exception.ImageOperationsException;
 import org.im4java.core.IMOperation;
 import org.im4java.core.IMOps;
-
-import com.bq.oss.corbel.resources.rem.exception.ImageOperationsException;
 
 public class ResizeHeight implements ImageOperation {
 

@@ -1,40 +1,5 @@
 package com.bq.oss.corbel.iam.api;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
-import io.dropwizard.auth.Authenticator;
-import io.dropwizard.auth.oauth.OAuthFactory;
-import io.dropwizard.testing.junit.ResourceTestRule;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
-
 import com.bq.oss.corbel.iam.exception.ClientAlreadyExistsException;
 import com.bq.oss.corbel.iam.exception.DomainAlreadyExists;
 import com.bq.oss.corbel.iam.model.Client;
@@ -42,11 +7,7 @@ import com.bq.oss.corbel.iam.model.Domain;
 import com.bq.oss.corbel.iam.service.ClientService;
 import com.bq.oss.corbel.iam.service.DomainService;
 import com.bq.oss.lib.queries.builder.QueryParametersBuilder;
-import com.bq.oss.lib.queries.parser.AggregationParser;
-import com.bq.oss.lib.queries.parser.PaginationParser;
-import com.bq.oss.lib.queries.parser.QueryParser;
-import com.bq.oss.lib.queries.parser.SearchParser;
-import com.bq.oss.lib.queries.parser.SortParser;
+import com.bq.oss.lib.queries.parser.*;
 import com.bq.oss.lib.queries.request.Pagination;
 import com.bq.oss.lib.queries.request.ResourceQuery;
 import com.bq.oss.lib.queries.request.Sort;
@@ -58,6 +19,31 @@ import com.bq.oss.lib.ws.auth.AuthorizationRequestFilter;
 import com.bq.oss.lib.ws.auth.CookieOAuthFactory;
 import com.bq.oss.lib.ws.queries.QueryParametersProvider;
 import com.google.gson.JsonObject;
+import io.dropwizard.auth.Authenticator;
+import io.dropwizard.auth.oauth.OAuthFactory;
+import io.dropwizard.testing.junit.ResourceTestRule;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.*;
 
 public class DomainResourceTest {
     protected static final String AUTHORIZATION = "Authorization";
@@ -83,7 +69,8 @@ public class DomainResourceTest {
             "realm", AuthorizationInfo.class);
     private static final AuthorizationRequestFilter filter = spy(new AuthorizationRequestFilter(oAuthFactory, cookieOAuthProvider, ""));
 
-    @ClassRule public static ResourceTestRule RULE = ResourceTestRule
+    @ClassRule
+    public static ResourceTestRule RULE = ResourceTestRule
             .builder()
             .addResource(new DomainResource(clientService, domainService))
             .addProvider(filter)
@@ -176,7 +163,8 @@ public class DomainResourceTest {
                 domains);
 
         List<Domain> domainsResponse = RULE.client().target("/v1.0/domain").request()
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TEST_TOKEN).get(new GenericType<List<Domain>>() {});
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TEST_TOKEN).get(new GenericType<List<Domain>>() {
+                });
 
         verify(domainService).getAll(null, defaultPagination, null);
         assertEquals(domains, domainsResponse);
@@ -304,7 +292,8 @@ public class DomainResourceTest {
                 .thenReturn(clientList);
 
         List<Client> clients = RULE.client().target("/v1.0/domain/" + DOMAIN_ID + "/client").request(MediaType.APPLICATION_JSON_TYPE)
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TEST_TOKEN).get(new GenericType<List<Client>>() {});
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + TEST_TOKEN).get(new GenericType<List<Client>>() {
+                });
 
         verify(clientService).findClientsByDomain(DOMAIN_ID, null, defaultPagination, null);
         assertEquals(clients, clientList);

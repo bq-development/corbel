@@ -1,14 +1,13 @@
 package com.bq.oss.corbel.resources.rem.operation;
 
-import static org.fest.assertions.api.Assertions.assertThat;
+import com.bq.oss.corbel.resources.rem.exception.ImageOperationsException;
+import org.im4java.core.IMOps;
+import org.junit.Test;
 
 import java.util.Collections;
 import java.util.List;
 
-import org.im4java.core.IMOps;
-import org.junit.Test;
-
-import com.bq.oss.corbel.resources.rem.exception.ImageOperationsException;
+import static org.fest.assertions.api.Assertions.assertThat;
 
 public class ImageOperationsTest {
 

@@ -1,40 +1,47 @@
 package com.bq.oss.corbel.resources.rem.service;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.List;
-import java.util.Map;
-
+import com.bq.oss.corbel.resources.rem.exception.ImageOperationsException;
+import com.bq.oss.corbel.resources.rem.format.ImageFormat;
+import com.bq.oss.corbel.resources.rem.model.ImageOperationDescription;
+import com.bq.oss.corbel.resources.rem.operation.ImageOperation;
 import org.im4java.core.ConvertCmd;
 import org.im4java.core.IM4JavaException;
 import org.im4java.core.IMOperation;
 import org.im4java.process.Pipe;
 
-import com.bq.oss.corbel.resources.rem.exception.ImageOperationsException;
-import com.bq.oss.corbel.resources.rem.model.ImageOperationDescription;
-import com.bq.oss.corbel.resources.rem.operation.ImageOperation;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 public class DefaultImageOperationsService implements ImageOperationsService {
 
     private final IMOperationFactory imOperationFactory;
     private final ConvertCmdFactory convertCmdFactory;
     private final Map<String, ImageOperation> operations;
+    public static final String DEF_IMAGE_ARG = "-";
 
     public DefaultImageOperationsService(IMOperationFactory imOperationFactory, ConvertCmdFactory convertCmdFactory,
-            Map<String, ImageOperation> operations) {
+                                         Map<String, ImageOperation> operations) {
         this.imOperationFactory = imOperationFactory;
         this.convertCmdFactory = convertCmdFactory;
         this.operations = operations;
     }
 
     @Override
-    public void applyConversion(List<ImageOperationDescription> parameters, InputStream image, OutputStream out)
-            throws ImageOperationsException, InterruptedException, IOException, IM4JavaException {
-
+    public void applyConversion(List<ImageOperationDescription> parameters, InputStream image, OutputStream out, Optional<ImageFormat> format) throws ImageOperationsException, InterruptedException, IOException, IM4JavaException {
         IMOperation imOperation = imOperationFactory.create();
-        imOperation.addImage("-");
+        addDefaultImageToIMOperation(imOperation);
+        addOperations(imOperation, parameters);
+        addImageToIMOperation(imOperation, getOutputFormatParameter(format));
 
+        ConvertCmd convertCmd = convertCmdFactory.create(image, out);
+        convertCmd.run(imOperation);
+    }
+
+    private void addOperations(IMOperation imOperation, List<ImageOperationDescription> parameters) throws ImageOperationsException {
         for (ImageOperationDescription parameter : parameters) {
 
             String operationName = parameter.getName();
@@ -45,13 +52,19 @@ public class DefaultImageOperationsService implements ImageOperationsService {
             }
 
             imOperation.addSubOperation(currentOperation.apply(parameter.getParameters()));
-
         }
+    }
 
-        imOperation.addImage("-");
+    private void addDefaultImageToIMOperation(IMOperation imOperation) {
+        addImageToIMOperation(imOperation, DEF_IMAGE_ARG);
+    }
 
-        ConvertCmd convertCmd = convertCmdFactory.create(image, out);
-        convertCmd.run(imOperation);
+    private void addImageToIMOperation(IMOperation imOperation, String extension) {
+        imOperation.addImage(extension);
+    }
+
+    private String getOutputFormatParameter(Optional<ImageFormat> format) {
+        return format.map(formatIn -> formatIn + ":-").orElse(DEF_IMAGE_ARG);
     }
 
     public static class IMOperationFactory {
@@ -68,5 +81,4 @@ public class DefaultImageOperationsService implements ImageOperationsService {
             return convertCmd;
         }
     }
-
 }

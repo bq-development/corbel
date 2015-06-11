@@ -1,26 +1,7 @@
 package com.bq.oss.corbel.resources.rem;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.StreamingOutput;
-
-import org.apache.commons.io.output.TeeOutputStream;
-import org.im4java.core.IM4JavaException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-
 import com.bq.oss.corbel.resources.rem.exception.ImageOperationsException;
+import com.bq.oss.corbel.resources.rem.format.ImageFormat;
 import com.bq.oss.corbel.resources.rem.model.ImageOperationDescription;
 import com.bq.oss.corbel.resources.rem.request.RequestParameters;
 import com.bq.oss.corbel.resources.rem.request.ResourceId;
@@ -30,10 +11,29 @@ import com.bq.oss.corbel.resources.rem.service.ImageOperationsService;
 import com.bq.oss.corbel.resources.rem.service.RemService;
 import com.bq.oss.lib.ws.api.error.ErrorResponseFactory;
 import com.bq.oss.lib.ws.model.Error;
+import org.apache.commons.io.output.TeeOutputStream;
+import org.im4java.core.IM4JavaException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 
 public class ImageGetRem extends BaseRem<Void> {
 
+    public static final String FORMAT_PARAMETER = "image:format";
     public static final String OPERATIONS_PARAMETER = "image:operations";
     public static final String IMAGE_WIDTH_PARAMETER = "image:width";
     public static final String IMAGE_HEIGHT_PARAMETER = "image:height";
@@ -51,7 +51,7 @@ public class ImageGetRem extends BaseRem<Void> {
 
     @Override
     public Response resource(String collection, ResourceId resourceId, RequestParameters<ResourceParameters> requestParameters,
-            Optional<Void> entity) {
+                             Optional<Void> entity) {
 
         Rem<?> restorGetRem = remService.getRem("RestorGetRem");
 
@@ -61,14 +61,22 @@ public class ImageGetRem extends BaseRem<Void> {
         }
 
         String operationsChain = getOperationsChain(requestParameters);
+        List<ImageOperationDescription> operations;
+        Optional<ImageFormat> imageFormat;
+        try {
+            operations = getParameters(operationsChain);
+            imageFormat = getImageFormat(requestParameters);
+        } catch (ImageOperationsException e) {
+            return ErrorResponseFactory.getInstance().badRequest(new Error("bad_request", e.getMessage()));
+        }
 
-        if (operationsChain.isEmpty()) {
+        if (operationsChain.isEmpty() && !imageFormat.isPresent()) {
             return restorGetRem.resource(collection, resourceId, requestParameters, Optional.empty());
         }
 
         MediaType mediaType = requestParameters.getAcceptedMediaTypes().get(0);
 
-        InputStream inputStream = imageCacheService.getFromCache(restorGetRem, resourceId, operationsChain, collection, requestParameters);
+        InputStream inputStream = imageCacheService.getFromCache(restorGetRem, resourceId, operationsChain, imageFormat, collection, requestParameters);
 
         if (inputStream != null) {
             return Response.ok(inputStream).type(javax.ws.rs.core.MediaType.valueOf(mediaType.toString())).build();
@@ -84,28 +92,21 @@ public class ImageGetRem extends BaseRem<Void> {
             return response;
         }
 
-        List<ImageOperationDescription> operations;
-
-        try {
-            operations = getParameters(operationsChain);
-        } catch (ImageOperationsException e) {
-            return ErrorResponseFactory.getInstance().badRequest(new Error("bad_request", e.getMessage()));
-        }
 
         StreamingOutput outputStream = output -> {
 
             File file = File.createTempFile(TEMP_IMAGE_PREFIX + UUID.randomUUID().toString(), "");
 
             try (FileOutputStream fileOutputStream = new FileOutputStream(file);
-                    TeeOutputStream teeOutputStream = new TeeOutputStream(output, fileOutputStream);
-                    InputStream input = (InputStream) response.getEntity()) {
-                imageOperationsService.applyConversion(operations, input, teeOutputStream);
+                 TeeOutputStream teeOutputStream = new TeeOutputStream(output, fileOutputStream);
+                 InputStream input = (InputStream) response.getEntity()) {
+                imageOperationsService.applyConversion(operations, input, teeOutputStream, imageFormat);
             } catch (IOException | InterruptedException | IM4JavaException | ImageOperationsException e) {
                 LOG.error("Error working with image", e);
                 throw new WebApplicationException(ErrorResponseFactory.getInstance().invalidEntity(e.getMessage()));
             }
 
-            imageCacheService.saveInCacheAsync(restorPutRem, resourceId, operationsChain, file.length(), collection, requestParameters,
+            imageCacheService.saveInCacheAsync(restorPutRem, resourceId, operationsChain, imageFormat, file.length(), collection, requestParameters,
                     file);
         };
 
@@ -146,7 +147,16 @@ public class ImageGetRem extends BaseRem<Void> {
         return operationsChain;
     }
 
-    public List<ImageOperationDescription> getParameters(String parametersString) throws ImageOperationsException {
+    private Optional<ImageFormat> getImageFormat(RequestParameters<ResourceParameters> parameters) throws ImageOperationsException {
+        String outputFormatString = parameters.getCustomParameterValue(FORMAT_PARAMETER);
+        try {
+            return Optional.ofNullable(ImageFormat.safeValueOf(outputFormatString));
+        } catch (IllegalArgumentException i) {
+            throw new ImageOperationsException("Invalid image output format: " + outputFormatString);
+        }
+    }
+
+    protected List<ImageOperationDescription> getParameters(String parametersString) throws ImageOperationsException {
         List<ImageOperationDescription> parameters = new LinkedList<>();
 
         for (String rawParameter : parametersString.split(";")) {
