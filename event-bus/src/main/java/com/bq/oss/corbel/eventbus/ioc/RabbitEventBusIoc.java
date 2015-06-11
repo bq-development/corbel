@@ -15,6 +15,8 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JSR310Module;
 
+import java.util.Optional;
+
 /**
  * @author Alberto J. Rubio
  *
@@ -61,14 +63,11 @@ import com.fasterxml.jackson.datatype.jsr310.JSR310Module;
         return getDefaultMessageConverter();
     }
 
-    @Override
-    protected String getRabbitHost() {
-        return this.getEnvironment().getProperty("eventbus.rabbitmq.host");
-    }
 
     @Override
-    protected int getRabbitPort() {
-        return ((Integer)this.getEnvironment().getProperty("eventbus.rabbitmq.port", Integer.TYPE)).intValue();
+    protected Optional<String> configPrefix() {
+        return Optional.of("eventbus");
     }
+
 
 }
