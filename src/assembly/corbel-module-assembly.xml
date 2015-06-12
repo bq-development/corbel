@@ -18,6 +18,14 @@
                 <include>**</include>
             </includes>
         </fileSet>
+        <!-- Include build metadata in the distro  -->
+        <fileSet>
+            <directory>${project.basedir}/../target</directory>
+            <outputDirectory>/${project.name}/etc</outputDirectory>
+            <includes>
+                <include>buildmetadata.xml</include>
+            </includes>
+        </fileSet>
     </fileSets>
 
 
