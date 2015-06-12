@@ -401,13 +401,6 @@
                         <!-- Set the target configuration directory to be used in the bin scripts -->
                         <configurationDirectory>etc</configurationDirectory>
 
-                        <!-- Set the name of the source directory for configuration files -->
-                        <configurationSourceDirectory>src/main/resources/</configurationSourceDirectory>
-
-                        <!-- Copy the contents from "/src/main/resources" to the target configuration
-                            directory in the assembled application -->
-                        <copyConfigurationDirectory>true</copyConfigurationDirectory>
-
                         <!-- Include the target configuration directory in the beginning of
                             the classpath declaration in the bin scripts -->
                         <includeConfigurationDirectoryInClasspath>true</includeConfigurationDirectoryInClasspath>
