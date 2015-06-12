@@ -374,25 +374,31 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>com.spotify</groupId>
-                <artifactId>docker-maven-plugin</artifactId>
-                <version>0.2.9</version>
-                <configuration>
-                    <imageName>corbel/${project.name}:${project.version}</imageName>
-                    <dockerDirectory>${project.build.directory}/docker</dockerDirectory>
-                    <resources>
-                        <resource>
-                            <targetPath>/</targetPath>
-                            <directory>${project.build.directory}</directory>
-                            <include>${project.name}-${project.version}-bin.tar.gz</include>
-                        </resource>
-                    </resources>
-                </configuration>
-            </plugin>
         </plugins>
         <pluginManagement>
             <plugins>
+                <plugin>
+                    <groupId>com.spotify</groupId>
+                    <artifactId>docker-maven-plugin</artifactId>
+                    <version>0.2.9</version>
+                    <configuration>
+                        <imageName>corbel/${project.name}</imageName>
+                        <imageTags>
+                            <imageTag>${project.version}</imageTag>
+                        </imageTags>
+                        <forceTags>true</forceTags>
+                        <dockerDirectory>${project.build.directory}/docker</dockerDirectory>
+                        <resources>
+                            <resource>
+                                <targetPath>/</targetPath>
+                                <directory>${project.build.directory}</directory>
+                                <include>${project.name}-${project.version}-bin.tar.gz</include>
+                            </resource>
+                        </resources>
+                        <serverId>docker-hub</serverId>
+                        <registryUrl>https://index.docker.io/v1/</registryUrl>
+                    </configuration>
+                </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>appassembler-maven-plugin</artifactId>
@@ -562,6 +568,41 @@
                         </executions>
                     </plugin>
                 </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>docker</id>
+            <activation>
+                <property>
+                    <name>dockerBuild</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <build>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>com.spotify</groupId>
+                            <artifactId>docker-maven-plugin</artifactId>
+                            <executions>
+                                <execution>
+                                    <id>build</id>
+                                    <phase>install</phase>
+                                    <goals>
+                                        <goal>build</goal>
+                                    </goals>
+                                </execution>
+                                <execution>
+                                    <id>push</id>
+                                    <phase>deploy</phase>
+                                    <goals>
+                                        <goal>push</goal>
+                                    </goals>
+                                </execution>
+                            </executions>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
             </build>
         </profile>
     </profiles>
