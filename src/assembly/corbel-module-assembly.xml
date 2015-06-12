@@ -20,7 +20,7 @@
         </fileSet>
         <!-- Include build metadata in the distro  -->
         <fileSet>
-            <directory>${project.basedir}/../target</directory>
+            <directory>${project.build.directory}/classes/META-INF</directory>
             <outputDirectory>/${project.name}/etc</outputDirectory>
             <includes>
                 <include>buildmetadata.xml</include>
