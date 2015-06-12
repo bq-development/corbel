@@ -379,7 +379,7 @@
                 <artifactId>docker-maven-plugin</artifactId>
                 <version>0.2.9</version>
                 <configuration>
-                    <imageName>bqreaders/corbel-${project.name}:${project.version}</imageName>
+                    <imageName>corbel/${project.name}:${project.version}</imageName>
                     <dockerDirectory>${project.build.directory}/docker</dockerDirectory>
                     <resources>
                         <resource>
