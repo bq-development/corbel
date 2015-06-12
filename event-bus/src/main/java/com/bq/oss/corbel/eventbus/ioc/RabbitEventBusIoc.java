@@ -15,6 +15,8 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JSR310Module;
 
+import java.util.Optional;
+
 /**
  * @author Alberto J. Rubio
  *
@@ -60,5 +62,12 @@ import com.fasterxml.jackson.datatype.jsr310.JSR310Module;
     protected MessageConverter getMessageConverter() {
         return getDefaultMessageConverter();
     }
+
+
+    @Override
+    protected Optional<String> configPrefix() {
+        return Optional.of("eventbus");
+    }
+
 
 }
