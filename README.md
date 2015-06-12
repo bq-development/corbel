@@ -4,4 +4,4 @@
 
 Corbel Platform
 
-Documentación relacionada con el proyecto [corbel](http://opensource.bq.com/corbel/).
+Documentación relacionada con el proyecto [corbel](http://corbel.docs.bqws.io).
