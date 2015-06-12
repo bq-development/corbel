@@ -359,7 +359,7 @@
                         <configuration>
                             <outputDirectory>${project.build.directory}/docker</outputDirectory>
                             <resources>
-                                <!-- Default Fockerfile -->
+                                <!-- Default Dockerfile -->
                                 <resource>
                                     <directory>${project.basedir}/../src/docker</directory>
                                     <filtering>true</filtering>
