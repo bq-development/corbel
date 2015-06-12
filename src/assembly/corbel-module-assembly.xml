@@ -12,21 +12,13 @@
 
     <fileSets>
         <fileSet>
-            <directory>${project.build.directory}/generated-resources/appassembler/jsw/iam</directory>
-            <outputDirectory>/</outputDirectory>
+            <directory>${project.build.directory}/generated-resources/appassembler/jsw/${project.name}</directory>
+            <outputDirectory>/${project.name}</outputDirectory>
             <includes>
                 <include>**</include>
             </includes>
         </fileSet>
-
-        <!-- Include build metadata in the distro  -->
-        <fileSet>
-            <directory>${project.build.outputDirectory}/META-INF</directory>
-            <outputDirectory>/etc</outputDirectory>
-            <includes>
-                <include>buildmetadata.xml</include>
-            </includes>
-        </fileSet>
     </fileSets>
+
 
 </assembly>
