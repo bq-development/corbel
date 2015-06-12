@@ -7,6 +7,7 @@ import com.bq.oss.lib.queries.jaxrs.QueryParameters;
 import com.bq.oss.lib.queries.parser.AggregationParser;
 import com.bq.oss.lib.queries.parser.QueryParser;
 import com.bq.oss.lib.queries.parser.SortParser;
+import com.bq.oss.lib.queries.request.*;
 
 /**
  * @author Alexander De Leon
@@ -16,10 +17,10 @@ public class RelationParametersImpl extends CollectionParametersImpl implements 
 
     private final Optional<String> predicate;
 
-    public RelationParametersImpl(int pageSize, int page, int maxPageSize, Optional<String> sort, Optional<List<String>> query,
-            QueryParser queryParser, Optional<String> aggregation, AggregationParser aggregationParser, SortParser sortParser,
-            Optional<String> predicate, Optional<String> search) {
-        super(pageSize, page, maxPageSize, sort, query, queryParser, aggregation, aggregationParser, sortParser, search);
+    public RelationParametersImpl(Pagination pagination, Optional<Sort> sort, Optional<List<ResourceQuery>> queries,
+            Optional<List<ResourceQuery>> conditions, Optional<Aggregation> aggreagation, Optional<ResourceSearch> search,
+            Optional<String> predicate) {
+        super(pagination, sort, queries, conditions, aggreagation, search);
         this.predicate = predicate;
     }
 

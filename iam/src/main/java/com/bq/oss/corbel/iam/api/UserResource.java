@@ -1,20 +1,5 @@
 package com.bq.oss.corbel.iam.api;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.time.Clock;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import javax.validation.Valid;
-import javax.ws.rs.*;
-import javax.ws.rs.core.*;
-import javax.ws.rs.core.Response.Status;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.dao.DuplicateKeyException;
-
 import com.bq.oss.corbel.iam.exception.DuplicatedOauthServiceIdentityException;
 import com.bq.oss.corbel.iam.exception.IdentityAlreadyExistsException;
 import com.bq.oss.corbel.iam.exception.UserProfileConfigurationException;
@@ -31,12 +16,25 @@ import com.bq.oss.lib.queries.request.*;
 import com.bq.oss.lib.ws.annotation.Rest;
 import com.bq.oss.lib.ws.auth.AuthorizationInfo;
 import com.bq.oss.lib.ws.model.Error;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DuplicateKeyException;
+
+import javax.validation.Valid;
+import javax.ws.rs.*;
+import javax.ws.rs.core.*;
+import javax.ws.rs.core.Response.Status;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.time.Clock;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Alexander De Leon
- * 
  */
-@Path(ApiVersion.CURRENT + "/user") public class UserResource {
+@Path(ApiVersion.CURRENT + "/user")
+public class UserResource {
 
     private static final Logger LOG = LoggerFactory.getLogger(UserResource.class);
     private static final String ME = "me";
@@ -48,7 +46,7 @@ import com.bq.oss.lib.ws.model.Error;
     private final DeviceService deviceService;
 
     public UserResource(UserService userService, DomainService domainService, IdentityService identityService, DeviceService deviceService,
-            Clock clock) {
+                        Clock clock) {
         this.userService = userService;
         this.domainService = domainService;
         this.identityService = identityService;
@@ -127,7 +125,8 @@ import com.bq.oss.lib.ws.model.Error;
         User user = getUserResolvingMeAndUserDomainVerifying(userId, authorizationInfo);
 
         if (userData != null) {
-            user.updateFields(userData);
+
+            user.updateUser(userData);
 
             Optional<Domain> optDomain = domainService.getDomain(authorizationInfo.getDomainId());
 
@@ -189,7 +188,7 @@ import com.bq.oss.lib.ws.model.Error;
     @Path("/{userId}/devices/{deviceId}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getDevice(@PathParam("userId") String userId, @PathParam("deviceId") String deviceId,
-            @Context AuthorizationInfo authorizationInfo) {
+                              @Context AuthorizationInfo authorizationInfo) {
         User user = getUserResolvingMeAndUserDomainVerifying(userId, authorizationInfo);
         return Optional.ofNullable(deviceService.getByIdAndUserId(deviceId, user.getId()))
                 .map(device -> Response.ok().type(MediaType.APPLICATION_JSON).entity(device).build())
@@ -200,7 +199,7 @@ import com.bq.oss.lib.ws.model.Error;
     @Path("/{userId}/devices")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response updateDevice(@PathParam("userId") String userId, @Valid Device deviceData,
-            @Context AuthorizationInfo authorizationInfo, @Context UriInfo uriInfo) {
+                                 @Context AuthorizationInfo authorizationInfo, @Context UriInfo uriInfo) {
         User user = getUserResolvingMeAndUserDomainVerifying(userId, authorizationInfo);
         ensureNoId(deviceData);
         deviceData.setUserId(user.getId());
@@ -212,7 +211,7 @@ import com.bq.oss.lib.ws.model.Error;
     @DELETE
     @Path("/{userId}/devices/{deviceId}")
     public Response deleteDevice(@PathParam("userId") String userId, @PathParam("deviceId") final String deviceId,
-            @Context AuthorizationInfo authorizationInfo) {
+                                 @Context AuthorizationInfo authorizationInfo) {
         User user = getUserResolvingMeAndUserDomainVerifying(userId, authorizationInfo);
         deviceService.deleteByIdAndUserId(deviceId, user.getId());
         return Response.status(Status.NO_CONTENT).build();
@@ -262,7 +261,7 @@ import com.bq.oss.lib.ws.model.Error;
     @Path("/{id}/identity")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response postUserIdentity(@Valid Identity identity, @PathParam("id") String id, @Context AuthorizationInfo authorizationInfo,
-            @Context Request request) {
+                                     @Context Request request) {
         User user = getUserResolvingMeAndUserDomainVerifying(id, authorizationInfo);
 
         identity.setDomain(authorizationInfo.getDomainId());
@@ -432,5 +431,7 @@ import com.bq.oss.lib.ws.model.Error;
         return query;
     }
 
-    @SuppressWarnings("serial") private static class IllegalOauthServiceException extends Exception {}
+    @SuppressWarnings("serial")
+    private static class IllegalOauthServiceException extends Exception {
+    }
 }

@@ -1,20 +1,13 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- ~ /* ~ * Copyright (C) 2013 StarTIC ~ */ -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-
     <modelVersion>4.0.0</modelVersion>
-
     <groupId>com.bq.oss.corbel</groupId>
     <artifactId>corbel</artifactId>
-    <version>1.19.0-SNAPSHOT</version>
+    <version>1.20.0-SNAPSHOT</version>
     <packaging>pom</packaging>
-
     <name>corbel</name>
-
     <description>Corbel Platform</description>
     <url>https://github.com/bq/corbel</url>
-
     <licenses>
         <license>
             <name>The Apache Software License, Version 2.0</name>
@@ -22,45 +15,39 @@
             <distribution>repo</distribution>
         </license>
     </licenses>
-
     <organization>
         <name>bq</name>
         <url>http://www.bq.com/</url>
     </organization>
-
     <scm>
-        <connection>scm:git:git@github.com:bq/corbel.git</connection>
-        <developerConnection>scm:git:git@github.com:bq/corbel.git</developerConnection>
+        <connection>scm:git:ssh://bq-devtools@git.dev.bqsoftware.net:29418/corbel</connection>
+        <developerConnection>scm:git:ssh://bq-devtools@git.dev.bqsoftware.net:29418/corbel</developerConnection>
         <url>https://github.com/bq/corbel</url>
         <tag>HEAD</tag>
     </scm>
-
     <ciManagement>
         <system>Travis CI</system>
         <url>https://travis-ci.org/bq/corbel</url>
     </ciManagement>
-
     <issueManagement>
         <url>https://github.com/bq/corbel/issues</url>
         <system>GitHub Issues</system>
     </issueManagement>
-
     <properties>
         <appassembler.plugin.version>1.10</appassembler.plugin.version>
         <maven-surefire.plugin.version>2.17</maven-surefire.plugin.version>
         <buildmetadata-maven-plugin.version>1.5.2</buildmetadata-maven-plugin.version>
         <lib-config.version>0.2.0</lib-config.version>
-        <lib-cli.version>0.3.0-SNAPSHOT</lib-cli.version>
+        <lib-cli.version>0.2.0</lib-cli.version>
         <lib-mongodb.version>0.3.0</lib-mongodb.version>
         <lib-token.version>0.5.0</lib-token.version>
-        <lib-queries.version>0.4.0-SNAPSHOT</lib-queries.version>
-        <lib-ws.version>0.7.0-SNAPSHOT</lib-ws.version>
-        <lib-rabbitmq.version>0.5.0</lib-rabbitmq.version>
+        <lib-queries.version>0.5.0</lib-queries.version>
+        <lib-ws.version>0.8.0-SNAPSHOT</lib-ws.version>
+        <lib-rabbitmq.version>0.6.0-SNAPSHOT</lib-rabbitmq.version>
         <spring.version>4.1.2.RELEASE</spring.version>
         <dropwizard.version>0.7.1</dropwizard.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
-
     <modules>
         <module>event-bus</module>
         <module>events</module>
@@ -70,15 +57,15 @@
         <module>rem-image</module>
         <module>resmi</module>
         <module>restor</module>
+        <module>i18n</module>
+        <module>webfs</module>
     </modules>
-
     <dependencies>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <version>1.7.7</version>
         </dependency>
-        <!-- Test dependencies -->
         <dependency>
             <groupId>org.easytesting</groupId>
             <artifactId>fest-assert-core</artifactId>
@@ -110,7 +97,6 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -283,7 +269,6 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-
     <build>
         <resources>
             <resource>
@@ -360,9 +345,205 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>2.7</version>
+                <executions>
+                    <execution>
+                        <id>copy-resources</id>
+                        <!-- here the phase you need -->
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/docker</outputDirectory>
+                            <resources>
+                                <!-- Default Fockerfile -->
+                                <resource>
+                                    <directory>${project.basedir}/../src/docker</directory>
+                                    <filtering>true</filtering>
+                                </resource>
+                                <!-- Override by module Dockerfile if exists -->
+                                <resource>
+                                    <directory>${project.basedir}/src/docker</directory>
+                                    <filtering>true</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.spotify</groupId>
+                <artifactId>docker-maven-plugin</artifactId>
+                <version>0.2.9</version>
+                <configuration>
+                    <imageName>bqreaders/corbel-${project.name}:${project.version}</imageName>
+                    <dockerDirectory>${project.build.directory}/docker</dockerDirectory>
+                    <resources>
+                        <resource>
+                            <targetPath>/</targetPath>
+                            <directory>${project.build.directory}</directory>
+                            <include>${project.name}-${project.version}-bin.tar.gz</include>
+                        </resource>
+                    </resources>
+                </configuration>
+            </plugin>
         </plugins>
-    </build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>appassembler-maven-plugin</artifactId>
+                    <version>${appassembler.plugin.version}</version>
+                    <configuration>
+                        <!-- Set the target configuration directory to be used in the bin scripts -->
+                        <configurationDirectory>etc</configurationDirectory>
 
+                        <!-- Set the name of the source directory for configuration files -->
+                        <configurationSourceDirectory>src/main/resources/</configurationSourceDirectory>
+
+                        <!-- Copy the contents from "/src/main/resources" to the target configuration
+                            directory in the assembled application -->
+                        <copyConfigurationDirectory>true</copyConfigurationDirectory>
+
+                        <!-- Include the target configuration directory in the beginning of
+                            the classpath declaration in the bin scripts -->
+                        <includeConfigurationDirectoryInClasspath>true</includeConfigurationDirectoryInClasspath>
+
+                        <!-- folder name and structure of the lib contents -->
+                        <repositoryName>lib</repositoryName>
+                        <repositoryLayout>default</repositoryLayout>
+                        <!-- with this all jars droped on the plugins directory get automatically loaded on the classpath -->
+                        <endorsedDir>plugins</endorsedDir>
+
+                        <assembleDirectory>${project.build.directory}/generated-resources/appassembler/jsw/${project.name}</assembleDirectory>
+
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>make-assembly</id> <!-- this is used for inheritance merges -->
+                            <phase>package</phase> <!-- bind to the packaging phase -->
+                            <goals>
+                                <goal>assemble</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <!-- Make binaries executables and create the plugins directory -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-antrun-plugin</artifactId>
+                    <version>1.6</version>
+                    <executions>
+                        <execution>
+                            <id>patch.executable</id>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>run</goal>
+                            </goals>
+                            <configuration>
+                                <target>
+                                    <exec executable="chmod" dir="${project.build.directory}/generated-resources/appassembler/jsw/${project.name}">
+                                        <arg value="-R" />
+                                        <arg value="a+x" />
+                                        <arg value="bin" />
+                                    </exec>
+                                </target>
+                            </configuration>
+                        </execution>
+                        <execution>
+                            <id>create.plugins</id>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>run</goal>
+                            </goals>
+                            <configuration>
+                                <target>
+                                    <exec executable="mkdir" dir="${project.build.directory}/generated-resources/appassembler/jsw/${project.name}">
+                                        <arg value="plugins" />
+                                    </exec>
+                                </target>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>2.4.1</version>
+
+                    <executions>
+                        <execution>
+                            <id>make-full-assembly</id>
+                            <!-- this is used for inheritance merges -->
+                            <phase>package</phase>
+                            <!-- append to the packaging phase. -->
+                            <goals>
+                                <goal>single</goal>
+                                <!-- goals == mojos -->
+                            </goals>
+                            <configuration>
+                                <descriptors>
+                                    <descriptor>${project.basedir}/../src/assembly/corbel-module-assembly.xml</descriptor>
+                                </descriptors>
+                                <finalName>${project.name}-${project.version}</finalName>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+                <!-- Groovy support -->
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>build-helper-maven-plugin</artifactId>
+                    <version>1.7</version>
+                    <executions>
+                        <execution>
+                            <id>add-source</id>
+                            <phase>generate-sources</phase>
+                            <goals>
+                                <goal>add-source</goal>
+                            </goals>
+                            <configuration>
+                                <sources>
+                                    <source>src/main/groovy</source>
+                                </sources>
+                            </configuration>
+                        </execution>
+                        <execution>
+                            <id>add-test-source</id>
+                            <phase>generate-sources</phase>
+                            <goals>
+                                <goal>add-test-source</goal>
+                            </goals>
+                            <configuration>
+                                <sources>
+                                    <source>src/test/groovy</source>
+                                </sources>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.gmaven</groupId>
+                    <artifactId>gmaven-plugin</artifactId>
+                    <version>1.4</version>
+                    <configuration>
+                        <providerSelection>2.0</providerSelection>
+                        <sourceEncoding>UTF-8</sourceEncoding>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>generateStubs</goal>
+                                <goal>compile</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
     <profiles>
         <profile>
             <id>release-sign-artifacts</id>
@@ -391,8 +572,6 @@
             </build>
         </profile>
     </profiles>
-
-
     <developers>
         <developer>
             <name>David Martínez</name>
@@ -475,7 +654,6 @@
             </roles>
         </developer>
     </developers>
-
     <distributionManagement>
         <repository>
             <id>sonatype-releases</id>
@@ -488,20 +666,22 @@
             <url>https://oss.sonatype.org/content/repositories/snapshots</url>
         </snapshotRepository>
     </distributionManagement>
-
     <repositories>
         <repository>
             <id>sonatype</id>
             <name>Sonatype Nexus snapshot repository</name>
             <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-            <snapshots><enabled>true</enabled></snapshots>
-        </repository>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>   
         <repository>
             <id>sonatype-releases</id>
             <name>Sonatype Nexus releases repository</name>
             <url>https://oss.sonatype.org/content/repositories/releases</url>
-            <snapshots><enabled>false</enabled></snapshots>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
         </repository>
     </repositories>
-
 </project>

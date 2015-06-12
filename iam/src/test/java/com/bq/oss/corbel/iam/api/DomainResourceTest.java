@@ -12,6 +12,8 @@ import java.util.Optional;
 
 import javax.ws.rs.core.MediaType;
 
+import com.bq.oss.lib.queries.builder.QueryParametersBuilder;
+import com.bq.oss.lib.queries.parser.PaginationParser;
 import com.bq.oss.lib.queries.parser.SortParser;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -48,6 +50,7 @@ public class DomainResourceTest {
 
     private static final SortParser sortParserMock = mock(SortParser.class);
     private static final AggregationParser aggregationParserMock = mock(AggregationParser.class);
+    private static final PaginationParser paginationParserMock = mock(PaginationParser.class);
     private static final QueryParser queryParserMock = mock(QueryParser.class);
     private static final AuthorizationInfo authorizationInfoMock = mock(AuthorizationInfo.class);
     private static final AuthorizationInfoProvider authorizationInfoProviderSpy = spy(new AuthorizationInfoProvider());
@@ -55,10 +58,14 @@ public class DomainResourceTest {
     private final static String DOMAIN_ID = "jksdawqqqqdfjdaslkfj";
     private final static String CLIENT_ID = "zsdetzerqdfjdaslkfj";
     private static final String TEST_TOKEN = "xxxx";
-    @ClassRule public static ResourceTestRule RULE = ResourceTestRule.builder()
-            .addResource(new DomainResource(clientService, domainService)).addProvider(authorizationInfoProviderSpy)
-            .addProvider(new QueryParametersProvider(DEFAULT_LIMIT, MAX_DEFAULT_LIMIT, queryParserMock, aggregationParserMock, sortParserMock))
-            .addProvider(GenericExceptionMapper.class).addProvider(JsonValidationExceptionMapper.class).build();
+    @ClassRule public static ResourceTestRule RULE = ResourceTestRule
+            .builder()
+            .addResource(new DomainResource(clientService, domainService))
+            .addProvider(authorizationInfoProviderSpy)
+            .addProvider(
+                    new QueryParametersProvider(DEFAULT_LIMIT, MAX_DEFAULT_LIMIT, new QueryParametersBuilder(queryParserMock,
+                            aggregationParserMock, sortParserMock, paginationParserMock))).addProvider(GenericExceptionMapper.class)
+            .addProvider(JsonValidationExceptionMapper.class).build();
 
     public DomainResourceTest() throws Exception {
         when(authorizationInfoMock.getClientId()).thenReturn(CLIENT_ID);
@@ -132,12 +139,12 @@ public class DomainResourceTest {
 
         Pagination defaultPagination = new Pagination(0, DEFAULT_LIMIT);
 
+        when(paginationParserMock.parse(0, DEFAULT_LIMIT, MAX_DEFAULT_LIMIT)).thenReturn(defaultPagination);
         when(domainService.getAll(Mockito.any(ResourceQuery.class), Mockito.any(Pagination.class), Mockito.any(Sort.class))).thenReturn(
                 domains);
 
         List<Domain> domainsResponse = RULE.client().resource("/v1.0/domain").type(MediaType.APPLICATION_JSON_TYPE)
-                .get(new GenericType<List<Domain>>() {
-                });
+                .get(new GenericType<List<Domain>>() {});
 
         verify(domainService).getAll(null, defaultPagination, null);
         assertEquals(domains, domainsResponse);
@@ -260,13 +267,12 @@ public class DomainResourceTest {
         clientList.add(expectedClient);
 
         Pagination defaultPagination = new Pagination(0, DEFAULT_LIMIT);
-
+        when(paginationParserMock.parse(0, DEFAULT_LIMIT, MAX_DEFAULT_LIMIT)).thenReturn(defaultPagination);
         when(clientService.findClientsByDomain(eq(DOMAIN_ID), any(ResourceQuery.class), any(Pagination.class), any(Sort.class)))
                 .thenReturn(clientList);
 
         List<Client> clients = RULE.client().resource("/v1.0/domain/" + DOMAIN_ID + "/client").accept(MediaType.APPLICATION_JSON_TYPE)
-                .get(new GenericType<List<Client>>() {
-                });
+                .get(new GenericType<List<Client>>() {});
 
         verify(clientService).findClientsByDomain(DOMAIN_ID, null, defaultPagination, null);
         assertEquals(clients, clientList);

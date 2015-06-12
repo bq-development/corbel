@@ -28,6 +28,8 @@ public interface ResmiDao {
 
     void upsert(String type, String id, JsonObject entity);
 
+    boolean findAndModify(String type, String id, JsonObject jsonObject, List<ResourceQuery> resourceQueries);
+
     void save(String type, Object entity);
 
     void createRelation(String type, String id, String relation, String uri, JsonObject jsonObject) throws NotFoundException;

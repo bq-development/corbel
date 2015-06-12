@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+import com.bq.oss.lib.queries.builder.QueryParametersBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
@@ -31,9 +32,7 @@ import com.bq.oss.corbel.resources.rem.plugin.PluginArtifactIdRegistry;
 import com.bq.oss.corbel.resources.rem.plugin.RelationRegistry;
 import com.bq.oss.corbel.resources.rem.service.RemService;
 import com.bq.oss.corbel.resources.repository.RelationSchemaRepository;
-import com.bq.oss.corbel.resources.service.DefaultRelationSchemaService;
-import com.bq.oss.corbel.resources.service.DefaultRemService;
-import com.bq.oss.corbel.resources.service.RelationSchemaService;
+import com.bq.oss.corbel.resources.service.*;
 import com.bq.oss.lib.config.ConfigurationIoC;
 import com.bq.oss.lib.mongo.config.DefaultMongoConfiguration;
 import com.bq.oss.lib.queries.mongo.repository.QueriesRepositoryFactoryBean;
@@ -56,16 +55,16 @@ import com.sun.jersey.spi.container.ContainerRequestFilter;
 @Configuration// import configuration mechanism
 @Import({ConfigurationIoC.class, CommonFiltersIoc.class, DropwizardIoc.class, OneTimeAccessTokenIoc.class, AuthorizationIoc.class,
         CorsIoc.class, QueriesIoc.class, MongoHealthCheckIoc.class, EventBusIoc.class})// scan package to discover REM implementations
-@ComponentScan({"com.bq.oss.corbel.resources.cli.dsl",    "com.bqreaders.silkroad.resources.cli.dsl",
-                "com.bq.oss.corbel.resources.rem.plugin", "com.bqreaders.silkroad.resources.rem.plugin"})
-@EnableMongoRepositories(value = "com.bq.oss.corbel.resources.repository", repositoryFactoryBeanClass = QueriesRepositoryFactoryBean.class)
-@EnableCaching @SuppressWarnings("unused") public class ResourcesIoc
+@ComponentScan({"com.bq.oss.corbel.resources.cli.dsl", "com.bqreaders.silkroad.resources.cli.dsl",
+        "com.bq.oss.corbel.resources.rem.plugin", "com.bqreaders.silkroad.resources.rem.plugin"}) @EnableMongoRepositories(
+        value = "com.bq.oss.corbel.resources.repository", repositoryFactoryBeanClass = QueriesRepositoryFactoryBean.class) @EnableCaching @SuppressWarnings("unused") public class ResourcesIoc
         extends
             DefaultMongoConfiguration {
 
     @Autowired private Environment env;
 
     @Autowired private RelationSchemaRepository relationSchemaRepository;
+
 
     // This bean fixed the problem with nginx sending the matrix param in a non encoded form.
     @Bean
@@ -74,10 +73,15 @@ import com.sun.jersey.spi.container.ContainerRequestFilter;
     }
 
     @Bean
-    public RemResource getRemResource(RemService remService, RemEntityTypeResolver remEntityTypeResolver, QueryParser queryParser,
-            AggregationParser aggregationParser, SortParser sortParser, EventBus eventBus) {
-        return new RemResource(remService, remEntityTypeResolver, getPageSizeDefault(), getMaxPageSizeDefault(), queryParser,
-                aggregationParser, sortParser, eventBus);
+    public RemResource getRemResource(ResourcesService resourcesService) {
+        return new RemResource(resourcesService);
+    }
+
+    @Bean
+    public ResourcesService getResourcesService(RemService remService, RemEntityTypeResolver remEntityTypeResolver,
+            QueryParametersBuilder queryParametersBuilder, EventBus eventBus) {
+        return new DefaultResourcesService(remService, remEntityTypeResolver, getPageSizeDefault(), getMaxPageSizeDefault(),
+                queryParametersBuilder, eventBus);
     }
 
     @Bean
@@ -107,6 +111,12 @@ import com.sun.jersey.spi.container.ContainerRequestFilter;
     }
 
     @Bean
+    public QueryParametersBuilder getQueryParametersBuilder(QueryParser queryParser, AggregationParser aggregationParser,
+            SortParser sortParser, PaginationParser paginationParser) {
+        return new QueryParametersBuilder(queryParser, aggregationParser, sortParser, paginationParser);
+    }
+
+    @Bean
     public AggregationParser getAggregationParser(CustomJsonParser customJsonParser) {
         return new JacksonAggregationParser(customJsonParser);
     }
@@ -117,8 +127,18 @@ import com.sun.jersey.spi.container.ContainerRequestFilter;
     }
 
     @Bean
+    public SortParser getSortParser(CustomJsonParser customJsonParser) {
+        return new JacksonSortParser(customJsonParser);
+    }
+
+    @Bean
     public CustomJsonParser getCustomJsonParser(ObjectMapper objectMapper) {
         return new CustomJsonParser(objectMapper.getFactory());
+    }
+
+    @Bean
+    public PaginationParser getPaginationParser() {
+        return new DefaultPaginationParser();
     }
 
     @Bean

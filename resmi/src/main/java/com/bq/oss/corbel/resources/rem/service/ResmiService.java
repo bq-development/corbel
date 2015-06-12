@@ -14,6 +14,7 @@ import com.bq.oss.corbel.resources.rem.request.RelationParameters;
 import com.bq.oss.corbel.resources.rem.request.ResourceId;
 import com.bq.oss.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
 import com.bq.oss.lib.queries.request.AggregationResult;
+import com.bq.oss.lib.queries.request.ResourceQuery;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -38,6 +39,9 @@ public interface ResmiService {
     JsonObject save(String type, JsonObject object, Optional<String> userId) throws StartsWithUnderscoreException;
 
     JsonObject upsert(String type, String id, JsonObject jsonObject) throws StartsWithUnderscoreException;
+
+    JsonObject conditionalUpdate(String type, String id, JsonObject object, List<ResourceQuery> resourceQueries)
+            throws StartsWithUnderscoreException;
 
     JsonObject createRelation(String type, String id, String relation, String uri, JsonObject requestEntity) throws NotFoundException,
             StartsWithUnderscoreException;

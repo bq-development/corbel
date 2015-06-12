@@ -9,6 +9,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import com.bq.oss.lib.queries.builder.QueryParametersBuilder;
+import com.bq.oss.lib.queries.parser.PaginationParser;
 import com.bq.oss.lib.queries.parser.SortParser;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -41,6 +43,7 @@ public class UserResourceDevicesTest extends UserResourceTestBase {
 
     private static final SortParser sortParserMock = mock(SortParser.class);
     private static final AggregationParser aggregationParserMock = mock(AggregationParser.class);
+    private static final PaginationParser paginationParserMock = mock(PaginationParser.class);
     private static final UserService userServiceMock = mock(UserService.class);
     private static final DomainService domainServiceMock = mock(DomainService.class);
     private static final IdentityService identityServiceMock = mock(IdentityService.class);
@@ -53,11 +56,14 @@ public class UserResourceDevicesTest extends UserResourceTestBase {
     private static final String TEST_DEVICE_ID = "TestDeviceID";
     private static final String TEST_DEVICE_UID = "TestDeviceUID";
 
-    @ClassRule public static ResourceTestRule RULE = ResourceTestRule.builder()
+    @ClassRule public static ResourceTestRule RULE = ResourceTestRule
+            .builder()
             .addResource(new UserResource(userServiceMock, domainServiceMock, identityServiceMock, devicesServiceMock, Clock.systemUTC()))
             .addProvider(authorizationInfoProviderSpy)
-            .addProvider(new QueryParametersProvider(DEFAULT_LIMIT, MAX_DEFAULT_LIMIT, queryParserMock, aggregationParserMock, sortParserMock))
-            .addProvider(GenericExceptionMapper.class).build();
+            .addProvider(
+                    new QueryParametersProvider(DEFAULT_LIMIT, MAX_DEFAULT_LIMIT, new QueryParametersBuilder(queryParserMock,
+                            aggregationParserMock, sortParserMock, paginationParserMock))).addProvider(GenericExceptionMapper.class)
+            .build();
 
     public UserResourceDevicesTest() throws Exception {
         when(authorizationInfoMock.getUserId()).thenReturn(TEST_USER_ID);

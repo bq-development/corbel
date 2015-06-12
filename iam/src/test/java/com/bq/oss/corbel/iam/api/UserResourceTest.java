@@ -1,25 +1,5 @@
 package com.bq.oss.corbel.iam.api;
 
-import static org.fest.assertions.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.*;
-
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.time.Clock;
-import java.util.*;
-
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
-import com.bq.oss.lib.queries.parser.SortParser;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
-
 import com.bq.oss.corbel.iam.exception.DuplicatedOauthServiceIdentityException;
 import com.bq.oss.corbel.iam.exception.IdentityAlreadyExistsException;
 import com.bq.oss.corbel.iam.exception.UserProfileConfigurationException;
@@ -31,12 +11,16 @@ import com.bq.oss.corbel.iam.service.DeviceService;
 import com.bq.oss.corbel.iam.service.DomainService;
 import com.bq.oss.corbel.iam.service.IdentityService;
 import com.bq.oss.corbel.iam.service.UserService;
+import com.bq.oss.lib.queries.builder.QueryParametersBuilder;
 import com.bq.oss.lib.queries.builder.ResourceQueryBuilder;
 import com.bq.oss.lib.queries.exception.MalformedJsonQueryException;
 import com.bq.oss.lib.queries.parser.AggregationParser;
+import com.bq.oss.lib.queries.parser.PaginationParser;
 import com.bq.oss.lib.queries.parser.QueryParser;
+import com.bq.oss.lib.queries.parser.SortParser;
 import com.bq.oss.lib.queries.request.*;
 import com.bq.oss.lib.ws.api.error.GenericExceptionMapper;
+import com.bq.oss.lib.ws.api.error.JsonValidationExceptionMapper;
 import com.bq.oss.lib.ws.auth.AuthorizationInfo;
 import com.bq.oss.lib.ws.auth.AuthorizationInfoProvider;
 import com.bq.oss.lib.ws.model.Error;
@@ -47,10 +31,26 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import io.dropwizard.testing.junit.ResourceTestRule;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
+
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.time.Clock;
+import java.util.*;
+
+import static org.fest.assertions.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.*;
 
 /**
  * @author Alexander De Leon
- * 
  */
 public class UserResourceTest extends UserResourceTestBase {
 
@@ -61,6 +61,7 @@ public class UserResourceTest extends UserResourceTestBase {
 
     private static final SortParser sortParserMock = mock(SortParser.class);
     private static final AggregationParser aggregationParserMock = mock(AggregationParser.class);
+    private static final PaginationParser paginationParserMock = mock(PaginationParser.class);
     private static final UserService userServiceMock = mock(UserService.class);
     private static final DomainService domainServiceMock = mock(DomainService.class);
     private static final IdentityService identityServiceMock = mock(IdentityService.class);
@@ -69,11 +70,16 @@ public class UserResourceTest extends UserResourceTestBase {
     private static final DeviceService devicesServiceMock = mock(DeviceService.class);
     private static final AuthorizationInfoProvider authorizationInfoProviderSpy = spy(new AuthorizationInfoProvider());
 
-    @ClassRule public static ResourceTestRule RULE = ResourceTestRule.builder()
+    @ClassRule
+    public static ResourceTestRule RULE = ResourceTestRule
+            .builder()
             .addResource(new UserResource(userServiceMock, domainServiceMock, identityServiceMock, devicesServiceMock, Clock.systemUTC()))
             .addProvider(authorizationInfoProviderSpy)
-            .addProvider(new QueryParametersProvider(DEFAULT_LIMIT, MAX_DEFAULT_LIMIT, queryParserMock, aggregationParserMock, sortParserMock))
-            .addProvider(GenericExceptionMapper.class).build();
+            .addProvider(
+                    new QueryParametersProvider(DEFAULT_LIMIT, MAX_DEFAULT_LIMIT, new QueryParametersBuilder(queryParserMock,
+                            aggregationParserMock, sortParserMock, paginationParserMock))).addProvider(GenericExceptionMapper.class)
+            .addProvider(JsonValidationExceptionMapper.class)
+            .build();
 
     public UserResourceTest() throws Exception {
         when(authorizationInfoMock.getClientId()).thenReturn(TEST_CLIENT_ID);
@@ -142,19 +148,19 @@ public class UserResourceTest extends UserResourceTestBase {
     }
 
     @Test
-    public void testMissingUsername() {
+    public void testCreateUserMissingUsername() {
         User user = createTestUser();
         user.setUsername(null);
         ClientResponse response = addUserClient().post(ClientResponse.class, user);
-        assertThat(response.getStatus()).isEqualTo(500);
+        assertThat(response.getStatus()).isEqualTo(422);
     }
 
     @Test
-    public void testMissingEmail() {
+    public void testCreateuserMissingEmail() {
         User user = createTestUser();
         user.setEmail(null);
         ClientResponse response = addUserClient().post(ClientResponse.class, user);
-        assertThat(response.getStatus()).isEqualTo(500);
+        assertThat(response.getStatus()).isEqualTo(422);
     }
 
     @Test
@@ -216,7 +222,8 @@ public class UserResourceTest extends UserResourceTestBase {
             public AggregationOperator getOperator() {
                 return null;
             }
-        };
+        }
+        ;
         Aggregation operation = new OtherAggregation();
         ResourceQuery resourceQuery = new ResourceQuery();
         when(queryParserMock.parse(queryString)).thenReturn(resourceQuery);
@@ -304,7 +311,7 @@ public class UserResourceTest extends UserResourceTestBase {
         when(domainServiceMock.scopesAllowedInDomain(TEST_SCOPES, TEST_DOMAIN)).thenReturn(true);
         when(userServiceMock.findById(TEST_USER_ID)).thenReturn(getTestUser());
 
-        String newEmail = "new_email@test";
+        String newEmail = "asdf@asdf.com";
         User user = new User();
         user.setEmail(newEmail);
 
@@ -315,6 +322,130 @@ public class UserResourceTest extends UserResourceTestBase {
         verify(userServiceMock).update(userCaptor.capture());
 
         assertThat(userCaptor.getValue().getEmail()).isEqualTo(newEmail);
+    }
+
+    @Test
+    public void testUpdateInvalidEmail() {
+        when(domainServiceMock.scopesAllowedInDomain(TEST_SCOPES, TEST_DOMAIN)).thenReturn(true);
+        when(userServiceMock.findById(TEST_USER_ID)).thenReturn(getTestUser());
+
+        String newEmail = "invalidEmail";
+        User user = new User();
+        user.setEmail(newEmail);
+
+        ClientResponse response = getUserClient(TEST_USER_ID).put(ClientResponse.class, user);
+        assertThat(response.getStatus()).isEqualTo(422);
+    }
+
+    @Test
+    public void testUpdateEmptyEmail() {
+        when(domainServiceMock.scopesAllowedInDomain(TEST_SCOPES, TEST_DOMAIN)).thenReturn(true);
+        when(userServiceMock.findById(TEST_USER_ID)).thenReturn(getTestUser());
+
+        User user = new User();
+        user.setEmail("");
+
+        ClientResponse response = getUserClient(TEST_USER_ID).put(ClientResponse.class, user);
+        assertThat(response.getStatus()).isEqualTo(422);
+    }
+
+    @Test
+    public void testUpdateUsername() {
+        when(domainServiceMock.scopesAllowedInDomain(TEST_SCOPES, TEST_DOMAIN)).thenReturn(true);
+        when(userServiceMock.findById(TEST_USER_ID)).thenReturn(getTestUser());
+
+        String newUsername = "newUsername";
+        User user = new User();
+        user.setUsername(newUsername);
+
+        ClientResponse response = getUserClient(TEST_USER_ID).put(ClientResponse.class, user);
+        assertThat(response.getStatus()).isEqualTo(204);
+
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userServiceMock).update(userCaptor.capture());
+
+        assertThat(userCaptor.getValue().getUsername()).isEqualTo(newUsername);
+    }
+
+    @Test
+    public void testUpdateEmptyUsername() {
+        when(domainServiceMock.scopesAllowedInDomain(TEST_SCOPES, TEST_DOMAIN)).thenReturn(true);
+        when(userServiceMock.findById(TEST_USER_ID)).thenReturn(getTestUser());
+
+        User user = new User();
+        user.setEmail("");
+
+        ClientResponse response = getUserClient(TEST_USER_ID).put(ClientResponse.class, user);
+        assertThat(response.getStatus()).isEqualTo(422);
+    }
+
+    /**
+     * Coming 'EmailAndUsername' tests are importants cause email & username have special validation process.
+     */
+    @Test
+    public void testUpdateEmailAndUsername() {
+        when(domainServiceMock.scopesAllowedInDomain(TEST_SCOPES, TEST_DOMAIN)).thenReturn(true);
+        when(userServiceMock.findById(TEST_USER_ID)).thenReturn(getTestUser());
+
+        String newEmail = "asdf@asdf.com";
+        String newUsername = "newUsername";
+        User user = new User();
+        user.setEmail(newEmail);
+        user.setUsername(newUsername);
+
+        ClientResponse response = getUserClient(TEST_USER_ID).put(ClientResponse.class, user);
+        assertThat(response.getStatus()).isEqualTo(204);
+
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userServiceMock).update(userCaptor.capture());
+
+        assertThat(userCaptor.getValue().getUsername()).isEqualTo(newUsername);
+        assertThat(userCaptor.getValue().getEmail()).isEqualTo(newEmail);
+    }
+
+    @Test
+    public void testUpdateEmailAndUsername2() {
+        when(domainServiceMock.scopesAllowedInDomain(TEST_SCOPES, TEST_DOMAIN)).thenReturn(true);
+        when(userServiceMock.findById(TEST_USER_ID)).thenReturn(getTestUser());
+
+        String newEmail = "";
+        String newUsername = "newUsername";
+        User user = new User();
+        user.setEmail(newEmail);
+        user.setUsername(newUsername);
+
+        ClientResponse response = getUserClient(TEST_USER_ID).put(ClientResponse.class, user);
+        assertThat(response.getStatus()).isEqualTo(422);
+    }
+
+    @Test
+    public void testUpdateEmailAndUsername3() {
+        when(domainServiceMock.scopesAllowedInDomain(TEST_SCOPES, TEST_DOMAIN)).thenReturn(true);
+        when(userServiceMock.findById(TEST_USER_ID)).thenReturn(getTestUser());
+
+        String newEmail = "asdf@asdf.com";
+        String newUsername = "";
+        User user = new User();
+        user.setEmail(newEmail);
+        user.setUsername(newUsername);
+
+        ClientResponse response = getUserClient(TEST_USER_ID).put(ClientResponse.class, user);
+        assertThat(response.getStatus()).isEqualTo(422);
+    }
+
+    @Test
+    public void testUpdateEmailAndUsername4() {
+        when(domainServiceMock.scopesAllowedInDomain(TEST_SCOPES, TEST_DOMAIN)).thenReturn(true);
+        when(userServiceMock.findById(TEST_USER_ID)).thenReturn(getTestUser());
+
+        String newEmail = "";
+        String newUsername = "";
+        User user = new User();
+        user.setEmail(newEmail);
+        user.setUsername(newUsername);
+
+        ClientResponse response = getUserClient(TEST_USER_ID).put(ClientResponse.class, user);
+        assertThat(response.getStatus()).isEqualTo(422);
     }
 
     @Test
@@ -714,7 +845,8 @@ public class UserResourceTest extends UserResourceTestBase {
                 .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(ClientResponse.class);
 
         assertThat(response.getStatus()).isEqualTo(200);
-        assertThat(response.getEntity(new GenericType<List<Identity>>() {})).isEqualTo(identities);
+        assertThat(response.getEntity(new GenericType<List<Identity>>() {
+        })).isEqualTo(identities);
     }
 
     @Test
@@ -741,7 +873,8 @@ public class UserResourceTest extends UserResourceTestBase {
                 .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(ClientResponse.class);
 
         assertThat(response.getStatus()).isEqualTo(200);
-        assertThat(response.getEntity(new GenericType<List<Identity>>() {})).isEqualTo(identities);
+        assertThat(response.getEntity(new GenericType<List<Identity>>() {
+        })).isEqualTo(identities);
     }
 
     @Test
@@ -815,7 +948,8 @@ public class UserResourceTest extends UserResourceTestBase {
             public AggregationOperator getOperator() {
                 return null;
             }
-        };
+        }
+        ;
         Aggregation operation = new OtherAggretation();
         ResourceQuery resourceQuery = new ResourceQuery();
         when(queryParserMock.parse(queryString)).thenReturn(resourceQuery);

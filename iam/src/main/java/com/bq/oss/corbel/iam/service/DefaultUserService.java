@@ -1,14 +1,5 @@
 package com.bq.oss.corbel.iam.service;
 
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-
-import org.apache.commons.beanutils.PropertyUtils;
-import org.springframework.dao.DataIntegrityViolationException;
-
 import com.bq.oss.corbel.iam.exception.UserProfileConfigurationException;
 import com.bq.oss.corbel.iam.model.Domain;
 import com.bq.oss.corbel.iam.model.User;
@@ -24,10 +15,17 @@ import com.bq.oss.lib.queries.request.Sort;
 import com.bq.oss.lib.ws.auth.repository.AuthorizationRulesRepository;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
+import org.apache.commons.beanutils.PropertyUtils;
+import org.springframework.dao.DataIntegrityViolationException;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 /**
  * @author Rubén Carrasco
- * 
  */
 public class DefaultUserService implements UserService {
 
@@ -41,8 +39,8 @@ public class DefaultUserService implements UserService {
     private final Gson gson;
 
     public DefaultUserService(UserRepository userRepository, EventsService eventsService, UserTokenRepository userTokenRepository,
-            AuthorizationRulesRepository authorizationRulesRepository, RefreshTokenService refreshTokenService,
-            MailResetPasswordService mailResetPasswordService, Gson gson) {
+                              AuthorizationRulesRepository authorizationRulesRepository, RefreshTokenService refreshTokenService,
+                              MailResetPasswordService mailResetPasswordService, Gson gson) {
 
         this.userRepository = userRepository;
         this.eventsService = eventsService;
@@ -89,7 +87,6 @@ public class DefaultUserService implements UserService {
                 throw new CreateUserException("username");
             }
         }
-
     }
 
     @Override

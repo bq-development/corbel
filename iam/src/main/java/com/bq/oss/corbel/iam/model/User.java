@@ -1,23 +1,26 @@
 package com.bq.oss.corbel.iam.model;
 
-import java.util.*;
-
+import com.bq.oss.lib.ws.digest.DigesterFactory;
+import com.bq.oss.lib.ws.model.ModelValidator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotEmpty;
 
-import com.bq.oss.lib.ws.digest.DigesterFactory;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.util.*;
 
 /**
  * A {@link User} is end user of the systems supported by Corbel
- * 
+ *
  * @author Alexander De Leon
- * 
  */
 public class User extends TraceableEntity implements HasScopes {
 
     private String domain;
-    @NotEmpty private String email;
-    @NotEmpty private String username;
+    @NotEmpty
+    @Email
+    protected String email;
+    @NotEmpty
+    protected String username;
     private String firstName;
     private String lastName;
     private String profileUrl;
@@ -176,7 +179,7 @@ public class User extends TraceableEntity implements HasScopes {
         return properties.remove(key) != null;
     }
 
-    public void updateFields(User updateUser) {
+    public void updateUser(User updateUser) {
         if (updateUser.getUsername() != null) {
             setUsername(updateUser.getUsername());
         }
@@ -214,6 +217,7 @@ public class User extends TraceableEntity implements HasScopes {
             this.password = updateUser.password;
             this.salt = updateUser.salt;
         }
+        ModelValidator.validateObject(this);
     }
 
     @Override

@@ -3,8 +3,9 @@ package com.bq.oss.corbel.resources.rem.resmi;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.*;
 
+import java.util.List;
 import java.util.Optional;
 
 import javax.ws.rs.core.Response;
@@ -13,8 +14,11 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.bq.oss.corbel.resources.rem.dao.NotFoundException;
+import com.bq.oss.corbel.resources.rem.request.RequestParameters;
 import com.bq.oss.corbel.resources.rem.request.ResourceId;
+import com.bq.oss.corbel.resources.rem.request.ResourceParameters;
 import com.bq.oss.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
+import com.bq.oss.lib.queries.request.ResourceQuery;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
@@ -33,16 +37,52 @@ public class ResmiPutRemTest extends ResmiRemTest {
         putRem = new ResmiPutRem(resmiServiceMock);
     }
 
+    private RequestParameters<ResourceParameters> getResourceParametersMockWithCondition(Optional<List<ResourceQuery>> conditions) {
+        ResourceParameters resourceParametersMock = mock(ResourceParameters.class);
+        RequestParameters<ResourceParameters> requestParametersMock = mock(RequestParameters.class);
+        when(requestParametersMock.getApiParameters()).thenReturn(resourceParametersMock);
+        when(resourceParametersMock.getConditions()).thenReturn(conditions);
+        return requestParametersMock;
+
+    }
+
     @Test
     public void updateResourceTest() {
         JsonObject json = new JsonObject();
         json.add("a", new JsonPrimitive("1"));
 
-        Response response = putRem.resource(TEST_TYPE, TEST_ID, null, Optional.of(json));
+        RequestParameters<ResourceParameters> requestParametersMock = getResourceParametersMockWithCondition(Optional.empty());
+        Response response = putRem.resource(TEST_TYPE, TEST_ID, requestParametersMock, Optional.of(json));
         assertThat(response.getStatus()).isEqualTo(204);
 
-        response = putRem.resource(TEST_TYPE, OTHER_ID, null, Optional.of(json));
+        response = putRem.resource(TEST_TYPE, OTHER_ID, requestParametersMock, Optional.of(json));
         assertThat(response.getStatus()).isEqualTo(204);
+    }
+
+    @Test
+    public void updateResourceTestWithCondition() throws StartsWithUnderscoreException {
+        JsonObject json = new JsonObject();
+        json.add("a", new JsonPrimitive("1"));
+        List<ResourceQuery> resourceQueryListMock = mock(List.class);
+        RequestParameters<ResourceParameters> requestParametersMock = getResourceParametersMockWithCondition(Optional
+                .of(resourceQueryListMock));
+
+        when(resmiServiceMock.conditionalUpdate(TEST_TYPE, TEST_ID.getId(), json, resourceQueryListMock)).thenReturn(json);
+        Response response = putRem.resource(TEST_TYPE, TEST_ID, requestParametersMock, Optional.of(json));
+        assertThat(response.getStatus()).isEqualTo(204);
+    }
+
+    @Test
+    public void updateResourceTestWithFailCondition() throws StartsWithUnderscoreException {
+        JsonObject json = new JsonObject();
+        json.add("a", new JsonPrimitive("1"));
+        List<ResourceQuery> resourceQueryListMock = mock(List.class);
+        RequestParameters<ResourceParameters> requestParametersMock = getResourceParametersMockWithCondition(Optional
+                .of(resourceQueryListMock));
+
+        when(resmiServiceMock.conditionalUpdate(TEST_TYPE, TEST_ID.getId(), json, resourceQueryListMock)).thenReturn(null);
+        Response response = putRem.resource(TEST_TYPE, TEST_ID, requestParametersMock, Optional.of(json));
+        assertThat(response.getStatus()).isEqualTo(412);
     }
 
     @Test
@@ -53,7 +93,9 @@ public class ResmiPutRemTest extends ResmiRemTest {
 
         doThrow(new StartsWithUnderscoreException("_b")).when(resmiServiceMock).upsert(any(), any(), eq(json));
 
-        Response response = putRem.resource(TEST_TYPE, TEST_ID, null, Optional.of(json));
+        RequestParameters<ResourceParameters> requestParametersMock = getResourceParametersMockWithCondition(Optional.empty());
+
+        Response response = putRem.resource(TEST_TYPE, TEST_ID, requestParametersMock, Optional.of(json));
         assertThat(response.getStatus()).isEqualTo(422);
     }
 
