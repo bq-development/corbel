@@ -22,7 +22,8 @@ public abstract class ResmiRemTest {
 
     protected static final String TEST_TYPE = "testType";
     protected static final String TEST_TYPE_RELATION = "testTypeRelation";
-    protected static final ResourceId TEST_ID = new ResourceId("testId");
+    protected static final String ID = "testId";
+    protected static final ResourceId TEST_ID = new ResourceId(ID);
     protected static final ResourceId TEST_WILDCARD_ID = new ResourceId("_");
     protected ResmiService resmiServiceMock;
 

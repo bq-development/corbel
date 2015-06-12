@@ -60,7 +60,7 @@ public class ElasticSearchResmiSearch implements ResmiSearch {
 
     @Override
     public void indexDocument(ResourceUri resourceUri, JsonObject fields) {
-        JsonPrimitive resourceId = resourceUri.isCollection() ? new JsonPrimitive(resourceUri.getTypeId()) : new JsonPrimitive(
+        JsonPrimitive resourceId = resourceUri.isResource() ? new JsonPrimitive(resourceUri.getTypeId()) : new JsonPrimitive(
                 resourceUri.getRelationId());
         fields.add("id", resourceId);
         UpdateRequest updateRequest = new UpdateRequest(INDEX, getElasticSearchType(resourceUri), getElasticSearchId(resourceUri))

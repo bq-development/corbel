@@ -1,5 +1,6 @@
 package com.bq.oss.corbel.resources.rem.service;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,40 +28,41 @@ public interface ResmiService {
     String ID = "id";
     String _ID = "_id";
 
-    JsonArray find(String type, CollectionParameters apiParameters) throws BadConfigurationException;
+    JsonArray findCollection(ResourceUri uri, CollectionParameters apiParameters) throws BadConfigurationException;
 
-    JsonObject findResourceById(String type, ResourceId id);
+    JsonObject findResource(ResourceUri uri);
 
-    JsonElement findRelation(String type, ResourceId id, String relation, RelationParameters apiParameters)
+    JsonElement findRelation(ResourceUri uri, RelationParameters apiParameters)
             throws BadConfigurationException;
 
-    AggregationResult aggregate(ResourceUri resourceUri, CollectionParameters apiParameters);
+    AggregationResult aggregate(ResourceUri uri, CollectionParameters apiParameters);
 
-    JsonObject save(String type, JsonObject object, Optional<String> userId) throws StartsWithUnderscoreException;
+    JsonObject saveResource(ResourceUri uri, JsonObject object, Optional<String> userId) throws StartsWithUnderscoreException;
 
-    JsonObject upsert(String type, String id, JsonObject jsonObject) throws StartsWithUnderscoreException;
+    JsonObject updateResource(ResourceUri uri, JsonObject jsonObject) throws StartsWithUnderscoreException;
 
-    JsonObject conditionalUpdate(String type, String id, JsonObject object, List<ResourceQuery> resourceQueries)
+    JsonObject conditionalUpdateResource(ResourceUri uri, JsonObject object, List<ResourceQuery> resourceQueries)
             throws StartsWithUnderscoreException;
 
-    JsonObject createRelation(String type, String id, String relation, String uri, JsonObject requestEntity) throws NotFoundException,
+    JsonObject createRelation(ResourceUri uri, JsonObject requestEntity) throws NotFoundException,
             StartsWithUnderscoreException;
 
-    void moveElement(String type, ResourceId id, String relation, String uri, RelationMoveOperation relationMoveOperation);
+    void moveRelation(ResourceUri uri, RelationMoveOperation relationMoveOperation);
 
-    void deleteResourceById(String type, String id);
+    void deleteCollection(ResourceUri uri, Optional<List<ResourceQuery>> queries);
 
-    void deleteRelation(String type, ResourceId id, String relation, Optional<String> dstId);
+    void deleteResource(ResourceUri uri);
+
+    void deleteRelation(ResourceUri uri);
 
     List<SearchableFields> getSearchableFields();
 
     void addSearchableFields(SearchableFields searchableFields);
 
-    void ensureExpireIndex(String type);
+    void ensureExpireIndex(ResourceUri uri);
 
-    void ensureCollectionIndex(String type, Index index);
-
-    void ensureRelationIndex(String type, String relation, Index index);
+    void ensureIndex(ResourceUri uri, Index index);
 
     void removeObjectId(JsonObject object);
+
 }

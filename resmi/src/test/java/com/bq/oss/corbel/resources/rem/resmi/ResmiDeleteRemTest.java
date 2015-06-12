@@ -2,12 +2,19 @@ package com.bq.oss.corbel.resources.rem.resmi;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.Optional;
 
 import javax.ws.rs.core.Response;
 
+import com.bq.oss.corbel.resources.rem.model.ResourceUri;
+import com.bq.oss.corbel.resources.rem.request.CollectionParameters;
+import com.bq.oss.corbel.resources.rem.request.RequestParameters;
+import com.bq.oss.lib.queries.request.ResourceQuery;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -57,9 +64,10 @@ public class ResmiDeleteRemTest extends ResmiRemTest {
 
     @Test
     public void testMethodDeleteRelationFromSrcID() {
+        ResourceUri uri = new ResourceUri(TEST_TYPE, TEST_ID.getId(), TEST_RELATION);
         Response response = deleteRem.relation(TEST_TYPE, TEST_ID, TEST_RELATION, getParametersWithEmptyUri(), Optional.empty());
         assertThat(response.getStatus()).isEqualTo(204);
-        verify(resmiServiceMock).deleteRelation(eq(TEST_TYPE), eq(TEST_ID), eq(TEST_RELATION), eq(Optional.empty()));
+        verify(resmiServiceMock).deleteRelation(eq(uri));
     }
 
     @Test
@@ -71,9 +79,19 @@ public class ResmiDeleteRemTest extends ResmiRemTest {
     }
 
     @Test
-    public void testDeleteCollectionNotAllowed() {
-        Response response = deleteRem.collection(TEST_TYPE, null, null, Optional.empty());
-        assertThat(response.getStatus()).isEqualTo(405);
+    public void testDeleteCollectionQuery() {
+        ResourceUri uri = new ResourceUri(TEST_TYPE);
+
+        Optional<List<ResourceQuery>> optionalQueries = Optional.of(mock(List.class));
+        RequestParameters<CollectionParameters> parameters = getParametersWithEmptyUri();
+        CollectionParameters collectionParameters = mock(CollectionParameters.class);
+
+        when(collectionParameters.getQueries()).thenReturn(optionalQueries);
+        when(parameters.getApiParameters()).thenReturn(collectionParameters);
+
+        Response response = deleteRem.collection(TEST_TYPE, parameters, null, Optional.empty());
+        assertThat(response.getStatus()).isEqualTo(204);
+        verify(resmiServiceMock).deleteCollection(eq(uri), eq(optionalQueries));
     }
 
 }

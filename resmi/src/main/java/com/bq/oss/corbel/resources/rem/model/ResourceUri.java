@@ -6,6 +6,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
  * @author Francisco Sanchez
  */
 public class ResourceUri {
+
+    public static final String WILDCARD_RESOURCE_ID = "_";
+
     private String type;
     private String typeId;
     private String relation;
@@ -36,32 +39,36 @@ public class ResourceUri {
         return type;
     }
 
-    public void setType(String type) {
+    public ResourceUri setType(String type) {
         this.type = type;
+        return this;
     }
 
     public String getTypeId() {
         return typeId;
     }
 
-    public void setTypeId(String typeId) {
+    public ResourceUri setTypeId(String typeId) {
         this.typeId = typeId;
+        return this;
     }
 
     public String getRelation() {
         return relation;
     }
 
-    public void setRelation(String relation) {
+    public ResourceUri setRelation(String relation) {
         this.relation = relation;
+        return this;
     }
 
     public String getRelationId() {
         return relationId;
     }
 
-    public void setRelationId(String relationId) {
+    public ResourceUri setRelationId(String relationId) {
         this.relationId = relationId;
+        return this;
     }
 
     @Override
@@ -85,6 +92,14 @@ public class ResourceUri {
         return true;
     }
 
+    public boolean isTypeWildcard() {
+        return WILDCARD_RESOURCE_ID.equals(typeId);
+    }
+
+    public boolean isRelationWildcard() {
+        return WILDCARD_RESOURCE_ID.equals(relationId);
+    }
+
     @Override
     public int hashCode() {
         int result = type != null ? type.hashCode() : 0;
@@ -96,11 +111,17 @@ public class ResourceUri {
 
     @JsonIgnore
     public boolean isCollection() {
-        return type != null && relation == null;
+        return type != null && typeId == null && relation == null;
+    }
+
+    @JsonIgnore
+    public boolean isResource() {
+        return type != null && typeId != null && relation == null;
     }
 
     @JsonIgnore
     public boolean isRelation() {
         return type != null && relation != null;
     }
+
 }

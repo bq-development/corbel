@@ -81,16 +81,19 @@ import com.google.gson.JsonPrimitive;
 
     @Test
     public void findTest() throws BadConfigurationException {
+        ResourceUri resourceUri = new ResourceUri(TYPE);
         JsonArray fakeResult = new JsonArray();
-        when(resmiDao.find(eq("resource:TYPE"), eq(Optional.of(resourceQueriesMock)), eq(paginationMock), eq(Optional.of(sortMock))))
+        when(resmiDao.findCollection(eq(resourceUri), eq(Optional.of(resourceQueriesMock)), eq(paginationMock), eq(Optional.of(sortMock))))
                 .thenReturn(fakeResult);
         when(collectionParametersMock.getSearch()).thenReturn(Optional.empty());
-        JsonArray result = defaultResmiService.find("resource:TYPE", collectionParametersMock);
+        JsonArray result = defaultResmiService.findCollection(resourceUri, collectionParametersMock);
         assertThat(fakeResult).isEqualTo(result);
     }
 
     @Test
     public void findWithSearchTest() throws BadConfigurationException {
+        ResourceUri resourceUri = new ResourceUri(TYPE);
+
         JsonArray fakeResult = new JsonArray();
         String search = "my+search";
         when(paginationMock.getPage()).thenReturn(PAGE);
@@ -98,17 +101,20 @@ import com.google.gson.JsonPrimitive;
         when(resourceSearchMock.getSearch()).thenReturn(search);
         when(searchableFieldRegistry.getFieldsFromResourceUri(eq(RESOURCE_URI))).thenReturn(new HashSet(Arrays.asList("t1", "t2")));
         when(resmiSearch.search(eq(RESOURCE_URI), eq(search), eq(PAGE), eq(SIZE))).thenReturn(fakeResult);
-        JsonArray result = defaultResmiService.find(TYPE, collectionParametersMock);
+
+        JsonArray result = defaultResmiService.findCollection(resourceUri, collectionParametersMock);
         assertThat(fakeResult).isEqualTo(result);
     }
 
     @Test
     public void findResourceByIdTest() throws BadConfigurationException {
-        ResourceId resourceId = new ResourceId(ID);
+        ResourceUri resourceUri = new ResourceUri(TYPE, ID);
+
         JsonObject fakeResult = new JsonObject();
-        when(resmiDao.findById(eq(TYPE), eq(ID))).thenReturn(fakeResult);
+        when(resmiDao.findResource(eq(resourceUri))).thenReturn(fakeResult);
         when(collectionParametersMock.getSearch()).thenReturn(Optional.empty());
-        JsonObject result = defaultResmiService.findResourceById(TYPE, resourceId);
+
+        JsonObject result = defaultResmiService.findResource(resourceUri);
         assertThat(fakeResult).isEqualTo(result);
     }
 
@@ -116,12 +122,14 @@ import com.google.gson.JsonPrimitive;
     public void findRelationTest() throws BadConfigurationException {
         ResourceId resourceId = new ResourceId(ID);
         JsonElement fakeResult = new JsonObject();
-        when(
-                resmiDao.findRelation(eq(TYPE), eq(resourceId), eq(RELATION_TYPE), eq(Optional.of(resourceQueriesMock)),
-                        eq(paginationMock), eq(Optional.of(sortMock)), eq(Optional.of("test")))).thenReturn(fakeResult);
+        ResourceUri resourceUri = new ResourceUri(TYPE, ID, RELATION_TYPE, "test");
+
+        when(resmiDao.findRelation(eq(resourceUri), eq(Optional.of(resourceQueriesMock)),
+                        eq(paginationMock), eq(Optional.of(sortMock)))).thenReturn(fakeResult);
         when(collectionParametersMock.getSearch()).thenReturn(Optional.empty());
         when(relationParametersMock.getPredicateResource()).thenReturn(Optional.of("test"));
-        JsonElement result = defaultResmiService.findRelation(TYPE, resourceId, RELATION_TYPE, relationParametersMock);
+
+        JsonElement result = defaultResmiService.findRelation(resourceUri, relationParametersMock);
         assertThat(fakeResult).isEqualTo(result);
     }
 
@@ -148,71 +156,79 @@ import com.google.gson.JsonPrimitive;
 
     @Test
     public void saveResourceTest() throws StartsWithUnderscoreException {
+        ResourceUri uri = new ResourceUri(TYPE);
         JsonObject fakeResult = new JsonObject();
-        defaultResmiService.save(TYPE, fakeResult, Optional.of(USER_ID));
+        defaultResmiService.saveResource(uri, fakeResult, Optional.of(USER_ID));
         assertThat(fakeResult.get(DefaultResmiService.ID).getAsString()).startsWith(USER_ID);
         assertThat(fakeResult.get(_CREATED_AT)).isNotNull();
         assertThat(fakeResult.get(_UPDATED_AT)).isNotNull();
-        verify(resmiDao).save(TYPE, fakeResult);
+        verify(resmiDao).saveResource(uri, fakeResult);
     }
 
     @Test
     public void saveResourceWithCreatedAtTest() throws StartsWithUnderscoreException, ParseException {
+        ResourceUri uri = new ResourceUri(TYPE);
         JsonObject fakeResult = new JsonObject();
         fakeResult.addProperty(_CREATED_AT, DATE);
         fakeResult.addProperty(_UPDATED_AT, DATE);
-        defaultResmiService.save(TYPE, fakeResult, Optional.of(USER_ID));
+        defaultResmiService.saveResource(uri, fakeResult, Optional.of(USER_ID));
         assertThat(fakeResult.get(DefaultResmiService.ID).getAsString()).startsWith(USER_ID);
         assertThat(extractMillis(fakeResult.get(_CREATED_AT).getAsString())).isEqualTo(DATE);
         assertThat(extractMillis(fakeResult.get(_UPDATED_AT).getAsString())).isNotEqualTo(DATE);
-        verify(resmiDao).save(TYPE, fakeResult);
+        verify(resmiDao).saveResource(uri, fakeResult);
     }
 
     @Test(expected = StartsWithUnderscoreException.class)
     public void saveResourceWithUnderscoreTest() throws StartsWithUnderscoreException {
+        ResourceUri uri = new ResourceUri(TYPE);
         JsonObject fakeResult = new JsonObject();
         fakeResult.add("_test", new JsonPrimitive("123"));
-        defaultResmiService.save(TYPE, fakeResult, Optional.of(USER_ID));
+        defaultResmiService.saveResource(uri, fakeResult, Optional.of(USER_ID));
     }
 
     @Test
     public void upsertTest() throws StartsWithUnderscoreException {
         String id = "123";
+        ResourceUri resourceUri = new ResourceUri(TYPE, id);
         JsonObject fakeResult = new JsonObject();
-        defaultResmiService.upsert(TYPE, id, fakeResult);
+        defaultResmiService.updateResource(resourceUri, fakeResult);
         assertThat(fakeResult.get(_CREATED_AT)).isNotNull();
         assertThat(fakeResult.get(_UPDATED_AT)).isNotNull();
-        verify(resmiDao).upsert(TYPE, id, fakeResult);
+        verify(resmiDao).updateResource(resourceUri, fakeResult);
     }
 
     @Test
     public void upsertWithDatesTest() throws StartsWithUnderscoreException, ParseException {
         String id = "123";
+        ResourceUri resourceUri = new ResourceUri(TYPE, id);
         JsonObject fakeResult = new JsonObject();
         fakeResult.addProperty(_CREATED_AT, DATE);
         fakeResult.addProperty(_UPDATED_AT, DATE);
-        defaultResmiService.upsert(TYPE, id, fakeResult);
+        defaultResmiService.updateResource(resourceUri, fakeResult);
         assertThat(extractMillis(fakeResult.get(_CREATED_AT).getAsString())).isEqualTo(DATE);
         assertThat(extractMillis(fakeResult.get(_UPDATED_AT).getAsString())).isNotEqualTo(DATE);
-        verify(resmiDao).upsert(TYPE, id, fakeResult);
+        verify(resmiDao).updateResource(resourceUri, fakeResult);
     }
 
     @Test(expected = StartsWithUnderscoreException.class)
     public void upsertWithUnderscoreTest() throws StartsWithUnderscoreException {
         String id = "123";
+        ResourceUri resourceUri = new ResourceUri(TYPE, id);
+
         JsonObject fakeResult = new JsonObject();
         fakeResult.add("_test", new JsonPrimitive("123"));
-        defaultResmiService.upsert(TYPE, id, fakeResult);
+        defaultResmiService.updateResource(resourceUri, fakeResult);
     }
 
     @Test
     public void createRelationTest() throws NotFoundException, StartsWithUnderscoreException {
         String resourceId = "test";
         JsonObject jsonObject = new JsonObject();
-        defaultResmiService.createRelation(TYPE, resourceId, RELATION_TYPE, RELATION_URI, jsonObject);
+        ResourceUri resourceUri = new ResourceUri(TYPE, resourceId, RELATION_TYPE, RELATION_URI);
+        defaultResmiService.createRelation(resourceUri, jsonObject);
         assertThat(jsonObject.get(_CREATED_AT)).isNotNull();
         assertThat(jsonObject.get(_UPDATED_AT)).isNotNull();
-        verify(resmiDao).createRelation(TYPE, resourceId, RELATION_TYPE, RELATION_URI, jsonObject);
+        verify(resmiDao).createRelation(resourceUri, jsonObject);
     }
 
     @Test
@@ -221,10 +237,11 @@ import com.google.gson.JsonPrimitive;
         JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty(_CREATED_AT, DATE);
         jsonObject.addProperty(_UPDATED_AT, DATE);
-        defaultResmiService.createRelation(TYPE, resourceId, RELATION_TYPE, RELATION_URI, jsonObject);
+        ResourceUri resourceUri = new ResourceUri(TYPE, resourceId, RELATION_TYPE, RELATION_URI);
+        defaultResmiService.createRelation(resourceUri, jsonObject);
         assertThat(extractMillis(jsonObject.get(_CREATED_AT).getAsString())).isEqualTo(DATE);
         assertThat(extractMillis(jsonObject.get(_UPDATED_AT).getAsString())).isNotEqualTo(DATE);
-        verify(resmiDao).createRelation(TYPE, resourceId, RELATION_TYPE, RELATION_URI, jsonObject);
+        verify(resmiDao).createRelation(resourceUri, jsonObject);
     }
 
     private long extractMillis(String date) throws ParseException {
@@ -237,39 +254,44 @@ import com.google.gson.JsonPrimitive;
         String resourceId = "test";
         JsonObject jsonObject = new JsonObject();
         jsonObject.add("_test", new JsonPrimitive("123"));
-        defaultResmiService.createRelation(TYPE, resourceId, RELATION_TYPE, RELATION_URI, jsonObject);
+        ResourceUri resourceUri = new ResourceUri(TYPE, resourceId, RELATION_TYPE, RELATION_URI);
+        defaultResmiService.createRelation(resourceUri, jsonObject);
     }
 
     @Test
     public void moveElementTest() throws NotFoundException {
-        ResourceId resourceId = new ResourceId(ID);
+        ResourceUri resourceUri = new ResourceUri(TYPE, ID, RELATION_TYPE, RELATION_URI);
+
         RelationMoveOperation relationMoveOperation = new RelationMoveOperation(1);
 
-        defaultResmiService.moveElement(TYPE, resourceId, RELATION_TYPE, RELATION_URI, relationMoveOperation);
-        verify(resmiDao).moveElement(TYPE, ID, RELATION_TYPE, RELATION_URI, relationMoveOperation);
+        defaultResmiService.moveRelation(resourceUri, relationMoveOperation);
+        verify(resmiDao).moveRelation(resourceUri, relationMoveOperation);
     }
 
     @Test
     public void deleteResourceByIdTest() throws NotFoundException {
-        defaultResmiService.deleteResourceById(TYPE, ID);
-        verify(resmiDao).deleteById(TYPE, ID);
+        ResourceUri uri = new ResourceUri(TYPE, ID);
+        defaultResmiService.deleteResource(uri);
+        verify(resmiDao).deleteResource(uri);
         verify(resmiSearch, times(0)).deleteDocument(any());
     }
 
     @Test
     public void deleteIndexedResourceByIdTest() throws NotFoundException {
+        ResourceUri uri = new ResourceUri(TYPE, ID);
         when(searchableFieldRegistry.getFieldsFromType(eq(TYPE))).thenReturn(new HashSet(Arrays.asList("t1", "t2")));
-        defaultResmiService.deleteResourceById(TYPE, ID);
-        verify(resmiDao).deleteById(TYPE, ID);
-        verify(resmiSearch).deleteDocument(eq(new ResourceUri(TYPE, ID)));
+        defaultResmiService.deleteResource(uri);
+        verify(resmiDao).deleteResource(uri);
+        verify(resmiSearch).deleteDocument(uri);
     }
 
     @Test
     public void deleteRelationTest() throws NotFoundException {
+        ResourceUri uri = new ResourceUri(TYPE, ID,RELATION_TYPE, "dst");
         ResourceId resourceId = new ResourceId(ID);
         Optional<String> dstId = Optional.of("dst");
-        defaultResmiService.deleteRelation(TYPE, resourceId, RELATION_TYPE, dstId);
-        verify(resmiDao).deleteRelation(TYPE, resourceId, RELATION_TYPE, dstId);
+        defaultResmiService.deleteRelation(uri);
+        verify(resmiDao).deleteRelation(uri);
     }
 
     @Test
@@ -280,23 +302,26 @@ import com.google.gson.JsonPrimitive;
 
     @Test
     public void addSearchableFieldsTest() {
+        ResourceUri uri = new ResourceUri(DefaultResmiService.SEARCHABLE_FIELDS);
         SearchableFields searchableFields = new SearchableFields(TYPE, new HashSet(Arrays.asList("t1", "t2")));
         defaultResmiService.addSearchableFields(searchableFields);
-        verify(resmiDao).save(DefaultResmiService.SEARCHABLE_FIELDS, searchableFields);
+        verify(resmiDao).saveResource(uri, searchableFields);
     }
 
     @Test
     public void ensureCollectionIndexTest() throws NotFoundException {
         Index index = mock(Index.class);
-        defaultResmiService.ensureCollectionIndex(TYPE, index);
-        verify(resmiDao).ensureCollectionIndex(TYPE, index);
+        ResourceUri resourceUri = new ResourceUri(TYPE);
+        defaultResmiService.ensureIndex(resourceUri, index);
+        verify(resmiDao).ensureIndex(resourceUri, index);
     }
 
     @Test
     public void ensureRelationIndexTest() throws NotFoundException {
         Index index = mock(Index.class);
-        defaultResmiService.ensureRelationIndex(TYPE, RELATION_TYPE, index);
-        verify(resmiDao).ensureRelationIndex(TYPE, RELATION_TYPE, index);
+        ResourceUri resourceUri = new ResourceUri(TYPE).setRelation(RELATION_TYPE);
+        defaultResmiService.ensureIndex(resourceUri, index);
+        verify(resmiDao).ensureIndex(resourceUri, index);
     }
 
     @Test

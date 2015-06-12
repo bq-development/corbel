@@ -11,6 +11,7 @@ import javax.ws.rs.core.Response;
 import com.bq.oss.corbel.resources.rem.dao.JsonRelation;
 import com.bq.oss.corbel.resources.rem.dao.NotFoundException;
 import com.bq.oss.corbel.resources.rem.dao.RelationMoveOperation;
+import com.bq.oss.corbel.resources.rem.model.ResourceUri;
 import com.bq.oss.corbel.resources.rem.request.*;
 import com.bq.oss.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
 import com.bq.oss.corbel.resources.rem.service.ResmiService;
@@ -36,6 +37,7 @@ public class ResmiPutRem extends AbstractResmiRem {
 
     @Override
     public Response resource(String type, ResourceId id, RequestParameters<ResourceParameters> parameters, Optional<JsonObject> entity) {
+        ResourceUri resourceUri = buildResourceUri(type, id.getId());
         return entity.map(object -> {
             try {
                 Optional<List<ResourceQuery>> conditions = Optional.ofNullable(parameters)
@@ -43,12 +45,12 @@ public class ResmiPutRem extends AbstractResmiRem {
                         .map(ResourceParameters::getConditions)
                         .orElse(Optional.empty());
                 if (conditions.isPresent()) {
-                    JsonObject result = resmiService.conditionalUpdate(type, id.getId(), object, conditions.get());
+                    JsonObject result = resmiService.conditionalUpdateResource(resourceUri, object, conditions.get());
                     if (result == null) {
                                 return ErrorResponseFactory.getInstance().preconditionFailed("Condition not satisfied.");
                     }
                 } else {
-                    resmiService.upsert(type, id.getId(), object);
+                    resmiService.updateResource(resourceUri, object);
                 }
             } catch (StartsWithUnderscoreException e) {
                 return ErrorResponseFactory.getInstance().invalidEntity("Invalid attribute name \"" + e.getMessage() + "\"");
@@ -61,6 +63,7 @@ public class ResmiPutRem extends AbstractResmiRem {
     @Override
     public Response relation(String type, ResourceId id, String relation, RequestParameters<RelationParameters> parameters,
             Optional<JsonObject> entity) {
+        ResourceUri resourceUri = buildRelationUri(type, id.getId(), relation, parameters.getApiParameters());
 
         if (id.isWildcard()) {
             ErrorResponseFactory.getInstance().methodNotAllowed();
@@ -74,10 +77,10 @@ public class ResmiPutRem extends AbstractResmiRem {
                     JsonObject requestEntity = entity.orElse(null);
                     if (requestEntity != null && requestEntity.has("_order")) {
                         String operation = requestEntity.get("_order").getAsString();
-                        resmiService.moveElement(type, id, relation, uri, RelationMoveOperation.create(operation));
+                        resmiService.moveRelation(resourceUri, RelationMoveOperation.create(operation));
                         return noContent();
                     } else {
-                        resmiService.createRelation(type, id.getId(), relation, uri, requestEntity);
+                        resmiService.createRelation(resourceUri, requestEntity);
                         return created();
                     }
                 }

@@ -25,11 +25,12 @@ public class ResmiGetRem extends AbstractResmiRem {
 
     @Override
     public Response collection(String type, RequestParameters<CollectionParameters> parameters, URI uri, Optional<JsonObject> entity) {
+        ResourceUri resourceUri = buildCollectionUri(type);
         try {
             if (parameters.getApiParameters().getAggregation().isPresent()) {
-                return buildResponse(resmiService.aggregate(new ResourceUri(type), parameters.getApiParameters()));
+                return buildResponse(resmiService.aggregate(resourceUri, parameters.getApiParameters()));
             } else {
-                return buildResponse(resmiService.find(type, parameters.getApiParameters()));
+                return buildResponse(resmiService.findCollection(resourceUri, parameters.getApiParameters()));
             }
 
         } catch (BadConfigurationException bce) {
@@ -41,17 +42,19 @@ public class ResmiGetRem extends AbstractResmiRem {
 
     @Override
     public Response resource(String type, ResourceId id, RequestParameters<ResourceParameters> parameters, Optional<JsonObject> entity) {
-        return buildResponse(resmiService.findResourceById(type, id));
+        ResourceUri resourceUri = buildResourceUri(type, id.getId());
+        return buildResponse(resmiService.findResource(resourceUri));
     }
 
     @Override
     public Response relation(String type, ResourceId id, String relation, RequestParameters<RelationParameters> parameters,
             Optional<JsonObject> entity) {
+        ResourceUri resourceUri = buildRelationUri(type, id.getId(), relation, parameters.getApiParameters());
         try {
             if (parameters.getApiParameters().getAggregation().isPresent()) {
-                return buildResponse(resmiService.aggregate(new ResourceUri(type, id.getId(), relation), parameters.getApiParameters()));
+                return buildResponse(resmiService.aggregate(resourceUri, parameters.getApiParameters()));
             } else {
-                return buildResponse(resmiService.findRelation(type, id, relation, parameters.getApiParameters()));
+                return buildResponse(resmiService.findRelation(resourceUri, parameters.getApiParameters()));
             }
         } catch (Exception e) {
             return ErrorResponseFactory.getInstance().badRequest();

@@ -10,6 +10,7 @@ import java.util.Optional;
 
 import javax.ws.rs.core.Response;
 
+import com.bq.oss.corbel.resources.rem.model.ResourceUri;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -61,26 +62,29 @@ public class ResmiPutRemTest extends ResmiRemTest {
 
     @Test
     public void updateResourceTestWithCondition() throws StartsWithUnderscoreException {
+        ResourceUri resourceUri = new ResourceUri(TEST_TYPE, ID);
+
         JsonObject json = new JsonObject();
         json.add("a", new JsonPrimitive("1"));
         List<ResourceQuery> resourceQueryListMock = mock(List.class);
         RequestParameters<ResourceParameters> requestParametersMock = getResourceParametersMockWithCondition(Optional
                 .of(resourceQueryListMock));
 
-        when(resmiServiceMock.conditionalUpdate(TEST_TYPE, TEST_ID.getId(), json, resourceQueryListMock)).thenReturn(json);
+        when(resmiServiceMock.conditionalUpdateResource(resourceUri, json, resourceQueryListMock)).thenReturn(json);
         Response response = putRem.resource(TEST_TYPE, TEST_ID, requestParametersMock, Optional.of(json));
         assertThat(response.getStatus()).isEqualTo(204);
     }
 
     @Test
     public void updateResourceTestWithFailCondition() throws StartsWithUnderscoreException {
+        ResourceUri resourceUri = new ResourceUri(TEST_TYPE, ID);
         JsonObject json = new JsonObject();
         json.add("a", new JsonPrimitive("1"));
         List<ResourceQuery> resourceQueryListMock = mock(List.class);
         RequestParameters<ResourceParameters> requestParametersMock = getResourceParametersMockWithCondition(Optional
                 .of(resourceQueryListMock));
 
-        when(resmiServiceMock.conditionalUpdate(TEST_TYPE, TEST_ID.getId(), json, resourceQueryListMock)).thenReturn(null);
+        when(resmiServiceMock.conditionalUpdateResource(resourceUri, json, resourceQueryListMock)).thenReturn(null);
         Response response = putRem.resource(TEST_TYPE, TEST_ID, requestParametersMock, Optional.of(json));
         assertThat(response.getStatus()).isEqualTo(412);
     }
@@ -91,7 +95,7 @@ public class ResmiPutRemTest extends ResmiRemTest {
         json.add("a", new JsonPrimitive("1"));
         json.add("_b", new JsonPrimitive("2"));
 
-        doThrow(new StartsWithUnderscoreException("_b")).when(resmiServiceMock).upsert(any(), any(), eq(json));
+        doThrow(new StartsWithUnderscoreException("_b")).when(resmiServiceMock).updateResource(any(), eq(json));
 
         RequestParameters<ResourceParameters> requestParametersMock = getResourceParametersMockWithCondition(Optional.empty());
 
@@ -122,7 +126,7 @@ public class ResmiPutRemTest extends ResmiRemTest {
         JsonObject json = new JsonObject();
         json.add("_b", new JsonPrimitive("2"));
 
-        doThrow(new StartsWithUnderscoreException("_b")).when(resmiServiceMock).createRelation(any(), any(), any(), any(), eq(json));
+        doThrow(new StartsWithUnderscoreException("_b")).when(resmiServiceMock).createRelation(any(), eq(json));
 
         Response response = putRem.relation(TEST_TYPE, TEST_ID, TEST_RELATION, getParameters(TEST_URI), Optional.ofNullable(json));
         assertThat(response.getStatus()).isEqualTo(422);

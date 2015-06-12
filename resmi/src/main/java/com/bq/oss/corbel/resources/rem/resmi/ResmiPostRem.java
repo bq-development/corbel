@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import javax.ws.rs.core.Response;
 
+import com.bq.oss.corbel.resources.rem.model.ResourceUri;
 import com.bq.oss.corbel.resources.rem.request.*;
 import com.bq.oss.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
 import com.bq.oss.corbel.resources.rem.service.ResmiService;
@@ -25,12 +26,12 @@ public class ResmiPostRem extends AbstractResmiRem {
 
     @Override
     public Response collection(String type, RequestParameters<CollectionParameters> parameters, URI uri, Optional<JsonObject> entity) {
-
+        ResourceUri resourceUri = buildCollectionUri(type);
         return entity.map(object -> {
             resmiService.removeObjectId(object);
             JsonObject savedObject;
             try {
-                savedObject = resmiService.save(type, object, getUserIdFromToken(parameters));
+                savedObject = resmiService.saveResource(resourceUri, object, getUserIdFromToken(parameters));
             } catch (StartsWithUnderscoreException e) {
                 return ErrorResponseFactory.getInstance().invalidEntity("Invalid attribute name \"" + e.getMessage() + "\"");
             }

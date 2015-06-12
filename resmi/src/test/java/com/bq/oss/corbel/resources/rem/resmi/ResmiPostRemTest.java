@@ -11,6 +11,7 @@ import java.util.Optional;
 
 import javax.ws.rs.core.Response;
 
+import com.bq.oss.corbel.resources.rem.model.ResourceUri;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -37,13 +38,15 @@ public class ResmiPostRemTest extends ResmiRemTest {
 
     @Test
     public void testPostCollectionWithUserToken() throws URISyntaxException, StartsWithUnderscoreException {
+        ResourceUri uri = new ResourceUri(TEST_TYPE);
+
         RequestParameters<CollectionParameters> requestParameters = mock(RequestParameters.class);
         TokenInfo tokenInfo = mock(TokenInfo.class);
         when(requestParameters.getTokenInfo()).thenReturn(tokenInfo);
         when(tokenInfo.getUserId()).thenReturn("userId");
 
         JsonObject testResource = getTestResource();
-        when(resmiServiceMock.save(eq(TEST_TYPE), eq(testResource), any())).thenReturn(testResource);
+        when(resmiServiceMock.saveResource(eq(uri), eq(testResource), any())).thenReturn(testResource);
 
         Response response = postRem.collection(TEST_TYPE, requestParameters, new URI("test"), Optional.of(testResource));
 
@@ -59,7 +62,7 @@ public class ResmiPostRemTest extends ResmiRemTest {
 
         JsonObject testResource = getTestResource();
 
-        doThrow(new StartsWithUnderscoreException("_any")).when(resmiServiceMock).save(any(), eq(testResource), any());
+        doThrow(new StartsWithUnderscoreException("_any")).when(resmiServiceMock).saveResource(any(), eq(testResource), any());
 
         Response response = postRem.collection(TEST_TYPE, requestParameters, new URI("test"), Optional.of(testResource));
 
@@ -68,13 +71,15 @@ public class ResmiPostRemTest extends ResmiRemTest {
 
     @Test
     public void testPostCollectionWithClientToken() throws URISyntaxException, StartsWithUnderscoreException {
+        ResourceUri uri = new ResourceUri(TEST_TYPE);
+
         RequestParameters<CollectionParameters> requestParameters = mock(RequestParameters.class);
         TokenInfo tokenInfo = mock(TokenInfo.class);
         when(requestParameters.getTokenInfo()).thenReturn(tokenInfo);
         when(tokenInfo.getUserId()).thenReturn(null);
 
         JsonObject testResource = getTestResource();
-        when(resmiServiceMock.save(eq(TEST_TYPE), eq(testResource), any())).thenReturn(testResource);
+        when(resmiServiceMock.saveResource(eq(uri), eq(testResource), any())).thenReturn(testResource);
 
         Response response = postRem.collection(TEST_TYPE, requestParameters, new URI("test"), Optional.of(testResource));
 

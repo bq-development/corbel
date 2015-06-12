@@ -54,11 +54,11 @@ public class ResmiGetRemTest extends ResmiRemTest {
 
     @Test
     public void testGetResource() {
-
+        ResourceUri resourceUri = new ResourceUri(TEST_TYPE, ID);
         JsonObject json = new JsonObject();
         json.add("a", new JsonPrimitive("1"));
 
-        when(resmiServiceMock.findResourceById(TEST_TYPE, TEST_ID)).thenReturn(json);
+        when(resmiServiceMock.findResource(resourceUri)).thenReturn(json);
         Response response = getRem.resource(TEST_TYPE, TEST_ID, null, Optional.empty());
         assertThat(response.getStatus()).isEqualTo(200);
         assertThat(response.getEntity()).isEqualTo(json);
@@ -67,8 +67,9 @@ public class ResmiGetRemTest extends ResmiRemTest {
 
     @Test
     public void testGetCollection() throws BadConfigurationException {
+        ResourceUri resourceUri = new ResourceUri(TEST_TYPE);
         JsonArray jsonArray = new JsonArray();
-        when(resmiServiceMock.find(TEST_TYPE, collectionParametersMock)).thenReturn(jsonArray);
+        when(resmiServiceMock.findCollection(resourceUri, collectionParametersMock)).thenReturn(jsonArray);
 
         when(requestParametersCollectionParametersMock.getApiParameters()).thenReturn(collectionParametersMock);
         when(collectionParametersMock.getAggregation()).thenReturn(Optional.empty());
@@ -118,8 +119,10 @@ public class ResmiGetRemTest extends ResmiRemTest {
     @Test
     public void testGetRelation() throws BadConfigurationException {
         JsonArray jsonArray = new JsonArray();
+        ResourceUri resourceUri = new ResourceUri(TEST_TYPE, ID, TEST_TYPE_RELATION, null);
+        ResourceId resourceId = new ResourceId(ID);
 
-        when(resmiServiceMock.findRelation(TEST_TYPE, resourceIdMock, TEST_TYPE_RELATION, relationParametersMock)).thenReturn(jsonArray);
+        when(resmiServiceMock.findRelation(resourceUri, relationParametersMock)).thenReturn(jsonArray);
 
         when(requestParametersRelationParametersMock.getApiParameters()).thenReturn(relationParametersMock);
         when(relationParametersMock.getAggregation()).thenReturn(Optional.empty());
@@ -129,7 +132,7 @@ public class ResmiGetRemTest extends ResmiRemTest {
         when(relationParametersMock.getSort()).thenReturn(Optional.ofNullable(sortMock));
         when(relationParametersMock.getPredicateResource()).thenReturn(Optional.empty());
 
-        Response response = getRem.relation(TEST_TYPE, resourceIdMock, TEST_TYPE_RELATION, requestParametersRelationParametersMock,
+        Response response = getRem.relation(TEST_TYPE, resourceId, TEST_TYPE_RELATION, requestParametersRelationParametersMock,
                 Optional.empty());
         assertThat(response.getStatus()).isEqualTo(200);
         assertThat(response.getEntity()).isEqualTo(jsonArray);
@@ -138,9 +141,12 @@ public class ResmiGetRemTest extends ResmiRemTest {
     @Test
     public void testGetRelationResource() throws BadConfigurationException {
         JsonArray jsonArray = new JsonArray();
-
         String dstId = "resourceDstId";
-        when(resmiServiceMock.findRelation(TEST_TYPE, resourceIdMock, TEST_TYPE_RELATION, relationParametersMock)).thenReturn(jsonArray);
+        ResourceUri resourceUri = new ResourceUri(TEST_TYPE, ID, TEST_TYPE_RELATION, dstId);
+        ResourceId resourceId = new ResourceId(ID);
+
+
+        when(resmiServiceMock.findRelation(resourceUri, relationParametersMock)).thenReturn(jsonArray);
 
         when(requestParametersRelationParametersMock.getApiParameters()).thenReturn(relationParametersMock);
         when(relationParametersMock.getAggregation()).thenReturn(Optional.empty());
@@ -150,7 +156,7 @@ public class ResmiGetRemTest extends ResmiRemTest {
         when(relationParametersMock.getSort()).thenReturn(Optional.ofNullable(sortMock));
         when(relationParametersMock.getPredicateResource()).thenReturn(Optional.of(dstId));
 
-        Response response = getRem.relation(TEST_TYPE, resourceIdMock, TEST_TYPE_RELATION, requestParametersRelationParametersMock,
+        Response response = getRem.relation(TEST_TYPE, resourceId, TEST_TYPE_RELATION, requestParametersRelationParametersMock,
                 Optional.empty());
 
         assertThat(response.getStatus()).isEqualTo(200);
@@ -170,6 +176,7 @@ public class ResmiGetRemTest extends ResmiRemTest {
         when(aggregationOperationMock.operate(Arrays.asList(resourceQueryMock))).thenReturn(Arrays.asList(resourceQueryMock));
 
         when(relationParametersMock.getQueries()).thenReturn(Optional.ofNullable(Arrays.asList(resourceQueryMock)));
+        when(relationParametersMock.getPredicateResource()).thenReturn(Optional.empty());
 
         Response response = getRem.relation(TEST_TYPE, resourceIdMock, TEST_TYPE_RELATION, requestParametersRelationParametersMock,
                 Optional.empty());
@@ -179,7 +186,8 @@ public class ResmiGetRemTest extends ResmiRemTest {
 
     @Test
     public void testResourceNotFound() {
-        when(resmiServiceMock.findResourceById(TEST_TYPE, TEST_ID)).thenReturn(null);
+        ResourceUri resourceUri = new ResourceUri(TEST_TYPE, ID);
+        when(resmiServiceMock.findResource(resourceUri)).thenReturn(null);
         Response response = getRem.resource(TEST_TYPE, TEST_ID, null, Optional.empty());
         assertThat(response.getStatus()).isEqualTo(404);
     }
