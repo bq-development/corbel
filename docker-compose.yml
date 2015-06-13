@@ -1,0 +1,34 @@
+resources:
+  image: corbel/resources
+  links:
+    - mongo
+    - rabbitmq
+    - redis
+  ports:
+    - "8080:8080"
+    - "8081:8081"
+iam:
+  image: corbel/iam
+  links:
+    - mongo
+    - rabbitmq
+    - redis
+  ports:
+    - "8082:8082"
+    - "8083:8083"
+webfs:
+  image: corbel/webfs
+  links:
+    - mongo
+    - rabbitmq
+    - redis
+  ports:
+    - "8096:8096"
+    - "8097:8097"
+
+mongo:
+  image: mongo
+redis:
+  image: redis
+rabbitmq:
+  image: rabbitmq
