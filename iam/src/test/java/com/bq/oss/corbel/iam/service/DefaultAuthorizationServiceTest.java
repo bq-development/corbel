@@ -105,21 +105,22 @@ import com.bq.oss.lib.token.model.TokenType;
     @Test
     public void testAuthorizedWithPrincipal() throws SignatureException, UnauthorizedException, MissingOAuthParamsException,
             OauthServerConnectionException, MissingBasicParamsException {
+        Set<Scope> filledScopes = new HashSet();
+
         JsonToken validJsonToken = mock(JsonToken.class);
         when(jsonTokenParserMock.verifyAndDeserialize(TEST_JWT)).thenReturn(validJsonToken);
         initContext(true);
         when(accessTokenFactoryMock.createToken(tokenInfo, TEST_EXPIRATION)).thenReturn(tokenGrant);
-        Set<String> scopes = Collections.singleton(TEST_SCOPE_1);
 
         TokenGrant grant = authorizationService.authorize(TEST_JWT);
-        verify(scopeServiceMock).publishAuthorizationRules(TEST_TOKEN, TEST_EXPIRATION, scopes, TEST_USER_ID, TEST_CLIENT_ID);
+        verify(scopeServiceMock).publishAuthorizationRules(TEST_TOKEN, TEST_EXPIRATION, filledScopes);
         assertThat(grant).isNotNull();
     }
 
     @Test
     public void testRefreshToken() throws SignatureException, UnauthorizedException, MissingOAuthParamsException,
             TokenVerificationException, OauthServerConnectionException, MissingBasicParamsException {
-        Set<String> scopes = new HashSet<>(Arrays.asList(TEST_SCOPE_1));
+        Set<Scope> filledScopes = new HashSet();
 
         User userMock = mock(User.class);
         when(userMock.getUsername()).thenReturn(TEST_USER_ID);
@@ -131,7 +132,7 @@ import com.bq.oss.lib.token.model.TokenType;
         when(accessTokenFactoryMock.createToken(tokenInfo, TEST_EXPIRATION)).thenReturn(tokenGrant);
         when(refreshTokenServiceMock.getUserFromRefreshToken(TEST_REFRESH_TOKEN)).thenReturn(userMock);
         TokenGrant grant = authorizationService.authorize(TEST_JWT);
-        verify(scopeServiceMock).publishAuthorizationRules(TEST_TOKEN, TEST_EXPIRATION, scopes, TEST_USER_ID, TEST_CLIENT_ID);
+        verify(scopeServiceMock).publishAuthorizationRules(TEST_TOKEN, TEST_EXPIRATION, filledScopes);
         assertThat(grant).isNotNull();
     }
 

@@ -4,6 +4,8 @@ import java.time.Clock;
 import java.util.Arrays;
 import java.util.List;
 
+import com.bq.oss.corbel.event.ScopeUpdateEvent;
+import com.bq.oss.corbel.iam.eventbus.ScopeModifiedEventHandler;
 import net.oauth.jsontoken.Checker;
 import net.oauth.jsontoken.JsonTokenParser;
 import net.oauth.jsontoken.crypto.SignatureAlgorithm;
@@ -13,6 +15,7 @@ import net.oauth.signatures.SignedJsonAssertionAudienceChecker;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -137,6 +140,12 @@ import com.google.gson.Gson;
     }
 
     @Bean
+    public EventHandler<ScopeUpdateEvent> scopeUpdateEventEventHandler(CacheManager cacheManager) {
+        return new ScopeModifiedEventHandler(cacheManager);
+    }
+
+
+    @Bean
     public AuthorizationService getAuthorizationService(RefreshTokenService refreshTokenService, TokenFactory tokenFactory,
             ScopeService scopeService, ScopesAuthorizationRule scopesAuthorizationRule, UserService userService) {
         return new DefaultAuthorizationService(getJsonTokenParser(), getAuthorizationRules(scopesAuthorizationRule), tokenFactory,
@@ -162,8 +171,8 @@ import com.google.gson.Gson;
     }
 
     @Bean
-    public TokenResource getTokenResource(AuthorizationService authorizationService) {
-        return new TokenResource(authorizationService, getUpgradeTokenService(), getSessionCookieFactory());
+    public TokenResource getTokenResource(AuthorizationService authorizationService, UpgradeTokenService upgradeTokenService) {
+        return new TokenResource(authorizationService, upgradeTokenService, getSessionCookieFactory());
     }
 
     @Bean
@@ -285,8 +294,9 @@ import com.google.gson.Gson;
     }
 
     @Bean
-    public ScopeService getScopeService() {
-        return new DefaultScopeService(scopeRepository, authorizationRulesRepository, getScopeFillStrategy(), env.getProperty("iam.uri"));
+    public ScopeService getScopeService(EventsService eventsService) {
+        return new DefaultScopeService(scopeRepository, authorizationRulesRepository, getScopeFillStrategy(), env.getProperty("iam.uri"),
+                eventsService);
     }
 
     @Bean
@@ -310,8 +320,8 @@ import com.google.gson.Gson;
     }
 
     @Bean
-    public UpgradeTokenService getUpgradeTokenService() {
-        return new DefaultUpgradeTokenService(getTokenUpgradeJsonTokenParser(), getScopeService());
+    public UpgradeTokenService getUpgradeTokenService(ScopeService scopeService) {
+        return new DefaultUpgradeTokenService(getTokenUpgradeJsonTokenParser(), scopeService);
     }
 
     @Bean

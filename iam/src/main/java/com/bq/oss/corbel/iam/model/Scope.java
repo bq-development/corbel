@@ -122,4 +122,7 @@ public class Scope extends Entity {
         result = 31 * result + (parameters != null ? parameters.hashCode() : 0);
         return result;
     }
+
+
+
 }

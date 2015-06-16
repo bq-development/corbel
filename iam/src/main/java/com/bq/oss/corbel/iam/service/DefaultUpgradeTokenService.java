@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.bq.oss.corbel.iam.model.Scope;
 import net.oauth.jsontoken.JsonToken;
 import net.oauth.jsontoken.JsonTokenParser;
 
@@ -41,8 +42,9 @@ public class DefaultUpgradeTokenService implements UpgradeTokenService {
         }
     }
 
-    private void publishScopes(Set<String> scopes, TokenReader tokenReader) {
-        scopeService.addAuthorizationRules(tokenReader.getToken(), scopes, tokenReader.getInfo().getUserId(), tokenReader.getInfo()
-                .getClientId());
+    private void publishScopes(Set<String> scopesIds, TokenReader tokenReader) {
+        Set<Scope> scopes = scopeService.expandScopes(scopesIds);
+        scopes = scopeService.fillScopes(scopes, tokenReader.getInfo().getUserId(), tokenReader.getInfo().getClientId());
+        scopeService.addAuthorizationRules(tokenReader.getToken(), scopes);
     }
 }

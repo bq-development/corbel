@@ -192,15 +192,11 @@ public class DefaultAuthorizationService implements AuthorizationService {
     }
 
     private void publishScope(TokenGrant tokenGrant, AuthorizationRequestContext context) {
+        Set<Scope> expandedRequestedScopes = context.getExpandedRequestedScopes();
         String principalId = context.hasPrincipal() ? context.getPrincipal().getId() : null;
-
         String issuerClientId = context.getIssuerClientId();
-        Set<String> requestedScopes = context.getRequestedScopes();
-        if (requestedScopes.isEmpty()) {
-            requestedScopes = scopeService.getAllowedScopes(context);
-        }
-        scopeService.publishAuthorizationRules(tokenGrant.getAccessToken(), tokenGrant.getExpiresAt(), requestedScopes, principalId,
-                issuerClientId);
+        Set<Scope> filledScopes = scopeService.fillScopes(expandedRequestedScopes, principalId, issuerClientId);
+        scopeService.publishAuthorizationRules(tokenGrant.getAccessToken(), tokenGrant.getExpiresAt(), filledScopes);
     }
 
     private AuthorizationRequestContext getContext(String assertion) throws SignatureException {
