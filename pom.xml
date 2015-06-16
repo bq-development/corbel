@@ -49,6 +49,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <modules>
+    	<module>eworker-api</module>
+		<module>evci</module>
         <module>event-bus</module>
         <module>events</module>
         <module>iam</module>
@@ -109,6 +111,11 @@
                 <artifactId>rem-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+				<groupId>com.bq.oss.corbel</groupId>
+				<artifactId>eworker-api</artifactId>
+				<version>${project.version}</version>
+			</dependency>
             <dependency>
                 <groupId>com.bq.oss.lib</groupId>
                 <artifactId>config</artifactId>
@@ -267,6 +274,11 @@
                 <artifactId>aws-java-sdk-s3</artifactId>
                 <version>1.9.7</version>
             </dependency>
+            <dependency>
+				<groupId>com.github.zafarkhaja</groupId>
+				<artifactId>java-semver</artifactId>
+				<version>0.9.0</version>
+			</dependency>
         </dependencies>
     </dependencyManagement>
     <build>
@@ -406,316 +418,318 @@
                     <configuration>
                         <!-- Set the target configuration directory to be used in the bin scripts -->
                         <configurationDirectory>etc</configurationDirectory>
+						<!-- Include the target configuration directory in the beginning of 
+							the classpath declaration in the bin scripts -->
+						<includeConfigurationDirectoryInClasspath>true</includeConfigurationDirectoryInClasspath>
 
-                        <!-- Include the target configuration directory in the beginning of
-                            the classpath declaration in the bin scripts -->
-                        <includeConfigurationDirectoryInClasspath>true</includeConfigurationDirectoryInClasspath>
+						<!-- folder name and structure of the lib contents -->
+						<repositoryName>lib</repositoryName>
+						<repositoryLayout>default</repositoryLayout>
+						<!-- with this all jars droped on the plugins directory get automatically 
+							loaded on the classpath -->
+						<endorsedDir>plugins</endorsedDir>
 
-                        <!-- folder name and structure of the lib contents -->
-                        <repositoryName>lib</repositoryName>
-                        <repositoryLayout>default</repositoryLayout>
-                        <!-- with this all jars droped on the plugins directory get automatically loaded on the classpath -->
-                        <endorsedDir>plugins</endorsedDir>
+						<assembleDirectory>${project.build.directory}/generated-resources/appassembler/jsw/${project.name}</assembleDirectory>
 
-                        <assembleDirectory>${project.build.directory}/generated-resources/appassembler/jsw/${project.name}</assembleDirectory>
+					</configuration>
+					<executions>
+						<execution>
+							<id>make-assembly</id> <!-- this is used for inheritance merges -->
+							<phase>package</phase> <!-- bind to the packaging phase -->
+							<goals>
+								<goal>assemble</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+				<!-- Make binaries executables and create the plugins directory -->
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-antrun-plugin</artifactId>
+					<version>1.6</version>
+					<executions>
+						<execution>
+							<id>patch.executable</id>
+							<phase>package</phase>
+							<goals>
+								<goal>run</goal>
+							</goals>
+							<configuration>
+								<target>
+									<exec executable="chmod"
+										dir="${project.build.directory}/generated-resources/appassembler/jsw/${project.name}">
+										<arg value="-R" />
+										<arg value="a+x" />
+										<arg value="bin" />
+									</exec>
+								</target>
+							</configuration>
+						</execution>
+						<execution>
+							<id>create.plugins</id>
+							<phase>package</phase>
+							<goals>
+								<goal>run</goal>
+							</goals>
+							<configuration>
+								<target>
+									<exec executable="mkdir"
+										dir="${project.build.directory}/generated-resources/appassembler/jsw/${project.name}">
+										<arg value="plugins" />
+									</exec>
+								</target>
+							</configuration>
+						</execution>
+					</executions>
+				</plugin>
+				<plugin>
+					<artifactId>maven-assembly-plugin</artifactId>
+					<version>2.4.1</version>
 
-                    </configuration>
-                    <executions>
-                        <execution>
-                            <id>make-assembly</id> <!-- this is used for inheritance merges -->
-                            <phase>package</phase> <!-- bind to the packaging phase -->
-                            <goals>
-                                <goal>assemble</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                </plugin>
-                <!-- Make binaries executables and create the plugins directory -->
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-antrun-plugin</artifactId>
-                    <version>1.6</version>
-                    <executions>
-                        <execution>
-                            <id>patch.executable</id>
-                            <phase>package</phase>
-                            <goals>
-                                <goal>run</goal>
-                            </goals>
-                            <configuration>
-                                <target>
-                                    <exec executable="chmod" dir="${project.build.directory}/generated-resources/appassembler/jsw/${project.name}">
-                                        <arg value="-R" />
-                                        <arg value="a+x" />
-                                        <arg value="bin" />
-                                    </exec>
-                                </target>
-                            </configuration>
-                        </execution>
-                        <execution>
-                            <id>create.plugins</id>
-                            <phase>package</phase>
-                            <goals>
-                                <goal>run</goal>
-                            </goals>
-                            <configuration>
-                                <target>
-                                    <exec executable="mkdir" dir="${project.build.directory}/generated-resources/appassembler/jsw/${project.name}">
-                                        <arg value="plugins" />
-                                    </exec>
-                                </target>
-                            </configuration>
-                        </execution>
-                    </executions>
-                </plugin>
-                <plugin>
-                    <artifactId>maven-assembly-plugin</artifactId>
-                    <version>2.4.1</version>
-
-                    <executions>
-                        <execution>
-                            <id>make-full-assembly</id>
-                            <!-- this is used for inheritance merges -->
-                            <phase>package</phase>
-                            <!-- append to the packaging phase. -->
-                            <goals>
-                                <goal>single</goal>
-                                <!-- goals == mojos -->
-                            </goals>
-                            <configuration>
-                                <descriptors>
-                                    <descriptor>${project.basedir}/../src/assembly/corbel-module-assembly.xml</descriptor>
-                                </descriptors>
-                                <finalName>${project.name}-${project.version}</finalName>
-                            </configuration>
-                        </execution>
-                    </executions>
-                </plugin>
-                <!-- Groovy support -->
-                <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>build-helper-maven-plugin</artifactId>
-                    <version>1.7</version>
-                    <executions>
-                        <execution>
-                            <id>add-source</id>
-                            <phase>generate-sources</phase>
-                            <goals>
-                                <goal>add-source</goal>
-                            </goals>
-                            <configuration>
-                                <sources>
-                                    <source>src/main/groovy</source>
-                                </sources>
-                            </configuration>
-                        </execution>
-                        <execution>
-                            <id>add-test-source</id>
-                            <phase>generate-sources</phase>
-                            <goals>
-                                <goal>add-test-source</goal>
-                            </goals>
-                            <configuration>
-                                <sources>
-                                    <source>src/test/groovy</source>
-                                </sources>
-                            </configuration>
-                        </execution>
-                    </executions>
-                </plugin>
-                <plugin>
-                    <groupId>org.codehaus.gmaven</groupId>
-                    <artifactId>gmaven-plugin</artifactId>
-                    <version>1.4</version>
-                    <configuration>
-                        <providerSelection>2.0</providerSelection>
-                        <sourceEncoding>UTF-8</sourceEncoding>
-                    </configuration>
-                    <executions>
-                        <execution>
-                            <goals>
-                                <goal>generateStubs</goal>
-                                <goal>compile</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                </plugin>
-            </plugins>
-        </pluginManagement>
-    </build>
-    <profiles>
-        <profile>
-            <id>release-sign-artifacts</id>
-            <activation>
-                <property>
-                    <name>performRelease</name>
-                    <value>true</value>
-                </property>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-gpg-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>sign-artifacts</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>sign</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>docker</id>
-            <activation>
-                <property>
-                    <name>dockerBuild</name>
-                    <value>true</value>
-                </property>
-            </activation>
-            <build>
-                <pluginManagement>
-                    <plugins>
-                        <plugin>
-                            <groupId>com.spotify</groupId>
-                            <artifactId>docker-maven-plugin</artifactId>
-                            <executions>
-                                <execution>
-                                    <id>build</id>
-                                    <phase>install</phase>
-                                    <goals>
-                                        <goal>build</goal>
-                                    </goals>
-                                </execution>
-                                <execution>
-                                    <id>push</id>
-                                    <phase>deploy</phase>
-                                    <goals>
-                                        <goal>push</goal>
-                                    </goals>
-                                </execution>
-                            </executions>
-                        </plugin>
-                    </plugins>
-                </pluginManagement>
-            </build>
-        </profile>
-    </profiles>
-    <developers>
-        <developer>
-            <name>David Martínez</name>
-            <email>david.martinez@bq.com</email>
-            <timezone>Europe/Madrid</timezone>
-            <roles>
-                <role>committer</role>
-            </roles>
-        </developer>
-        <developer>
-            <name>Alexander de Leon</name>
-            <email>alexander.deleon@bq.com</email>
-            <timezone>Europe/Madrid</timezone>
-            <roles>
-                <role>committer</role>
-            </roles>
-        </developer>
-        <developer>
-            <name>Alberto J. Rubio</name>
-            <email>alberto.rubio@bq.com</email>
-            <timezone>Europe/Madrid</timezone>
-            <roles>
-                <role>committer</role>
-            </roles>
-        </developer>
-        <developer>
-            <name>Anthanh Pham</name>
-            <email>anthanh.pham@bq.com</email>
-            <timezone>Europe/Madrid</timezone>
-            <roles>
-                <role>committer</role>
-            </roles>
-        </developer>
-        <developer>
-            <name>Francisco Sánchez</name>
-            <email>francisco.sanchez@bq.com</email>
-            <timezone>Europe/Madrid</timezone>
-            <roles>
-                <role>committer</role>
-            </roles>
-        </developer>
-        <developer>
-            <name>Ismael Madirolas</name>
-            <email>ismael.madirolas@bq.com</email>
-            <timezone>Europe/Madrid</timezone>
-            <roles>
-                <role>committer</role>
-            </roles>
-        </developer>
-        <developer>
-            <name>Cristian del Cerro</name>
-            <email>cristian.delcerro@bq.com</email>
-            <timezone>Europe/Madrid</timezone>
-            <roles>
-                <role>committer</role>
-            </roles>
-        </developer>
-        <developer>
-            <name>Rubén Carrasco</name>
-            <email>rcarrasco@bq.com</email>
-            <timezone>Europe/Madrid</timezone>
-            <roles>
-                <role>committer</role>
-            </roles>
-        </developer>
-        <developer>
-            <name>Laura Sada</name>
-            <email>laura.sada@bq.com</email>
-            <timezone>Europe/Madrid</timezone>
-            <roles>
-                <role>committer</role>
-            </roles>
-        </developer>
-        <developer>
-            <name>Luis Miguel García</name>
-            <email>luismiguel.garcia@bq.com</email>
-            <timezone>Europe/Madrid</timezone>
-            <roles>
-                <role>committer</role>
-            </roles>
-        </developer>
-    </developers>
-    <distributionManagement>
-        <repository>
-            <id>sonatype-releases</id>
-            <name>Sonatype Nexus releases repository</name>
-            <url>https://oss.sonatype.org/content/repositories/releases</url>
-        </repository>
-        <snapshotRepository>
-            <id>sonatype</id>
-            <name>Sonatype Nexus snapshot repository</name>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-        </snapshotRepository>
-    </distributionManagement>
-    <repositories>
-        <repository>
-            <id>sonatype</id>
-            <name>Sonatype Nexus snapshot repository</name>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>   
-        <repository>
-            <id>sonatype-releases</id>
-            <name>Sonatype Nexus releases repository</name>
-            <url>https://oss.sonatype.org/content/repositories/releases</url>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
+					<executions>
+						<execution>
+							<id>make-full-assembly</id>
+							<!-- this is used for inheritance merges -->
+							<phase>package</phase>
+							<!-- append to the packaging phase. -->
+							<goals>
+								<goal>single</goal>
+								<!-- goals == mojos -->
+							</goals>
+							<configuration>
+								<descriptors>
+									<descriptor>${project.basedir}/../src/assembly/corbel-module-assembly.xml</descriptor>
+								</descriptors>
+								<finalName>${project.name}-${project.version}</finalName>
+							</configuration>
+						</execution>
+					</executions>
+				</plugin>
+				<!-- Groovy support -->
+				<plugin>
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>build-helper-maven-plugin</artifactId>
+					<version>1.7</version>
+					<executions>
+						<execution>
+							<id>add-source</id>
+							<phase>generate-sources</phase>
+							<goals>
+								<goal>add-source</goal>
+							</goals>
+							<configuration>
+								<sources>
+									<source>src/main/groovy</source>
+								</sources>
+							</configuration>
+						</execution>
+						<execution>
+							<id>add-test-source</id>
+							<phase>generate-sources</phase>
+							<goals>
+								<goal>add-test-source</goal>
+							</goals>
+							<configuration>
+								<sources>
+									<source>src/test/groovy</source>
+								</sources>
+							</configuration>
+						</execution>
+					</executions>
+				</plugin>
+				<plugin>
+					<groupId>org.codehaus.gmaven</groupId>
+					<artifactId>gmaven-plugin</artifactId>
+					<version>1.4</version>
+					<configuration>
+						<providerSelection>2.0</providerSelection>
+						<sourceEncoding>UTF-8</sourceEncoding>
+					</configuration>
+					<executions>
+						<execution>
+							<goals>
+								<goal>generateStubs</goal>
+								<goal>compile</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+	<profiles>
+		<profile>
+			<id>release-sign-artifacts</id>
+			<activation>
+				<property>
+					<name>performRelease</name>
+					<value>true</value>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-gpg-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>sign-artifacts</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
+			<id>docker</id>
+			<activation>
+				<property>
+					<name>dockerBuild</name>
+					<value>true</value>
+				</property>
+			</activation>
+			<build>
+				<pluginManagement>
+					<plugins>
+						<plugin>
+							<groupId>com.spotify</groupId>
+							<artifactId>docker-maven-plugin</artifactId>
+							<executions>
+								<execution>
+									<id>build</id>
+									<phase>install</phase>
+									<goals>
+										<goal>build</goal>
+									</goals>
+								</execution>
+								<execution>
+									<id>push</id>
+									<phase>deploy</phase>
+									<goals>
+										<goal>push</goal>
+									</goals>
+								</execution>
+							</executions>
+						</plugin>
+					</plugins>
+				</pluginManagement>
+			</build>
+		</profile>
+	</profiles>
+	<developers>
+		<developer>
+			<name>David Martínez</name>
+			<email>david.martinez@bq.com</email>
+			<timezone>Europe/Madrid</timezone>
+			<roles>
+				<role>committer</role>
+			</roles>
+		</developer>
+		<developer>
+			<name>Alexander de Leon</name>
+			<email>alexander.deleon@bq.com</email>
+			<timezone>Europe/Madrid</timezone>
+			<roles>
+				<role>committer</role>
+			</roles>
+		</developer>
+		<developer>
+			<name>Alberto J. Rubio</name>
+			<email>alberto.rubio@bq.com</email>
+			<timezone>Europe/Madrid</timezone>
+			<roles>
+				<role>committer</role>
+			</roles>
+		</developer>
+		<developer>
+			<name>Anthanh Pham</name>
+			<email>anthanh.pham@bq.com</email>
+			<timezone>Europe/Madrid</timezone>
+			<roles>
+				<role>committer</role>
+			</roles>
+		</developer>
+		<developer>
+			<name>Francisco Sánchez</name>
+			<email>francisco.sanchez@bq.com</email>
+			<timezone>Europe/Madrid</timezone>
+			<roles>
+				<role>committer</role>
+			</roles>
+		</developer>
+		<developer>
+			<name>Ismael Madirolas</name>
+			<email>ismael.madirolas@bq.com</email>
+			<timezone>Europe/Madrid</timezone>
+			<roles>
+				<role>committer</role>
+			</roles>
+		</developer>
+		<developer>
+			<name>Cristian del Cerro</name>
+			<email>cristian.delcerro@bq.com</email>
+			<timezone>Europe/Madrid</timezone>
+			<roles>
+				<role>committer</role>
+			</roles>
+		</developer>
+		<developer>
+			<name>Rubén Carrasco</name>
+			<email>rcarrasco@bq.com</email>
+			<timezone>Europe/Madrid</timezone>
+			<roles>
+				<role>committer</role>
+			</roles>
+		</developer>
+		<developer>
+			<name>Laura Sada</name>
+			<email>laura.sada@bq.com</email>
+			<timezone>Europe/Madrid</timezone>
+			<roles>
+				<role>committer</role>
+			</roles>
+		</developer>
+		<developer>
+			<name>Luis Miguel García</name>
+			<email>luismiguel.garcia@bq.com</email>
+			<timezone>Europe/Madrid</timezone>
+			<roles>
+				<role>committer</role>
+			</roles>
+		</developer>
+	</developers>
+	<distributionManagement>
+		<repository>
+			<id>sonatype-releases</id>
+			<name>Sonatype Nexus releases repository</name>
+			<url>https://oss.sonatype.org/content/repositories/releases</url>
+		</repository>
+		<snapshotRepository>
+			<id>sonatype</id>
+			<name>Sonatype Nexus snapshot repository</name>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+		</snapshotRepository>
+	</distributionManagement>
+	<repositories>
+		<repository>
+			<id>sonatype</id>
+			<name>Sonatype Nexus snapshot repository</name>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>sonatype-releases</id>
+			<name>Sonatype Nexus releases repository</name>
+			<url>https://oss.sonatype.org/content/repositories/releases</url>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
 </project>
