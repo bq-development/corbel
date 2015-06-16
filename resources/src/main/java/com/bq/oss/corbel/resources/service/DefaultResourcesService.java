@@ -13,6 +13,7 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.Providers;
 
 import com.bq.oss.lib.queries.builder.QueryParametersBuilder;
+import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpMethod;
@@ -70,6 +71,8 @@ public class DefaultResourcesService implements ResourcesService {
     @Override
     public Response collectionOperation(String type, Request request, UriInfo uriInfo, TokenInfo tokenInfo, URI typeUri, HttpMethod method,
                                         QueryParameters queryParameters, InputStream inputStream, MediaType contentType) {
+        Response result;
+
         try {
             List<org.springframework.http.MediaType> acceptedMediaTypes = getRequestAcceptedMediaTypes(request);
             Rem rem = remService.getRem(type, acceptedMediaTypes, getRequestMethod(request));
@@ -79,7 +82,7 @@ public class DefaultResourcesService implements ResourcesService {
 
             Optional<?> entity = method.equals(HttpMethod.POST) ? getEntity(Optional.ofNullable(inputStream), rem, contentType) : Optional.empty();
 
-            return remService.collection(rem, type, parameters, typeUri, entity);
+            result = remService.collection(rem, type, parameters, typeUri, entity);
         } catch (JsonParseException e) {
             return ErrorResponseFactory.getInstance().invalidEntity(e.getOriginalMessage());
         } catch (IOException e) {
@@ -88,6 +91,13 @@ public class DefaultResourcesService implements ResourcesService {
         } catch (ApiRequestException e) {
             return ErrorResponseFactory.getInstance().badRequest(e);
         }
+
+        if (method == HttpMethod.POST && tokenInfo != null && (result.getStatus() == HttpStatus.CREATED_201
+                || result.getStatus() == org.eclipse.jetty.http.HttpStatus.OK_200)) {
+            eventBus.dispatch(ResourceEvent.createResourceEvent(type, result.getMetadata().getFirst("Location").toString(), tokenInfo.getDomainId()));
+        }
+
+        return result;
     }
 
     @Override
@@ -98,7 +108,7 @@ public class DefaultResourcesService implements ResourcesService {
             return collectionOperation(type, request, uriInfo, tokenInfo, typeUri, method, queryParameters, inputStream, contentType);
         }
 
-        Response result = null;
+        Response result;
         try {
             List<org.springframework.http.MediaType> acceptedMediaTypes = getRequestAcceptedMediaTypes(request);
             Rem rem = remService.getRem(type, acceptedMediaTypes, getRequestMethod(request));
@@ -119,10 +129,15 @@ public class DefaultResourcesService implements ResourcesService {
             result = ErrorResponseFactory.getInstance().badRequest(e);
         }
 
-        if (method == HttpMethod.PUT &&
-                tokenInfo != null &&
-                (result.getStatus() == org.eclipse.jetty.http.HttpStatus.NO_CONTENT_204 || result.getStatus() == org.eclipse.jetty.http.HttpStatus.OK_200)) {
-            eventBus.dispatch(ResourceEvent.updateResourceEvent(type, id.getId(), tokenInfo.getDomainId()));
+        if(method != HttpMethod.GET && tokenInfo != null && (result.getStatus() == org.eclipse.jetty.http.HttpStatus.NO_CONTENT_204
+                || result.getStatus() == org.eclipse.jetty.http.HttpStatus.OK_200)) {
+            ResourceEvent event;
+            if(method == HttpMethod.PUT) {
+                event = ResourceEvent.updateResourceEvent(type, id.getId(), tokenInfo.getDomainId());
+            }else {
+                event = ResourceEvent.deleteResourceEvent(type, id.getId(), tokenInfo.getDomainId());
+            }
+            eventBus.dispatch(event);
         }
         return result;
     }

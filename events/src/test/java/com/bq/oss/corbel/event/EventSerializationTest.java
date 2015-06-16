@@ -68,8 +68,18 @@ public class EventSerializationTest {
     }
 
     @Test
+    public void testResourceCreatedEvent() {
+        assertThanCanBeSendAndRetriveInEventBus(ResourceEvent.createResourceEvent("TYPE", "RESOURCE_ID", "DOMAIN"));
+    }
+
+    @Test
     public void testResourceModifiedEvent() {
         assertThanCanBeSendAndRetriveInEventBus(ResourceEvent.updateResourceEvent("TYPE", "RESOURCE_ID", "DOMAIN"));
+    }
+
+    @Test
+    public void testResourceDeletedEvent() {
+        assertThanCanBeSendAndRetriveInEventBus(ResourceEvent.deleteResourceEvent("TYPE", "RESOURCE_ID", "DOMAIN"));
     }
 
     @Test

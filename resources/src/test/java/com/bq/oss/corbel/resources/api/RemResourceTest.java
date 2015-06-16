@@ -87,7 +87,6 @@ public class RemResourceTest {
     private static RemService remService = new DefaultRemService(registryMock);
     private static RemEntityTypeResolver remEntityTypeResolverMock = mock(RemEntityTypeResolver.class);
     private static QueryParser queryParserMock = mock(QueryParser.class);
-    private static SortParser sortParserMock = mock(SortParser.class);
 
     private static BearerTokenAuthenticator authenticatorMock = mock(BearerTokenAuthenticator.class);
     private static ObjectMapper objectMapper = new ObjectMapper();
@@ -342,7 +341,7 @@ public class RemResourceTest {
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Test
     public void testPostCollection() {
-        Response testResponse = Response.ok().entity(TEST_OK).build();
+        Response testResponse = Response.ok().header("Location", RESOURCE_ID.getId()).entity(TEST_OK).build();
         // TODO Complete Pagination, Query and Sort
         ArgumentCaptor<RequestParameters> parametersCaptor = ArgumentCaptor.forClass(RequestParameters.class);
         ArgumentCaptor<Optional> optionalJsonObjectCaptor = ArgumentCaptor.forClass(Optional.class);
@@ -353,6 +352,7 @@ public class RemResourceTest {
                 RULE.client().resource(COLLECTION_URI).type(MediaType.APPLICATION_JSON_TYPE).header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
                         .post(String.class, jsonTest)).isEqualTo(TEST_OK);
         assertThat(parametersCaptor.getValue().getTokenInfo().getUserId()).isSameAs(TEST_USER_ID);
+        verify(eventBusMock).dispatch(ResourceEvent.createResourceEvent(TEST_TYPE, RESOURCE_ID.getId(), DOMAIN));
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -466,6 +466,7 @@ public class RemResourceTest {
         assertThat(RULE.client().resource(RESOURCE_URI).header(AUTHORIZATION, "Bearer " + TEST_TOKEN).delete(String.class)).isEqualTo(
                 TEST_OK);
         assertThat(parametersCaptor.getValue().getTokenInfo().getUserId()).isSameAs(TEST_USER_ID);
+        verify(eventBusMock).dispatch(ResourceEvent.deleteResourceEvent(TEST_TYPE, RESOURCE_ID.getId(), DOMAIN));
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
