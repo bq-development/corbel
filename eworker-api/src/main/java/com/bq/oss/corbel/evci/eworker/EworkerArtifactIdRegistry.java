@@ -10,7 +10,7 @@ public interface EworkerArtifactIdRegistry {
     /**
      * Adds eworker artifact Id
      *
-     * @param artifactId
+     * @param artifactId Artifact Id to be added
      */
     void addEworkerArtifactId(String artifactId);
 
