@@ -3,6 +3,7 @@ package com.bq.oss.corbel.resources.rem.dao;
 import java.util.List;
 import java.util.Optional;
 
+import com.bq.oss.corbel.resources.rem.model.GenericDocument;
 import org.springframework.data.mongodb.core.index.Index;
 
 import com.bq.oss.corbel.resources.rem.model.ResourceUri;
@@ -19,24 +20,25 @@ public interface ResmiDao {
 
     boolean exists(String type, String id);
 
-    JsonObject findById(String type, String id);
+    JsonObject findResource(ResourceUri uri);
 
-    JsonArray find(String type, Optional<List<ResourceQuery>> resourceQueries, Pagination pagination, Optional<Sort> sort);
+    JsonArray findCollection(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries, Pagination pagination, Optional<Sort> sort);
 
-    JsonElement findRelation(String type, ResourceId id, String relation, Optional<List<ResourceQuery>> resourceQueries,
-            Pagination pagination, Optional<Sort> sort, Optional<String> dstId);
+    JsonElement findRelation(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries, Pagination pagination, Optional<Sort> sort);
 
-    void upsert(String type, String id, JsonObject entity);
+    void updateResource(ResourceUri uri, JsonObject entity);
 
-    boolean findAndModify(String type, String id, JsonObject jsonObject, List<ResourceQuery> resourceQueries);
+    boolean conditionalUpdateResource(ResourceUri uri, JsonObject jsonObject, List<ResourceQuery> resourceQueries);
 
-    void save(String type, Object entity);
+    void saveResource(ResourceUri uri, Object entity);
 
-    void createRelation(String type, String id, String relation, String uri, JsonObject jsonObject) throws NotFoundException;
+    void createRelation(ResourceUri uri, JsonObject jsonObject) throws NotFoundException;
 
-    void deleteById(String type, String id);
+    JsonObject deleteResource(ResourceUri uri);
 
-    void deleteRelation(String type, ResourceId id, String relation, Optional<String> dstId);
+    List<GenericDocument> deleteCollection(ResourceUri uri, Optional<List<ResourceQuery>> queries);
+
+    List<GenericDocument> deleteRelation(ResourceUri uri);
 
     CountResult count(ResourceUri resourceUri, List<ResourceQuery> resourceQueries);
 
@@ -44,14 +46,12 @@ public interface ResmiDao {
 
     SumResult sum(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field);
 
-    void moveElement(String type, String id, String relation, String uri, RelationMoveOperation relationMoveOperation);
+    void moveRelation(ResourceUri uri, RelationMoveOperation relationMoveOperation);
 
     <T> List<T> findAll(String collection, Class<T> entityClass);
 
-    void ensureExpireIndex(String type);
+    void ensureExpireIndex(ResourceUri uri);
 
-    void ensureCollectionIndex(String type, Index index);
-
-    void ensureRelationIndex(String type, String relation, Index index);
+    void ensureIndex(ResourceUri uri, Index index);
 
 }

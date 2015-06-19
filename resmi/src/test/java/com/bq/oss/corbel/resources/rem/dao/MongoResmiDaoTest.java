@@ -34,12 +34,10 @@ import org.springframework.data.mongodb.core.query.Update;
 import com.bq.oss.corbel.resources.rem.model.ResourceUri;
 import com.bq.oss.corbel.resources.rem.request.ResourceId;
 import com.bq.oss.corbel.resources.rem.service.DefaultNamespaceNormalizer;
-import com.bq.oss.corbel.resources.rem.utils.JsonUtils;
 import com.bq.oss.lib.mongo.JsonObjectMongoWriteConverter;
 import com.bq.oss.lib.queries.QueryNodeImpl;
 import com.bq.oss.lib.queries.StringQueryLiteral;
 import com.bq.oss.lib.queries.request.*;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
@@ -77,28 +75,15 @@ public class MongoResmiDaoTest {
 
     @Test
     public void testFindById() {
+        ResourceUri resourceUri = new ResourceUri(TEST_COLLECTION, TEST_ID);
         JsonObject json = new JsonObject();
         json.add("a", new JsonPrimitive("1"));
         when(mongoOperations.findById(TEST_ID, JsonObject.class, TEST_COLLECTION)).thenReturn(json);
 
-        JsonObject object = mongoResmiDao.findById(TEST_COLLECTION, TEST_ID);
+        JsonObject object = mongoResmiDao.findResource(resourceUri);
         assertThat(object).isEqualTo(json);
     }
 
-    @Test
-    public void testFindCollection() {
-        JsonObject json = new JsonObject();
-        json.add("a", new JsonPrimitive("1"));
-        List<JsonObject> jsonObjectList = Arrays.asList(json, json, json);
-        JsonArray jsonObjectArray = JsonUtils.convertToArray(jsonObjectList);
-        when(mongoOperations.find(TEST_QUERY, JsonObject.class, TEST_COLLECTION)).thenReturn(jsonObjectList);
-
-        JsonArray result = mongoResmiDao.find(TEST_COLLECTION, TEST_QUERY);
-        assertThat(jsonObjectArray).hasSameSizeAs(result);
-        for (JsonElement element : result) {
-            assertThat(element).isIn(jsonObjectArray);
-        }
-    }
 
     @Test
     public void testFindRelation() {
@@ -114,8 +99,8 @@ public class MongoResmiDaoTest {
         when(mongoOperations.find(queryCaptor.capture(), Mockito.eq(JsonObject.class), Mockito.eq(collectionName))).thenReturn(
                 jsonObjectList);
 
-        JsonElement result = mongoResmiDao.findRelation(TEST_COLLECTION, TEST_RESOURCE_ID, TEST_REL, Optional.empty(), pagination,
-                Optional.empty(), Optional.empty());
+        ResourceUri resourceUri = new ResourceUri(TEST_COLLECTION, TEST_ID, TEST_REL);
+        JsonElement result = mongoResmiDao.findRelation(resourceUri, Optional.empty(), pagination, Optional.empty());
 
         assertThat(result.isJsonArray()).isTrue();
         assertThat(result.getAsJsonArray().size()).isSameAs(jsonObjectList.size());
@@ -153,7 +138,8 @@ public class MongoResmiDaoTest {
         when(mongoOperations.findAndModify(any(), any(), any(), eq(JsonObject.class), eq(RELATION_COLLECTION_NAME))).thenAnswer(
                 answerWithId(jsonResult));
 
-        mongoResmiDao.createRelation(TEST_COLLECTION, TEST_ID, TEST_REL, TEST_ID_RELATION_OBJECT, json);
+        ResourceUri resourceUri = new ResourceUri(TEST_COLLECTION, TEST_ID, TEST_REL, TEST_ID_RELATION_OBJECT);
+        mongoResmiDao.createRelation(resourceUri, json);
 
         verify(mongoOperations).findAndModify(queryCaptor.capture(), updateCaptor.capture(), optionsCaptor.capture(), eq(JsonObject.class),
                 eq(RELATION_COLLECTION_NAME));
@@ -195,7 +181,8 @@ public class MongoResmiDaoTest {
         when(mongoOperations.findAndModify(any(), any(), any(), eq(JsonObject.class), eq(RELATION_COLLECTION_NAME))).thenAnswer(
                 answerWithId(jsonResult));
 
-        mongoResmiDao.createRelation(TEST_COLLECTION, TEST_ID, TEST_REL, TEST_ID_RELATION_OBJECT, json);
+        ResourceUri resourceUri = new ResourceUri(TEST_COLLECTION, TEST_ID, TEST_REL, TEST_ID_RELATION_OBJECT);
+        mongoResmiDao.createRelation(resourceUri, json);
 
         verify(mongoOperations).findAndModify(queryCaptor.capture(), updateCaptor.capture(), optionsCaptor.capture(), eq(JsonObject.class),
                 eq(RELATION_COLLECTION_NAME));
@@ -212,36 +199,9 @@ public class MongoResmiDaoTest {
     }
 
     @Test
-    public void testSaveWithCreatedAt() {
-        ArgumentCaptor<Query> queryCaptor = ArgumentCaptor.forClass(Query.class);
-        ArgumentCaptor<Update> updateCaptor = ArgumentCaptor.forClass(Update.class);
-        ArgumentCaptor<FindAndModifyOptions> optionsCaptor = ArgumentCaptor.forClass(FindAndModifyOptions.class);
-
-        JsonObject json = new JsonObject();
-        json.addProperty("a", "abc");
-        json.addProperty("_createdAt", "date");
-
-        when(mongoOperations.findAndModify(any(), any(), any(), eq(JsonObject.class), eq(TEST_COLLECTION))).thenAnswer(answerWithId(json));
-
-        mongoResmiDao.save(TEST_COLLECTION, json);
-
-        verify(mongoOperations).findAndModify(queryCaptor.capture(), updateCaptor.capture(), optionsCaptor.capture(),
-                Mockito.eq(JsonObject.class), Mockito.eq(TEST_COLLECTION));
-
-        assertThat(optionsCaptor.getValue().isUpsert()).isTrue();
-        assertThat(queryCaptor.getValue().getQueryObject().get("_id").toString()).isEqualTo("{ \"$exists\" : false}");
-
-        assertThat(updateCaptor.getValue().getUpdateObject().containsField("$set")).isEqualTo(true);
-        DBObject dbObjectSet = (DBObject) updateCaptor.getValue().getUpdateObject().get("$set");
-        assertThat(dbObjectSet.get("a")).isEqualTo("abc");
-
-        assertThat(updateCaptor.getValue().getUpdateObject().containsField("$setOnInsert")).isEqualTo(true);
-        dbObjectSet = (DBObject) updateCaptor.getValue().getUpdateObject().get("$setOnInsert");
-        assertThat(dbObjectSet.get("_createdAt")).isEqualTo("date");
-    }
-
-    @Test
     public void testUpsert() {
+        ResourceUri resourceUri = new ResourceUri(TEST_COLLECTION, TEST_ID);
+
         ArgumentCaptor<Query> queryCaptor = ArgumentCaptor.forClass(Query.class);
         ArgumentCaptor<Update> updateCaptor = ArgumentCaptor.forClass(Update.class);
         WriteResult writeResultMock = mock(WriteResult.class);
@@ -255,7 +215,7 @@ public class MongoResmiDaoTest {
 
         when(mongoOperations.findAndModify(any(), any(), any(), eq(JsonObject.class), eq(TEST_COLLECTION))).thenAnswer(answerWithId(json));
 
-        mongoResmiDao.upsert(TEST_COLLECTION, TEST_ID, json);
+        mongoResmiDao.updateResource(resourceUri, json);
 
         verify(mongoOperations).findAndModify(queryCaptor.capture(), updateCaptor.capture(), optionsCaptor.capture(),
                 Mockito.eq(JsonObject.class), Mockito.eq(TEST_COLLECTION));
@@ -275,6 +235,8 @@ public class MongoResmiDaoTest {
 
     @Test
     public void testUpsertWithCreatedAt() {
+        ResourceUri resourceUri = new ResourceUri(TEST_COLLECTION, TEST_ID);
+
         ArgumentCaptor<Query> queryCaptor = ArgumentCaptor.forClass(Query.class);
         ArgumentCaptor<Update> updateCaptor = ArgumentCaptor.forClass(Update.class);
         ArgumentCaptor<FindAndModifyOptions> optionsCaptor = ArgumentCaptor.forClass(FindAndModifyOptions.class);
@@ -285,7 +247,7 @@ public class MongoResmiDaoTest {
 
         when(mongoOperations.findAndModify(any(), any(), any(), eq(JsonObject.class), eq(TEST_COLLECTION))).thenAnswer(answerWithId(json));
 
-        mongoResmiDao.upsert(TEST_COLLECTION, TEST_ID, json);
+        mongoResmiDao.updateResource(resourceUri, json);
 
         verify(mongoOperations).findAndModify(queryCaptor.capture(), updateCaptor.capture(), optionsCaptor.capture(),
                 Mockito.eq(JsonObject.class), Mockito.eq(TEST_COLLECTION));
@@ -315,9 +277,10 @@ public class MongoResmiDaoTest {
 
     @Test
     public void testDelete() {
-        mongoResmiDao.deleteRelation("type", new ResourceId("id"), "relation", Optional.of("uri"));
+        ResourceUri uri = new ResourceUri("type", "id", "relation", "uri");
+        mongoResmiDao.deleteRelation(uri);
         Query query = new Query(Criteria.where("_src_id").is("id").and("_dst_id").is("uri"));
-        verify(mongoOperations).remove(query, "type.relation");
+        verify(mongoOperations).findAllAndRemove(eq(query), any(), eq("type.relation"));
     }
 
     @Test
@@ -329,7 +292,8 @@ public class MongoResmiDaoTest {
         Mockito.when(mongoOperations.indexOps(Mockito.anyString())).thenReturn(indexOperations);
 
         Index index = new Index().on(name, Direction.ASC).expire(seconds);
-        mongoResmiDao.ensureCollectionIndex(TEST_COLLECTION, index);
+        ResourceUri resourceUri = new ResourceUri(TEST_COLLECTION);
+        mongoResmiDao.ensureIndex(resourceUri, index);
 
         Mockito.verify(mongoOperations).indexOps(TEST_COLLECTION);
         Mockito.verify(indexOperations).ensureIndex(index);
@@ -345,7 +309,8 @@ public class MongoResmiDaoTest {
         Mockito.when(mongoOperations.indexOps(Mockito.anyString())).thenReturn(indexOperations);
 
         Index index = new Index().on(name, Direction.ASC).expire(seconds);
-        mongoResmiDao.ensureRelationIndex(TEST_COLLECTION, TEST_REL, index);
+        ResourceUri resourceUri = new ResourceUri(TEST_COLLECTION).setRelation(TEST_REL);
+        mongoResmiDao.ensureIndex(resourceUri, index);
 
         Mockito.verify(mongoOperations).indexOps(RELATION_COLLECTION_NAME);
         Mockito.verify(indexOperations).ensureIndex(index);

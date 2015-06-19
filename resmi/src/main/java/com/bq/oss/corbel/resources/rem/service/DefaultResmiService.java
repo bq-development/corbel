@@ -4,6 +4,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.*;
 
+import com.bq.oss.corbel.resources.rem.model.GenericDocument;
 import org.springframework.data.mongodb.core.index.Index;
 
 import com.bq.oss.corbel.resources.rem.dao.NotFoundException;
@@ -13,7 +14,6 @@ import com.bq.oss.corbel.resources.rem.model.ResourceUri;
 import com.bq.oss.corbel.resources.rem.model.SearchableFields;
 import com.bq.oss.corbel.resources.rem.request.CollectionParameters;
 import com.bq.oss.corbel.resources.rem.request.RelationParameters;
-import com.bq.oss.corbel.resources.rem.request.ResourceId;
 import com.bq.oss.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
 import com.bq.oss.corbel.resources.rem.search.ResmiSearch;
 import com.bq.oss.lib.queries.request.*;
@@ -79,11 +79,11 @@ public class DefaultResmiService implements ResmiService {
     }
 
     @Override
-    public JsonArray find(String type, CollectionParameters apiParameters) throws BadConfigurationException {
+    public JsonArray findCollection(ResourceUri uri, CollectionParameters apiParameters) throws BadConfigurationException {
         if (apiParameters.getSearch().isPresent()) {
-            return findInSearchService(new ResourceUri(type), apiParameters);
+            return findInSearchService(uri, apiParameters);
         } else {
-            return resmiDao.find(type, apiParameters.getQueries(), apiParameters.getPagination(), apiParameters.getSort());
+            return resmiDao.findCollection(uri, apiParameters.getQueries(), apiParameters.getPagination(), apiParameters.getSort());
         }
     }
 
@@ -98,48 +98,47 @@ public class DefaultResmiService implements ResmiService {
     }
 
     @Override
-    public JsonObject findResourceById(String type, ResourceId id) {
-        return resmiDao.findById(type, id.getId());
+    public JsonObject findResource(ResourceUri uri) {
+        return resmiDao.findResource(uri);
     }
 
     @Override
-    public JsonElement findRelation(String type, ResourceId id, String relation, RelationParameters apiParameters)
+    public JsonElement findRelation(ResourceUri uri, RelationParameters apiParameters)
             throws BadConfigurationException {
         if (apiParameters.getSearch().isPresent()) {
-            return findInSearchService(new ResourceUri(type, id.getId(), relation), apiParameters);
+            return findInSearchService(uri, apiParameters);
         } else {
-            return resmiDao.findRelation(type, id, relation, apiParameters.getQueries(), apiParameters.getPagination(),
-                    apiParameters.getSort(), apiParameters.getPredicateResource());
+            return resmiDao.findRelation(uri, apiParameters.getQueries(), apiParameters.getPagination(), apiParameters.getSort());
         }
     }
 
     @Override
-    public JsonObject save(String type, JsonObject object, Optional<String> optionalUserId) throws StartsWithUnderscoreException {
+    public JsonObject saveResource(ResourceUri uri, JsonObject object, Optional<String> optionalUserId) throws StartsWithUnderscoreException {
         verifyNotUnderscore(object);
         optionalUserId.ifPresent(userId -> setId(userId, object));
         addDates(object);
-        resmiDao.save(type, object);
-        indexInSearchService(new ResourceUri(type, object.get(ID).getAsString()), object);
+        resmiDao.saveResource(uri, object);
+        indexInSearchService(uri.setTypeId(object.get(ID).getAsString()), object);
         return object;
     }
 
     @Override
-    public JsonObject upsert(String type, String id, JsonObject jsonObject) throws StartsWithUnderscoreException {
+    public JsonObject updateResource(ResourceUri uri, JsonObject jsonObject) throws StartsWithUnderscoreException {
         verifyNotUnderscore(jsonObject);
         addDates(jsonObject);
-        resmiDao.upsert(type, id, jsonObject);
-        indexInSearchService(new ResourceUri(type, id), jsonObject);
+        resmiDao.updateResource(uri, jsonObject);
+        indexInSearchService(uri, jsonObject);
         return jsonObject;
     }
 
     @Override
-    public JsonObject conditionalUpdate(String type, String id, JsonObject jsonObject, List<ResourceQuery> resourceQueries)
+    public JsonObject conditionalUpdateResource(ResourceUri uri, JsonObject jsonObject, List<ResourceQuery> resourceQueries)
             throws StartsWithUnderscoreException {
         verifyNotUnderscore(jsonObject);
         addDates(jsonObject);
-        boolean found = resmiDao.findAndModify(type, id, jsonObject, resourceQueries);
+        boolean found = resmiDao.conditionalUpdateResource(uri, jsonObject, resourceQueries);
         if (found) {
-            indexInSearchService(new ResourceUri(type, id), jsonObject);
+            indexInSearchService(uri, jsonObject);
             return jsonObject;
         }
         return null;
@@ -159,53 +158,62 @@ public class DefaultResmiService implements ResmiService {
     }
 
     @Override
-    public JsonObject createRelation(String type, String id, String relation, String uri, JsonObject requestEntity)
-            throws NotFoundException, StartsWithUnderscoreException {
+    public JsonObject createRelation(ResourceUri uri, JsonObject requestEntity) throws NotFoundException, StartsWithUnderscoreException {
         verifyNotUnderscore(requestEntity);
         addDates(requestEntity);
-        resmiDao.createRelation(type, id, relation, uri, requestEntity);
-        indexInSearchService(new ResourceUri(type, id, relation, uri), requestEntity);
+        resmiDao.createRelation(uri, requestEntity);
+        indexInSearchService(uri, requestEntity);
         return requestEntity;
     }
 
     @Override
-    public void moveElement(String type, ResourceId id, String relation, String uri, RelationMoveOperation relationMoveOperation) {
-        if (id.isWildcard()) {
+    public void moveRelation(ResourceUri uri, RelationMoveOperation relationMoveOperation) {
+        if (uri.isTypeWildcard()) {
             throw new IllegalArgumentException("Relation origin must not be a wildcard");
         }
-        resmiDao.moveElement(type, id.getId(), relation, uri, relationMoveOperation);
+        resmiDao.moveRelation(uri, relationMoveOperation);
     }
 
     @Override
-    public void deleteResourceById(String type, String id) {
-        resmiDao.deleteById(type, id);
-        deleteInSearchService(type, id);
+    public void deleteResource(ResourceUri uri) {
+        resmiDao.deleteResource(uri);
+        deleteInSearchService(uri);
     }
 
-    private void deleteInSearchService(String type, String id) {
-        if (!searchableFieldsRegistry.getFieldsFromType(type).isEmpty()) {
-            search.deleteDocument(new ResourceUri(type, id));
+    private void deleteInSearchService(ResourceUri uri) {
+        if (!searchableFieldsRegistry.getFieldsFromType(uri.getType()).isEmpty()) {
+            search.deleteDocument(uri);
         }
     }
 
     @Override
-    public void deleteRelation(String type, ResourceId id, String relation, Optional<String> dstId) {
-        resmiDao.deleteRelation(type, id, relation, dstId);
+    public void deleteCollection(ResourceUri uri, Optional<List<ResourceQuery>> queries) {
+        List<GenericDocument> deleteEntries = resmiDao.deleteCollection(uri, queries);
+        deleteInSearchService(uri, deleteEntries);
     }
 
     @Override
-    public void ensureExpireIndex(String type) {
-        resmiDao.ensureExpireIndex(type);
+    public void deleteRelation(ResourceUri uri) {
+        List<GenericDocument> deleteEntries = resmiDao.deleteRelation(uri);
+        deleteInSearchService(uri, deleteEntries);
+    }
+
+    private void deleteInSearchService(ResourceUri uri, List<GenericDocument> deleteEntries) {
+        if (!searchableFieldsRegistry.getFieldsFromType(uri.getType()).isEmpty()) {
+            for (GenericDocument deleteEntry : deleteEntries) {
+                search.deleteDocument(uri.setRelationId(deleteEntry.getId()));
+            }
+        }
     }
 
     @Override
-    public void ensureCollectionIndex(String type, Index index) {
-        resmiDao.ensureCollectionIndex(type, index);
+    public void ensureExpireIndex(ResourceUri uri) {
+        resmiDao.ensureExpireIndex(uri);
     }
 
     @Override
-    public void ensureRelationIndex(String type, String relation, Index index) {
-        resmiDao.ensureRelationIndex(type, relation, index);
+    public void ensureIndex(ResourceUri uri, Index index) {
+        resmiDao.ensureIndex(uri, index);
     }
 
     @Override
@@ -222,7 +230,7 @@ public class DefaultResmiService implements ResmiService {
 
     @Override
     public void addSearchableFields(SearchableFields searchableFields) {
-        resmiDao.save(SEARCHABLE_FIELDS, searchableFields);
+        resmiDao.saveResource(new ResourceUri(SEARCHABLE_FIELDS), searchableFields);
         searchableFieldsRegistry.addFields(searchableFields);
     }
 

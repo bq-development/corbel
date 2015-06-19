@@ -1,11 +1,14 @@
 package com.bq.oss.corbel.resources.rem.resmi;
 
 import java.net.URI;
+import java.util.Optional;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import com.bq.oss.corbel.resources.rem.Rem;
+import com.bq.oss.corbel.resources.rem.model.ResourceUri;
+import com.bq.oss.corbel.resources.rem.request.RelationParameters;
 import com.bq.oss.corbel.resources.rem.service.ResmiService;
 import com.bq.oss.lib.queries.request.AggregationResult;
 import com.bq.oss.lib.ws.api.error.ErrorResponseFactory;
@@ -37,6 +40,18 @@ public abstract class AbstractResmiRem implements Rem<JsonObject> {
         } else {
             return Response.ok().type(javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE).entity(response).build();
         }
+    }
+
+    protected ResourceUri buildCollectionUri(String type) {
+        return new ResourceUri(type);
+    }
+
+    protected ResourceUri buildResourceUri(String type, String id) {
+        return new ResourceUri(type, id);
+    }
+
+    protected ResourceUri buildRelationUri(String type, String id, String relation, RelationParameters apiParameters) {
+        return new ResourceUri(type, id, relation, apiParameters.getPredicateResource().orElse(null));
     }
 
     protected Response noContent() {

@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 import java.util.Arrays;
 import java.util.List;
 
+import com.bq.oss.corbel.resources.rem.model.ResourceUri;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -45,6 +46,7 @@ public class DefaultResmiOrderTest {
 
     @Test
     public void moveToFirstTest() {
+        ResourceUri resourceUri = new ResourceUri(TEST_COLLECTION, TEST_ID, TEST_REL, TEST_ID_RELATION_OBJECT);
         RelationMoveOperation relationMoveOperation = new RelationMoveOperation(1);
 
         JsonObject elem1 = new JsonObject();
@@ -55,7 +57,7 @@ public class DefaultResmiOrderTest {
 
         Mockito.when(mongoOperations.find(Mockito.any(Query.class), Mockito.eq(JsonObject.class), Mockito.anyString())).thenReturn(list);
 
-        defaultResmiOrder.moveElement(TEST_COLLECTION, TEST_ID, TEST_REL, TEST_ID_RELATION_OBJECT, relationMoveOperation);
+        defaultResmiOrder.moveRelation(resourceUri, relationMoveOperation);
 
         Update update = new Update();
         update.set("_order", 0.0d);
@@ -64,6 +66,7 @@ public class DefaultResmiOrderTest {
 
     @Test
     public void moveToMiddleTest() {
+        ResourceUri resourceUri = new ResourceUri(TEST_COLLECTION, TEST_ID, TEST_REL, TEST_ID_RELATION_OBJECT);
         RelationMoveOperation relationMoveOperation = new RelationMoveOperation(2);
 
         JsonObject elem1 = new JsonObject();
@@ -74,7 +77,7 @@ public class DefaultResmiOrderTest {
 
         Mockito.when(mongoOperations.find(Mockito.any(Query.class), Mockito.eq(JsonObject.class), Mockito.anyString())).thenReturn(list);
 
-        defaultResmiOrder.moveElement(TEST_COLLECTION, TEST_ID, TEST_REL, TEST_ID_RELATION_OBJECT, relationMoveOperation);
+        defaultResmiOrder.moveRelation(resourceUri, relationMoveOperation);
 
         Update update = new Update();
         update.set("_order", 1.5d);
@@ -83,6 +86,7 @@ public class DefaultResmiOrderTest {
 
     @Test
     public void moveToLastTest() {
+        ResourceUri resourceUri = new ResourceUri(TEST_COLLECTION, TEST_ID, TEST_REL, TEST_ID_RELATION_OBJECT);
         RelationMoveOperation relationMoveOperation = new RelationMoveOperation(2);
 
         JsonObject elem1 = new JsonObject();
@@ -97,7 +101,7 @@ public class DefaultResmiOrderTest {
                 mongoOperations.findAndModify(Mockito.any(Query.class), Mockito.any(Update.class), Mockito.any(),
                         Mockito.eq(JsonObject.class), Mockito.anyString())).thenReturn(json);
 
-        defaultResmiOrder.moveElement(TEST_COLLECTION, TEST_ID, TEST_REL, TEST_ID_RELATION_OBJECT, relationMoveOperation);
+        defaultResmiOrder.moveRelation(resourceUri, relationMoveOperation);
 
         Update update = new Update();
         update.set("_order", 2.0d);

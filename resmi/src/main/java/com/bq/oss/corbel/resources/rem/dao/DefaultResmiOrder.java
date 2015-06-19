@@ -2,6 +2,7 @@ package com.bq.oss.corbel.resources.rem.dao;
 
 import java.util.List;
 
+import com.bq.oss.corbel.resources.rem.model.ResourceUri;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoOperations;
@@ -33,15 +34,15 @@ public class DefaultResmiOrder implements ResmiOrder {
     }
 
     @Override
-    public void moveElement(String type, String id, String relation, String uri, RelationMoveOperation relationMoveOperation) {
-        String originCollection = namespaceNormalizer.normalize(type);
-        String destCollection = namespaceNormalizer.normalize(relation);
+    public void moveRelation(ResourceUri uri, RelationMoveOperation relationMoveOperation) {
+        String originCollection = namespaceNormalizer.normalize(uri.getType());
+        String destCollection = namespaceNormalizer.normalize(uri.getRelation());
 
         if (relationMoveOperation.getValue() < 1) {
             throw new IllegalArgumentException("$pos must be greater or equal than 1");
         }
         String collection = originCollection + RELATION_CONCATENATOR + destCollection;;
-        Query query = Query.query(Criteria.where(JsonRelation._SRC_ID).is(id).and(JsonRelation._DST_ID).ne(uri)).limit(2);
+        Query query = Query.query(Criteria.where(JsonRelation._SRC_ID).is(uri.getTypeId()).and(JsonRelation._DST_ID).ne(uri.getRelationId())).limit(2);
         if (relationMoveOperation.getValue() > 1) {
             query.skip((int) relationMoveOperation.getValue() - 2);
         }
@@ -59,18 +60,18 @@ public class DefaultResmiOrder implements ResmiOrder {
             if (order == order1 || order == order2) {
                 Update update = new Update();
                 update.inc(ORDER_FIELD, 1);
-                nextOrderInRelation(originCollection, id, destCollection);
-                mongoOperations.updateMulti(Query.query(Criteria.where(JsonRelation._SRC_ID).is(id).and(ORDER_FIELD).gt(order1)), update,
+                nextOrderInRelation(originCollection, uri.getTypeId(), destCollection);
+                mongoOperations.updateMulti(Query.query(Criteria.where(JsonRelation._SRC_ID).is(uri.getTypeId()).and(ORDER_FIELD).gt(order1)), update,
                         collection);
                 order = (order1 + order2 + 1) / 2;
             }
         } else {
-            order = nextOrderInRelation(originCollection, id, destCollection);
+            order = nextOrderInRelation(originCollection, uri.getTypeId(), destCollection);
         }
 
         Update update = new Update();
         update.set(ORDER_FIELD, order);
-        mongoOperations.updateFirst(Query.query(Criteria.where(JsonRelation._SRC_ID).is(id).and(JsonRelation._DST_ID).is(uri)), update,
+        mongoOperations.updateFirst(Query.query(Criteria.where(JsonRelation._SRC_ID).is(uri.getTypeId()).and(JsonRelation._DST_ID).is(uri.getRelationId())), update,
                 collection);
     }
 
