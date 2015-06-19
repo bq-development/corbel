@@ -4,6 +4,7 @@
 package com.bq.oss.corbel.resources.api;
 
 import static org.fest.assertions.api.Assertions.assertThat;
+import static org.fest.assertions.api.Assertions.not;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
@@ -340,7 +341,26 @@ public class RemResourceTest {
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Test
-    public void testPostCollection() {
+    public void testPostCollectionWithoutLocation() {
+        Mockito.reset(eventBusMock);
+        Response testResponse = Response.ok().entity(TEST_OK).build();
+        // TODO Complete Pagination, Query and Sort
+        ArgumentCaptor<RequestParameters> parametersCaptor = ArgumentCaptor.forClass(RequestParameters.class);
+        ArgumentCaptor<Optional> optionalJsonObjectCaptor = ArgumentCaptor.forClass(Optional.class);
+        when(
+                remMock.collection(Mockito.eq(TEST_TYPE), parametersCaptor.capture(), Mockito.any(URI.class),
+                        optionalJsonObjectCaptor.capture())).thenReturn(testResponse);
+        assertThat(
+                RULE.client().resource(COLLECTION_URI).type(MediaType.APPLICATION_JSON_TYPE).header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
+                        .post(String.class, jsonTest)).isEqualTo(TEST_OK);
+        assertThat(parametersCaptor.getValue().getTokenInfo().getUserId()).isSameAs(TEST_USER_ID);
+        verifyZeroInteractions(eventBusMock);
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    @Test
+    public void testPostCollectionWithLocation() {
+        Mockito.reset(eventBusMock);
         Response testResponse = Response.ok().header("Location", RESOURCE_ID.getId()).entity(TEST_OK).build();
         // TODO Complete Pagination, Query and Sort
         ArgumentCaptor<RequestParameters> parametersCaptor = ArgumentCaptor.forClass(RequestParameters.class);
@@ -456,6 +476,7 @@ public class RemResourceTest {
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Test
     public void testDeleteResource() {
+        Mockito.reset(eventBusMock);
         Response testResponse = Response.ok().entity(TEST_OK).build();
         ArgumentCaptor<RequestParameters> parametersCaptor = ArgumentCaptor.forClass(RequestParameters.class);
         ArgumentCaptor<Optional> optionalJsonObjectCaptor = ArgumentCaptor.forClass(Optional.class);
@@ -487,6 +508,7 @@ public class RemResourceTest {
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Test
     public void testPutResource() {
+        Mockito.reset(eventBusMock);
         Response testResponse = Response.ok().entity(TEST_OK).build();
         ArgumentCaptor<RequestParameters> parametersCaptor = ArgumentCaptor.forClass(RequestParameters.class);
         ArgumentCaptor<Optional> optionalJsonObjectCaptor = ArgumentCaptor.forClass(Optional.class);

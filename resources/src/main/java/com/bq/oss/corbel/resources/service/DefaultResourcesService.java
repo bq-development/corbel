@@ -92,8 +92,8 @@ public class DefaultResourcesService implements ResourcesService {
             return ErrorResponseFactory.getInstance().badRequest(e);
         }
 
-        if (method == HttpMethod.POST && tokenInfo != null && (result.getStatus() == HttpStatus.CREATED_201
-                || result.getStatus() == org.eclipse.jetty.http.HttpStatus.OK_200)) {
+        if (method == HttpMethod.POST && tokenInfo != null && result.getMetadata().containsKey("Location") &&
+                (result.getStatus() == HttpStatus.CREATED_201 || result.getStatus() == org.eclipse.jetty.http.HttpStatus.OK_200)) {
             eventBus.dispatch(ResourceEvent.createResourceEvent(type, result.getMetadata().getFirst("Location").toString(), tokenInfo.getDomainId()));
         }
 
