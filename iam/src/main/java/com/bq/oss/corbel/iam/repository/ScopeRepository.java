@@ -12,7 +12,8 @@ import com.bq.oss.corbel.iam.model.Scope;
 public interface ScopeRepository extends CrudRepository<Scope, String> {
     String SCOPE_CACHE = "scope_cache";
 
-    @Cacheable(SCOPE_CACHE)
+    // TODO: Fix cache -> fillScope modify cache content
+    // @Cacheable(SCOPE_CACHE)
     Scope findOne(String id);
 
 }
