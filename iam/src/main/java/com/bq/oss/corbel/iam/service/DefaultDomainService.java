@@ -11,7 +11,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import com.bq.oss.corbel.iam.exception.DomainAlreadyExists;
 import com.bq.oss.corbel.iam.exception.InvalidAggregationException;
 import com.bq.oss.corbel.iam.model.Domain;
-import com.bq.oss.corbel.iam.model.Entity;
+import com.bq.oss.corbel.iam.model.Scope;
 import com.bq.oss.corbel.iam.repository.DomainRepository;
 import com.bq.oss.lib.queries.request.*;
 
@@ -46,8 +46,9 @@ public class DefaultDomainService implements DomainService {
         }
 
         try {
-            Set<String> expandedRequestedScopes = scopeService.expandScopes(scopes).stream().map(Entity::getId).collect(Collectors.toSet());
-            Set<String> expandedDomainScopes = scopeService.expandScopes(domain.getScopes()).stream().map(Entity::getId)
+            Set<String> expandedRequestedScopes = scopeService.expandScopes(scopes).stream().map(Scope::getIdWithParameters)
+                    .collect(Collectors.toSet());
+            Set<String> expandedDomainScopes = scopeService.expandScopes(domain.getScopes()).stream().map(Scope::getIdWithParameters)
                     .collect(Collectors.toSet());
             return expandedDomainScopes.containsAll(expandedRequestedScopes);
         } catch (IllegalStateException e) {

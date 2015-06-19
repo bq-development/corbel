@@ -9,6 +9,7 @@ import net.oauth.jsontoken.JsonToken;
 
 import com.bq.oss.corbel.iam.model.Client;
 import com.bq.oss.corbel.iam.model.Domain;
+import com.bq.oss.corbel.iam.model.Scope;
 import com.bq.oss.corbel.iam.model.User;
 import com.bq.oss.corbel.iam.repository.ClientRepository;
 import com.bq.oss.corbel.iam.repository.DomainRepository;
@@ -42,6 +43,7 @@ public class JsonTokenAuthorizationRequestContext implements AuthorizationReques
     private BasicParams basicParams;
     private Boolean hasPrincipal;
     private String principalId;
+    private Set<Scope> expandedRequestedScopes;
 
     public JsonTokenAuthorizationRequestContext(ClientRepository clientRepository, DomainRepository domainRepository,
             UserRepository userRepository, JsonToken jsonToken) {
@@ -149,6 +151,16 @@ public class JsonTokenAuthorizationRequestContext implements AuthorizationReques
     @Override
     public BasicParams getBasicParams() {
         return (basicParams == null) ? (basicParams = BasicParams.createFromJWT(jsonToken)) : basicParams;
+    }
+
+    @Override
+    public Set<Scope> getExpandedRequestedScopes() {
+        return expandedRequestedScopes;
+    }
+
+    @Override
+    public void setExpandedRequestedScopes(Set<Scope> expandedRequestedScopes) {
+        this.expandedRequestedScopes = expandedRequestedScopes;
     }
 
     @Override

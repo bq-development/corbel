@@ -4,6 +4,7 @@ import java.util.Set;
 
 import com.bq.oss.corbel.iam.model.Client;
 import com.bq.oss.corbel.iam.model.Domain;
+import com.bq.oss.corbel.iam.model.Scope;
 import com.bq.oss.corbel.iam.model.User;
 
 /**
@@ -55,4 +56,9 @@ public interface AuthorizationRequestContext {
     boolean isBasic();
 
     BasicParams getBasicParams();
+
+    Set<Scope> getExpandedRequestedScopes();
+
+    void setExpandedRequestedScopes(Set<Scope> expandedRequestedScopes);
+
 }

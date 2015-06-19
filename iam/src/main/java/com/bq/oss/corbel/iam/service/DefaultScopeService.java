@@ -9,12 +9,9 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.util.CollectionUtils;
 
-import com.bq.oss.corbel.iam.auth.AuthorizationRequestContext;
 import com.bq.oss.corbel.iam.exception.ScopeNameException;
-import com.bq.oss.corbel.iam.model.Domain;
 import com.bq.oss.corbel.iam.model.Entity;
 import com.bq.oss.corbel.iam.model.Scope;
 import com.bq.oss.corbel.iam.repository.ScopeRepository;
@@ -30,8 +27,6 @@ import com.google.gson.JsonPrimitive;
  * 
  */
 public class DefaultScopeService implements ScopeService {
-
-    public static final String EXPAND_SCOPES_CACHE = "expandScopesCache";
     private static final Logger LOG = LoggerFactory.getLogger(DefaultScopeService.class);
     private static final int SCOPE_ID_POSITION = 0;
     private static final int FIRST_PARAM_POSITION = 1;
@@ -42,18 +37,21 @@ public class DefaultScopeService implements ScopeService {
     private final String iamAudience;
     private final Clock clock;
 
+    private final EventsService eventsService;
+
     public DefaultScopeService(ScopeRepository scopeRepository, AuthorizationRulesRepository authorizationRulesRepository,
-            ScopeFillStrategy fillStrategy, String iamAudience, Clock clock) {
+            ScopeFillStrategy fillStrategy, String iamAudience, Clock clock, EventsService eventsService) {
         this.scopeRepository = scopeRepository;
         this.authorizationRulesRepository = authorizationRulesRepository;
         this.fillStrategy = fillStrategy;
         this.iamAudience = iamAudience;
         this.clock = clock;
+        this.eventsService = eventsService;
     }
 
     public DefaultScopeService(ScopeRepository scopeRepository, AuthorizationRulesRepository authorizationRulesRepository,
-            ScopeFillStrategy fillStrategy, String iamAudience) {
-        this(scopeRepository, authorizationRulesRepository, fillStrategy, iamAudience, Clock.systemDefaultZone());
+            ScopeFillStrategy fillStrategy, String iamAudience, EventsService eventsService) {
+        this(scopeRepository, authorizationRulesRepository, fillStrategy, iamAudience, Clock.systemDefaultZone(), eventsService);
     }
 
     @Override
@@ -125,6 +123,11 @@ public class DefaultScopeService implements ScopeService {
     }
 
     @Override
+    public Set<Scope> fillScopes(Set<Scope> scope, String userId, String clientId) {
+        return scope.stream().map(s -> fillScope(s, userId, clientId)).collect(Collectors.toSet());
+    }
+
+    @Override
     public Scope fillScope(Scope scope, String userId, String clientId) {
         Validate.notNull(scope, "scope must not be null");
         Validate.notNull(clientId, "clientId must not be null");
@@ -142,13 +145,9 @@ public class DefaultScopeService implements ScopeService {
     }
 
     @Override
-    public void publishAuthorizationRules(String token, long tokenExpirationTime, Set<String> scopes, String principalId,
-            String issuerClientId) {
-        Validate.notNull(scopes);
-        Validate.noNullElements(scopes);
-        Set<Scope> filledScopes = expandScopes(scopes).stream().map(s -> fillScope(s, principalId, issuerClientId))
-                .collect(Collectors.toSet());
-
+    public void publishAuthorizationRules(String token, long tokenExpirationTime, Set<Scope> filledScopes) {
+        Validate.notNull(filledScopes);
+        Validate.noNullElements(filledScopes);
         Map<String, Set<JsonObject>> rules = prepareRules(filledScopes.toArray(new Scope[filledScopes.size()]));
 
         for (Map.Entry<String, Set<JsonObject>> entry : rules.entrySet()) {
@@ -161,11 +160,8 @@ public class DefaultScopeService implements ScopeService {
     }
 
     @Override
-    public void addAuthorizationRules(String token, Set<String> scopes, String principalId, String issuerClientId) {
-        Set<Scope> filledScopes = expandScopes(scopes).stream().map(s -> fillScope(s, principalId, issuerClientId))
-                .collect(Collectors.toSet());
+    public void addAuthorizationRules(String token, Set<Scope> filledScopes) {
         Map<String, Set<JsonObject>> rules = prepareRules(filledScopes.toArray(new Scope[filledScopes.size()]));
-
         for (Map.Entry<String, Set<JsonObject>> entry : rules.entrySet()) {
             Set<JsonObject> audienceRules = entry.getValue();
 
@@ -184,7 +180,6 @@ public class DefaultScopeService implements ScopeService {
         }
     }
 
-    @Cacheable(EXPAND_SCOPES_CACHE)
     @Override
     public Set<Scope> expandScopes(Collection<String> scopes) {
         if (CollectionUtils.isEmpty(scopes)) {
@@ -210,24 +205,15 @@ public class DefaultScopeService implements ScopeService {
     }
 
     @Override
-    public Set<String> expandScopesIds(Set<String> scopes) {
-        return expandScopes(scopes).stream().map(Scope::getIdWithParameters).collect(Collectors.toSet());
-    }
-
-    @Override
-    public Set<String> getAllowedScopes(AuthorizationRequestContext context) {
-        Domain requestedDomain = context.getRequestedDomain();
-        Set<String> domainScopes = expandScopesIds(requestedDomain.getScopes());
-
-        if (context.isCrossDomain()) {
+    public Set<Scope> getAllowedScopes(Set<Scope> domainScopes, Set<Scope> clientScopes, Set<Scope> userScopes, boolean isCrossDomain,
+            boolean hasPrincipal) {
+        if (isCrossDomain) {
             return domainScopes;
         }
 
-        Set<String> clientScopes = expandScopesIds(context.getIssuerClient().getScopes());
-        Set<String> requestedScopes;
+        Set<Scope> requestedScopes;
 
-        if (context.hasPrincipal()) {
-            Set<String> userScopes = expandScopesIds(context.getPrincipal().getScopes());
+        if (hasPrincipal) {
             requestedScopes = Sets.union(userScopes, clientScopes);
         } else {
             requestedScopes = clientScopes;
@@ -243,11 +229,13 @@ public class DefaultScopeService implements ScopeService {
         }
 
         scopeRepository.save(scope);
+        eventsService.sendCreateScope(scope.getIdWithParameters());
     }
 
     @Override
     public void delete(String scope) {
         scopeRepository.delete(scope);
+        eventsService.sendDeleteScope(scope);
     }
 
     private Map<String, Set<JsonObject>> prepareRules(Scope... scopes) {

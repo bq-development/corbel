@@ -2,6 +2,7 @@ package com.bq.oss.corbel.iam.service;
 
 import java.util.Map;
 
+import com.bq.oss.corbel.iam.model.Scope;
 import com.bq.oss.corbel.iam.model.User;
 
 /**
@@ -16,4 +17,8 @@ public interface EventsService {
     void sendNotificationEvent(String notificationId, String recipient, Map<String, String> properties);
 
     void sendDomainDeletedEvent(String domainId);
+
+    void sendCreateScope(String scope);
+
+    void sendDeleteScope(String scope);
 }

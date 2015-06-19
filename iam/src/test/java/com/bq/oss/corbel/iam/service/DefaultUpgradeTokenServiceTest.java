@@ -1,6 +1,5 @@
 package com.bq.oss.corbel.iam.service;
 
-import static org.mockito.Matchers.startsWith;
 import static org.mockito.Mockito.*;
 
 import java.security.SignatureException;
@@ -57,14 +56,19 @@ import com.google.gson.JsonPrimitive;
         JsonObject json = new JsonObject();
         json.add("scope", new JsonPrimitive(TEST_SCOPES));
         when(validJsonToken.getPayloadAsJsonObject()).thenReturn(json);
-        Scope scope = new Scope();
-        Set<String> scopes = new HashSet<String>(Arrays.asList("SCOPE_1", "SCOPE_2"));
-        when(scopeServiceMock.getScope(startsWith("SCOPE_"))).thenReturn(scope);
-        when(scopeServiceMock.fillScope(scope, TEST_USER, TEST_CLIENT)).thenReturn(scope);
+        Scope scope1 = new Scope();
+        Scope scope2 = new Scope();
+        Set<Scope> scopes = new HashSet<Scope>(Arrays.asList(scope1, scope2));
+        Set<String> scopesIds = new HashSet<String>(Arrays.asList("SCOPE_1", "SCOPE_2"));
+
+        when(scopeServiceMock.expandScopes(scopesIds)).thenReturn(scopes);
+        when(scopeServiceMock.fillScopes(scopes, TEST_USER, TEST_CLIENT)).thenReturn(scopes);
+
         when(jsonTokenParser.verifyAndDeserialize(TEST_ASSERTION)).thenReturn(validJsonToken);
         upgradeTokenService.upgradeToken(TEST_ASSERTION, tokenReader);
 
-        verify(scopeServiceMock).addAuthorizationRules(TEST_TOKEN, scopes, TEST_USER, TEST_CLIENT);
+        verify(scopeServiceMock).fillScopes(scopes, TEST_USER, TEST_CLIENT);
+        verify(scopeServiceMock).addAuthorizationRules(TEST_TOKEN, scopes);
     }
 
     @Test(expected = UnauthorizedException.class)
@@ -74,8 +78,7 @@ import com.google.gson.JsonPrimitive;
         json.add("scope", new JsonPrimitive(TEST_SCOPES));
         when(validJsonToken.getPayloadAsJsonObject()).thenReturn(json);
 
-        doThrow(new IllegalStateException("Nonexistent scope scopeId")).when(scopeServiceMock).addAuthorizationRules(anyString(), anySet(),
-                anyString(), anyString());
+        doThrow(new IllegalStateException("Nonexistent scope scopeId")).when(scopeServiceMock).addAuthorizationRules(anyString(), anySet());
 
         when(jsonTokenParser.verifyAndDeserialize(TEST_ASSERTION)).thenReturn(validJsonToken);
         upgradeTokenService.upgradeToken(TEST_ASSERTION, tokenReader);
@@ -83,13 +86,15 @@ import com.google.gson.JsonPrimitive;
 
     @Test
     public void upgradeTokenEmptyScopeTest() throws SignatureException, UnauthorizedException {
-        Set<String> scopes = new HashSet<>();
+        Set<Scope> scopes = new HashSet<>();
         JsonToken validJsonToken = mock(JsonToken.class);
         JsonObject json = new JsonObject();
         json.add("scope", new JsonPrimitive(""));
         when(validJsonToken.getPayloadAsJsonObject()).thenReturn(json);
         when(jsonTokenParser.verifyAndDeserialize(TEST_ASSERTION)).thenReturn(validJsonToken);
         upgradeTokenService.upgradeToken(TEST_ASSERTION, tokenReader);
-        verify(scopeServiceMock).addAuthorizationRules(TEST_TOKEN, scopes, TEST_USER, TEST_CLIENT);
+
+        verify(scopeServiceMock).fillScopes(scopes, TEST_USER, TEST_CLIENT);
+        verify(scopeServiceMock).addAuthorizationRules(TEST_TOKEN, scopes);
     }
 }

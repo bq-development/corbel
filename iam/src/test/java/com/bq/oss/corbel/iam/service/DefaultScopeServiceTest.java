@@ -65,24 +65,26 @@ public class DefaultScopeServiceTest {
     private AuthorizationRulesRepository authorizationRulesRepositoryMock;
     private ScopeFillStrategy fillStrategyMock;
 
+    private EventsService eventsServiceMock;
+
     @Before
     public void setup() {
         scopeRepositoryMock = mock(ScopeRepository.class);
         authorizationRulesRepositoryMock = mock(AuthorizationRulesRepository.class);
         fillStrategyMock = mock(ScopeFillStrategy.class);
+        eventsServiceMock = mock(EventsService.class);
         service = new DefaultScopeService(scopeRepositoryMock, authorizationRulesRepositoryMock, fillStrategyMock, IAM_AUDIENCE,
-                Clock.fixed(now, ZoneId.systemDefault()));
+                Clock.fixed(now, ZoneId.systemDefault()), eventsServiceMock);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testPublishAuthorizationRulesIllegalArgument() {
-        service.publishAuthorizationRules(TEST_TOKEN, TEST_TOKEN_EXPIRATION_TIME, null, null, null);
+        service.publishAuthorizationRules(TEST_TOKEN, TEST_TOKEN_EXPIRATION_TIME, null);
     }
 
     @SuppressWarnings("unchecked")
     @Test
     public void testPublishAuthorizationRules() {
-        Set<String> scopes = new HashSet<>(Arrays.asList("TOKEN_1", "TOKEN_2"));
         String principalId = "principalId";
         String issuerClientId = "issuerClientId";
 
@@ -98,6 +100,8 @@ public class DefaultScopeServiceTest {
         when(scope2.getRules()).thenReturn(RULES_2);
         when(scope2.isComposed()).thenReturn(false);
 
+        Set<Scope> scopes = new HashSet<>(Arrays.asList(scope1, scope2));
+
         doAnswer(returnsFirstArg()).when(fillStrategyMock).fillScope(Matchers.<Scope>any(), anyMap());
 
         when(scopeRepositoryMock.findOne(Mockito.eq("TOKEN_1"))).thenReturn(scope1);
@@ -106,7 +110,7 @@ public class DefaultScopeServiceTest {
         when(authorizationRulesRepositoryMock.getKeyForAuthorizationRules(TEST_TOKEN, MODULE_A)).thenReturn(key(TEST_TOKEN, MODULE_A));
         when(authorizationRulesRepositoryMock.getKeyForAuthorizationRules(TEST_TOKEN, MODULE_B)).thenReturn(key(TEST_TOKEN, MODULE_B));
 
-        service.publishAuthorizationRules(TEST_TOKEN, TEST_TOKEN_EXPIRATION_TIME, scopes, principalId, issuerClientId);
+        service.publishAuthorizationRules(TEST_TOKEN, TEST_TOKEN_EXPIRATION_TIME, scopes);
 
         verify(authorizationRulesRepositoryMock).save(key(TEST_TOKEN, MODULE_A), TEST_TOKEN_EXPIRATION_TIME - now.toEpochMilli(),
                 array(RULES_1));
@@ -152,7 +156,7 @@ public class DefaultScopeServiceTest {
     @SuppressWarnings("unchecked")
     @Test
     public void testAddAuthorizationRules() {
-        Set<String> scopes = new HashSet<>(Arrays.asList("TOKEN_1", "TOKEN_2"));
+
 
         Scope scope1 = mock(Scope.class);
         when(scope1.getId()).thenReturn("TOKEN_1");
@@ -165,6 +169,8 @@ public class DefaultScopeServiceTest {
         when(scope2.getAudience()).thenReturn(MODULE_B);
         when(scope2.getRules()).thenReturn(RULES_2);
         when(scope2.isComposed()).thenReturn(false);
+
+        Set<Scope> scopes = new HashSet<>(Arrays.asList(scope1, scope2));
 
         doAnswer(returnsFirstArg()).when(fillStrategyMock).fillScope(Matchers.<Scope>any(), anyMap());
 
@@ -180,7 +186,7 @@ public class DefaultScopeServiceTest {
         when(authorizationRulesRepositoryMock.existsRules(key(TEST_TOKEN, MODULE_A))).thenReturn(true);
         when(authorizationRulesRepositoryMock.existsRules(key(TEST_TOKEN, MODULE_B))).thenReturn(false);
 
-        service.addAuthorizationRules(TEST_TOKEN, scopes, TEST_USER_ID, TEST_CLIENT_ID);
+        service.addAuthorizationRules(TEST_TOKEN, scopes);
 
         verify(authorizationRulesRepositoryMock).addRules(key(TEST_TOKEN, MODULE_A), array(RULES_1));
         verify(authorizationRulesRepositoryMock).save(key(TEST_TOKEN, MODULE_B), TimeUnit.SECONDS.toMillis(TEST_TOKEN_EXPIRATION_TIME),

@@ -16,7 +16,8 @@ import org.springframework.data.mongodb.core.convert.CustomConversions;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
 import com.bq.oss.corbel.iam.repository.MongoIndexes;
-import com.bq.oss.corbel.iam.service.DefaultScopeService;
+import com.bq.oss.corbel.iam.repository.ScopeRepository;
+import com.bq.oss.corbel.iam.service.ScopeService;
 import com.bq.oss.lib.mongo.JsonObjectMongoReadConverter;
 import com.bq.oss.lib.mongo.JsonObjectMongoWriteConverter;
 import com.bq.oss.lib.mongo.config.DefaultMongoConfiguration;
@@ -30,7 +31,8 @@ import com.google.gson.Gson;
  */
 @Configuration @Import({MongoHealthCheckIoc.class}) @EnableMongoRepositories(value = {"com.bq.oss.corbel.iam.repository",
         "com.bq.oss.lib.token.repository"}, repositoryFactoryBeanClass = QueriesRepositoryFactoryBean.class) @EnableCaching public class IamMongoIoc
-        extends DefaultMongoConfiguration {
+        extends
+            DefaultMongoConfiguration {
 
     @Autowired private Environment env;
 
@@ -62,10 +64,18 @@ import com.google.gson.Gson;
     @Bean
     public CacheManager cacheManager(Environment env) {
         // configure and return an implementation of Spring's CacheManager SPI
+        boolean allowNullValues = true;
         SimpleCacheManager cacheManager = new SimpleCacheManager();
-        ConcurrentMapCache expandScopesCache = new ConcurrentMapCache(DefaultScopeService.EXPAND_SCOPES_CACHE, CacheBuilder.newBuilder()
-                .expireAfterWrite(env.getProperty("iam.cache.scopes.expiry", Long.class), TimeUnit.MINUTES).build().asMap(), false);
-        cacheManager.setCaches(Arrays.asList(expandScopesCache));
+        ConcurrentMapCache expandScopesCache = new ConcurrentMapCache(ScopeService.EXPAND_SCOPES_CACHE, CacheBuilder.newBuilder()
+                .expireAfterWrite(env.getProperty("iam.cache.scopes.expiry", Long.class), TimeUnit.MINUTES).build().asMap(),
+                allowNullValues);
+
+        ConcurrentMapCache scopeCache = new ConcurrentMapCache(ScopeRepository.SCOPE_CACHE, CacheBuilder.newBuilder()
+                .expireAfterWrite(env.getProperty("iam.cache.scopes.expiry", Long.class), TimeUnit.MINUTES).build().asMap(),
+                allowNullValues);
+
+
+        cacheManager.setCaches(Arrays.asList(expandScopesCache, scopeCache));
         return cacheManager;
     }
 }
