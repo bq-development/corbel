@@ -48,13 +48,14 @@ import com.google.common.collect.Sets;
 
     @Before
     public void setup() {
-        scopeA = new Scope();
-        scopeB = new Scope();
-        scopeC = new Scope();
+        scopeA = mock(Scope.class);
+        scopeB = mock(Scope.class);
+        scopeC = mock(Scope.class);
 
-        scopeA.setId(SCOPE_A);
-        scopeB.setId(SCOPE_B);
-        scopeC.setId(SCOPE_C);
+        when(scopeA.getId()).thenReturn(SCOPE_A);
+        when(scopeB.getId()).thenReturn(SCOPE_B);
+        when(scopeC.getId()).thenReturn(SCOPE_C);
+
 
         domainService = new DefaultDomainService(domainRepositoryMock, defaultScopeServiceMock, eventsServiceMock);
     }

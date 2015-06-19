@@ -16,6 +16,10 @@ public class Entity {
         id = entity.id;
     }
 
+    public Entity(String id) {
+        this.id = id;
+    }
+
     public Entity() {}
 
     public String getId() {

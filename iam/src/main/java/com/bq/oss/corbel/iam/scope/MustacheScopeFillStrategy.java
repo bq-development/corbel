@@ -32,8 +32,8 @@ public class MustacheScopeFillStrategy implements ScopeFillStrategy {
         for (JsonObject rule : rules) {
             filledRules.add(fill(rule, params));
         }
-        scope.setRules(filledRules);
-        return scope;
+
+        return new Scope(scope.getId(), scope.getType(), scope.getAudience(), scope.getScopes(), filledRules, scope.getParameters());
     }
 
     private JsonObject fill(JsonObject rule, Map<String, String> params) {

@@ -29,8 +29,7 @@ public interface ScopeService {
 
     void addAuthorizationRules(String token, Set<Scope> filledScopes);
 
-    // TODO: Fix cache -> fillScope modify cache content
-    // @Cacheable(EXPAND_SCOPES_CACHE)
+    @Cacheable(EXPAND_SCOPES_CACHE)
     Set<Scope> expandScopes(Collection<String> scopes);
 
     void publishAuthorizationRules(String token, long tokenExpirationTime, Set<Scope> filledScopes);

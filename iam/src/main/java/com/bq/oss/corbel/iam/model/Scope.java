@@ -21,14 +21,24 @@ import com.google.gson.JsonObject;
  * 
  */
 public class Scope extends Entity {
-
     public static final String COMPOSITE_SCOPE_TYPE = "composite_scope";
 
     private String type;
     @NotEmpty private String audience;
-    @NotEmpty @JsonDeserialize(using = JsonArrayToSetDeserializer.class) private Set<JsonObject> rules = new HashSet<>();
-    private Set<String> scopes = new HashSet<>();
+    @NotEmpty @JsonDeserialize(using = JsonArrayToSetDeserializer.class) private Set<JsonObject> rules;
+    private Set<String> scopes;
     @JsonDeserialize(using = JsonObjectDeserializer.class) private JsonObject parameters;
+
+    private Scope() {}
+
+    public Scope(String id, String type, String audience, Set<String> scopes, Set<JsonObject> rules, JsonObject parameters) {
+        super(id);
+        this.type = type;
+        this.audience = audience;
+        this.scopes = scopes;
+        this.parameters = parameters;
+        this.rules = rules;
+    }
 
     @JsonIgnore
     public boolean isComposed() {
@@ -39,16 +49,8 @@ public class Scope extends Entity {
         return type;
     }
 
-    public void setType(String type) {
-        this.type = type;
-    }
-
     public String getAudience() {
         return audience;
-    }
-
-    public void setAudience(String audience) {
-        this.audience = audience;
     }
 
     @JsonSerialize(using = JsonObjectSetToJsonArraySerializer.class)
@@ -56,25 +58,13 @@ public class Scope extends Entity {
         return rules;
     }
 
-    public void setRules(Set<JsonObject> rules) {
-        this.rules = rules;
-    }
-
     public Set<String> getScopes() {
         return scopes;
-    }
-
-    public void setScopes(Set<String> scopes) {
-        this.scopes = scopes;
     }
 
     @JsonSerialize(using = JsonObjectSerializer.class)
     public JsonObject getParameters() {
         return parameters;
-    }
-
-    public void setParameters(JsonObject parameters) {
-        this.parameters = parameters;
     }
 
     @JsonIgnore

@@ -85,7 +85,7 @@ class IamShell {
         assert rule: "rule is required"
         Scope scope = new Scope()
         scope.setId(scopeId)
-        scope.setAudience(audience)
+        scope.audience = audience
         Gson gson = getGson()
         //Parse rule Map
         def element = gson.toJsonTree(rule)
@@ -96,9 +96,10 @@ class IamShell {
         } catch (ignored) {
         }
         assert pattern: "uri with value '${uri}' is wrong"
-        scope.rules.add(element)
+
+        scope.rules = new HashSet().add(element)
         if (parameters) {
-            scope.setParameters(gson.toJsonTree(parameters))
+            scope.parameters = gson.toJsonTree(parameters)
         }
         scopeRepository.save(scope)
     }
@@ -109,8 +110,8 @@ class IamShell {
         assert scopes: "scopes is required"
         Scope scope = new Scope()
         scope.setId(scopeId)
-        scope.setType(Scope.COMPOSITE_SCOPE_TYPE)
-        scope.setScopes(new HashSet<Scope>(scopes.toList()))
+        scope.type = Scope.COMPOSITE_SCOPE_TYPE
+        scope.scopes = new HashSet<Scope>(scopes.toList())
         scopeRepository.save(scope)
     }
 

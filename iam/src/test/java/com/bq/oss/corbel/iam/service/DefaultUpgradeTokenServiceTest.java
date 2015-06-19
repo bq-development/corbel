@@ -56,8 +56,8 @@ import com.google.gson.JsonPrimitive;
         JsonObject json = new JsonObject();
         json.add("scope", new JsonPrimitive(TEST_SCOPES));
         when(validJsonToken.getPayloadAsJsonObject()).thenReturn(json);
-        Scope scope1 = new Scope();
-        Scope scope2 = new Scope();
+        Scope scope1 = mock(Scope.class);
+        Scope scope2 = mock(Scope.class);
         Set<Scope> scopes = new HashSet<Scope>(Arrays.asList(scope1, scope2));
         Set<String> scopesIds = new HashSet<String>(Arrays.asList("SCOPE_1", "SCOPE_2"));
 

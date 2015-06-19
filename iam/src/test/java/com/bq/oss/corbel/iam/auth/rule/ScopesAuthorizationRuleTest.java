@@ -87,8 +87,9 @@ import com.bq.oss.corbel.iam.utils.Message;
             when(scopeServiceMock.getAllowedScopes(domainScopes, clientScopes, userScopes, context.isCrossDomain(), context.hasPrincipal()))
                     .thenReturn(userScopes);
 
-            Scope scope = new Scope();
-            scope.setId("SCOPE_A");
+            Scope scope = mock(Scope.class);
+            when(scope.getIdWithParameters()).thenReturn("SCOPE_A");
+
             Set requestedScope = new HashSet<>(Arrays.asList(scope));
             when(scopeServiceMock.expandScopes(eq(context.getRequestedScopes()))).thenReturn(requestedScope);
             rule.process(context);

@@ -1,6 +1,8 @@
 package com.bq.oss.corbel.iam.scope;
 
 import static org.fest.assertions.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.Collections;
 
@@ -28,8 +30,8 @@ public class MustacheScopeFillStrategyTest {
 
     @Test
     public void testFill() {
-        Scope scope = new Scope();
-        scope.setRules(Collections.singleton(getRule()));
+        Scope scope = mock(Scope.class);
+        when(scope.getRules()).thenReturn(Collections.singleton(getRule()));
 
         scope = mustacheScopeFillStrategy.fillScope(scope, Collections.singletonMap("userId", "USER"));
 
@@ -39,15 +41,15 @@ public class MustacheScopeFillStrategyTest {
 
     @Test
     public void testFillWithoutRules() {
-        Scope scope = new Scope();
+        Scope scope = mock(Scope.class);
         scope = mustacheScopeFillStrategy.fillScope(scope, Collections.singletonMap("userId", "USER"));
         assertThat(scope.getRules().size()).isEqualTo(0);
     }
 
     @Test
     public void testFillWithNullRules() {
-        Scope scope = new Scope();
-        scope.setRules(null);
+        Scope scope = mock(Scope.class);
+        when(scope.getRules()).thenReturn(null);
         scope = mustacheScopeFillStrategy.fillScope(scope, Collections.singletonMap("userId", "USER"));
         assertThat(scope).isEqualTo(scope);
     }

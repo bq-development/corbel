@@ -86,15 +86,15 @@ public class ScopeResourceTest {
 
     @Test
     public void testGetScope() {
-        Scope expectedScope = new Scope();
-        expectedScope.setId(SCOPE_ID);
+        Scope expectedScope = new Scope(SCOPE_ID, null, null, null, null, null);
+
 
         when(scopeService.getScope(SCOPE_ID)).thenReturn(expectedScope);
 
         Scope scope = RULE.client().resource("/v1.0/scope/" + SCOPE_ID).accept(MediaType.APPLICATION_JSON_TYPE).get(Scope.class);
 
         verify(scopeService).getScope(eq(SCOPE_ID));
-        assertEquals(SCOPE_ID, scope.getId());
+        assertEquals(scope, expectedScope);
     }
 
     @Test

@@ -97,7 +97,7 @@ import com.bq.oss.lib.token.model.TokenType;
         TokenInfo tokenInfoWithoutUserId = TokenInfo.newBuilder().setType(TokenType.TOKEN).setClientId(TEST_CLIENT_ID)
                 .setState(Long.toString(TEST_EXPIRATION)).setDomainId(TEST_DOMAIN_ID).build();
         when(accessTokenFactoryMock.createToken(tokenInfoWithoutUserId, TEST_EXPIRATION)).thenReturn(tokenGrant);
-        when(scopeServiceMock.getScope(TEST_SCOPE_1)).thenReturn(new Scope());
+        when(scopeServiceMock.getScope(TEST_SCOPE_1)).thenReturn(mock(Scope.class));
         TokenGrant grant = authorizationService.authorize(TEST_JWT);
         assertThat(grant).isNotNull();
     }

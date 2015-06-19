@@ -121,7 +121,7 @@ public class DefaultScopeServiceTest {
     @Test
     public void testGetScope() {
         String id = "scope_id";
-        Scope expectedScope = new Scope();
+        Scope expectedScope = mock(Scope.class);
         when(scopeRepositoryMock.findOne(id)).thenReturn(expectedScope);
         assertThat(service.getScope(id)).isSameAs(expectedScope);
 
@@ -204,18 +204,14 @@ public class DefaultScopeServiceTest {
     @SuppressWarnings("unchecked")
     @Test
     public void testComposedScopes() {
-        Scope scope1 = new Scope();
-        scope1.setId(TEST_SCOPE_1);
-        Scope scope2 = new Scope();
-        scope2.setId(TEST_SCOPE_2);
-        Scope compositeScope = new Scope();
-        compositeScope.setId(TEST_COMPOSITE_SCOPE);
-        compositeScope.setType(Scope.COMPOSITE_SCOPE_TYPE);
+        Set<String> requestScopes = new HashSet<>(Arrays.asList(TEST_COMPOSITE_SCOPE));
+
+        Scope scope1 = new Scope(TEST_SCOPE_1, null, IAM_AUDIENCE, null, RULES_3, null);
+        Scope scope2 = new Scope(TEST_SCOPE_2, null, IAM_AUDIENCE, null, RULES_3, null);
         HashSet<String> scopesFromCompositScopes = new HashSet<>(Arrays.asList(TEST_COMPOSITE_SCOPE, TEST_SCOPE_1, TEST_SCOPE_2,
                 TEST_COMPOSITE_SCOPE));
-        compositeScope.setScopes(scopesFromCompositScopes);
-
-        Set<String> requestScopes = new HashSet<>(Arrays.asList(TEST_COMPOSITE_SCOPE));
+        Scope compositeScope = new Scope(TEST_COMPOSITE_SCOPE, Scope.COMPOSITE_SCOPE_TYPE, IAM_AUDIENCE, scopesFromCompositScopes, null,
+                null);
 
         when(scopeRepositoryMock.findOne(Mockito.eq(TEST_COMPOSITE_SCOPE))).thenReturn(compositeScope);
         when(scopeRepositoryMock.findOne(Mockito.eq(TEST_SCOPE_1))).thenReturn(scope1);
@@ -234,11 +230,7 @@ public class DefaultScopeServiceTest {
     @SuppressWarnings("unchecked")
     @Test
     public void testScopeWithCustomParameters() {
-        Scope scope1 = new Scope();
-        scope1.setId(TEST_SCOPE_1);
-        scope1.setAudience(IAM_AUDIENCE);
-        scope1.setRules(RULES_3);
-        scope1.setParameters(RULE_PARAMS);
+        Scope scope1 = new Scope(TEST_SCOPE_1, null, IAM_AUDIENCE, null, RULES_3, RULE_PARAMS);
 
         Set<String> requestScopes = new HashSet<>(Arrays.asList(TEST_SCOPE_1_WITH_PARAMS));
         when(scopeRepositoryMock.findOne(Mockito.eq(TEST_SCOPE_1))).thenReturn(scope1);
@@ -250,11 +242,7 @@ public class DefaultScopeServiceTest {
     @SuppressWarnings("unchecked")
     @Test
     public void testScopeWithErrorsInCustomParameters() {
-        Scope scope1 = new Scope();
-        scope1.setId(TEST_SCOPE_1);
-        scope1.setAudience(IAM_AUDIENCE);
-        scope1.setRules(RULES_3);
-        scope1.setParameters(RULE_PARAMS);
+        Scope scope1 = new Scope(TEST_SCOPE_1, null, IAM_AUDIENCE, null, RULES_3, RULE_PARAMS);
 
         Set<String> requestScopes = new HashSet<>(Arrays.asList(TEST_SCOPE_1_WITH_PARAMS_AND_ERRORS));
         when(scopeRepositoryMock.findOne(Mockito.eq(TEST_SCOPE_1))).thenReturn(scope1);
@@ -266,11 +254,7 @@ public class DefaultScopeServiceTest {
     @SuppressWarnings("unchecked")
     @Test(expected = IllegalStateException.class)
     public void testScopeWithoutCustomParametersDefined() {
-        Scope scope1 = new Scope();
-        scope1.setId(TEST_SCOPE_1);
-        scope1.setAudience(IAM_AUDIENCE);
-        scope1.setRules(RULES_3);
-        scope1.setParameters(RULE_PARAMS);
+        Scope scope1 = new Scope(TEST_SCOPE_1, null, IAM_AUDIENCE, null, RULES_3, RULE_PARAMS);
 
         Set<String> requestScopes = new HashSet<>(Arrays.asList(TEST_SCOPE_1_WITHOUT_PARAMS));
         when(scopeRepositoryMock.findOne(Mockito.eq(TEST_SCOPE_1))).thenReturn(scope1);
@@ -282,11 +266,7 @@ public class DefaultScopeServiceTest {
     @SuppressWarnings("unchecked")
     @Test(expected = IllegalStateException.class)
     public void testScopeWithNotExistCustomParameters() {
-        Scope scope1 = new Scope();
-        scope1.setId(TEST_SCOPE_1);
-        scope1.setAudience(IAM_AUDIENCE);
-        scope1.setRules(RULES_3);
-        scope1.setParameters(RULE_PARAMS);
+        Scope scope1 = new Scope(TEST_SCOPE_1, null, IAM_AUDIENCE, null, RULES_3, RULE_PARAMS);
 
         Set<String> requestScopes = new HashSet<>(Arrays.asList(TEST_SCOPE_1_WITH_NOT_EXIST_PARAMS));
         when(scopeRepositoryMock.findOne(Mockito.eq(TEST_SCOPE_1))).thenReturn(scope1);
@@ -298,24 +278,20 @@ public class DefaultScopeServiceTest {
     @SuppressWarnings("unchecked")
     @Test(expected = IllegalStateException.class)
     public void testScopeWithWrongCustomParameters() {
-        Scope scope1 = new Scope();
-        scope1.setId(TEST_SCOPE_1);
-        scope1.setAudience(IAM_AUDIENCE);
-        scope1.setRules(RULES_3);
-        scope1.setParameters(RULE_PARAMS);
+        Scope scope1 = new Scope(TEST_SCOPE_1, null, IAM_AUDIENCE, null, RULES_3, RULE_PARAMS);
 
         Set<String> requestScopes = new HashSet<>(Arrays.asList(TEST_SCOPE_1_WITH_WRONG_PARAMS));
         when(scopeRepositoryMock.findOne(Mockito.eq(TEST_SCOPE_1))).thenReturn(scope1);
         doAnswer(returnsFirstArg()).when(fillStrategyMock).fillScope(Matchers.<Scope>any(), anyMap());
+
         Set<Scope> scopes = service.getScopes(requestScopes);
         assertThat(scopes.iterator().next().getParameters()).isEqualTo(RULE_WITH_PARAMS_FILLED);
     }
 
     @Test
     public void testCreateScope() throws ScopeNameException {
-        Scope scope = new Scope();
-        scope.setId(TEST_SCOPE_1);
-
+        Scope scope = mock(Scope.class);
+        when(scope.getId()).thenReturn(TEST_SCOPE_1);
         service.create(scope);
         verify(scopeRepositoryMock).save(scope);
     }
@@ -323,9 +299,7 @@ public class DefaultScopeServiceTest {
 
     @Test(expected = ScopeNameException.class)
     public void testCreateIncorrectScope() throws ScopeNameException {
-        Scope scope = new Scope();
-        scope.setId(";");
-
+        Scope scope = new Scope(";", null, null, null, null, null);
         service.create(scope);
     }
 
@@ -334,4 +308,6 @@ public class DefaultScopeServiceTest {
         service.delete(TEST_SCOPE_1);
         verify(scopeRepositoryMock).delete(TEST_SCOPE_1);
     }
+
+
 }
