@@ -1,17 +1,19 @@
 package com.bq.oss.corbel.iam.cli.dsl
 
+import java.util.regex.Pattern
+
+import net.oauth.jsontoken.JsonToken
+import net.oauth.jsontoken.crypto.HmacSHA256Signer
+
+import org.bouncycastle.util.encoders.Base64
+import org.joda.time.Instant
+
 import com.bq.oss.corbel.iam.model.*
 import com.bq.oss.corbel.iam.repository.*
 import com.bq.oss.lib.cli.console.Description
 import com.bq.oss.lib.cli.console.Shell
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
-import net.oauth.jsontoken.JsonToken
-import net.oauth.jsontoken.crypto.HmacSHA256Signer
-import org.bouncycastle.util.encoders.Base64
-import org.joda.time.Instant
-
-import java.util.regex.Pattern
 
 /**
  * @author Alexander De Leon
@@ -83,24 +85,25 @@ class IamShell {
         assert scopeId: "scopeId is required"
         assert audience: "audience is required"
         assert rule: "rule is required"
-        Scope scope = new Scope()
-        scope.setId(scopeId)
-        scope.audience = audience
         Gson gson = getGson()
         //Parse rule Map
         def element = gson.toJsonTree(rule)
         def uri = element.asJsonObject.get("uri")?.getAsString()
-        Pattern pattern = null;
+        Pattern pattern = null
         try {
             pattern = Pattern.compile(uri.replaceAll("\\{\\{.*\\}\\}", "0"))
         } catch (ignored) {
         }
         assert pattern: "uri with value '${uri}' is wrong"
 
-        scope.rules = new HashSet().add(element)
+        def rules =  new HashSet()
+        rules.add(element)
+        def jsonParameters = null
         if (parameters) {
-            scope.parameters = gson.toJsonTree(parameters)
+            jsonParameters = gson.toJsonTree(parameters)
         }
+        Scope scope = new Scope(scopeId, null, audience, null, rules, jsonParameters)
+
         scopeRepository.save(scope)
     }
 
@@ -108,10 +111,7 @@ class IamShell {
     def createCompositeScope(String scopeId, String... scopes) {
         assert scopeId: "scopeId is required"
         assert scopes: "scopes is required"
-        Scope scope = new Scope()
-        scope.setId(scopeId)
-        scope.type = Scope.COMPOSITE_SCOPE_TYPE
-        scope.scopes = new HashSet<Scope>(scopes.toList())
+        Scope scope = new Scope(scopeId, Scope.COMPOSITE_SCOPE_TYPE, null, new HashSet<Scope>(scopes.toList()), null, null)
         scopeRepository.save(scope)
     }
 
@@ -124,7 +124,7 @@ class IamShell {
         User userUsername = userRepository.findByUsernameAndDomain(userFields.username, userFields.domain)
         User userEmail = userRepository.findByDomainAndEmail(userFields.domain, userFields.email)
 
-        User user;
+        User user
         if (!userUsername && !userEmail) {
             user = new User()
             user.setId(userFields.id)
