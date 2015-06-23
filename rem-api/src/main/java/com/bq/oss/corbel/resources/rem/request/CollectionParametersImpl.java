@@ -4,6 +4,9 @@ import java.util.List;
 import java.util.Optional;
 
 import com.bq.oss.lib.queries.jaxrs.QueryParameters;
+import com.bq.oss.lib.queries.parser.AggregationParser;
+import com.bq.oss.lib.queries.parser.QueryParser;
+import com.bq.oss.lib.queries.parser.SortParser;
 import com.bq.oss.lib.queries.request.*;
 
 /**
@@ -13,8 +16,8 @@ import com.bq.oss.lib.queries.request.*;
 public class CollectionParametersImpl extends QueryParameters implements CollectionParameters {
 
     public CollectionParametersImpl(Pagination pagination, Optional<Sort> sort, Optional<List<ResourceQuery>> queries,
-            Optional<List<ResourceQuery>> conditions, Optional<Aggregation> aggregation, Optional<ResourceSearch> search) {
-        super(pagination, sort, queries, conditions, aggregation, search);
+            Optional<List<ResourceQuery>> conditions, Optional<Aggregation> aggreagation, Optional<ResourceSearch> search) {
+        super(pagination, sort, queries, conditions, aggreagation, search);
     }
 
     public CollectionParametersImpl(QueryParameters queryParameters) {

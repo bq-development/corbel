@@ -37,10 +37,8 @@ public class ImageGetRem extends BaseRem<Void> {
     public static final String OPERATIONS_PARAMETER = "image:operations";
     public static final String IMAGE_WIDTH_PARAMETER = "image:width";
     public static final String IMAGE_HEIGHT_PARAMETER = "image:height";
-    private static final String TEMP_IMAGE_NAME = "temp";
-
     private static final Logger LOG = LoggerFactory.getLogger(ImageGetRem.class);
-
+    private static final String TEMP_IMAGE_NAME = "temp";
     private final ImageOperationsService imageOperationsService;
     private final ImageCacheService imageCacheService;
     private RemService remService;

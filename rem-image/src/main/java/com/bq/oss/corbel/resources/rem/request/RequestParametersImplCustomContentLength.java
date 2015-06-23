@@ -4,8 +4,6 @@ import java.util.List;
 
 import javax.ws.rs.core.MultivaluedMap;
 
-import org.springframework.http.MediaType;
-
 import com.bq.oss.lib.token.TokenInfo;
 
 public class RequestParametersImplCustomContentLength<E> implements RequestParameters<E> {
@@ -30,7 +28,7 @@ public class RequestParametersImplCustomContentLength<E> implements RequestParam
     }
 
     @Override
-    public List<MediaType> getAcceptedMediaTypes() {
+    public List getAcceptedMediaTypes() {
         return requestParameters.getAcceptedMediaTypes();
     }
 
@@ -40,13 +38,8 @@ public class RequestParametersImplCustomContentLength<E> implements RequestParam
     }
 
     @Override
-    public List<String> getCustomParameterValues(String parameterName) {
+    public List getCustomParameterValues(String parameterName) {
         return requestParameters.getCustomParameterValues(parameterName);
-    }
-
-    @Override
-    public MultivaluedMap<String, String> getParams() {
-        return requestParameters.getParams();
     }
 
     @Override
