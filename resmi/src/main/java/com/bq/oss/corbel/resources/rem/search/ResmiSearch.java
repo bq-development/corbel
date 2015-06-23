@@ -9,7 +9,8 @@ import com.google.gson.JsonObject;
  * @author Francisco Sanchez
  */
 public interface ResmiSearch {
-    public JsonArray search(ResourceUri uri, String search, int page, int size);
+
+    JsonArray search(ResourceUri uri, String search, int page, int size);
 
     void indexDocument(ResourceUri uri, JsonObject fields);
 
