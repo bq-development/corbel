@@ -57,6 +57,11 @@ public class RequestParametersImpl<E> implements RequestParameters<E> {
     }
 
     @Override
+    public MultivaluedMap<String, String> getParams() {
+        return params;
+    }
+
+    @Override
     public MultivaluedMap<String, String> getHeaders() {
         return headers;
     }

@@ -24,6 +24,8 @@ public interface RequestParameters<E> {
 
     List<String> getCustomParameterValues(String parameterName);
 
+    MultivaluedMap<String, String> getParams();
+
     MultivaluedMap<String, String> getHeaders();
 
     Long getContentLength();
