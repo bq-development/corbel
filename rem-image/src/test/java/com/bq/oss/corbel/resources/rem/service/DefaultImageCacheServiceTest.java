@@ -22,6 +22,7 @@ import com.bq.oss.corbel.resources.rem.Rem;
 import com.bq.oss.corbel.resources.rem.request.RequestParameters;
 import com.bq.oss.corbel.resources.rem.request.ResourceId;
 import com.bq.oss.corbel.resources.rem.request.ResourceParameters;
+import com.google.common.base.Joiner;
 
 @RunWith(MockitoJUnitRunner.class) public class DefaultImageCacheServiceTest {
 
@@ -38,8 +39,9 @@ import com.bq.oss.corbel.resources.rem.request.ResourceParameters;
         when(responseMock.getStatus()).thenReturn(200);
         when(responseMock.getEntity()).thenReturn(mockStreamResponse);
         when(
-                remMock.resource("images:ImageCache", new ResourceId(RESOURCE_ID.getId() + "." + COLLECTION_TEST + "."
-                        + "resize=(150, 100)"), parameters, Optional.empty())).thenReturn(responseMock);
+                remMock.resource("images:ImageCache",
+                        new ResourceId(Joiner.on('.').join("cachedImage", RESOURCE_ID.getId(), COLLECTION_TEST, "resize=(150, 100)")),
+                        parameters, Optional.empty())).thenReturn(responseMock);
 
         DefaultImageCacheService defaultImageCacheService = new DefaultImageCacheService("images:ImageCache");
         assertThat(defaultImageCacheService.getFromCache(remMock, RESOURCE_ID, "resize=(150, 100)", COLLECTION_TEST, parameters))
@@ -51,8 +53,9 @@ import com.bq.oss.corbel.resources.rem.request.ResourceParameters;
         Response responseMock = mock(Response.class);
         when(responseMock.getEntity()).thenReturn(null);
         when(
-                remMock.resource("images:ImageCache", new ResourceId(RESOURCE_ID.getId() + "." + COLLECTION_TEST + "."
-                        + "resize=(150, 100)"), parameters, Optional.empty())).thenReturn(responseMock);
+                remMock.resource("images:ImageCache",
+                        new ResourceId(Joiner.on('.').join("cachedImage", RESOURCE_ID.getId(), COLLECTION_TEST, "resize=(150, 100)")),
+                        parameters, Optional.empty())).thenReturn(responseMock);
 
         DefaultImageCacheService defaultImageCacheService = new DefaultImageCacheService("images:ImageCache");
         assertThat(defaultImageCacheService.getFromCache(remMock, RESOURCE_ID, "resize=(150, 100)", COLLECTION_TEST, parameters)).isNull();
@@ -60,18 +63,22 @@ import com.bq.oss.corbel.resources.rem.request.ResourceParameters;
 
     @Test
     public void putInCacheTest() throws FileNotFoundException {
+        long newSize = 123123l;
+
         File mockFile = mock(File.class);
         InputStream mockStream = mock(FileInputStream.class);
         DefaultImageCacheService defaultImageCacheService = spy(new DefaultImageCacheService("images:ImageCache"));
         doReturn(mockStream).when(defaultImageCacheService).createInputStream(mockFile);
+
         defaultImageCacheService
-                .saveInCacheAsync(remMock, RESOURCE_ID, "resize=(150, 100)", 123123l, COLLECTION_TEST, parameters, mockFile);
+                .saveInCacheAsync(remMock, RESOURCE_ID, "resize=(150, 100)", newSize, COLLECTION_TEST, parameters, mockFile);
+
         ArgumentCaptor<RequestParameters> argument = ArgumentCaptor.forClass(RequestParameters.class);
         verify(remMock).resource(eq("images:ImageCache"),
-                eq(new ResourceId(RESOURCE_ID.getId() + "." + COLLECTION_TEST + "." + "resize=(150, 100)")), argument.capture(),
-                eq(Optional.of(mockStream)));
+                eq(new ResourceId(Joiner.on('.').join("cachedImage", RESOURCE_ID.getId(), COLLECTION_TEST, "resize=(150, 100)"))),
+                argument.capture(), eq(Optional.of(mockStream)));
 
-        assertThat(argument.getValue().getContentLength()).isEqualTo(123123l);
+        assertThat(argument.getValue().getContentLength()).isEqualTo(newSize);
 
     }
 }

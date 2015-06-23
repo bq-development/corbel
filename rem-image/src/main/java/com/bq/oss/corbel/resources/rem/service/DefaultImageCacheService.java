@@ -43,12 +43,17 @@ public class DefaultImageCacheService implements ImageCacheService {
             String collection, RequestParameters<ResourceParameters> parameters, File file) {
         try (InputStream inputStream = createInputStream(file)) {
             resourceId = generateId(resourceId, collection, operationsChain);
-            parameters = new RequestParametersImplCustomContentLength(parameters, newSize);
-            restorPutRem.resource(cacheCollection, resourceId, parameters, Optional.of(inputStream));
+            RequestParameters<ResourceParameters> newParameters = new RequestParametersImplCustomContentLength<>(parameters, newSize);
+            restorPutRem.resource(cacheCollection, resourceId, newParameters, Optional.of(inputStream));
             file.delete();
         } catch (IOException e) {
             LOG.error("Error while saving image in cache", e);
         }
+    }
+
+    @Override
+    public void invalidateCache(Rem<InputStream> restorDeleteRem, ResourceId resourceId) {
+
     }
 
     FileInputStream createInputStream(File file) throws FileNotFoundException {
@@ -56,7 +61,7 @@ public class DefaultImageCacheService implements ImageCacheService {
     }
 
     private ResourceId generateId(ResourceId resourceId, String collection, String operationsChain) {
-        return new ResourceId(Joiner.on(".").join(resourceId.getId(), collection, operationsChain));
+        return new ResourceId(Joiner.on('.').join("cachedImage", resourceId.getId(), collection, operationsChain));
     }
 
 }

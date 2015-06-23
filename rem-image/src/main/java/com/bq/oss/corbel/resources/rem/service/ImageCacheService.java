@@ -16,4 +16,6 @@ public interface ImageCacheService {
     void saveInCacheAsync(Rem<InputStream> restorPutRem, ResourceId resourceId, String operationsChain, Long newSize, String collection,
             RequestParameters<ResourceParameters> parameters, File file);
 
+    void invalidateCache(Rem<InputStream> restorDeleteRem, ResourceId resourceId);
+
 }
