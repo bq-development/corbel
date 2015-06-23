@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -52,11 +51,10 @@ public class ImageGetRem extends BaseRem<Void> {
     public Response resource(String collection, ResourceId resourceId, RequestParameters<ResourceParameters> requestParameters,
             Optional<Void> entity) {
 
-        Rem<?> restorGetRem = remService.getRem(collection, requestParameters.getAcceptedMediaTypes(), HttpMethod.GET,
-                Collections.singletonList(this));
+        Rem<?> restorGetRem = remService.getRem("RestorGetRem");
 
         if (restorGetRem == null) {
-            LOG.warn("RESTOR not found. May  be is needed to install it?");
+            LOG.warn("RESTOR not found. May be is needed to install it?");
             return ErrorResponseFactory.getInstance().notFound();
         }
 
