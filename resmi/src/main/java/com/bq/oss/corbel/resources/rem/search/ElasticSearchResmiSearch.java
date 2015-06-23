@@ -1,5 +1,7 @@
 package com.bq.oss.corbel.resources.rem.search;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
@@ -35,16 +37,20 @@ public class ElasticSearchResmiSearch implements ResmiSearch {
     private final Gson gson;
     private final NamespaceNormalizer namespaceNormalizer;
 
-    public ElasticSearchResmiSearch(Client elasticsearchClient, NamespaceNormalizer namespaceNormalizer, Gson gson) {
-        createResourcesIndex(elasticsearchClient, INDEX);
+    public ElasticSearchResmiSearch(Client elasticsearchClient, NamespaceNormalizer namespaceNormalizer, Gson gson, String... stopWords) {
+        createResourcesIndex(elasticsearchClient, INDEX, stopWords);
         this.elasticsearchClient = elasticsearchClient;
         this.namespaceNormalizer = namespaceNormalizer;
         this.gson = gson;
     }
 
-    private void createResourcesIndex(Client elasticsearchClient, String index) {
+    private void createResourcesIndex(Client elasticsearchClient, String index, String... languages) {
         if (!elasticsearchClient.admin().indices().prepareExists(index).execute().actionGet().isExists()) {
-            elasticsearchClient.admin().indices().create(new CreateIndexRequest(index)).actionGet();
+            CreateIndexRequest indexRequest = new CreateIndexRequest(index);
+            if(languages.length > 0) {
+                indexRequest.settings(createStopWordsSettingsObject(languages));
+            }
+            elasticsearchClient.admin().indices().create(indexRequest).actionGet();
         }
     }
 
@@ -99,5 +105,16 @@ public class ElasticSearchResmiSearch implements ResmiSearch {
                 .map(type -> type
                         + Optional.ofNullable(resourceUri.getRelationId()).map(relationId -> ";r=" + relationId).orElse(EMPTY_STRING))
                 .orElse(EMPTY_STRING);
+    }
+
+    private Map<String, String> createStopWordsSettingsObject(String... languages) {
+        Map<String, String> settings = new HashMap<>();
+        settings.put("analysis.filter.custom_stop_filter.type", "stop");
+        int stopWordIndex = 0;
+        for(String language : languages) {
+            settings.put("analysis.filter.custom_stop_filter.stopwords." + stopWordIndex, "_" + language.trim() + "_");
+            stopWordIndex++;
+        }
+        return settings;
     }
 }

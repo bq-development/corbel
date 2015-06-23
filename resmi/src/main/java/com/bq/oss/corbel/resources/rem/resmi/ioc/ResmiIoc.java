@@ -38,6 +38,7 @@ import com.google.gson.Gson;
 @Import({ConfigurationIoC.class, DefaultElasticSearchConfiguration.class}) public class ResmiIoc extends DefaultMongoConfiguration {
 
     @Value("${resmi.elasticsearch.enabled:true}") private boolean elasticSearchEnabled;
+    @Value("${resmi.elasticsearch.stopwords:}") private String elasticSearchStopWords;
 
     @Autowired private Environment env;
 
@@ -121,7 +122,8 @@ import com.google.gson.Gson;
     @Bean
     public ResmiSearch getSearchClient() {
         if (elasticSearchEnabled) {
-            return new ElasticSearchResmiSearch(applicationContext.getBean(Client.class), getNamespaceNormilizer(), getGson());
+            return new ElasticSearchResmiSearch(applicationContext.getBean(Client.class), getNamespaceNormilizer(),
+                    getGson(), elasticSearchStopWords.split(","));
         } else {
             return new DummyResmiSearch();
         }
