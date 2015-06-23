@@ -7,9 +7,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 
-import com.bq.oss.corbel.resources.rem.ImageGetRem;
-import com.bq.oss.corbel.resources.rem.Rem;
-import com.bq.oss.corbel.resources.rem.RemRegistry;
+import com.bq.oss.corbel.resources.rem.*;
 import com.bq.oss.corbel.resources.rem.ioc.RemImageIoc;
 import com.bq.oss.corbel.resources.rem.ioc.RemImageIocNames;
 import com.bq.oss.lib.config.ConfigurationHelper;
@@ -29,10 +27,21 @@ import com.bq.oss.lib.config.ConfigurationHelper;
 
     @Override
     protected void register(RemRegistry registry) {
-        ImageGetRem bean = (ImageGetRem) context.getBean(RemImageIocNames.REM_GET, Rem.class);
-        bean.setRemService(remService);
-        registry.registerRem(bean, "^(?!" + context.getEnvironment().getProperty("image.cache.collection") + "$).*",
+        ImageGetRem beanImageGetRem = (ImageGetRem) context.getBean(RemImageIocNames.REM_GET, Rem.class);
+        beanImageGetRem.setRemService(remService);
+
+        ImagePutRem beanImagePutRem = (ImagePutRem) context.getBean(RemImageIocNames.REM_PUT, Rem.class);
+        beanImagePutRem.setRemService(remService);
+
+        ImageDeleteRem beanImageDeleteRem = (ImageDeleteRem) context.getBean(RemImageIocNames.REM_DELETE, Rem.class);
+        beanImageDeleteRem.setRemService(remService);
+
+        registry.registerRem(beanImageGetRem, "^(?!" + context.getEnvironment().getProperty("image.cache.collection") + "$).*",
                 MediaType.parseMediaType("image/*"), HttpMethod.GET);
+        registry.registerRem(beanImagePutRem, "^(?!" + context.getEnvironment().getProperty("image.cache.collection") + "$).*",
+                MediaType.parseMediaType("image/*"), HttpMethod.PUT);
+        registry.registerRem(beanImageDeleteRem, "^(?!" + context.getEnvironment().getProperty("image.cache.collection") + "$).*",
+                MediaType.parseMediaType("image/*"), HttpMethod.DELETE);
     }
 
     @Override

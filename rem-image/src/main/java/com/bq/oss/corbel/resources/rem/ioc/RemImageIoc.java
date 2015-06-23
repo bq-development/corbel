@@ -11,13 +11,16 @@ import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.EnableAsync;
 
+import com.bq.oss.corbel.resources.rem.ImageDeleteRem;
 import com.bq.oss.corbel.resources.rem.ImageGetRem;
+import com.bq.oss.corbel.resources.rem.ImagePutRem;
 import com.bq.oss.corbel.resources.rem.Rem;
 import com.bq.oss.corbel.resources.rem.operation.*;
 import com.bq.oss.corbel.resources.rem.service.DefaultImageCacheService;
 import com.bq.oss.corbel.resources.rem.service.DefaultImageOperationsService;
 import com.bq.oss.corbel.resources.rem.service.ImageCacheService;
 import com.bq.oss.corbel.resources.rem.service.ImageOperationsService;
+import com.bq.oss.corbel.resources.rem.util.ImageRemUtil;
 import com.bq.oss.lib.config.ConfigurationIoC;
 
 @SuppressWarnings("unused") @Configuration @EnableAsync @Import({ConfigurationIoC.class}) public class RemImageIoc {
@@ -70,9 +73,24 @@ import com.bq.oss.lib.config.ConfigurationIoC;
         return new DefaultImageCacheService(env.getProperty("image.cache.collection"));
     }
 
+    @Bean
+    public ImageRemUtil getImageRemUtil() {
+        return new ImageRemUtil();
+    }
+
     @Bean(name = RemImageIocNames.REM_GET)
     public Rem getImageGetRem(ImageOperationsService imageOperationsService, ImageCacheService imageCacheService) {
         return new ImageGetRem(imageOperationsService, imageCacheService);
+    }
+
+    @Bean(name = RemImageIocNames.REM_PUT)
+    public Rem getImagePutRem(ImageRemUtil imageRemUtil) {
+        return new ImagePutRem(env.getProperty("image.cache.collection", "image:ImageCache"), imageRemUtil);
+    }
+
+    @Bean(name = RemImageIocNames.REM_DELETE)
+    public Rem getImageDeleteRem(ImageRemUtil imageRemUtil) {
+        return new ImageDeleteRem(env.getProperty("image.cache.collection", "image:ImageCache"), imageRemUtil);
     }
 
 }
