@@ -2,16 +2,21 @@ package com.bq.oss.corbel.iam.api;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.only;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+import io.dropwizard.testing.junit.ResourceTestRule;
 
 import java.time.Clock;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import com.bq.oss.lib.queries.builder.QueryParametersBuilder;
-import com.bq.oss.lib.queries.parser.PaginationParser;
-import com.bq.oss.lib.queries.parser.SortParser;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -21,15 +26,18 @@ import com.bq.oss.corbel.iam.service.DeviceService;
 import com.bq.oss.corbel.iam.service.DomainService;
 import com.bq.oss.corbel.iam.service.IdentityService;
 import com.bq.oss.corbel.iam.service.UserService;
+import com.bq.oss.lib.queries.builder.QueryParametersBuilder;
 import com.bq.oss.lib.queries.parser.AggregationParser;
+import com.bq.oss.lib.queries.parser.PaginationParser;
 import com.bq.oss.lib.queries.parser.QueryParser;
+import com.bq.oss.lib.queries.parser.SearchParser;
+import com.bq.oss.lib.queries.parser.SortParser;
 import com.bq.oss.lib.ws.api.error.GenericExceptionMapper;
 import com.bq.oss.lib.ws.auth.AuthorizationInfo;
 import com.bq.oss.lib.ws.auth.AuthorizationInfoProvider;
 import com.bq.oss.lib.ws.queries.QueryParametersProvider;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
-import io.dropwizard.testing.junit.ResourceTestRule;
 
 /**
  * @author Alexander De Leon
@@ -42,6 +50,7 @@ public class UserResourceDevicesTest extends UserResourceTestBase {
 
 
     private static final SortParser sortParserMock = mock(SortParser.class);
+    private static final SearchParser searchParserMock = mock(SearchParser.class);
     private static final AggregationParser aggregationParserMock = mock(AggregationParser.class);
     private static final PaginationParser paginationParserMock = mock(PaginationParser.class);
     private static final UserService userServiceMock = mock(UserService.class);
@@ -62,8 +71,8 @@ public class UserResourceDevicesTest extends UserResourceTestBase {
             .addProvider(authorizationInfoProviderSpy)
             .addProvider(
                     new QueryParametersProvider(DEFAULT_LIMIT, MAX_DEFAULT_LIMIT, new QueryParametersBuilder(queryParserMock,
-                            aggregationParserMock, sortParserMock, paginationParserMock))).addProvider(GenericExceptionMapper.class)
-            .build();
+                            aggregationParserMock, sortParserMock, paginationParserMock, searchParserMock)))
+            .addProvider(GenericExceptionMapper.class).build();
 
     public UserResourceDevicesTest() throws Exception {
         when(authorizationInfoMock.getUserId()).thenReturn(TEST_USER_ID);

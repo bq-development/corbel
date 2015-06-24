@@ -23,7 +23,7 @@ public class DummyResmiSearch implements ResmiSearch {
     }
 
     @Override
-    public JsonArray search(ResourceUri resourceUri, String search, int page, int size) {
+    public JsonArray search(ResourceUri resourceUri, String search, String[] fields, int page, int size) {
         LOG.debug(DISABLE_RESMI_SEARCH_MESSAGE);
         return new JsonArray();
     }
@@ -39,7 +39,7 @@ public class DummyResmiSearch implements ResmiSearch {
     }
 
     @Override
-    public AggregationResult count(ResourceUri resourceUri, String search) {
+    public AggregationResult count(ResourceUri resourceUri, String search, String[] fields) {
         LOG.debug(DISABLE_RESMI_SEARCH_MESSAGE);
         return new CountResult();
     }

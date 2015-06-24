@@ -1,6 +1,5 @@
 package com.bq.oss.corbel.resources.rem.service;
 
-import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 
@@ -12,7 +11,6 @@ import com.bq.oss.corbel.resources.rem.model.ResourceUri;
 import com.bq.oss.corbel.resources.rem.model.SearchableFields;
 import com.bq.oss.corbel.resources.rem.request.CollectionParameters;
 import com.bq.oss.corbel.resources.rem.request.RelationParameters;
-import com.bq.oss.corbel.resources.rem.request.ResourceId;
 import com.bq.oss.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
 import com.bq.oss.lib.queries.request.AggregationResult;
 import com.bq.oss.lib.queries.request.ResourceQuery;
@@ -32,10 +30,9 @@ public interface ResmiService {
 
     JsonObject findResource(ResourceUri uri);
 
-    JsonElement findRelation(ResourceUri uri, RelationParameters apiParameters)
-            throws BadConfigurationException;
+    JsonElement findRelation(ResourceUri uri, RelationParameters apiParameters) throws BadConfigurationException;
 
-    AggregationResult aggregate(ResourceUri uri, CollectionParameters apiParameters);
+    AggregationResult aggregate(ResourceUri uri, CollectionParameters apiParameters) throws BadConfigurationException;
 
     JsonObject saveResource(ResourceUri uri, JsonObject object, Optional<String> userId) throws StartsWithUnderscoreException;
 
@@ -44,8 +41,7 @@ public interface ResmiService {
     JsonObject conditionalUpdateResource(ResourceUri uri, JsonObject object, List<ResourceQuery> resourceQueries)
             throws StartsWithUnderscoreException;
 
-    JsonObject createRelation(ResourceUri uri, JsonObject requestEntity) throws NotFoundException,
-            StartsWithUnderscoreException;
+    JsonObject createRelation(ResourceUri uri, JsonObject requestEntity) throws NotFoundException, StartsWithUnderscoreException;
 
     void moveRelation(ResourceUri uri, RelationMoveOperation relationMoveOperation);
 

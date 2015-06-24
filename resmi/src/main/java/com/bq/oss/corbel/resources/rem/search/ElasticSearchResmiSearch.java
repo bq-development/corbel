@@ -47,7 +47,7 @@ public class ElasticSearchResmiSearch implements ResmiSearch {
     private void createResourcesIndex(Client elasticsearchClient, String index, String... languages) {
         if (!elasticsearchClient.admin().indices().prepareExists(index).execute().actionGet().isExists()) {
             CreateIndexRequest indexRequest = new CreateIndexRequest(index);
-            if(languages.length > 0) {
+            if (languages.length > 0) {
                 indexRequest.settings(createStopWordsSettingsObject(languages));
             }
             elasticsearchClient.admin().indices().create(indexRequest).actionGet();
@@ -55,9 +55,9 @@ public class ElasticSearchResmiSearch implements ResmiSearch {
     }
 
     @Override
-    public JsonArray search(ResourceUri resourceUri, String search, int page, int size) {
+    public JsonArray search(ResourceUri resourceUri, String search, String[] fields, int page, int size) {
         SearchResponse response = elasticsearchClient.prepareSearch(INDEX).setTypes(getElasticSearchType(resourceUri))
-                .setSearchType(SearchType.DFS_QUERY_THEN_FETCH).setQuery(QueryBuilders.multiMatchQuery(search, "_all")).setFrom(page)
+                .setSearchType(SearchType.DFS_QUERY_THEN_FETCH).setQuery(QueryBuilders.multiMatchQuery(search, fields)).setFrom(page)
                 .setSize(size).execute().actionGet();
         JsonArray jsonArray = new JsonArray();
         response.getHits().forEach(hit -> jsonArray.add(gson.toJsonTree(hit.getSource())));
@@ -85,9 +85,9 @@ public class ElasticSearchResmiSearch implements ResmiSearch {
     }
 
     @Override
-    public AggregationResult count(ResourceUri resourceUri, String search) {
+    public AggregationResult count(ResourceUri resourceUri, String search, String[] fields) {
         CountResponse response = elasticsearchClient.prepareCount(INDEX).setTypes(getElasticSearchType(resourceUri))
-                .setQuery(QueryBuilders.multiMatchQuery(search, "_all")).execute().actionGet();
+                .setQuery(QueryBuilders.multiMatchQuery(search, fields)).execute().actionGet();
         return new CountResult(response.getCount());
     }
 
@@ -96,7 +96,7 @@ public class ElasticSearchResmiSearch implements ResmiSearch {
                 .ofNullable(namespaceNormalizer.normalize(resourceUri.getType()))
                 .map(type -> type
                         + Optional.ofNullable(resourceUri.getRelation()).map(relation -> ":" + namespaceNormalizer.normalize(relation))
-                        .orElse(EMPTY_STRING)).orElse(EMPTY_STRING);
+                                .orElse(EMPTY_STRING)).orElse(EMPTY_STRING);
     }
 
     private String getElasticSearchId(ResourceUri resourceUri) {
@@ -111,7 +111,7 @@ public class ElasticSearchResmiSearch implements ResmiSearch {
         Map<String, String> settings = new HashMap<>();
         settings.put("analysis.filter.custom_stop_filter.type", "stop");
         int stopWordIndex = 0;
-        for(String language : languages) {
+        for (String language : languages) {
             settings.put("analysis.filter.custom_stop_filter.stopwords." + stopWordIndex, "_" + language.trim() + "_");
             stopWordIndex++;
         }

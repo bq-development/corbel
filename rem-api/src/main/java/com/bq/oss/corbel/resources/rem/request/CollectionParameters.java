@@ -3,7 +3,11 @@ package com.bq.oss.corbel.resources.rem.request;
 import java.util.List;
 import java.util.Optional;
 
-import com.bq.oss.lib.queries.request.*;
+import com.bq.oss.lib.queries.request.Aggregation;
+import com.bq.oss.lib.queries.request.Pagination;
+import com.bq.oss.lib.queries.request.ResourceQuery;
+import com.bq.oss.lib.queries.request.Search;
+import com.bq.oss.lib.queries.request.Sort;
 
 /**
  * @author Alexander De Leon
@@ -18,7 +22,9 @@ public interface CollectionParameters {
 
     Optional<List<ResourceQuery>> getQueries();
 
-    Optional<ResourceSearch> getSearch();
+    Optional<List<ResourceQuery>> getConditions();
+
+    Optional<Search> getSearch();
 
     Optional<Sort> getSort();
 
@@ -27,11 +33,13 @@ public interface CollectionParameters {
     void setPagination(Pagination pagination);
 
     @Deprecated
-    void setQuery(Optional<ResourceQuery> resource);
+    void setQuery(Optional<ResourceQuery> query);
 
-    void setQueries(Optional<List<ResourceQuery>> resources);
+    void setQueries(Optional<List<ResourceQuery>> queries);
 
-    void setSearch(Optional<ResourceSearch> search);
+    void setConditions(Optional<List<ResourceQuery>> conditions);
+
+    void setSearch(Optional<Search> search);
 
     void setSort(Optional<Sort> sort);
 

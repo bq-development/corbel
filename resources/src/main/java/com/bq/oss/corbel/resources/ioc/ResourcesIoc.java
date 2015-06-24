@@ -4,7 +4,6 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import com.bq.oss.lib.queries.builder.QueryParametersBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
@@ -19,7 +18,12 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 
 import com.bq.oss.corbel.eventbus.ioc.EventBusIoc;
 import com.bq.oss.corbel.eventbus.service.EventBus;
-import com.bq.oss.corbel.rem.internal.*;
+import com.bq.oss.corbel.rem.internal.DefaultRemEntityTypeResolver;
+import com.bq.oss.corbel.rem.internal.InMemoryHealthCheckRegistry;
+import com.bq.oss.corbel.rem.internal.InMemoryPluginArtifactIdRegistry;
+import com.bq.oss.corbel.rem.internal.InMemoryRelationRegistry;
+import com.bq.oss.corbel.rem.internal.InMemoryRemRegistry;
+import com.bq.oss.corbel.rem.internal.RemEntityTypeResolver;
 import com.bq.oss.corbel.resources.api.PluginInfoResource;
 import com.bq.oss.corbel.resources.api.RemResource;
 import com.bq.oss.corbel.resources.href.DefaultLinkGenerator;
@@ -32,11 +36,26 @@ import com.bq.oss.corbel.resources.rem.plugin.PluginArtifactIdRegistry;
 import com.bq.oss.corbel.resources.rem.plugin.RelationRegistry;
 import com.bq.oss.corbel.resources.rem.service.RemService;
 import com.bq.oss.corbel.resources.repository.RelationSchemaRepository;
-import com.bq.oss.corbel.resources.service.*;
+import com.bq.oss.corbel.resources.service.DefaultRelationSchemaService;
+import com.bq.oss.corbel.resources.service.DefaultRemService;
+import com.bq.oss.corbel.resources.service.DefaultResourcesService;
+import com.bq.oss.corbel.resources.service.RelationSchemaService;
+import com.bq.oss.corbel.resources.service.ResourcesService;
 import com.bq.oss.lib.config.ConfigurationIoC;
 import com.bq.oss.lib.mongo.config.DefaultMongoConfiguration;
+import com.bq.oss.lib.queries.builder.QueryParametersBuilder;
 import com.bq.oss.lib.queries.mongo.repository.QueriesRepositoryFactoryBean;
-import com.bq.oss.lib.queries.parser.*;
+import com.bq.oss.lib.queries.parser.AggregationParser;
+import com.bq.oss.lib.queries.parser.CustomJsonParser;
+import com.bq.oss.lib.queries.parser.CustomSearchParser;
+import com.bq.oss.lib.queries.parser.DefaultPaginationParser;
+import com.bq.oss.lib.queries.parser.JacksonAggregationParser;
+import com.bq.oss.lib.queries.parser.JacksonQueryParser;
+import com.bq.oss.lib.queries.parser.JacksonSortParser;
+import com.bq.oss.lib.queries.parser.PaginationParser;
+import com.bq.oss.lib.queries.parser.QueryParser;
+import com.bq.oss.lib.queries.parser.SearchParser;
+import com.bq.oss.lib.queries.parser.SortParser;
 import com.bq.oss.lib.token.ioc.OneTimeAccessTokenIoc;
 import com.bq.oss.lib.ws.auth.ioc.AuthorizationIoc;
 import com.bq.oss.lib.ws.cors.ioc.CorsIoc;
@@ -58,8 +77,7 @@ import com.sun.jersey.spi.container.ContainerRequestFilter;
 @ComponentScan({"com.bq.oss.corbel.resources.cli.dsl", "com.bqreaders.silkroad.resources.cli.dsl",
         "com.bq.oss.corbel.resources.rem.plugin", "com.bqreaders.silkroad.resources.rem.plugin"}) @EnableMongoRepositories(
         value = "com.bq.oss.corbel.resources.repository", repositoryFactoryBeanClass = QueriesRepositoryFactoryBean.class) @EnableCaching @SuppressWarnings("unused") public class ResourcesIoc
-        extends
-            DefaultMongoConfiguration {
+        extends DefaultMongoConfiguration {
 
     @Autowired private Environment env;
 
@@ -112,8 +130,8 @@ import com.sun.jersey.spi.container.ContainerRequestFilter;
 
     @Bean
     public QueryParametersBuilder getQueryParametersBuilder(QueryParser queryParser, AggregationParser aggregationParser,
-            SortParser sortParser, PaginationParser paginationParser) {
-        return new QueryParametersBuilder(queryParser, aggregationParser, sortParser, paginationParser);
+            SortParser sortParser, PaginationParser paginationParser, SearchParser searchParser) {
+        return new QueryParametersBuilder(queryParser, aggregationParser, sortParser, paginationParser, searchParser);
     }
 
     @Bean
@@ -139,6 +157,11 @@ import com.sun.jersey.spi.container.ContainerRequestFilter;
     @Bean
     public PaginationParser getPaginationParser() {
         return new DefaultPaginationParser();
+    }
+
+    @Bean
+    public SearchParser getSearchParser(ObjectMapper objectMapper) {
+        return new CustomSearchParser(objectMapper);
     }
 
     @Bean

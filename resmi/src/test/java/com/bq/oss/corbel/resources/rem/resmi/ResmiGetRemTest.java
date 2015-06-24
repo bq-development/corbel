@@ -19,7 +19,13 @@ import com.bq.oss.corbel.resources.rem.request.RelationParameters;
 import com.bq.oss.corbel.resources.rem.request.RequestParameters;
 import com.bq.oss.corbel.resources.rem.request.ResourceId;
 import com.bq.oss.corbel.resources.rem.service.BadConfigurationException;
-import com.bq.oss.lib.queries.request.*;
+import com.bq.oss.lib.queries.request.Aggregation;
+import com.bq.oss.lib.queries.request.AggregationOperator;
+import com.bq.oss.lib.queries.request.AverageResult;
+import com.bq.oss.lib.queries.request.CountResult;
+import com.bq.oss.lib.queries.request.Pagination;
+import com.bq.oss.lib.queries.request.ResourceQuery;
+import com.bq.oss.lib.queries.request.Sort;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
@@ -83,7 +89,7 @@ public class ResmiGetRemTest extends ResmiRemTest {
     }
 
     @Test
-    public void testGetCollectionCount() {
+    public void testGetCollectionCount() throws BadConfigurationException {
         when(resmiServiceMock.aggregate(new ResourceUri(TEST_TYPE), collectionParametersMock)).thenReturn(countResultMock);
 
         when(requestParametersCollectionParametersMock.getApiParameters()).thenReturn(collectionParametersMock);
@@ -100,7 +106,7 @@ public class ResmiGetRemTest extends ResmiRemTest {
     }
 
     @Test
-    public void testGetCollectionAverage() {
+    public void testGetCollectionAverage() throws BadConfigurationException {
         when(resmiServiceMock.aggregate(new ResourceUri(TEST_TYPE), collectionParametersMock)).thenReturn(averageResultMock);
 
         when(requestParametersCollectionParametersMock.getApiParameters()).thenReturn(collectionParametersMock);
@@ -164,7 +170,7 @@ public class ResmiGetRemTest extends ResmiRemTest {
     }
 
     @Test
-    public void testGetRelationCount() {
+    public void testGetRelationCount() throws BadConfigurationException {
         when(resmiServiceMock.aggregate(new ResourceUri(TEST_TYPE, resourceIdMock.getId(), TEST_TYPE_RELATION), relationParametersMock))
                 .thenReturn(countResultMock);
 

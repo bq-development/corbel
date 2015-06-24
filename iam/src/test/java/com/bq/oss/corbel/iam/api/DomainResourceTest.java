@@ -4,7 +4,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+import io.dropwizard.testing.junit.ResourceTestRule;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,9 +20,6 @@ import java.util.Optional;
 
 import javax.ws.rs.core.MediaType;
 
-import com.bq.oss.lib.queries.builder.QueryParametersBuilder;
-import com.bq.oss.lib.queries.parser.PaginationParser;
-import com.bq.oss.lib.queries.parser.SortParser;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -27,8 +32,12 @@ import com.bq.oss.corbel.iam.model.Client;
 import com.bq.oss.corbel.iam.model.Domain;
 import com.bq.oss.corbel.iam.service.ClientService;
 import com.bq.oss.corbel.iam.service.DomainService;
+import com.bq.oss.lib.queries.builder.QueryParametersBuilder;
 import com.bq.oss.lib.queries.parser.AggregationParser;
+import com.bq.oss.lib.queries.parser.PaginationParser;
 import com.bq.oss.lib.queries.parser.QueryParser;
+import com.bq.oss.lib.queries.parser.SearchParser;
+import com.bq.oss.lib.queries.parser.SortParser;
 import com.bq.oss.lib.queries.request.Pagination;
 import com.bq.oss.lib.queries.request.ResourceQuery;
 import com.bq.oss.lib.queries.request.Sort;
@@ -39,7 +48,6 @@ import com.bq.oss.lib.ws.auth.AuthorizationInfoProvider;
 import com.bq.oss.lib.ws.queries.QueryParametersProvider;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
-import io.dropwizard.testing.junit.ResourceTestRule;
 
 public class DomainResourceTest {
     protected static final String AUTHORIZATION = "Authorization";
@@ -49,6 +57,7 @@ public class DomainResourceTest {
     private static final int MAX_DEFAULT_LIMIT = 50;
 
     private static final SortParser sortParserMock = mock(SortParser.class);
+    private static final SearchParser searchParserMock = mock(SearchParser.class);
     private static final AggregationParser aggregationParserMock = mock(AggregationParser.class);
     private static final PaginationParser paginationParserMock = mock(PaginationParser.class);
     private static final QueryParser queryParserMock = mock(QueryParser.class);
@@ -64,8 +73,8 @@ public class DomainResourceTest {
             .addProvider(authorizationInfoProviderSpy)
             .addProvider(
                     new QueryParametersProvider(DEFAULT_LIMIT, MAX_DEFAULT_LIMIT, new QueryParametersBuilder(queryParserMock,
-                            aggregationParserMock, sortParserMock, paginationParserMock))).addProvider(GenericExceptionMapper.class)
-            .addProvider(JsonValidationExceptionMapper.class).build();
+                            aggregationParserMock, sortParserMock, paginationParserMock, searchParserMock)))
+            .addProvider(GenericExceptionMapper.class).addProvider(JsonValidationExceptionMapper.class).build();
 
     public DomainResourceTest() throws Exception {
         when(authorizationInfoMock.getClientId()).thenReturn(CLIENT_ID);

@@ -1,5 +1,40 @@
 package com.bq.oss.corbel.iam.api;
 
+import static org.fest.assertions.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+import io.dropwizard.testing.junit.ResourceTestRule;
+
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.time.Clock;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
+
 import com.bq.oss.corbel.iam.exception.DuplicatedOauthServiceIdentityException;
 import com.bq.oss.corbel.iam.exception.IdentityAlreadyExistsException;
 import com.bq.oss.corbel.iam.exception.UserProfileConfigurationException;
@@ -17,8 +52,13 @@ import com.bq.oss.lib.queries.exception.MalformedJsonQueryException;
 import com.bq.oss.lib.queries.parser.AggregationParser;
 import com.bq.oss.lib.queries.parser.PaginationParser;
 import com.bq.oss.lib.queries.parser.QueryParser;
+import com.bq.oss.lib.queries.parser.SearchParser;
 import com.bq.oss.lib.queries.parser.SortParser;
-import com.bq.oss.lib.queries.request.*;
+import com.bq.oss.lib.queries.request.Aggregation;
+import com.bq.oss.lib.queries.request.AggregationOperator;
+import com.bq.oss.lib.queries.request.Count;
+import com.bq.oss.lib.queries.request.CountResult;
+import com.bq.oss.lib.queries.request.ResourceQuery;
 import com.bq.oss.lib.ws.api.error.GenericExceptionMapper;
 import com.bq.oss.lib.ws.api.error.JsonValidationExceptionMapper;
 import com.bq.oss.lib.ws.auth.AuthorizationInfo;
@@ -30,24 +70,6 @@ import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.UniformInterfaceException;
-import io.dropwizard.testing.junit.ResourceTestRule;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
-
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.time.Clock;
-import java.util.*;
-
-import static org.fest.assertions.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.*;
 
 /**
  * @author Alexander De Leon
@@ -60,6 +82,7 @@ public class UserResourceTest extends UserResourceTestBase {
 
 
     private static final SortParser sortParserMock = mock(SortParser.class);
+    private static final SearchParser searchParserMock = mock(SearchParser.class);
     private static final AggregationParser aggregationParserMock = mock(AggregationParser.class);
     private static final PaginationParser paginationParserMock = mock(PaginationParser.class);
     private static final UserService userServiceMock = mock(UserService.class);
@@ -70,16 +93,14 @@ public class UserResourceTest extends UserResourceTestBase {
     private static final DeviceService devicesServiceMock = mock(DeviceService.class);
     private static final AuthorizationInfoProvider authorizationInfoProviderSpy = spy(new AuthorizationInfoProvider());
 
-    @ClassRule
-    public static ResourceTestRule RULE = ResourceTestRule
+    @ClassRule public static ResourceTestRule RULE = ResourceTestRule
             .builder()
             .addResource(new UserResource(userServiceMock, domainServiceMock, identityServiceMock, devicesServiceMock, Clock.systemUTC()))
             .addProvider(authorizationInfoProviderSpy)
             .addProvider(
                     new QueryParametersProvider(DEFAULT_LIMIT, MAX_DEFAULT_LIMIT, new QueryParametersBuilder(queryParserMock,
-                            aggregationParserMock, sortParserMock, paginationParserMock))).addProvider(GenericExceptionMapper.class)
-            .addProvider(JsonValidationExceptionMapper.class)
-            .build();
+                            aggregationParserMock, sortParserMock, paginationParserMock, searchParserMock)))
+            .addProvider(GenericExceptionMapper.class).addProvider(JsonValidationExceptionMapper.class).build();
 
     public UserResourceTest() throws Exception {
         when(authorizationInfoMock.getClientId()).thenReturn(TEST_CLIENT_ID);
@@ -222,8 +243,7 @@ public class UserResourceTest extends UserResourceTestBase {
             public AggregationOperator getOperator() {
                 return null;
             }
-        }
-        ;
+        };
         Aggregation operation = new OtherAggregation();
         ResourceQuery resourceQuery = new ResourceQuery();
         when(queryParserMock.parse(queryString)).thenReturn(resourceQuery);
@@ -845,8 +865,7 @@ public class UserResourceTest extends UserResourceTestBase {
                 .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(ClientResponse.class);
 
         assertThat(response.getStatus()).isEqualTo(200);
-        assertThat(response.getEntity(new GenericType<List<Identity>>() {
-        })).isEqualTo(identities);
+        assertThat(response.getEntity(new GenericType<List<Identity>>() {})).isEqualTo(identities);
     }
 
     @Test
@@ -873,8 +892,7 @@ public class UserResourceTest extends UserResourceTestBase {
                 .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(ClientResponse.class);
 
         assertThat(response.getStatus()).isEqualTo(200);
-        assertThat(response.getEntity(new GenericType<List<Identity>>() {
-        })).isEqualTo(identities);
+        assertThat(response.getEntity(new GenericType<List<Identity>>() {})).isEqualTo(identities);
     }
 
     @Test
@@ -948,8 +966,7 @@ public class UserResourceTest extends UserResourceTestBase {
             public AggregationOperator getOperator() {
                 return null;
             }
-        }
-        ;
+        };
         Aggregation operation = new OtherAggretation();
         ResourceQuery resourceQuery = new ResourceQuery();
         when(queryParserMock.parse(queryString)).thenReturn(resourceQuery);

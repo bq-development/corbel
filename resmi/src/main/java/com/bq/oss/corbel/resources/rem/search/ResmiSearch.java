@@ -10,11 +10,11 @@ import com.google.gson.JsonObject;
  */
 public interface ResmiSearch {
 
-    JsonArray search(ResourceUri uri, String search, int page, int size);
+    JsonArray search(ResourceUri uri, String search, String[] fields, int page, int size);
 
     void indexDocument(ResourceUri uri, JsonObject fields);
 
     void deleteDocument(ResourceUri uri);
 
-    AggregationResult count(ResourceUri uri, String search);
+    AggregationResult count(ResourceUri uri, String search, String[] fields);
 }
