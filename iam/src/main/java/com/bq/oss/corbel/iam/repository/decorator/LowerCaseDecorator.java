@@ -1,11 +1,13 @@
 package com.bq.oss.corbel.iam.repository.decorator;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.bouncycastle.util.Strings;
 
 import com.bq.oss.corbel.iam.model.User;
 import com.bq.oss.corbel.iam.repository.UserRepository;
+import com.bq.oss.lib.queries.ListQueryLiteral;
 import com.bq.oss.lib.queries.StringQueryLiteral;
 import com.bq.oss.lib.queries.request.AggregationResult;
 import com.bq.oss.lib.queries.request.Pagination;
@@ -57,10 +59,28 @@ public class LowerCaseDecorator extends UserRepositoryDecorator {
     private void emailQueryToLowerCase(ResourceQuery resourceQuery) {
         resourceQuery.forEach(queryNode -> {
             if ("email".equals(queryNode.getField())) {
-                StringQueryLiteral stringQueryLiteral = (StringQueryLiteral) queryNode.getValue().getLiteral();
-                stringQueryLiteral.setLiteral(Strings.toLowerCase(stringQueryLiteral.getLiteral()));
+                try {
+                    if (queryNode.getValue() instanceof ListQueryLiteral) {
+                        ListQueryLiteral list = (ListQueryLiteral) queryNode.getValue();
+                        list.setLiteral(list.getLiteral().stream()
+                                .map(literal -> lowerCaseStringQueryLiteral((StringQueryLiteral) literal)).collect(Collectors.toList()));
+
+                    } else {
+                        lowerCaseStringQueryLiteral((StringQueryLiteral) queryNode.getValue());
+                    }
+                } catch (ClassCastException e) {
+                    throw new IllegalArgumentException("Email query must be string or array of strings.", e);
+                }
             }
+
         });
+
+
+    }
+
+    private StringQueryLiteral lowerCaseStringQueryLiteral(StringQueryLiteral queryLiteral) {
+        queryLiteral.setLiteral(Strings.toLowerCase(queryLiteral.getLiteral()));
+        return queryLiteral;
     }
 
 }
