@@ -81,20 +81,20 @@ public class ElasticSearchResmiSearch implements ResmiSearch {
                 elasticsearchClient.admin().indices().putMapping(mappingRequest).actionGet();
                 mappingTypeNotCreated = true;
             }
+            PutMappingRequest mappingRequest = new PutMappingRequest(INDEX).type(type);
+            mappingRequest.ignoreConflicts(true);
+            XContentBuilder properties = XContentFactory.jsonBuilder().startObject().startObject("properties");
             for(String field : fields.getFields()) {
                 if (mappingTypeNotCreated || !checkFieldCurrentlyMapped(mappings, type, field)) {
-                    PutMappingRequest mappingRequest = new PutMappingRequest(INDEX).type(type);
-                    mappingRequest.ignoreConflicts(true);
-                    XContentBuilder properties = XContentFactory.jsonBuilder().startObject().startObject("properties");
                     properties.startObject(field);
                     properties.field("type", SearchResource.DEFAULT_FIELD_TYPE);
                     properties.field("index", "not_analyzed");
                     properties.endObject();
-                    properties.endObject().endObject();
-                    mappingRequest.source(properties);
-                    elasticsearchClient.admin().indices().putMapping(mappingRequest).actionGet();
                 }
             }
+            properties.endObject().endObject();
+            mappingRequest.source(properties);
+            elasticsearchClient.admin().indices().putMapping(mappingRequest).actionGet();
         } catch (IOException | URISyntaxException e) {
             LOG.error("Unable to create mapping settings for " + type + " type", e);
         }
