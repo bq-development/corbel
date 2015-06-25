@@ -1,0 +1,44 @@
+{
+  "index": {
+    "analysis": {
+      "filter": {
+        "spanish_stop_words": {
+          "resourceUri": "stop",
+          "stopwords": "_spanish_"
+        },
+        "nGram_filter": {
+          "resourceUri": "nGram",
+          "min_gram": 2,
+          "max_gram": 10,
+          "token_chars": [
+            "letter",
+            "digit",
+            "punctuation",
+            "symbol"
+          ]
+        }
+      },
+      "analyzer": {
+        "nGram_analyzer": {
+          "resourceUri": "custom",
+          "tokenizer": "whitespace",
+          "filter": [
+            "lowercase",
+            "asciifolding",
+            "spanish_stop_words",
+            "nGram_filter"
+          ]
+        },
+        "whitespace_analyzer": {
+          "resourceUri": "custom",
+          "tokenizer": "whitespace",
+          "filter": [
+            "lowercase",
+            "asciifolding",
+            "spanish_stop_words"
+          ]
+        }
+      }
+    }
+  }
+}

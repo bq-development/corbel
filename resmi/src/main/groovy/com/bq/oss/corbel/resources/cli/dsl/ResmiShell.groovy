@@ -1,7 +1,7 @@
 package com.bq.oss.corbel.resources.cli.dsl
 
 import com.bq.oss.corbel.resources.rem.model.ResourceUri
-import com.bq.oss.corbel.resources.rem.model.SearchableFields
+import com.bq.oss.corbel.resources.rem.model.SearchResource
 import com.bq.oss.corbel.resources.rem.service.ResmiService
 import com.bq.oss.lib.cli.console.Description
 import com.bq.oss.lib.cli.console.Shell
@@ -43,7 +43,7 @@ class ResmiShell {
     def searchableFields(String type, String... fields) {
         assert type: "type is required"
         assert fields: "fields is required"
-        resmiService.addSearchableFields(new SearchableFields(type, fields.collect().toSet()))
+        resmiService.addSearchableFields(new SearchResource(type, fields.collect().toSet()))
     }
 
     @Description("Full text search fields in a type.")
@@ -51,7 +51,7 @@ class ResmiShell {
         assert type: "type is required"
         assert relation: "relation is required"
         assert fields: "fields is required"
-        resmiService.addSearchableFields(new SearchableFields(type, relation, fields.collect().toSet()))
+        resmiService.addSearchableFields(new SearchResource(type, relation, fields.collect().toSet()))
     }
 
     def index = IndexBuilder.index

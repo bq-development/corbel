@@ -29,7 +29,7 @@ import com.bq.oss.corbel.resources.rem.dao.NotFoundException;
 import com.bq.oss.corbel.resources.rem.dao.RelationMoveOperation;
 import com.bq.oss.corbel.resources.rem.dao.ResmiDao;
 import com.bq.oss.corbel.resources.rem.model.ResourceUri;
-import com.bq.oss.corbel.resources.rem.model.SearchableFields;
+import com.bq.oss.corbel.resources.rem.model.SearchResource;
 import com.bq.oss.corbel.resources.rem.request.CollectionParameters;
 import com.bq.oss.corbel.resources.rem.request.RelationParameters;
 import com.bq.oss.corbel.resources.rem.request.ResourceId;
@@ -314,15 +314,15 @@ import com.google.gson.JsonPrimitive;
     @Test
     public void getSearchableFieldsTest() {
         defaultResmiService.getSearchableFields();
-        verify(resmiDao).findAll(DefaultResmiService.SEARCHABLE_FIELDS, SearchableFields.class);
+        verify(resmiDao).findAll(DefaultResmiService.SEARCHABLE_FIELDS, SearchResource.class);
     }
 
     @Test
     public void addSearchableFieldsTest() {
         ResourceUri uri = new ResourceUri(DefaultResmiService.SEARCHABLE_FIELDS);
-        SearchableFields searchableFields = new SearchableFields(TYPE, new HashSet(Arrays.asList("t1", "t2")));
-        defaultResmiService.addSearchableFields(searchableFields);
-        verify(resmiDao).saveResource(uri, searchableFields);
+        SearchResource searchResource = new SearchResource(TYPE, new HashSet(Arrays.asList("t1", "t2")));
+        defaultResmiService.addSearchableFields(searchResource);
+        verify(resmiDao).saveResource(uri, searchResource);
     }
 
     @Test

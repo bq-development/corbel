@@ -1,6 +1,7 @@
 package com.bq.oss.corbel.resources.rem.search;
 
 import com.bq.oss.corbel.resources.rem.model.ResourceUri;
+import com.bq.oss.corbel.resources.rem.model.SearchResource;
 import com.bq.oss.lib.queries.request.AggregationResult;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -11,6 +12,8 @@ import com.google.gson.JsonObject;
 public interface ResmiSearch {
 
     JsonArray search(ResourceUri uri, String search, String[] fields, int page, int size);
+
+    void addResource(SearchResource field);
 
     void indexDocument(ResourceUri uri, JsonObject fields);
 

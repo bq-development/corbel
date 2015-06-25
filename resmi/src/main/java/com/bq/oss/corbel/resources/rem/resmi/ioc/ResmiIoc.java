@@ -38,7 +38,12 @@ import com.google.gson.Gson;
 @Import({ConfigurationIoC.class, DefaultElasticSearchConfiguration.class}) public class ResmiIoc extends DefaultMongoConfiguration {
 
     @Value("${resmi.elasticsearch.enabled:true}") private boolean elasticSearchEnabled;
-    @Value("${resmi.elasticsearch.stopwords:}") private String elasticSearchStopWords;
+
+    @Value("${resmi.elasticsearch.index.settings:/elasticsearch/index.settings}")
+    private String elasticSearchIndexSettings;
+
+    @Value("${resmi.elasticsearch.mapping.settings:/elasticsearch/mapping.settings}")
+    private String elasticSearchMappingSettings;
 
     @Autowired private Environment env;
 
@@ -51,7 +56,8 @@ import com.google.gson.Gson;
 
     @Bean
     public ResmiDao getMongoResmiDao() throws Exception {
-        return new MongoResmiDao(mongoTemplate(), getJsonObjectMongoWriteConverter(), getNamespaceNormilizer(), getMongoResmiOrder());
+        return new MongoResmiDao(mongoTemplate(), getJsonObjectMongoWriteConverter(),
+                getNamespaceNormilizer(), getMongoResmiOrder());
     }
 
     @Bean
@@ -122,8 +128,8 @@ import com.google.gson.Gson;
     @Bean
     public ResmiSearch getSearchClient() {
         if (elasticSearchEnabled) {
-            return new ElasticSearchResmiSearch(applicationContext.getBean(Client.class), getNamespaceNormilizer(),
-                    getGson(), elasticSearchStopWords.split(","));
+            return new ElasticSearchResmiSearch(applicationContext.getBean(Client.class), elasticSearchIndexSettings,
+                    elasticSearchMappingSettings, getNamespaceNormilizer(), getGson());
         } else {
             return new DummyResmiSearch();
         }

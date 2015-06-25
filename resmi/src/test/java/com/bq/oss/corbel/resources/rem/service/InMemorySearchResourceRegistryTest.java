@@ -9,12 +9,12 @@ import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.bq.oss.corbel.resources.rem.model.SearchableFields;
+import com.bq.oss.corbel.resources.rem.model.SearchResource;
 
 /**
  * @author Francisco Sanchez
  */
-public class InMemorySearchableFieldsRegistryTest {
+public class InMemorySearchResourceRegistryTest {
 
     private InMemorySearchableFieldsRegistry inMemorySearchableFieldsRegistry;
 
@@ -29,10 +29,10 @@ public class InMemorySearchableFieldsRegistryTest {
         Set<String> s2Fields = new HashSet(Arrays.asList("s2.1", "s2.2"));
         Set<String> s3Fields = new HashSet(Arrays.asList("s3.1", "s3.2"));
 
-        SearchableFields s1 = new SearchableFields("s1", s1Fields);
-        SearchableFields s2 = new SearchableFields("s2", s2Fields);
-        SearchableFields s3 = new SearchableFields("s3", s3Fields);
-        SearchableFields s3Mod = new SearchableFields("s3", s1Fields);
+        SearchResource s1 = new SearchResource("s1", s1Fields);
+        SearchResource s2 = new SearchResource("s2", s2Fields);
+        SearchResource s3 = new SearchResource("s3", s3Fields);
+        SearchResource s3Mod = new SearchResource("s3", s1Fields);
 
         inMemorySearchableFieldsRegistry.addFields(s1);
         inMemorySearchableFieldsRegistry.addFields(s2);

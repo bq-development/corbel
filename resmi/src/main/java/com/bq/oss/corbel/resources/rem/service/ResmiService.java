@@ -8,7 +8,7 @@ import org.springframework.data.mongodb.core.index.Index;
 import com.bq.oss.corbel.resources.rem.dao.NotFoundException;
 import com.bq.oss.corbel.resources.rem.dao.RelationMoveOperation;
 import com.bq.oss.corbel.resources.rem.model.ResourceUri;
-import com.bq.oss.corbel.resources.rem.model.SearchableFields;
+import com.bq.oss.corbel.resources.rem.model.SearchResource;
 import com.bq.oss.corbel.resources.rem.request.CollectionParameters;
 import com.bq.oss.corbel.resources.rem.request.RelationParameters;
 import com.bq.oss.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
@@ -51,9 +51,9 @@ public interface ResmiService {
 
     void deleteRelation(ResourceUri uri);
 
-    List<SearchableFields> getSearchableFields();
+    List<SearchResource> getSearchableFields();
 
-    void addSearchableFields(SearchableFields searchableFields);
+    void addSearchableFields(SearchResource searchResource);
 
     void ensureExpireIndex(ResourceUri uri);
 

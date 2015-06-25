@@ -3,7 +3,7 @@ package com.bq.oss.corbel.resources.rem.service;
 import java.util.Set;
 
 import com.bq.oss.corbel.resources.rem.model.ResourceUri;
-import com.bq.oss.corbel.resources.rem.model.SearchableFields;
+import com.bq.oss.corbel.resources.rem.model.SearchResource;
 
 /**
  * @author Francisco Sanchez
@@ -13,7 +13,7 @@ public interface SearchableFieldsRegistry {
 
     public Set<String> getFieldsFromRelation(String type, String relation);
 
-    public void addFields(SearchableFields searchableFields);
+    public void addFields(SearchResource searchResource);
 
     Set<String> getFieldsFromResourceUri(ResourceUri resourceUri);
 }

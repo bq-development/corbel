@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.Set;
 
 import com.bq.oss.corbel.resources.rem.model.ResourceUri;
-import com.bq.oss.corbel.resources.rem.model.SearchableFields;
+import com.bq.oss.corbel.resources.rem.model.SearchResource;
 
 /**
  * @author Francisco Sanchez
@@ -33,8 +33,8 @@ public class InMemorySearchableFieldsRegistry implements SearchableFieldsRegistr
     }
 
     @Override
-    public void addFields(SearchableFields searchableFields) {
-        this.searchableFields.put(searchableFields.getResourceUri(), searchableFields.getFields());
+    public void addFields(SearchResource searchResource) {
+        this.searchableFields.put(searchResource.getResourceUri(), searchResource.getFields());
     }
 
 }

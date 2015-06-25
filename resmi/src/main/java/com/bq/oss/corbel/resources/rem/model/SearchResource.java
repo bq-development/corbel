@@ -9,18 +9,21 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 /**
  * @author Francisco Sanchez
  */
-public class SearchableFields {
+public class SearchResource {
+
+    public static final String DEFAULT_FIELD_TYPE = "string";
+
     @Id private ResourceUri resourceUri;
     private Set<String> fields;
 
-    public SearchableFields() {}
+    public SearchResource() {}
 
-    public SearchableFields(String type, Set<String> fields) {
+    public SearchResource(String type, Set<String> fields) {
         this.resourceUri = new ResourceUri(type);
         this.fields = fields;
     }
 
-    public SearchableFields(String type, String relation, Set<String> fields) {
+    public SearchResource(String type, String relation, Set<String> fields) {
         this.resourceUri = new ResourceUri(type, null, relation);
         this.fields = fields;
     }

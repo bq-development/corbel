@@ -1,5 +1,6 @@
 package com.bq.oss.corbel.resources.rem.search;
 
+import com.bq.oss.corbel.resources.rem.model.SearchResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,6 +22,8 @@ public class DummyResmiSearch implements ResmiSearch {
     public DummyResmiSearch() {
         LOG.warn(DISABLE_RESMI_SEARCH_MESSAGE);
     }
+
+    public void addResource(SearchResource fields) { LOG.debug(DISABLE_RESMI_SEARCH_MESSAGE); }
 
     @Override
     public JsonArray search(ResourceUri resourceUri, String search, String[] fields, int page, int size) {

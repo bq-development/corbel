@@ -18,7 +18,7 @@ import com.bq.oss.corbel.resources.rem.dao.RelationMoveOperation;
 import com.bq.oss.corbel.resources.rem.dao.ResmiDao;
 import com.bq.oss.corbel.resources.rem.model.GenericDocument;
 import com.bq.oss.corbel.resources.rem.model.ResourceUri;
-import com.bq.oss.corbel.resources.rem.model.SearchableFields;
+import com.bq.oss.corbel.resources.rem.model.SearchResource;
 import com.bq.oss.corbel.resources.rem.request.CollectionParameters;
 import com.bq.oss.corbel.resources.rem.request.CollectionParametersImpl;
 import com.bq.oss.corbel.resources.rem.request.RelationParameters;
@@ -272,14 +272,15 @@ public class DefaultResmiService implements ResmiService {
     }
 
     @Override
-    public List<SearchableFields> getSearchableFields() {
-        return resmiDao.findAll(SEARCHABLE_FIELDS, SearchableFields.class);
+    public List<SearchResource> getSearchableFields() {
+        return resmiDao.findAll(SEARCHABLE_FIELDS, SearchResource.class);
     }
 
     @Override
-    public void addSearchableFields(SearchableFields searchableFields) {
-        resmiDao.saveResource(new ResourceUri(SEARCHABLE_FIELDS), searchableFields);
-        searchableFieldsRegistry.addFields(searchableFields);
+    public void addSearchableFields(SearchResource searchResource) {
+        search.addResource(searchResource);
+        resmiDao.saveResource(new ResourceUri(SEARCHABLE_FIELDS), searchResource);
+        searchableFieldsRegistry.addFields(searchResource);
     }
 
     private void setId(String userId, JsonObject jsonObject) {
