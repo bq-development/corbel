@@ -101,8 +101,9 @@ public class ElasticSearchResmiSearch implements ResmiSearch {
 
     @Override
     public JsonArray search(ResourceUri resourceUri, String search, String[] fields, int page, int size) {
+        //TODO: Search only in fields defined
         SearchResponse response = elasticsearchClient.prepareSearch(INDEX).setTypes(getElasticSearchType(resourceUri))
-                .setSearchType(SearchType.DFS_QUERY_THEN_FETCH).setQuery(QueryBuilders.multiMatchQuery(search, fields)).setFrom(page)
+                .setSearchType(SearchType.DFS_QUERY_THEN_FETCH).setQuery(QueryBuilders.queryStringQuery(search)).setFrom(page)
                 .setSize(size).execute().actionGet();
         JsonArray jsonArray = new JsonArray();
         response.getHits().forEach(hit -> jsonArray.add(gson.toJsonTree(hit.getSource())));
