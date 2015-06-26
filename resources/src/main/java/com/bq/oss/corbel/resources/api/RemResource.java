@@ -1,17 +1,5 @@
 package com.bq.oss.corbel.resources.api;
 
-import java.io.InputStream;
-import java.net.URI;
-
-import javax.annotation.Resource;
-import javax.ws.rs.*;
-import javax.ws.rs.core.*;
-import javax.ws.rs.ext.Providers;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpMethod;
-
 import com.bq.oss.corbel.resources.href.LinksFilter;
 import com.bq.oss.corbel.resources.rem.request.ResourceId;
 import com.bq.oss.corbel.resources.service.ResourcesService;
@@ -20,6 +8,16 @@ import com.bq.oss.lib.token.TokenInfo;
 import com.bq.oss.lib.ws.annotation.Rest;
 import com.bq.oss.lib.ws.auth.AuthorizationInfo;
 import com.sun.jersey.spi.container.ContainerRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpMethod;
+
+import javax.annotation.Resource;
+import javax.ws.rs.*;
+import javax.ws.rs.core.*;
+import javax.ws.rs.ext.Providers;
+import java.io.InputStream;
+import java.net.URI;
 
 /**
  * Entry point for any resource on the resources. Here we obtain the appropiate Resource Resolver Module (REM) and delegate on it the
@@ -65,9 +63,9 @@ import com.sun.jersey.spi.container.ContainerRequest;
     @DELETE
     @Path("/{type}")
     public Response deleteCollection(@PathParam("type") String type, @Context Request request, @Context UriInfo uriInfo,
-            @Context AuthorizationInfo authorizationInfo) {
+            @Context AuthorizationInfo authorizationInfo, @Rest QueryParameters queryParameters) {
         return resourcesService.collectionOperation(type, request, uriInfo, getTokenInfo(authorizationInfo),
-                getBaseUriWithType(uriInfo, type), HttpMethod.DELETE, null, null, null);
+                getBaseUriWithType(uriInfo, type), HttpMethod.DELETE, queryParameters, null, null);
     }
 
     @GET
