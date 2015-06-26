@@ -404,11 +404,11 @@ public class UserResource {
             return IamErrorResponseFactory.getInstance().invalidOAuthService(identity.getDomain());
         }
         if (e instanceof IdentityAlreadyExistsException) {
-            return IamErrorResponseFactory.getInstance().entityExists(Message.IDENTITY_EXITS, identity.getOauthId(),
+            return IamErrorResponseFactory.getInstance().identityExists(Message.IDENTITY_EXITS, identity.getOauthId(),
                     identity.getOauthService(), identity.getDomain());
         }
         if (e instanceof DuplicatedOauthServiceIdentityException) {
-            return IamErrorResponseFactory.getInstance().entityExists(Message.DUPLICATED_OAUTH_SERVICE_IDENTITY, identity.getUserId(),
+            return IamErrorResponseFactory.getInstance().oauthServiceDuplicated(Message.DUPLICATED_OAUTH_SERVICE_IDENTITY, identity.getUserId(),
                     identity.getOauthService(), identity.getDomain());
         }
         if (e instanceof IllegalArgumentException) {

@@ -1,10 +1,10 @@
 package com.bq.oss.corbel.iam.api;
 
-import javax.ws.rs.core.Response;
-
 import com.bq.oss.corbel.iam.utils.Message;
 import com.bq.oss.lib.ws.api.error.ErrorResponseFactory;
 import com.bq.oss.lib.ws.model.Error;
+
+import javax.ws.rs.core.Response;
 
 /**
  * @author Alexander De Leon
@@ -54,6 +54,10 @@ public final class IamErrorResponseFactory extends ErrorResponseFactory {
 
     public Response identityExists(Message message, String... params) {
         return conflict(new Error("identity_exists", message.getMessage((Object[]) params)));
+    }
+
+    public Response oauthServiceDuplicated(Message message, String... params) {
+        return conflict(new Error("oauth_service_duplicated", message.getMessage((Object[]) params)));
     }
 
     public Response scopesNotAllowed(String domain) {
