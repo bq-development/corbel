@@ -1,11 +1,9 @@
 package com.bq.oss.corbel.resources.rem.search;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.LinkedHashMap;
 import java.util.Optional;
+import java.util.Scanner;
 import java.util.concurrent.ExecutionException;
 
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
@@ -47,7 +45,8 @@ public class ElasticSearchResmiSearch implements ResmiSearch {
     private final NamespaceNormalizer namespaceNormalizer;
     private final String mappingSettingsPath;
 
-    public ElasticSearchResmiSearch(Client elasticsearchClient, String indexSettingsPath, String mappingSettingsPath, NamespaceNormalizer namespaceNormalizer, Gson gson) {
+    public ElasticSearchResmiSearch(Client elasticsearchClient, String indexSettingsPath, String mappingSettingsPath,
+            NamespaceNormalizer namespaceNormalizer, Gson gson) {
         createResourcesIndex(elasticsearchClient, INDEX, indexSettingsPath);
         this.elasticsearchClient = elasticsearchClient;
         this.namespaceNormalizer = namespaceNormalizer;
@@ -58,11 +57,7 @@ public class ElasticSearchResmiSearch implements ResmiSearch {
     private void createResourcesIndex(Client elasticsearchClient, String index, String indexSettingsPath) {
         if (!elasticsearchClient.admin().indices().prepareExists(index).execute().actionGet().isExists()) {
             CreateIndexRequest indexRequest = new CreateIndexRequest(index);
-            try {
-                indexRequest.settings(new String(Files.readAllBytes(Paths.get(getClass().getResource(indexSettingsPath).toURI()))));
-            } catch (IOException | URISyntaxException e) {
-                LOG.error("Unable to read elasticsearch index settings", e);
-            }
+            indexRequest.settings(new Scanner(getClass().getResourceAsStream(indexSettingsPath), "UTF-8").useDelimiter("\\A").next());
             elasticsearchClient.admin().indices().create(indexRequest).actionGet();
         }
     }
@@ -76,15 +71,14 @@ public class ElasticSearchResmiSearch implements ResmiSearch {
                     .prepareGetMappings(INDEX).execute().actionGet().mappings();
             if (!mappings.get(INDEX).containsKey(type)) {
                 PutMappingRequest mappingRequest = new PutMappingRequest(INDEX).type(type);
-                mappingRequest.source(new String(Files.readAllBytes(Paths.get(getClass().getResource(mappingSettingsPath)
-                        .toURI()))));
+                mappingRequest.source(new Scanner(getClass().getResourceAsStream(mappingSettingsPath), "UTF-8").useDelimiter("\\A").next());
                 elasticsearchClient.admin().indices().putMapping(mappingRequest).actionGet();
                 mappingTypeNotCreated = true;
             }
             PutMappingRequest mappingRequest = new PutMappingRequest(INDEX).type(type);
             mappingRequest.ignoreConflicts(true);
             XContentBuilder properties = XContentFactory.jsonBuilder().startObject().startObject("properties");
-            for(String field : fields.getFields()) {
+            for (String field : fields.getFields()) {
                 if (mappingTypeNotCreated || !checkFieldCurrentlyMapped(mappings, type, field)) {
                     properties.startObject(field);
                     properties.field("type", SearchResource.DEFAULT_FIELD_TYPE);
@@ -95,8 +89,8 @@ public class ElasticSearchResmiSearch implements ResmiSearch {
             properties.endObject().endObject();
             mappingRequest.source(properties);
             elasticsearchClient.admin().indices().putMapping(mappingRequest).actionGet();
-        } catch (IOException | URISyntaxException e) {
-            LOG.error("Unable to create mapping settings for " + type + " type", e);
+        } catch (IOException e) {
+            LOG.error("Unable to create mapping properties for " + type + " type", e);
         }
     }
 

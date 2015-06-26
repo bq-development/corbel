@@ -3,11 +3,11 @@
     "analysis": {
       "filter": {
         "spanish_stop_words": {
-          "resourceUri": "stop",
+          "type": "stop",
           "stopwords": "_spanish_"
         },
         "nGram_filter": {
-          "resourceUri": "nGram",
+          "type": "nGram",
           "min_gram": 2,
           "max_gram": 10,
           "token_chars": [
@@ -20,7 +20,7 @@
       },
       "analyzer": {
         "nGram_analyzer": {
-          "resourceUri": "custom",
+          "type": "custom",
           "tokenizer": "whitespace",
           "filter": [
             "lowercase",
@@ -30,7 +30,7 @@
           ]
         },
         "whitespace_analyzer": {
-          "resourceUri": "custom",
+          "type": "custom",
           "tokenizer": "whitespace",
           "filter": [
             "lowercase",
