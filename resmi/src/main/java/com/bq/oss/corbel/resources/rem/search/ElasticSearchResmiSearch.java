@@ -64,7 +64,7 @@ public class ElasticSearchResmiSearch implements ResmiSearch {
 
     @Override
     public void addResource(SearchResource fields) {
-        String type = fields.getResourceUri().getType();
+        String type = getElasticSearchType(fields.getResourceUri());
         try {
             boolean mappingTypeNotCreated = false;
             ImmutableOpenMap<String, ImmutableOpenMap<String, MappingMetaData>> mappings = elasticsearchClient.admin().indices()
