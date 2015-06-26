@@ -1,9 +1,14 @@
 package com.bq.oss.corbel.resources.rem.dao;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
+import com.bq.oss.corbel.resources.rem.model.GenericDocument;
+import com.bq.oss.corbel.resources.rem.model.ResourceUri;
+import com.bq.oss.corbel.resources.rem.utils.JsonUtils;
+import com.bq.oss.lib.mongo.JsonObjectMongoWriteConverter;
+import com.bq.oss.lib.mongo.utils.GsonUtil;
+import com.bq.oss.lib.queries.request.*;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Sort.Direction;
@@ -16,15 +21,10 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
-import com.bq.oss.corbel.resources.rem.model.GenericDocument;
-import com.bq.oss.corbel.resources.rem.model.ResourceUri;
-import com.bq.oss.corbel.resources.rem.utils.JsonUtils;
-import com.bq.oss.lib.mongo.JsonObjectMongoWriteConverter;
-import com.bq.oss.lib.mongo.utils.GsonUtil;
-import com.bq.oss.lib.queries.request.*;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * @author Alberto J. Rubio
@@ -234,7 +234,8 @@ public class MongoResmiDao implements ResmiDao {
 
     @Override
     public List<GenericDocument> deleteCollection(ResourceUri uri, Optional<List<ResourceQuery>> queries) {
-        Criteria criteria = new MongoResmiQueryBuilder().getCriteriaFromResourceQueries(queries.get());
+        List<ResourceQuery> resourceQueries = queries.orElse(Collections.<ResourceQuery>emptyList());
+        Criteria criteria = new MongoResmiQueryBuilder().getCriteriaFromResourceQueries(resourceQueries);
         return findAllAndRemove(uri, criteria);
     }
 
