@@ -1,14 +1,10 @@
 package com.bq.oss.corbel.resources.rem.dao;
 
-import com.bq.oss.corbel.resources.rem.model.GenericDocument;
-import com.bq.oss.corbel.resources.rem.model.ResourceUri;
-import com.bq.oss.corbel.resources.rem.utils.JsonUtils;
-import com.bq.oss.lib.mongo.JsonObjectMongoWriteConverter;
-import com.bq.oss.lib.mongo.utils.GsonUtil;
-import com.bq.oss.lib.queries.request.*;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Sort.Direction;
@@ -21,10 +17,20 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import com.bq.oss.corbel.resources.rem.model.GenericDocument;
+import com.bq.oss.corbel.resources.rem.model.ResourceUri;
+import com.bq.oss.corbel.resources.rem.utils.JsonUtils;
+import com.bq.oss.lib.mongo.JsonObjectMongoWriteConverter;
+import com.bq.oss.lib.mongo.utils.GsonUtil;
+import com.bq.oss.lib.queries.request.AverageResult;
+import com.bq.oss.lib.queries.request.CountResult;
+import com.bq.oss.lib.queries.request.Pagination;
+import com.bq.oss.lib.queries.request.ResourceQuery;
+import com.bq.oss.lib.queries.request.Sort;
+import com.bq.oss.lib.queries.request.SumResult;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 /**
  * @author Alberto J. Rubio
@@ -107,11 +113,13 @@ public class MongoResmiDao implements ResmiDao {
 
     @Override
     public boolean conditionalUpdateResource(ResourceUri uri, JsonObject entity, List<ResourceQuery> resourceQueries) {
-        JsonObject saved = findAndModify(getMongoCollectionName(uri), Optional.of(uri.getTypeId()), entity, false, Optional.of(resourceQueries));
+        JsonObject saved = findAndModify(getMongoCollectionName(uri), Optional.of(uri.getTypeId()), entity, false,
+                Optional.of(resourceQueries));
         return saved != null;
     }
 
-    private JsonObject findAndModify(String collection, Optional<String> id, JsonObject entity, boolean upsert, Optional<List<ResourceQuery>> resourceQueries) {
+    private JsonObject findAndModify(String collection, Optional<String> id, JsonObject entity, boolean upsert,
+            Optional<List<ResourceQuery>> resourceQueries) {
         JsonElement created = entity.remove(CREATED_AT);
 
         Update update = updateFromJsonObject(entity, id, Optional.ofNullable(created));
@@ -185,8 +193,11 @@ public class MongoResmiDao implements ResmiDao {
     }
 
     private JsonObject findRelation(ResourceUri uri) {
-        Criteria criteria = Criteria.where(JsonRelation._SRC_ID).is(uri.getTypeId()).and(JsonRelation._DST_ID).is(uri.getRelationId());
-        return mongoOperations.findOne(new Query(criteria), JsonObject.class, getMongoCollectionName(uri));
+        if (uri.getRelationId() != null) {
+            Criteria criteria = Criteria.where(JsonRelation._SRC_ID).is(uri.getTypeId()).and(JsonRelation._DST_ID).is(uri.getRelationId());
+            return mongoOperations.findOne(new Query(criteria), JsonObject.class, getMongoCollectionName(uri));
+        }
+        return null;
     }
 
     @Override
@@ -303,7 +314,7 @@ public class MongoResmiDao implements ResmiDao {
                 .ofNullable(namespaceNormalizer.normalize(resourceUri.getType()))
                 .map(type -> type
                         + Optional.ofNullable(resourceUri.getRelation())
-                        .map(relation -> RELATION_CONCATENATOR + namespaceNormalizer.normalize(relation)).orElse(EMPTY_STRING))
+                                .map(relation -> RELATION_CONCATENATOR + namespaceNormalizer.normalize(relation)).orElse(EMPTY_STRING))
                 .orElse(EMPTY_STRING);
     }
 }

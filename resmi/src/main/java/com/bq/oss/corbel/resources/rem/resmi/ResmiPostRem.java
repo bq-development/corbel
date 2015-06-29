@@ -5,12 +5,18 @@ import java.util.Optional;
 
 import javax.ws.rs.core.Response;
 
+import com.bq.oss.corbel.resources.rem.dao.NotFoundException;
 import com.bq.oss.corbel.resources.rem.model.ResourceUri;
-import com.bq.oss.corbel.resources.rem.request.*;
+import com.bq.oss.corbel.resources.rem.request.CollectionParameters;
+import com.bq.oss.corbel.resources.rem.request.RelationParameters;
+import com.bq.oss.corbel.resources.rem.request.RequestParameters;
+import com.bq.oss.corbel.resources.rem.request.ResourceId;
+import com.bq.oss.corbel.resources.rem.request.ResourceParameters;
 import com.bq.oss.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
 import com.bq.oss.corbel.resources.rem.service.ResmiService;
 import com.bq.oss.lib.token.TokenInfo;
 import com.bq.oss.lib.ws.api.error.ErrorResponseFactory;
+import com.bq.oss.lib.ws.model.Error;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.sun.jersey.api.uri.UriBuilderImpl;
@@ -47,7 +53,23 @@ public class ResmiPostRem extends AbstractResmiRem {
     @Override
     public Response relation(String type, ResourceId id, String relation, RequestParameters<RelationParameters> parameters,
             Optional<JsonObject> entity) {
-        return ErrorResponseFactory.getInstance().methodNotAllowed();
+
+        if (id.isWildcard()) {
+            return ErrorResponseFactory.getInstance().methodNotAllowed();
+        }
+
+        ResourceUri resourceUri = buildRelationUri(type, id.getId(), relation, parameters.getApiParameters());
+
+        try {
+            JsonObject requestEntity = entity.orElse(null);
+            resmiService.createRelation(resourceUri, requestEntity);
+            return created();
+        } catch (NotFoundException | NullPointerException | IllegalArgumentException e) {
+            return ErrorResponseFactory.getInstance().badRequest(
+                    new Error("bad_request", e.getClass().getSimpleName() + ": " + e.getMessage()));
+        } catch (StartsWithUnderscoreException e) {
+            return ErrorResponseFactory.getInstance().invalidEntity("Invalid attribute name \"" + e.getMessage() + "\"");
+        }
     }
 
     private Optional<String> getUserIdFromToken(RequestParameters<CollectionParameters> parameters) {

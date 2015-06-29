@@ -1,5 +1,28 @@
 package com.bq.oss.corbel.resources.api;
 
+import java.io.InputStream;
+import java.net.URI;
+
+import javax.annotation.Resource;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.MatrixParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Request;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.ext.Providers;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpMethod;
+
 import com.bq.oss.corbel.resources.href.LinksFilter;
 import com.bq.oss.corbel.resources.rem.request.ResourceId;
 import com.bq.oss.corbel.resources.service.ResourcesService;
@@ -8,16 +31,6 @@ import com.bq.oss.lib.token.TokenInfo;
 import com.bq.oss.lib.ws.annotation.Rest;
 import com.bq.oss.lib.ws.auth.AuthorizationInfo;
 import com.sun.jersey.spi.container.ContainerRequest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpMethod;
-
-import javax.annotation.Resource;
-import javax.ws.rs.*;
-import javax.ws.rs.core.*;
-import javax.ws.rs.ext.Providers;
-import java.io.InputStream;
-import java.net.URI;
 
 /**
  * Entry point for any resource on the resources. Here we obtain the appropiate Resource Resolver Module (REM) and delegate on it the
@@ -56,8 +69,7 @@ import java.net.URI;
     public Response postCollection(@PathParam("type") String type, @Context Request request, @Context UriInfo uriInfo,
             @Context AuthorizationInfo authorizationInfo, InputStream inputStream, @HeaderParam("Content-Type") MediaType contentType) {
         return resourcesService.collectionOperation(type, request, uriInfo, getTokenInfo(authorizationInfo),
-                getBaseUriWithType(uriInfo, type), HttpMethod.POST, null, inputStream,
-                contentType);
+                getBaseUriWithType(uriInfo, type), HttpMethod.POST, null, inputStream, contentType);
     }
 
     @DELETE
@@ -85,8 +97,7 @@ import java.net.URI;
             @HeaderParam("Content-Type") MediaType contentType, @HeaderParam("Content-Length") Long contentLength,
             @Rest QueryParameters queryParameters) {
         return resourcesService.resourceOperation(type, id, request, queryParameters, uriInfo, getTokenInfo(authorizationInfo),
-                getBaseUriWithType(uriInfo, type),
-                HttpMethod.PUT, inputStream, contentType, contentLength);
+                getBaseUriWithType(uriInfo, type), HttpMethod.PUT, inputStream, contentType, contentLength);
     }
 
     @DELETE
@@ -94,8 +105,7 @@ import java.net.URI;
     public Response deleteResource(@PathParam("type") String type, @PathParam("id") ResourceId id, @Context Request request,
             @Context UriInfo uriInfo, @Context AuthorizationInfo authorizationInfo, @Rest QueryParameters queryParameters) {
         return resourcesService.resourceOperation(type, id, request, queryParameters, uriInfo, getTokenInfo(authorizationInfo),
-                getBaseUriWithType(uriInfo, type), HttpMethod.DELETE, null,
-                null, null);
+                getBaseUriWithType(uriInfo, type), HttpMethod.DELETE, null, null, null);
     }
 
     @GET
@@ -107,6 +117,15 @@ import java.net.URI;
         updateRequestWithLinksTypeAndUri(request, typeUri, type);
         return resourcesService.relationOperation(type, id, rel, request, uriInfo, getTokenInfo(authorizationInfo), HttpMethod.GET,
                 queryParameters, resource, null, null);
+    }
+
+    @POST
+    @Path("/{type}/{id}/{rel}")
+    public Response postRelation(@PathParam("type") String type, @PathParam("id") ResourceId id, @PathParam("rel") String rel,
+            @Context Request request, @Context UriInfo uriInfo, @Context AuthorizationInfo authorizationInfo, InputStream inputStream,
+            @HeaderParam("Content-Type") MediaType contentType) {
+        return resourcesService.relationOperation(type, id, rel, request, uriInfo, getTokenInfo(authorizationInfo), HttpMethod.POST, null,
+                null, inputStream, contentType);
     }
 
     @PUT
