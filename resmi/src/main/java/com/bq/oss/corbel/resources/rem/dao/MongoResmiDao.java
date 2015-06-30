@@ -71,16 +71,16 @@ public class MongoResmiDao implements ResmiDao {
     }
 
     @Override
-    public JsonArray findCollection(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries, Pagination pagination,
+    public JsonArray findCollection(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries, Optional<Pagination> pagination,
             Optional<Sort> sort) {
-        Query query = new MongoResmiQueryBuilder().query(resourceQueries.orElse(null)).pagination(pagination).sort(sort.orElse(null))
+        Query query = new MongoResmiQueryBuilder().query(resourceQueries.orElse(null)).pagination(pagination.orElse(null)).sort(sort.orElse(null))
                 .build();
         LOG.debug("findCollection Query executed : " + query.getQueryObject().toString());
         return JsonUtils.convertToArray(mongoOperations.find(query, JsonObject.class, getMongoCollectionName(uri)));
     }
 
     @Override
-    public JsonElement findRelation(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries, Pagination pagination,
+    public JsonElement findRelation(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries, Optional<Pagination> pagination,
             Optional<Sort> sort) {
         MongoResmiQueryBuilder mongoResmiQueryBuilder = new MongoResmiQueryBuilder();
 
@@ -88,7 +88,7 @@ public class MongoResmiDao implements ResmiDao {
             mongoResmiQueryBuilder.relationDestinationId(uri.getRelationId());
         }
 
-        Query query = mongoResmiQueryBuilder.relationSubjectId(uri).query(resourceQueries.orElse(null)).pagination(pagination)
+        Query query = mongoResmiQueryBuilder.relationSubjectId(uri).query(resourceQueries.orElse(null)).pagination(pagination.orElse(null))
                 .sort(sort.orElse(null)).build();
         query.fields().exclude(_ID).exclude(JsonRelation._SRC_ID);
         LOG.debug("findRelation Query executed : " + query.getQueryObject().toString());

@@ -50,8 +50,8 @@ public abstract class AbstractResmiRem implements Rem<JsonObject> {
         return new ResourceUri(type, id);
     }
 
-    protected ResourceUri buildRelationUri(String type, String id, String relation, RelationParameters apiParameters) {
-        return new ResourceUri(type, id, relation, apiParameters.getPredicateResource().orElse(null));
+    protected ResourceUri buildRelationUri(String type, String id, String relation,Optional<String> predicateResource) {
+        return new ResourceUri(type, id, relation, predicateResource.orElse(null));
     }
 
     protected Response noContent() {

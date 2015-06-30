@@ -1,9 +1,12 @@
 package com.bq.oss.corbel.resources.rem.request;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import javax.ws.rs.core.MultivaluedMap;
 
+import com.sun.jersey.core.util.MultivaluedMapImpl;
 import org.springframework.http.MediaType;
 
 import com.bq.oss.lib.token.TokenInfo;
@@ -14,7 +17,12 @@ import com.bq.oss.lib.token.TokenInfo;
  */
 public interface RequestParameters<E> {
 
+    @Deprecated
     E getApiParameters();
+
+    default Optional<E> getOptionalApiParameters() {
+        return Optional.ofNullable(getApiParameters());
+    }
 
     TokenInfo getTokenInfo();
 
@@ -29,5 +37,51 @@ public interface RequestParameters<E> {
     MultivaluedMap<String, String> getHeaders();
 
     Long getContentLength();
+
+    static <E> RequestParameters<E> emptyParameters() {
+        return new RequestParameters<E>(){
+            @Override
+            public List<MediaType> getAcceptedMediaTypes() {
+                return Collections.emptyList();
+            }
+
+            @Override
+            public E getApiParameters() {
+                return null;
+            }
+
+            @Override
+            public TokenInfo getTokenInfo() {
+                return null;
+            }
+
+            @Override
+            public String getCustomParameterValue(String parameterName) {
+                return null;
+            }
+
+            @Override
+            public List<String> getCustomParameterValues(String parameterName) {
+                return Collections.emptyList();
+            }
+
+            @Override
+            public MultivaluedMap<String, String> getParams() {
+                return new MultivaluedMapImpl();
+            }
+
+            @Override
+            public MultivaluedMap<String, String> getHeaders() {
+                return new MultivaluedMapImpl();
+            }
+
+            @Override
+            public Long getContentLength() {
+                return null;
+            }
+        };
+    }
+
+
 
 }

@@ -100,7 +100,7 @@ public class MongoResmiDaoTest {
                 jsonObjectList);
 
         ResourceUri resourceUri = new ResourceUri(TEST_COLLECTION, TEST_ID, TEST_REL);
-        JsonElement result = mongoResmiDao.findRelation(resourceUri, Optional.empty(), pagination, Optional.empty());
+        JsonElement result = mongoResmiDao.findRelation(resourceUri, Optional.empty(), Optional.of(pagination), Optional.empty());
 
         assertThat(result.isJsonArray()).isTrue();
         assertThat(result.getAsJsonArray().size()).isSameAs(jsonObjectList.size());
