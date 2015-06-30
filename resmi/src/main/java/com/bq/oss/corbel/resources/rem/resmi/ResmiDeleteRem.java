@@ -24,7 +24,7 @@ public class ResmiDeleteRem extends AbstractResmiRem {
     @Override
     public Response collection(String type, RequestParameters<CollectionParameters> parameters, URI uri, Optional<JsonObject> entity) {
         ResourceUri uriResource = buildCollectionUri(type);
-        resmiService.deleteCollection(uriResource, parameters.getApiParameters().getQueries());
+        resmiService.deleteCollection(uriResource, parameters.getOptionalApiParameters().flatMap(params -> params.getQueries()));
         return noContent();
     }
 
@@ -38,7 +38,7 @@ public class ResmiDeleteRem extends AbstractResmiRem {
     @Override
     public Response relation(String type, ResourceId id, String relation, RequestParameters<RelationParameters> parameters,
             Optional<JsonObject> entity) {
-        ResourceUri uri = buildRelationUri(type, id.getId(), relation, parameters.getApiParameters());
+        ResourceUri uri = buildRelationUri(type, id.getId(), relation, parameters.getOptionalApiParameters().flatMap(params -> params.getPredicateResource()));
         if (!id.isWildcard() || uri.getRelationId() != null) {
             resmiService.deleteRelation(uri);
             return noContent();

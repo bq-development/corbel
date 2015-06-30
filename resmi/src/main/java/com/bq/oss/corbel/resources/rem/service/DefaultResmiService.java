@@ -100,11 +100,14 @@ public class DefaultResmiService implements ResmiService {
     }
 
     @Override
-    public JsonArray findCollection(ResourceUri uri, CollectionParameters apiParameters) throws BadConfigurationException {
-        if (apiParameters.getSearch().isPresent()) {
-            return findInSearchService(uri, apiParameters);
+    public JsonArray findCollection(ResourceUri uri, Optional<? extends CollectionParameters> apiParameters) throws BadConfigurationException {
+        if (apiParameters.flatMap(params -> params.getSearch()).isPresent()) {
+            return findInSearchService(uri, apiParameters.get());
         } else {
-            return resmiDao.findCollection(uri, apiParameters.getQueries(), apiParameters.getPagination(), apiParameters.getSort());
+            return resmiDao.findCollection(uri,
+                    apiParameters.flatMap(params -> params.getQueries()),
+                    apiParameters.map(params -> params.getPagination()),
+                    apiParameters.flatMap(params -> params.getSort()));
         }
     }
 
@@ -116,7 +119,7 @@ public class DefaultResmiService implements ResmiService {
 
         if (searchObject.isBinded()) {
             CollectionParameters parameters = buildParametersForBinding(apiParameters, searchResult);
-            return findCollection(resourceUri, parameters);
+            return findCollection(resourceUri, Optional.of(parameters));
         } else {
             return searchResult;
         }
@@ -151,11 +154,13 @@ public class DefaultResmiService implements ResmiService {
     }
 
     @Override
-    public JsonElement findRelation(ResourceUri uri, RelationParameters apiParameters) throws BadConfigurationException {
-        if (apiParameters.getSearch().isPresent()) {
-            return findInSearchService(uri, apiParameters);
+    public JsonElement findRelation(ResourceUri uri, Optional<RelationParameters> apiParameters) throws BadConfigurationException {
+        if (apiParameters.flatMap(params -> params.getSearch()).isPresent()) {
+            return findInSearchService(uri, apiParameters.get());
         } else {
-            return resmiDao.findRelation(uri, apiParameters.getQueries(), apiParameters.getPagination(), apiParameters.getSort());
+            return resmiDao.findRelation(uri, apiParameters.flatMap(params -> params.getQueries()),
+                    apiParameters.map(params -> params.getPagination()),
+                    apiParameters.flatMap(params -> params.getSort()));
         }
     }
 

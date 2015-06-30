@@ -58,7 +58,7 @@ public class ResmiPostRem extends AbstractResmiRem {
             return ErrorResponseFactory.getInstance().methodNotAllowed();
         }
 
-        ResourceUri resourceUri = buildRelationUri(type, id.getId(), relation, parameters.getApiParameters());
+        ResourceUri resourceUri = buildRelationUri(type, id.getId(), relation, parameters.getOptionalApiParameters().flatMap(params -> params.getPredicateResource()));
 
         try {
             JsonObject requestEntity = entity.orElse(null);

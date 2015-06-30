@@ -41,7 +41,7 @@ public class ResmiPutRem extends AbstractResmiRem {
         return entity.map(object -> {
             try {
                 Optional<List<ResourceQuery>> conditions = Optional.ofNullable(parameters)
-                        .map(RequestParameters::getApiParameters)
+                        .flatMap(RequestParameters::getOptionalApiParameters)
                         .map(ResourceParameters::getConditions)
                         .orElse(Optional.empty());
                 if (conditions.isPresent()) {
@@ -63,15 +63,15 @@ public class ResmiPutRem extends AbstractResmiRem {
     @Override
     public Response relation(String type, ResourceId id, String relation, RequestParameters<RelationParameters> parameters,
             Optional<JsonObject> entity) {
-        ResourceUri resourceUri = buildRelationUri(type, id.getId(), relation, parameters.getApiParameters());
+        ResourceUri resourceUri = buildRelationUri(type, id.getId(), relation, parameters.getOptionalApiParameters().flatMap(params -> params.getPredicateResource()));
 
         if (id.isWildcard()) {
             ErrorResponseFactory.getInstance().methodNotAllowed();
         }
 
-        if (parameters.getApiParameters().getPredicateResource().isPresent()) {
+        if (parameters.getOptionalApiParameters().flatMap(params -> params.getPredicateResource()).isPresent()) {
             try {
-                String uri = URLDecoder.decode(parameters.getApiParameters().getPredicateResource().get(), "UTF-8");
+                String uri = URLDecoder.decode(parameters.getOptionalApiParameters().get().getPredicateResource().get(), "UTF-8");
                 if (JsonRelation.validateUri(uri)) {
 
                     JsonObject requestEntity = entity.orElse(null);

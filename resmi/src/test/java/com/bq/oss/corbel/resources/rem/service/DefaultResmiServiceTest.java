@@ -99,10 +99,10 @@ import com.google.gson.JsonPrimitive;
     public void findTest() throws BadConfigurationException {
         ResourceUri resourceUri = new ResourceUri(TYPE);
         JsonArray fakeResult = new JsonArray();
-        when(resmiDao.findCollection(eq(resourceUri), eq(Optional.of(resourceQueriesMock)), eq(paginationMock), eq(Optional.of(sortMock))))
+        when(resmiDao.findCollection(eq(resourceUri), eq(Optional.of(resourceQueriesMock)), eq(Optional.of(paginationMock)), eq(Optional.of(sortMock))))
                 .thenReturn(fakeResult);
         when(collectionParametersMock.getSearch()).thenReturn(Optional.empty());
-        JsonArray result = defaultResmiService.findCollection(resourceUri, collectionParametersMock);
+        JsonArray result = defaultResmiService.findCollection(resourceUri, Optional.of(collectionParametersMock));
         assertThat(fakeResult).isEqualTo(result);
     }
 
@@ -119,7 +119,7 @@ import com.google.gson.JsonPrimitive;
         when(searchableFieldRegistry.getFieldsFromResourceUri(eq(RESOURCE_URI))).thenReturn(new HashSet(Arrays.asList("t1", "t2")));
         when(resmiSearch.search(eq(RESOURCE_URI), eq(search), any(), eq(PAGE), eq(SIZE))).thenReturn(fakeResult);
 
-        JsonArray result = defaultResmiService.findCollection(resourceUri, collectionParametersMock);
+        JsonArray result = defaultResmiService.findCollection(resourceUri, Optional.of(collectionParametersMock));
         assertThat(fakeResult).isEqualTo(result);
     }
 
@@ -141,12 +141,12 @@ import com.google.gson.JsonPrimitive;
         JsonElement fakeResult = new JsonObject();
         ResourceUri resourceUri = new ResourceUri(TYPE, ID, RELATION_TYPE, "test");
 
-        when(resmiDao.findRelation(eq(resourceUri), eq(Optional.of(resourceQueriesMock)), eq(paginationMock), eq(Optional.of(sortMock))))
+        when(resmiDao.findRelation(eq(resourceUri), eq(Optional.of(resourceQueriesMock)), eq(Optional.of(paginationMock)), eq(Optional.of(sortMock))))
                 .thenReturn(fakeResult);
         when(collectionParametersMock.getSearch()).thenReturn(Optional.empty());
         when(relationParametersMock.getPredicateResource()).thenReturn(Optional.of("test"));
 
-        JsonElement result = defaultResmiService.findRelation(resourceUri, relationParametersMock);
+        JsonElement result = defaultResmiService.findRelation(resourceUri, Optional.of(relationParametersMock));
         assertThat(fakeResult).isEqualTo(result);
     }
 

@@ -75,9 +75,9 @@ public class ResmiGetRemTest extends ResmiRemTest {
     public void testGetCollection() throws BadConfigurationException {
         ResourceUri resourceUri = new ResourceUri(TEST_TYPE);
         JsonArray jsonArray = new JsonArray();
-        when(resmiServiceMock.findCollection(resourceUri, collectionParametersMock)).thenReturn(jsonArray);
+        when(resmiServiceMock.findCollection(resourceUri, Optional.of(collectionParametersMock))).thenReturn(jsonArray);
 
-        when(requestParametersCollectionParametersMock.getApiParameters()).thenReturn(collectionParametersMock);
+        when(requestParametersCollectionParametersMock.getOptionalApiParameters()).thenReturn(Optional.of(collectionParametersMock));
         when(collectionParametersMock.getAggregation()).thenReturn(Optional.empty());
         when(collectionParametersMock.getQueries()).thenReturn(Optional.ofNullable(Arrays.asList(resourceQueryMock)));
         when(collectionParametersMock.getPagination()).thenReturn(paginationMock);
@@ -92,7 +92,7 @@ public class ResmiGetRemTest extends ResmiRemTest {
     public void testGetCollectionCount() throws BadConfigurationException {
         when(resmiServiceMock.aggregate(new ResourceUri(TEST_TYPE), collectionParametersMock)).thenReturn(countResultMock);
 
-        when(requestParametersCollectionParametersMock.getApiParameters()).thenReturn(collectionParametersMock);
+        when(requestParametersCollectionParametersMock.getOptionalApiParameters()).thenReturn(Optional.of(collectionParametersMock));
         when(collectionParametersMock.getAggregation()).thenReturn(Optional.of(aggregationOperationMock));
         when(aggregationOperationMock.getOperator()).thenReturn(AggregationOperator.$COUNT);
 
@@ -109,7 +109,7 @@ public class ResmiGetRemTest extends ResmiRemTest {
     public void testGetCollectionAverage() throws BadConfigurationException {
         when(resmiServiceMock.aggregate(new ResourceUri(TEST_TYPE), collectionParametersMock)).thenReturn(averageResultMock);
 
-        when(requestParametersCollectionParametersMock.getApiParameters()).thenReturn(collectionParametersMock);
+        when(requestParametersCollectionParametersMock.getOptionalApiParameters()).thenReturn(Optional.of(collectionParametersMock));
         when(collectionParametersMock.getAggregation()).thenReturn(Optional.of(aggregationOperationMock));
         when(aggregationOperationMock.getOperator()).thenReturn(AggregationOperator.$AVG);
 
@@ -128,9 +128,9 @@ public class ResmiGetRemTest extends ResmiRemTest {
         ResourceUri resourceUri = new ResourceUri(TEST_TYPE, ID, TEST_TYPE_RELATION, null);
         ResourceId resourceId = new ResourceId(ID);
 
-        when(resmiServiceMock.findRelation(resourceUri, relationParametersMock)).thenReturn(jsonArray);
+        when(resmiServiceMock.findRelation(resourceUri, Optional.of(relationParametersMock))).thenReturn(jsonArray);
 
-        when(requestParametersRelationParametersMock.getApiParameters()).thenReturn(relationParametersMock);
+        when(requestParametersRelationParametersMock.getOptionalApiParameters()).thenReturn(Optional.of(relationParametersMock));
         when(relationParametersMock.getAggregation()).thenReturn(Optional.empty());
 
         when(relationParametersMock.getQueries()).thenReturn(Optional.ofNullable(Arrays.asList(resourceQueryMock)));
@@ -152,9 +152,9 @@ public class ResmiGetRemTest extends ResmiRemTest {
         ResourceId resourceId = new ResourceId(ID);
 
 
-        when(resmiServiceMock.findRelation(resourceUri, relationParametersMock)).thenReturn(jsonArray);
+        when(resmiServiceMock.findRelation(resourceUri, Optional.of(relationParametersMock))).thenReturn(jsonArray);
 
-        when(requestParametersRelationParametersMock.getApiParameters()).thenReturn(relationParametersMock);
+        when(requestParametersRelationParametersMock.getOptionalApiParameters()).thenReturn(Optional.of(relationParametersMock));
         when(relationParametersMock.getAggregation()).thenReturn(Optional.empty());
 
         when(relationParametersMock.getQueries()).thenReturn(Optional.ofNullable(Arrays.asList(resourceQueryMock)));
@@ -174,7 +174,7 @@ public class ResmiGetRemTest extends ResmiRemTest {
         when(resmiServiceMock.aggregate(new ResourceUri(TEST_TYPE, resourceIdMock.getId(), TEST_TYPE_RELATION), relationParametersMock))
                 .thenReturn(countResultMock);
 
-        when(requestParametersRelationParametersMock.getApiParameters()).thenReturn(relationParametersMock);
+        when(requestParametersRelationParametersMock.getOptionalApiParameters()).thenReturn(Optional.of(relationParametersMock));
         when(relationParametersMock.getAggregation()).thenReturn(Optional.of(aggregationOperationMock));
 
         when(aggregationOperationMock.getOperator()).thenReturn(AggregationOperator.$COUNT);

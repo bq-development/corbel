@@ -41,7 +41,7 @@ public class ResmiPutRemTest extends ResmiRemTest {
     private RequestParameters<ResourceParameters> getResourceParametersMockWithCondition(Optional<List<ResourceQuery>> conditions) {
         ResourceParameters resourceParametersMock = mock(ResourceParameters.class);
         RequestParameters<ResourceParameters> requestParametersMock = mock(RequestParameters.class);
-        when(requestParametersMock.getApiParameters()).thenReturn(resourceParametersMock);
+        when(requestParametersMock.getOptionalApiParameters()).thenReturn(Optional.of(resourceParametersMock));
         when(resourceParametersMock.getConditions()).thenReturn(conditions);
         return requestParametersMock;
 

@@ -22,9 +22,9 @@ public interface ResmiDao {
 
     JsonObject findResource(ResourceUri uri);
 
-    JsonArray findCollection(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries, Pagination pagination, Optional<Sort> sort);
+    JsonArray findCollection(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries, Optional<Pagination> pagination, Optional<Sort> sort);
 
-    JsonElement findRelation(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries, Pagination pagination, Optional<Sort> sort);
+    JsonElement findRelation(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries, Optional<Pagination> pagination, Optional<Sort> sort);
 
     void updateResource(ResourceUri uri, JsonObject entity);
 

@@ -87,7 +87,7 @@ public class ResmiDeleteRemTest extends ResmiRemTest {
         CollectionParameters collectionParameters = mock(CollectionParameters.class);
 
         when(collectionParameters.getQueries()).thenReturn(optionalQueries);
-        when(parameters.getApiParameters()).thenReturn(collectionParameters);
+        when(parameters.getOptionalApiParameters()).thenReturn(Optional.of(collectionParameters));
 
         Response response = deleteRem.collection(TEST_TYPE, parameters, null, Optional.empty());
         assertThat(response.getStatus()).isEqualTo(204);
