@@ -1,5 +1,6 @@
 package com.bq.oss.corbel.resources.rem.request;
 
+import java.util.Collections;
 import java.util.List;
 
 import javax.ws.rs.core.MultivaluedMap;
@@ -7,6 +8,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import org.springframework.http.MediaType;
 
 import com.bq.oss.lib.token.TokenInfo;
+import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 /**
  * @author Alexander De Leon
@@ -74,7 +76,8 @@ public class RequestParametersImpl<E> implements RequestParameters<E> {
 
     public static RequestParametersImpl<?> getEmptyInstance() {
         if (emptyInstance == null) {
-            emptyInstance = new RequestParametersImpl<>(null, null, null, null, null, null);
+            emptyInstance = new RequestParametersImpl<>(null, null, Collections.<MediaType>emptyList(), null, new MultivaluedMapImpl(),
+                    new MultivaluedMapImpl());
         }
         return emptyInstance;
     }

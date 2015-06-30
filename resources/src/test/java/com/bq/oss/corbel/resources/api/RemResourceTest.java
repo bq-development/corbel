@@ -707,6 +707,25 @@ public class RemResourceTest {
                 Response.Status.BAD_REQUEST.getStatusCode());
     }
 
+
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    @Test
+    public void testPostRelation() {
+        Mockito.reset(eventBusMock);
+        Response testResponse = Response.ok().entity(TEST_OK).build();
+        ArgumentCaptor<RequestParameters> parametersCaptor = ArgumentCaptor.forClass(RequestParameters.class);
+        ArgumentCaptor<Optional> optionalJsonObjectCaptor = ArgumentCaptor.forClass(Optional.class);
+        when(
+                remMock.relation(Mockito.eq(TEST_TYPE), Mockito.eq(RESOURCE_ID), Mockito.eq(TEST_REL), parametersCaptor.capture(),
+                        optionalJsonObjectCaptor.capture())).thenReturn(testResponse);
+        assertThat(
+                RULE.client().resource(RELATION_URI).type(MediaType.APPLICATION_JSON_TYPE).header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
+                        .post(String.class, jsonTest)).isEqualTo(TEST_OK);
+        assertThat(parametersCaptor.getValue().getTokenInfo().getUserId()).isSameAs(TEST_USER_ID);
+        verifyZeroInteractions(eventBusMock);
+    }
+
     @SuppressWarnings({"rawtypes", "unchecked"})
     // Test TODO JACKSON
     public void testPutRelation() {
