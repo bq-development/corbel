@@ -7,7 +7,7 @@ import com.bq.oss.corbel.eventbus.EventWithSpecificDomain;
  */
 public class ResourceEvent extends EventWithSpecificDomain {
 
-    private enum Action {
+    public enum Action {
         CREATE, UPDATE, DELETE
     }
 
