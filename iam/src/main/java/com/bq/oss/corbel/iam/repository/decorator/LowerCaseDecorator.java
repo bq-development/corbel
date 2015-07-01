@@ -1,18 +1,14 @@
 package com.bq.oss.corbel.iam.repository.decorator;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.bouncycastle.util.Strings;
-
 import com.bq.oss.corbel.iam.model.User;
 import com.bq.oss.corbel.iam.repository.UserRepository;
 import com.bq.oss.lib.queries.ListQueryLiteral;
 import com.bq.oss.lib.queries.StringQueryLiteral;
-import com.bq.oss.lib.queries.request.AggregationResult;
-import com.bq.oss.lib.queries.request.Pagination;
-import com.bq.oss.lib.queries.request.ResourceQuery;
-import com.bq.oss.lib.queries.request.Sort;
+import com.bq.oss.lib.queries.request.*;
+import org.bouncycastle.util.Strings;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author Francisco Sanchez
@@ -62,8 +58,9 @@ public class LowerCaseDecorator extends UserRepositoryDecorator {
                 try {
                     if (queryNode.getValue() instanceof ListQueryLiteral) {
                         ListQueryLiteral list = (ListQueryLiteral) queryNode.getValue();
+
                         list.setLiteral(list.getLiteral().stream()
-                                .map(literal -> lowerCaseStringQueryLiteral((StringQueryLiteral) literal)).collect(Collectors.toList()));
+                                .map(literal -> (QueryLiteral) lowerCaseStringQueryLiteral((StringQueryLiteral) literal)).collect(Collectors.toList()));
 
                     } else {
                         lowerCaseStringQueryLiteral((StringQueryLiteral) queryNode.getValue());
