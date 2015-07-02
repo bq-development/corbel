@@ -1,8 +1,11 @@
 package com.bq.oss.corbel.iam.service;
 
 import java.security.SignatureException;
-import java.util.*;
-import java.util.function.BiFunction;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 import net.oauth.jsontoken.JsonToken;
 import net.oauth.jsontoken.JsonTokenParser;
@@ -10,11 +13,24 @@ import net.oauth.jsontoken.JsonTokenParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.bq.oss.corbel.iam.auth.*;
+import com.bq.oss.corbel.iam.auth.AuthorizationRequestContext;
+import com.bq.oss.corbel.iam.auth.AuthorizationRequestContextFactory;
+import com.bq.oss.corbel.iam.auth.AuthorizationRule;
+import com.bq.oss.corbel.iam.auth.BasicParams;
+import com.bq.oss.corbel.iam.auth.OauthParams;
 import com.bq.oss.corbel.iam.auth.provider.AuthorizationProviderFactory;
 import com.bq.oss.corbel.iam.auth.provider.Provider;
-import com.bq.oss.corbel.iam.exception.*;
-import com.bq.oss.corbel.iam.model.*;
+import com.bq.oss.corbel.iam.exception.MissingBasicParamsException;
+import com.bq.oss.corbel.iam.exception.MissingOAuthParamsException;
+import com.bq.oss.corbel.iam.exception.NoSuchPrincipalException;
+import com.bq.oss.corbel.iam.exception.OauthServerConnectionException;
+import com.bq.oss.corbel.iam.exception.UnauthorizedException;
+import com.bq.oss.corbel.iam.model.Domain;
+import com.bq.oss.corbel.iam.model.Identity;
+import com.bq.oss.corbel.iam.model.Scope;
+import com.bq.oss.corbel.iam.model.TokenGrant;
+import com.bq.oss.corbel.iam.model.User;
+import com.bq.oss.corbel.iam.model.UserToken;
 import com.bq.oss.corbel.iam.repository.UserTokenRepository;
 import com.bq.oss.corbel.iam.utils.Message;
 import com.bq.oss.lib.token.TokenInfo;
@@ -100,7 +116,7 @@ public class DefaultAuthorizationService implements AuthorizationService {
     }
 
     private String getMessageByException(RuntimeException e) {
-        return (String) Optional.ofNullable(e.getMessage()).map(error -> {
+        return Optional.ofNullable(e.getMessage()).map(error -> {
             if (error.contains("Invalid iat and/or exp.")) {
                 return "Authorization request is now past. Check your system clock.";
             }
@@ -155,24 +171,17 @@ public class DefaultAuthorizationService implements AuthorizationService {
     private TokenGrant grantAccess(AuthorizationRequestContext context, BasicParams basicParams) throws UnauthorizedException {
         Domain domain = context.getRequestedDomain();
 
-        List<BiFunction<String, String, User>> funcList = Arrays.asList(userService::findByDomainAndUsername,
-                userService::findByDomainAndEmail);
-
-        for (BiFunction<String, String, User> func : funcList) {
-            Optional<User> candidateUser = Optional.ofNullable(func.apply(domain.getId(), basicParams.getUsername())).map(user -> {
-                if (user.checkPassword(basicParams.getPassword()))
-                    return user;
-                else
-                    return null;
-            });
-
-            if (candidateUser.isPresent()) {
-                context.setPrincipalId(candidateUser.get().getUsername());
-                return grantAccess(context);
-            }
+        User user;
+        user = userService.findByDomainAndUsername(domain.getId(), basicParams.getUsername());
+        if (user == null) {
+            user = userService.findByDomainAndEmail(domain.getId(), basicParams.getUsername());
         }
-
-        throw new NoSuchPrincipalException(Message.UNKNOWN_BASIC_USER_CREDENTIALS.getMessage());
+        if (user != null && user.checkPassword(basicParams.getPassword())) {
+            context.setPrincipalId(user.getUsername());
+            return grantAccess(context);
+        } else {
+            throw new NoSuchPrincipalException(Message.UNKNOWN_BASIC_USER_CREDENTIALS.getMessage());
+        }
     }
 
     private TokenGrant grantAccess(AuthorizationRequestContext context) throws UnauthorizedException {

@@ -2,10 +2,18 @@ package com.bq.oss.corbel.iam.api;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import io.dropwizard.testing.junit.ResourceTestRule;
 
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -17,8 +25,6 @@ import com.bq.oss.corbel.iam.model.Scope;
 import com.bq.oss.corbel.iam.service.ClientService;
 import com.bq.oss.corbel.iam.service.DomainService;
 import com.bq.oss.corbel.iam.service.ScopeService;
-import com.sun.jersey.api.client.ClientResponse;
-import io.dropwizard.testing.junit.ResourceTestRule;
 
 public class ScopeResourceTest {
     private final static ScopeService scopeService = mock(ScopeService.class);
@@ -41,13 +47,12 @@ public class ScopeResourceTest {
 
         ArgumentCaptor<Scope> scopeCaptor = ArgumentCaptor.forClass(Scope.class);
 
-        ClientResponse response = RULE.client().resource("/v1.0/scope").type(MediaType.APPLICATION_JSON_TYPE)
-                .post(ClientResponse.class, scope);
+        Response response = RULE.client().target("/v1.0/scope").request().post(Entity.json(scope), Response.class);
 
         verify(scopeService).create(scopeCaptor.capture());
         assertEquals(SCOPE_ID, scopeCaptor.getValue().getId());
-        assertEquals(ClientResponse.Status.CREATED.getStatusCode(), response.getStatus());
-        assertTrue(response.getHeaders().getFirst("Location").endsWith(SCOPE_ID));
+        assertEquals(Response.Status.CREATED.getStatusCode(), response.getStatus());
+        assertTrue(response.getHeaderString("Location").endsWith(SCOPE_ID));
     }
 
     @Test
@@ -58,13 +63,12 @@ public class ScopeResourceTest {
 
         ArgumentCaptor<Scope> scopeCaptor = ArgumentCaptor.forClass(Scope.class);
 
-        ClientResponse response = RULE.client().resource("/v1.0/scope").type(MediaType.APPLICATION_JSON_TYPE)
-                .post(ClientResponse.class, scope);
+        Response response = RULE.client().target("/v1.0/scope").request().post(Entity.json(scope), Response.class);
 
         verify(scopeService).create(scopeCaptor.capture());
         assertEquals(SCOPE_ID, scopeCaptor.getValue().getId());
-        assertEquals(ClientResponse.Status.CREATED.getStatusCode(), response.getStatus());
-        assertTrue(response.getHeaders().getFirst("Location").endsWith(SCOPE_ID));
+        assertEquals(Response.Status.CREATED.getStatusCode(), response.getStatus());
+        assertTrue(response.getHeaderString("Location").endsWith(SCOPE_ID));
     }
 
     @Test
@@ -76,12 +80,11 @@ public class ScopeResourceTest {
 
         doThrow(ScopeNameException.class).when(scopeService).create(any());
 
-        ClientResponse response = RULE.client().resource("/v1.0/scope").type(MediaType.APPLICATION_JSON_TYPE)
-                .post(ClientResponse.class, scope);
+        Response response = RULE.client().target("/v1.0/scope").request().post(Entity.json(scope), Response.class);
 
         verify(scopeService).create(scopeCaptor.capture());
         assertEquals(SCOPE_ID, scopeCaptor.getValue().getId());
-        assertEquals(ClientResponse.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
     }
 
     @Test
@@ -91,7 +94,7 @@ public class ScopeResourceTest {
 
         when(scopeService.getScope(SCOPE_ID)).thenReturn(expectedScope);
 
-        Scope scope = RULE.client().resource("/v1.0/scope/" + SCOPE_ID).accept(MediaType.APPLICATION_JSON_TYPE).get(Scope.class);
+        Scope scope = RULE.client().target("/v1.0/scope/" + SCOPE_ID).request(MediaType.APPLICATION_JSON_TYPE).get(Scope.class);
 
         verify(scopeService).getScope(eq(SCOPE_ID));
         assertEquals(scope, expectedScope);
@@ -101,18 +104,17 @@ public class ScopeResourceTest {
     public void testGetUnknownScope() {
         when(scopeService.getScope(SCOPE_ID)).thenReturn(null);
 
-        ClientResponse response = RULE.client().resource("/v1.0/scope/" + SCOPE_ID).accept(MediaType.APPLICATION_JSON_TYPE)
-                .get(ClientResponse.class);
+        Response response = RULE.client().target("/v1.0/scope/" + SCOPE_ID).request(MediaType.APPLICATION_JSON_TYPE).get(Response.class);
 
         verify(scopeService).getScope(eq(SCOPE_ID));
-        assertEquals(ClientResponse.Status.NOT_FOUND.getStatusCode(), response.getStatus());
+        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
     }
 
     @Test
     public void testDeleteScope() {
-        ClientResponse response = RULE.client().resource("/v1.0/scope/" + SCOPE_ID).delete(ClientResponse.class);
+        Response response = RULE.client().target("/v1.0/scope/" + SCOPE_ID).request().delete(Response.class);
 
         verify(scopeService).delete(eq(SCOPE_ID));
-        assertEquals(ClientResponse.Status.NO_CONTENT.getStatusCode(), response.getStatus());
+        assertEquals(Response.Status.NO_CONTENT.getStatusCode(), response.getStatus());
     }
 }

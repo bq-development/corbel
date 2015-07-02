@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
@@ -24,7 +25,6 @@ import com.bq.oss.corbel.resources.rem.request.CollectionParameters;
 import com.bq.oss.corbel.resources.rem.request.RequestParameters;
 import com.bq.oss.corbel.resources.rem.request.ResourceId;
 import com.bq.oss.corbel.resources.rem.service.RemService;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 public class I18nDeleteRemTest {
     private static final String TEST_COLLECTION_TYPE = "I18n_TEST";
@@ -55,7 +55,7 @@ public class I18nDeleteRemTest {
     public void testDeleteResource() {
         ResourceId resourceId = new ResourceId(TEST_ID);
         Response responseMock = mock(Response.class);
-        MultivaluedMap<String, String> multiValueMap = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> multiValueMap = new MultivaluedHashMap();
         multiValueMap.add(ACCEPT_LANGUAGE_HEADER, LANGUAGE);
 
         when(requestParametersMock.getHeaders()).thenReturn(multiValueMap);
@@ -72,7 +72,7 @@ public class I18nDeleteRemTest {
     @Test
     public void testDeleteResourceNotLanguage() {
         ResourceId resourceId = new ResourceId(TEST_ID);
-        when(requestParametersMock.getHeaders()).thenReturn(new MultivaluedMapImpl());
+        when(requestParametersMock.getHeaders()).thenReturn(new MultivaluedHashMap());
         Response response = i18DeleteRem.resource(TEST_COLLECTION_TYPE, resourceId, requestParametersMock, Optional.empty());
         assertThat(response.getStatus()).isEqualTo(400);
     }

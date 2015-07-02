@@ -10,6 +10,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
@@ -19,7 +20,6 @@ import com.bq.oss.corbel.evci.service.EventsService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.sun.jersey.api.representation.Form;
 
 @Path(ApiVersion.CURRENT + "/event") public class EventResource {
 
@@ -50,10 +50,10 @@ import com.sun.jersey.api.representation.Form;
     }
 
     private ObjectNode getNodeParams(Form params) {
-        if (!params.isEmpty()) {
+        if (!params.asMap().isEmpty()) {
             ObjectMapper mapper = new ObjectMapper();
             ObjectNode node = mapper.createObjectNode();
-            for (Entry<String, List<String>> entry : params.entrySet()) {
+            for (Entry<String, List<String>> entry : params.asMap().entrySet()) {
                 if (entry.getValue().size() > 1) {
                     node.put(entry.getKey(), mapper.<JsonNode>valueToTree(entry.getValue()));
                 } else {

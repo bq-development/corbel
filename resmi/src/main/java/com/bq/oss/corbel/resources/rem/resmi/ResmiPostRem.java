@@ -4,6 +4,7 @@ import java.net.URI;
 import java.util.Optional;
 
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilder;
 
 import com.bq.oss.corbel.resources.rem.dao.NotFoundException;
 import com.bq.oss.corbel.resources.rem.model.ResourceUri;
@@ -19,7 +20,6 @@ import com.bq.oss.lib.ws.api.error.ErrorResponseFactory;
 import com.bq.oss.lib.ws.model.Error;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.sun.jersey.api.uri.UriBuilderImpl;
 
 /**
  * @author Rubén Carrasco
@@ -87,7 +87,7 @@ public class ResmiPostRem extends AbstractResmiRem {
     private URI generateResourceLink(JsonObject resource, URI typeUri) {
         JsonElement idElement = resource.get(resource.has(ResmiService.ID) ? ResmiService.ID : ResmiService._ID);
         if (idElement.isJsonPrimitive()) {
-            return UriBuilderImpl.fromUri(typeUri).path("/{id}").build(idElement.getAsString());
+            return UriBuilder.fromUri(typeUri).path("/{id}").build(idElement.getAsString());
         }
         return null;
     }

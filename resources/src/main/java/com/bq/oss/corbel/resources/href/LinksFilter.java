@@ -5,6 +5,9 @@ import java.net.URISyntaxException;
 import java.util.Optional;
 import java.util.Set;
 
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerResponseContext;
+import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -14,9 +17,6 @@ import org.slf4j.LoggerFactory;
 import com.bq.oss.corbel.resources.service.RelationSchemaService;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.sun.jersey.spi.container.ContainerRequest;
-import com.sun.jersey.spi.container.ContainerResponse;
-import com.sun.jersey.spi.container.ContainerResponseFilter;
 
 /**
  * @author Rubén Carrasco
@@ -38,7 +38,7 @@ public class LinksFilter implements ContainerResponseFilter {
     }
 
     @Override
-    public ContainerResponse filter(ContainerRequest request, ContainerResponse response) {
+    public void filter(ContainerRequestContext request, ContainerResponseContext response) {
         if (request.getMethod().equals(GET_METHOD) && request.getAcceptableMediaTypes().contains(MediaType.APPLICATION_JSON_TYPE)
                 && MediaType.APPLICATION_JSON_TYPE.isCompatible(response.getMediaType())
                 && response.getStatus() == Response.Status.OK.getStatusCode()) {
@@ -49,12 +49,11 @@ public class LinksFilter implements ContainerResponseFilter {
                 LOG.error(e.getMessage());
             }
         }
-        return response;
     }
 
-    private void processRequest(ContainerRequest request, JsonElement entity) {
+    private void processRequest(ContainerRequestContext request, JsonElement entity) {
         Optional.ofNullable(getUriWithProxyPassPath(request)).ifPresent(baseUri -> {
-            String type = String.valueOf(request.getProperties().get(TYPE));
+            String type = String.valueOf(request.getProperty(TYPE));
             if (type != null) {
                 addLinks(entity, baseUri, Optional.ofNullable(relationSchemaService.getTypeRelations(type)));
             } else {
@@ -63,10 +62,10 @@ public class LinksFilter implements ContainerResponseFilter {
         });
     }
 
-    private java.net.URI getUriWithProxyPassPath(ContainerRequest request) {
-        URI uri = (java.net.URI) request.getProperties().get("uri");
-        return Optional.ofNullable(request.getHeaderValue("X-Forwarded-Uri")).map(originalUri -> {
-            String proxyPassPath = originalUri.replace(request.getAbsolutePath().getPath(), "");
+    private java.net.URI getUriWithProxyPassPath(ContainerRequestContext request) {
+        URI uri = (java.net.URI) request.getProperty("uri");
+        return Optional.ofNullable(request.getHeaderString("X-Forwarded-Uri")).map(originalUri -> {
+            String proxyPassPath = originalUri.replace(request.getUriInfo().getAbsolutePath().getPath(), "");
             try {
                 return new URI(uri.getScheme(), uri.getHost(), proxyPassPath + uri.getPath(), uri.getFragment());
             } catch (URISyntaxException e) {

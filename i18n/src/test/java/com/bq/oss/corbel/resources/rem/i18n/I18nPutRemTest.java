@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.Response;
 
 import org.junit.Before;
@@ -25,7 +26,6 @@ import com.bq.oss.corbel.resources.rem.request.ResourceId;
 import com.bq.oss.corbel.resources.rem.service.RemService;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 public class I18nPutRemTest {
     private static final String TEST_COLLECTION_TYPE = "I18n_TEST";
@@ -75,7 +75,7 @@ public class I18nPutRemTest {
     @Test
     public void testPutResourceNotLanguage() {
         ResourceId resourceId = new ResourceId(TEST_ID);
-        when(requestParametersMock.getHeaders()).thenReturn(new MultivaluedMapImpl());
+        when(requestParametersMock.getHeaders()).thenReturn(new MultivaluedHashMap());
         Response response = i18nPutRem.resource(TEST_COLLECTION_TYPE, resourceId, requestParametersMock,
                 Optional.of(i18nTestModel.setLang(null)));
         assertThat(response.getStatus()).isEqualTo(422);
@@ -84,7 +84,7 @@ public class I18nPutRemTest {
     @Test
     public void testPutResourceNotValue() {
         ResourceId resourceId = new ResourceId(TEST_ID);
-        when(requestParametersMock.getHeaders()).thenReturn(new MultivaluedMapImpl());
+        when(requestParametersMock.getHeaders()).thenReturn(new MultivaluedHashMap());
         Response response = i18nPutRem.resource(TEST_COLLECTION_TYPE, resourceId, requestParametersMock,
                 Optional.of(i18nTestModel.setValue(null)));
         assertThat(response.getStatus()).isEqualTo(422);

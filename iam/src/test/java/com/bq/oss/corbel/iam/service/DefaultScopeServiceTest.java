@@ -3,12 +3,19 @@ package com.bq.oss.corbel.iam.service;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.Matchers.anyMap;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Before;
@@ -77,7 +84,7 @@ public class DefaultScopeServiceTest {
                 Clock.fixed(now, ZoneId.systemDefault()), eventsServiceMock);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = NullPointerException.class)
     public void testPublishAuthorizationRulesIllegalArgument() {
         service.publishAuthorizationRules(TEST_TOKEN, TEST_TOKEN_EXPIRATION_TIME, null);
     }

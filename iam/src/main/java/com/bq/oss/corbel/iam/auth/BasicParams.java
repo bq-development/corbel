@@ -2,13 +2,13 @@ package com.bq.oss.corbel.iam.auth;
 
 import net.oauth.jsontoken.JsonToken;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import com.google.gson.JsonPrimitive;
 
 public class BasicParams {
-    private String username;
-    private String password;
+    private final String username;
+    private final String password;
     public static final String BASIC_AUTH_USERNAME = "basic_auth.username";
     public static final String BASIC_AUTH_PASSWORD = "basic_auth.password";
 

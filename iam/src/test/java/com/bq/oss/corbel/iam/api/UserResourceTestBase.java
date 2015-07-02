@@ -1,15 +1,17 @@
 package com.bq.oss.corbel.iam.api;
 
+import io.dropwizard.testing.junit.ResourceTestRule;
+
+import java.util.Set;
+
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.core.MediaType;
+
 import com.bq.oss.corbel.iam.model.Domain;
 import com.bq.oss.corbel.iam.model.Identity;
 import com.bq.oss.corbel.iam.model.User;
 import com.bq.oss.corbel.iam.model.UserWithIdentity;
 import com.google.common.collect.Sets;
-import com.sun.jersey.api.client.WebResource.Builder;
-import io.dropwizard.testing.junit.ResourceTestRule;
-
-import javax.ws.rs.core.MediaType;
-import java.util.Set;
 
 /**
  * @author Alexander De Leon
@@ -73,21 +75,21 @@ public abstract class UserResourceTestBase {
     }
 
     protected Builder addUserClient() {
-        return getTestRule().client().resource("/v1.0/user").type(MediaType.APPLICATION_JSON).header(AUTHORIZATION, "Bearer " + TEST_TOKEN);
+        return getTestRule().client().target("/v1.0/user").request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN);
     }
 
     protected Builder getUserClient(String id) {
-        return getTestRule().client().resource("/v1.0/user/" + id).type(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON)
+        return getTestRule().client().target("/v1.0/user/" + id).request(MediaType.APPLICATION_JSON)
                 .header(AUTHORIZATION, "Bearer " + TEST_TOKEN);
     }
 
     protected Builder getUserProfile(String id) {
-        return getTestRule().client().resource("/v1.0/user/" + id + "/profile").type(MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON).header(AUTHORIZATION, "Bearer " + TEST_TOKEN);
+        return getTestRule().client().target("/v1.0/user/" + id + "/profile").request(MediaType.APPLICATION_JSON)
+                .header(AUTHORIZATION, "Bearer " + TEST_TOKEN);
     }
 
     protected Builder getUserClientMe() {
-        return getTestRule().client().resource("/v1.0/user/me").type(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON)
+        return getTestRule().client().target("/v1.0/user/me").request(MediaType.APPLICATION_JSON)
                 .header(AUTHORIZATION, "Bearer " + TEST_TOKEN);
     }
 
@@ -96,11 +98,11 @@ public abstract class UserResourceTestBase {
     }
 
     protected Builder apiCall(String authorization, String url) {
-        return apiCall(authorization, url, MediaType.APPLICATION_JSON_TYPE, MediaType.APPLICATION_JSON_TYPE);
+        return apiCall(authorization, url, MediaType.APPLICATION_JSON_TYPE);
     }
 
-    protected Builder apiCall(String authorization, String url, MediaType type, MediaType accept) {
-        return getTestRule().client().resource(url).type(type).accept(accept).header(AUTHORIZATION, authorization);
+    protected Builder apiCall(String authorization, String url, MediaType accept) {
+        return getTestRule().client().target(url).request(accept).header(AUTHORIZATION, authorization);
     }
 
 }

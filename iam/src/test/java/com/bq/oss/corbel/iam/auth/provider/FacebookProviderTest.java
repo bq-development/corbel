@@ -11,6 +11,10 @@ import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
+
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -25,11 +29,6 @@ import com.bq.oss.corbel.iam.model.Identity;
 import com.bq.oss.corbel.iam.repository.IdentityRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
 
 public class FacebookProviderTest {
 
@@ -51,17 +50,14 @@ public class FacebookProviderTest {
 
     @BeforeClass
     public static void loginWithTestUser() throws UnsupportedEncodingException, URISyntaxException {
-        ClientConfig clientConfig = new DefaultClientConfig();
-        clientConfig.getClasses().add(JacksonJsonProvider.class);
+        Client client = ClientBuilder.newClient();
 
-        Client client = Client.create(clientConfig);
+        WebTarget webResource = client.target(URL_GET_APP_ACCES_TOKEN);
+        String appAccessToken = webResource.request().get(String.class);
 
-        WebResource webResource = client.resource(URL_GET_APP_ACCES_TOKEN);
-        String appAccessToken = webResource.get(String.class);
-
-        WebResource webResource2 = client.resource(new URI(URL_GET_TEST_USERS
-                + URLEncoder.encode(appAccessToken, "UTF-8").replace("%3D", "=")));
-        ObjectNode jsonNode = webResource2.get(ObjectNode.class);
+        WebTarget webResource2 = client
+                .target(new URI(URL_GET_TEST_USERS + URLEncoder.encode(appAccessToken, "UTF-8").replace("%3D", "=")));
+        ObjectNode jsonNode = webResource2.request().get(ObjectNode.class);
 
         for (JsonNode testUser : jsonNode.path("data")) {
             if (testUser.path("id").asText().equals(idTestUser)) {

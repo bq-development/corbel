@@ -1,15 +1,30 @@
 package com.bq.oss.corbel.iam.api;
 
 import static org.fest.assertions.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import io.dropwizard.auth.Authenticator;
+import io.dropwizard.auth.oauth.OAuthFactory;
+import io.dropwizard.testing.junit.ResourceTestRule;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.security.SignatureException;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.NewCookie;
+import javax.ws.rs.core.Response;
 
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -27,15 +42,10 @@ import com.bq.oss.corbel.iam.utils.TokenCookieFactory;
 import com.bq.oss.lib.token.TokenInfo;
 import com.bq.oss.lib.token.reader.TokenReader;
 import com.bq.oss.lib.ws.auth.AuthorizationInfo;
+import com.bq.oss.lib.ws.auth.AuthorizationInfoProvider;
+import com.bq.oss.lib.ws.auth.AuthorizationRequestFilter;
 import com.bq.oss.lib.ws.auth.BearerTokenAuthenticator;
 import com.google.common.base.Optional;
-import com.sun.jersey.api.client.ClientHandlerException;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
-
-import io.dropwizard.auth.oauth.OAuthProvider;
-import io.dropwizard.testing.junit.ResourceTestRule;
 
 /**
  * @author Alexander De Leon
@@ -67,9 +77,13 @@ public class TokenResourceTest {
     private static final TokenInfo token = mock(TokenInfo.class);
     private static final TokenReader tokenReader = mock(TokenReader.class);
 
+    private static final Authenticator<String, AuthorizationInfo> authenticator = mock(Authenticator.class);
+    private static OAuthFactory oAuthFactory = new OAuthFactory<>(authenticator, "realm", AuthorizationInfo.class);
+    private static final AuthorizationRequestFilter filter = spy(new AuthorizationRequestFilter(oAuthFactory, null, ""));
+
     @ClassRule public static ResourceTestRule RULE = ResourceTestRule.builder()
-            .addResource(new TokenResource(authorizationServiceMock, upgradeTokenServiceMock, tokenCookieFactoryMock))
-            .addProvider(new OAuthProvider<>(authenticatorMock, null)).build();
+            .addResource(new TokenResource(authorizationServiceMock, upgradeTokenServiceMock, tokenCookieFactoryMock)).addProvider(filter)
+            .addProvider(new AuthorizationInfoProvider().getBinder()).build();
 
     public TokenResourceTest() throws Exception {
         when(authorizationInfoMock.getTokenReader()).thenReturn(tokenReader);
@@ -79,6 +93,12 @@ public class TokenResourceTest {
         when(token.toString()).thenReturn(TEST_TOKEN);
         NewCookie cookie = new NewCookie("token", TEST_TOKEN);
         when(tokenCookieFactoryMock.createCookie(Mockito.eq(TEST_TOKEN), Mockito.anyInt())).thenReturn(cookie);
+
+        HttpServletRequest requestMock = mock(HttpServletRequest.class);
+        when(requestMock.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + TEST_TOKEN);
+        when(authenticator.authenticate(any())).thenReturn(com.google.common.base.Optional.of(authorizationInfoMock));
+        doReturn(requestMock).when(filter).getRequest();
+        doNothing().when(filter).checkAccessRules(eq(authorizationInfoMock), any());
     }
 
     @Test
@@ -87,12 +107,11 @@ public class TokenResourceTest {
         TokenGrant testTokenGrant = new TokenGrant(TEST_TOKEN, 1, REFRESH_TOKEN);
         when(authorizationServiceMock.authorize(TEST_ASSERTION)).thenReturn(testTokenGrant);
 
-        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> formData = new MultivaluedHashMap();
         formData.add(ASSERTION, TEST_ASSERTION);
         formData.add(GRANT_TYPE, GrantType.JWT_BEARER);
 
-        ClientResponse response = RULE.client().resource(OAUTH_TOKEN_ENDPOINT).type(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
-                .post(ClientResponse.class, formData);
+        Response response = RULE.client().target(OAUTH_TOKEN_ENDPOINT).request().post(Entity.form(formData), Response.class);
 
         checkResponseContainsToken(response, TEST_TOKEN, REFRESH_TOKEN);
     }
@@ -103,41 +122,40 @@ public class TokenResourceTest {
             OauthServerConnectionException, MissingBasicParamsException {
         when(authorizationServiceMock.authorize(TEST_ASSERTION)).thenThrow(new UnauthorizedException(UNAUTHORIZED_MESSAGE));
 
-        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> formData = new MultivaluedHashMap();
         formData.add(ASSERTION, TEST_ASSERTION);
         formData.add(GRANT_TYPE, GrantType.JWT_BEARER);
 
-        ClientResponse response = RULE.client().resource(OAUTH_TOKEN_ENDPOINT).type(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
-                .post(ClientResponse.class, formData);
+        Response response = RULE.client().target(OAUTH_TOKEN_ENDPOINT).request().post(Entity.form(formData), Response.class);
 
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(401);
-        assertThat(response.getType()).isEqualTo(MediaType.APPLICATION_JSON_TYPE);
+        assertThat(response.getMediaType()).isEqualTo(MediaType.APPLICATION_JSON_TYPE);
     }
 
     @Test
     public void testPostMissingGrantType() throws SignatureException, UnauthorizedException {
-        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> formData = new MultivaluedHashMap();
         formData.add(ASSERTION, TEST_ASSERTION);
-        ClientResponse response = RULE.client().resource(OAUTH_TOKEN_ENDPOINT).post(ClientResponse.class, formData);
+        Response response = RULE.client().target(OAUTH_TOKEN_ENDPOINT).request().post(Entity.form(formData), Response.class);
         checkErrorResponse(response, 400, INVALID_GRANT_ERROR_MESSAGE);
     }
 
     @Test
     public void testPostInvalidGrantType() throws SignatureException, UnauthorizedException {
-        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> formData = new MultivaluedHashMap();
         formData.add(ASSERTION, TEST_ASSERTION);
         formData.add(GRANT_TYPE, INVALID_GRANT_TYPE);
 
-        ClientResponse response = RULE.client().resource(OAUTH_TOKEN_ENDPOINT).post(ClientResponse.class, formData);
+        Response response = RULE.client().target(OAUTH_TOKEN_ENDPOINT).request().post(Entity.form(formData), Response.class);
         checkErrorResponse(response, 400, INVALID_GRANT_ERROR_MESSAGE);
     }
 
     @Test
     public void testPostMissingAssertion() throws SignatureException, UnauthorizedException {
-        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> formData = new MultivaluedHashMap();
         formData.add(GRANT_TYPE, GrantType.JWT_BEARER);
-        ClientResponse response = RULE.client().resource(OAUTH_TOKEN_ENDPOINT).post(ClientResponse.class, formData);
+        Response response = RULE.client().target(OAUTH_TOKEN_ENDPOINT).request().post(Entity.form(formData), Response.class);
         checkErrorResponse(response, 400, INVALID_ASSERTION_ERROR_MESSAGE);
     }
 
@@ -146,8 +164,8 @@ public class TokenResourceTest {
         TokenGrant testTokenGrant = new TokenGrant(TEST_TOKEN, 1, REFRESH_TOKEN);
         when(authorizationServiceMock.authorize(Mockito.eq(TEST_ASSERTION), Mockito.any())).thenReturn(testTokenGrant);
 
-        ClientResponse response = RULE.client().resource(OAUTH_TOKEN_ENDPOINT).queryParam(GRANT_TYPE, GrantType.JWT_BEARER)
-                .queryParam(ASSERTION, TEST_ASSERTION).queryParam(ACCESS_TOKEN, TEST_TOKEN).get(ClientResponse.class);
+        Response response = RULE.client().target(OAUTH_TOKEN_ENDPOINT).queryParam(GRANT_TYPE, GrantType.JWT_BEARER)
+                .queryParam(ASSERTION, TEST_ASSERTION).queryParam(ACCESS_TOKEN, TEST_TOKEN).request().get(Response.class);
 
         checkResponseContainsToken(response, TEST_TOKEN, REFRESH_TOKEN);
     }
@@ -157,8 +175,8 @@ public class TokenResourceTest {
         TokenGrant testTokenGrant = new TokenGrant(TEST_TOKEN, 1, REFRESH_TOKEN);
         when(authorizationServiceMock.authorize(Mockito.eq(TEST_ASSERTION), Mockito.any())).thenReturn(testTokenGrant);
 
-        ClientResponse response = RULE.client().resource(OAUTH_TOKEN_ENDPOINT).queryParam(GRANT_TYPE, INVALID_GRANT_TYPE)
-                .queryParam(ASSERTION, TEST_ASSERTION).queryParam(ACCESS_TOKEN, TEST_TOKEN).get(ClientResponse.class);
+        Response response = RULE.client().target(OAUTH_TOKEN_ENDPOINT).queryParam(GRANT_TYPE, INVALID_GRANT_TYPE)
+                .queryParam(ASSERTION, TEST_ASSERTION).queryParam(ACCESS_TOKEN, TEST_TOKEN).request().get(Response.class);
 
         checkErrorResponse(response, 400, INVALID_GRANT_ERROR_MESSAGE);
     }
@@ -168,8 +186,8 @@ public class TokenResourceTest {
         TokenGrant testTokenGrant = new TokenGrant(TEST_TOKEN, 1, REFRESH_TOKEN);
         when(authorizationServiceMock.authorize(Mockito.eq(TEST_ASSERTION), Mockito.any())).thenReturn(testTokenGrant);
 
-        ClientResponse response = RULE.client().resource(OAUTH_TOKEN_ENDPOINT).queryParam(ASSERTION, TEST_ASSERTION)
-                .queryParam(ACCESS_TOKEN, TEST_TOKEN).get(ClientResponse.class);
+        Response response = RULE.client().target(OAUTH_TOKEN_ENDPOINT).queryParam(ASSERTION, TEST_ASSERTION)
+                .queryParam(ACCESS_TOKEN, TEST_TOKEN).request().get(Response.class);
 
         checkErrorResponse(response, 400, INVALID_GRANT_ERROR_MESSAGE);
     }
@@ -179,35 +197,35 @@ public class TokenResourceTest {
         TokenGrant testTokenGrant = new TokenGrant(TEST_TOKEN, 1, REFRESH_TOKEN);
         when(authorizationServiceMock.authorize(Mockito.eq(TEST_ASSERTION), Mockito.any())).thenReturn(testTokenGrant);
 
-        ClientResponse response = RULE.client().resource(OAUTH_TOKEN_ENDPOINT).queryParam(GRANT_TYPE, GrantType.JWT_BEARER)
-                .queryParam(ACCESS_TOKEN, TEST_TOKEN).get(ClientResponse.class);
+        Response response = RULE.client().target(OAUTH_TOKEN_ENDPOINT).queryParam(GRANT_TYPE, GrantType.JWT_BEARER)
+                .queryParam(ACCESS_TOKEN, TEST_TOKEN).request().get(Response.class);
 
         checkErrorResponse(response, 400, INVALID_ASSERTION_ERROR_MESSAGE);
     }
 
     @Test
-    public void testGetState() throws UnauthorizedException, MissingOAuthParamsException, UniformInterfaceException,
-            ClientHandlerException, UnsupportedEncodingException, OauthServerConnectionException {
+    public void testGetState() throws UnauthorizedException, MissingOAuthParamsException, UnsupportedEncodingException,
+            OauthServerConnectionException {
         TokenGrant testTokenGrant = new TokenGrant(TEST_TOKEN, 1, REFRESH_TOKEN);
         when(authorizationServiceMock.authorize(Mockito.eq(TEST_ASSERTION), Mockito.any())).thenReturn(testTokenGrant);
 
-        ClientResponse response = RULE
+        Response response = RULE
                 .client()
-                .resource(OAUTH_TOKEN_ENDPOINT)
+                .target(OAUTH_TOKEN_ENDPOINT)
                 .queryParam(GRANT_TYPE, "other")
                 .queryParam(ASSERTION, "other")
                 .queryParam(
                         "state",
                         ASSERTION + "=" + TEST_ASSERTION + "&" + GRANT_TYPE + "=" + URLEncoder.encode(GrantType.JWT_BEARER, "UTF-8")
-                                + "&otherparam=othercontet").get(ClientResponse.class);
+                                + "&otherparam=othercontet").request().get(Response.class);
 
         checkResponseContainsToken(response, TEST_TOKEN, REFRESH_TOKEN);
     }
 
     @Test
     public void testUpgradeToken() throws UnauthorizedException {
-        ClientResponse response = RULE.client().resource(UPGRADE_TOKEN_ENDPOINT).queryParam(ASSERTION, TEST_ASSERTION)
-                .queryParam(GRANT_TYPE, GrantType.JWT_BEARER).header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(ClientResponse.class);
+        Response response = RULE.client().target(UPGRADE_TOKEN_ENDPOINT).queryParam(ASSERTION, TEST_ASSERTION)
+                .queryParam(GRANT_TYPE, GrantType.JWT_BEARER).request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(Response.class);
 
         assertThat(response.getStatus()).isEqualTo(204);
         verify(upgradeTokenServiceMock).upgradeToken(TEST_ASSERTION, tokenReader);
@@ -215,16 +233,16 @@ public class TokenResourceTest {
 
     @Test
     public void testInvalidGrantTypeUpgradeToken() throws UnauthorizedException {
-        ClientResponse response = RULE.client().resource(UPGRADE_TOKEN_ENDPOINT).queryParam(ASSERTION, TEST_ASSERTION)
-                .queryParam(GRANT_TYPE, "").header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(ClientResponse.class);
+        Response response = RULE.client().target(UPGRADE_TOKEN_ENDPOINT).queryParam(ASSERTION, TEST_ASSERTION).queryParam(GRANT_TYPE, "")
+                .request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(Response.class);
 
         assertThat(response.getStatus()).isEqualTo(400);
     }
 
     @Test
     public void testGetMissingAssertionUpgradeToken() throws UnauthorizedException, MissingOAuthParamsException {
-        ClientResponse response = RULE.client().resource(UPGRADE_TOKEN_ENDPOINT).queryParam(GRANT_TYPE, "")
-                .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(ClientResponse.class);
+        Response response = RULE.client().target(UPGRADE_TOKEN_ENDPOINT).queryParam(GRANT_TYPE, "").request()
+                .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(Response.class);
 
         assertThat(response.getStatus()).isEqualTo(400);
 
@@ -233,13 +251,13 @@ public class TokenResourceTest {
 
     @Test
     public void testUpgradeTokenMissingAssertion() {
-        ClientResponse response = RULE.client().resource(OAUTH_TOKEN_ENDPOINT + "/upgrade?" + ASSERTION + "=")
-                .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(ClientResponse.class);
+        Response response = RULE.client().target(OAUTH_TOKEN_ENDPOINT + "/upgrade?" + ASSERTION + "=").request()
+                .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(Response.class);
 
         checkErrorResponse(response, 400, INVALID_ASSERTION_ERROR_MESSAGE);
 
-        response = RULE.client().resource(OAUTH_TOKEN_ENDPOINT + "/upgrade").header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
-                .get(ClientResponse.class);
+        response = RULE.client().target(OAUTH_TOKEN_ENDPOINT + "/upgrade").request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
+                .get(Response.class);
 
         checkErrorResponse(response, 400, INVALID_ASSERTION_ERROR_MESSAGE);
     }
@@ -250,12 +268,12 @@ public class TokenResourceTest {
         TokenGrant testTokenGrant = new TokenGrant(TEST_TOKEN, 1, REFRESH_TOKEN);
         when(authorizationServiceMock.authorize(TEST_ASSERTION)).thenReturn(testTokenGrant);
 
-        MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> formData = new MultivaluedHashMap();
         formData.add(ASSERTION, TEST_ASSERTION);
         formData.add(GRANT_TYPE, GrantType.JWT_BEARER);
 
-        ClientResponse response = RULE.client().resource(OAUTH_TOKEN_ENDPOINT).header(REQUEST_COOKIE, true)
-                .type(MediaType.APPLICATION_FORM_URLENCODED_TYPE).post(ClientResponse.class, formData);
+        Response response = RULE.client().target(OAUTH_TOKEN_ENDPOINT).request().header(REQUEST_COOKIE, true)
+                .post(Entity.form(formData), Response.class);
 
         checkResponseContainsTokenWithCookie(response, TEST_TOKEN, REFRESH_TOKEN);
     }
@@ -266,33 +284,33 @@ public class TokenResourceTest {
         TokenGrant testTokenGrant = new TokenGrant(TEST_TOKEN, 1, REFRESH_TOKEN);
         when(authorizationServiceMock.authorize(Mockito.eq(TEST_ASSERTION), Mockito.any())).thenReturn(testTokenGrant);
 
-        ClientResponse response = RULE.client().resource(OAUTH_TOKEN_ENDPOINT).queryParam(GRANT_TYPE, GrantType.JWT_BEARER)
-                .queryParam(ASSERTION, TEST_ASSERTION).queryParam(ACCESS_TOKEN, TEST_TOKEN).header(REQUEST_COOKIE, true)
-                .get(ClientResponse.class);
+        Response response = RULE.client().target(OAUTH_TOKEN_ENDPOINT).queryParam(GRANT_TYPE, GrantType.JWT_BEARER)
+                .queryParam(ASSERTION, TEST_ASSERTION).queryParam(ACCESS_TOKEN, TEST_TOKEN).request().header(REQUEST_COOKIE, true)
+                .get(Response.class);
 
         checkResponseContainsTokenWithCookie(response, TEST_TOKEN, REFRESH_TOKEN);
     }
 
-    private void checkResponseContainsTokenWithCookie(ClientResponse response, String token, String refreshToken) {
+    private void checkResponseContainsTokenWithCookie(Response response, String token, String refreshToken) {
         checkResponseContainsToken(response, token, refreshToken);
         assertThat(response.getCookies()).isNotEmpty();
-        NewCookie cookie = response.getCookies().get(0);
+        NewCookie cookie = response.getCookies().get("token");
         assertThat(cookie.getValue()).isEqualTo(token);
     }
 
-    private void checkErrorResponse(ClientResponse response, int status, String expectedMessage) {
+    private void checkErrorResponse(Response response, int status, String expectedMessage) {
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(status);
-        assertThat(response.getType()).isEqualTo(MediaType.APPLICATION_JSON_TYPE);
-        com.bq.oss.lib.ws.model.Error error = response.getEntity(com.bq.oss.lib.ws.model.Error.class);
+        assertThat(response.getMediaType()).isEqualTo(MediaType.APPLICATION_JSON_TYPE);
+        com.bq.oss.lib.ws.model.Error error = response.readEntity(com.bq.oss.lib.ws.model.Error.class);
         assertThat(error.getError()).isEqualTo(expectedMessage);
     }
 
-    private void checkResponseContainsToken(ClientResponse response, String expectedToken, String expectedRefreshToken) {
+    private void checkResponseContainsToken(Response response, String expectedToken, String expectedRefreshToken) {
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(200);
-        assertThat(response.getType()).isEqualTo(MediaType.APPLICATION_JSON_TYPE);
-        TokenGrant grant = response.getEntity(TokenGrant.class);
+        assertThat(response.getMediaType()).isEqualTo(MediaType.APPLICATION_JSON_TYPE);
+        TokenGrant grant = response.readEntity(TokenGrant.class);
         assertThat(grant.getAccessToken()).isEqualTo(expectedToken);
         assertThat(grant.getRefreshToken()).isEqualTo(expectedRefreshToken);
         assertThat(grant.getExpiresAt()).isEqualTo(1);

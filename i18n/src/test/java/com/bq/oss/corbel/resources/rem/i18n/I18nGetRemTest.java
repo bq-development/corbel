@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
@@ -32,7 +33,6 @@ import com.bq.oss.corbel.resources.rem.service.RemService;
 import com.bq.oss.lib.queries.request.ResourceQuery;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 public class I18nGetRemTest {
     private static final String TEST_COLLECTION_TYPE = "I18n_TEST";
@@ -72,7 +72,7 @@ public class I18nGetRemTest {
         when(responseMock.getEntity()).thenReturn(jsonArray);
 
 
-        MultivaluedMap<String, String> multiValueMap = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> multiValueMap = new MultivaluedHashMap();
         multiValueMap.add(ACCEPT_LANGUAGE_HEADER, LANGUAGE);
         ResourceQuery resourceQuery = new ResourceQuery();
 
@@ -96,7 +96,7 @@ public class I18nGetRemTest {
         jsonArray.add(new JsonObject());
         when(responseMock.getEntity()).thenReturn(jsonArray);
 
-        MultivaluedMap<String, String> multiValueMap = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> multiValueMap = new MultivaluedHashMap();
         multiValueMap.add(ACCEPT_LANGUAGE_HEADER, LARGE_LANGUAGE);
         ResourceQuery resourceQuery = new ResourceQuery();
 
@@ -121,7 +121,7 @@ public class I18nGetRemTest {
 
     @Test
     public void testGetCollectionNotLanguage() {
-        when(requestParametersMock.getHeaders()).thenReturn(new MultivaluedMapImpl());
+        when(requestParametersMock.getHeaders()).thenReturn(new MultivaluedHashMap());
         Response response = i18nGetRem.collection(TEST_COLLECTION_TYPE, requestParametersMock, uriMock, Optional.empty());
         assertThat(response.getStatus()).isEqualTo(400);
     }
@@ -132,7 +132,7 @@ public class I18nGetRemTest {
         ResourceId validResourceId = new ResourceId(LANGUAGE + ":" + TEST_ID);
         Response responseMock = mock(Response.class);
         when(responseMock.getStatus()).thenReturn(200);
-        MultivaluedMap<String, String> multiValueMap = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> multiValueMap = new MultivaluedHashMap();
         multiValueMap.add(ACCEPT_LANGUAGE_HEADER, LANGUAGE);
 
         when(requestParametersMock.getHeaders()).thenReturn(multiValueMap);
@@ -155,7 +155,7 @@ public class I18nGetRemTest {
         when(responseMock200.getStatus()).thenReturn(200);
         when(responseMock404.getStatus()).thenReturn(404);
 
-        MultivaluedMap<String, String> multiValueMap = new MultivaluedMapImpl();
+        MultivaluedMap<String, String> multiValueMap = new MultivaluedHashMap();
         multiValueMap.add(ACCEPT_LANGUAGE_HEADER, LARGE_LANGUAGE);
 
         when(requestParametersMock.getHeaders()).thenReturn(multiValueMap);
@@ -173,7 +173,7 @@ public class I18nGetRemTest {
     @Test
     public void testGetResourceNotLanguage() {
         ResourceId resourceId = new ResourceId(TEST_ID);
-        when(requestParametersMock.getHeaders()).thenReturn(new MultivaluedMapImpl());
+        when(requestParametersMock.getHeaders()).thenReturn(new MultivaluedHashMap());
         Response response = i18nGetRem.resource(TEST_COLLECTION_TYPE, resourceId, requestParametersMock, Optional.empty());
         assertThat(response.getStatus()).isEqualTo(400);
     }

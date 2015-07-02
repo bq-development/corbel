@@ -1,5 +1,7 @@
 package com.bq.oss.corbel.resources.api;
 
+import io.dropwizard.auth.Auth;
+
 import java.io.InputStream;
 import java.net.URI;
 
@@ -19,6 +21,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.Providers;
 
+import org.glassfish.jersey.server.ContainerRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpMethod;
@@ -30,7 +33,6 @@ import com.bq.oss.lib.queries.jaxrs.QueryParameters;
 import com.bq.oss.lib.token.TokenInfo;
 import com.bq.oss.lib.ws.annotation.Rest;
 import com.bq.oss.lib.ws.auth.AuthorizationInfo;
-import com.sun.jersey.spi.container.ContainerRequest;
 
 /**
  * Entry point for any resource on the resources. Here we obtain the appropiate Resource Resolver Module (REM) and delegate on it the
@@ -57,7 +59,7 @@ import com.sun.jersey.spi.container.ContainerRequest;
     @GET
     @Path("/{type}")
     public Response getCollection(@PathParam("type") String type, @Context Request request, @Context UriInfo uriInfo,
-            @Context AuthorizationInfo authorizationInfo, @Rest QueryParameters queryParameters) {
+            @Auth AuthorizationInfo authorizationInfo, @Rest QueryParameters queryParameters) {
         URI typeUri = getBaseUriWithType(uriInfo, type);
         updateRequestWithLinksTypeAndUri(request, typeUri, type);
         return resourcesService.collectionOperation(type, request, uriInfo, getTokenInfo(authorizationInfo), typeUri, HttpMethod.GET,
@@ -67,7 +69,7 @@ import com.sun.jersey.spi.container.ContainerRequest;
     @POST
     @Path("/{type}")
     public Response postCollection(@PathParam("type") String type, @Context Request request, @Context UriInfo uriInfo,
-            @Context AuthorizationInfo authorizationInfo, InputStream inputStream, @HeaderParam("Content-Type") MediaType contentType) {
+            @Auth AuthorizationInfo authorizationInfo, InputStream inputStream, @HeaderParam("Content-Type") MediaType contentType) {
         return resourcesService.collectionOperation(type, request, uriInfo, getTokenInfo(authorizationInfo),
                 getBaseUriWithType(uriInfo, type), HttpMethod.POST, null, inputStream, contentType);
     }
@@ -75,7 +77,7 @@ import com.sun.jersey.spi.container.ContainerRequest;
     @DELETE
     @Path("/{type}")
     public Response deleteCollection(@PathParam("type") String type, @Context Request request, @Context UriInfo uriInfo,
-            @Context AuthorizationInfo authorizationInfo, @Rest QueryParameters queryParameters) {
+            @Auth AuthorizationInfo authorizationInfo, @Rest QueryParameters queryParameters) {
         return resourcesService.collectionOperation(type, request, uriInfo, getTokenInfo(authorizationInfo),
                 getBaseUriWithType(uriInfo, type), HttpMethod.DELETE, queryParameters, null, null);
     }
@@ -83,7 +85,7 @@ import com.sun.jersey.spi.container.ContainerRequest;
     @GET
     @Path("/{type}/{id}")
     public Response getResource(@PathParam("type") String type, @PathParam("id") ResourceId id, @Context Request request,
-            @Context UriInfo uriInfo, @Context AuthorizationInfo authorizationInfo, @Rest QueryParameters queryParameters) {
+            @Context UriInfo uriInfo, @Auth AuthorizationInfo authorizationInfo, @Rest QueryParameters queryParameters) {
         URI typeUri = getBaseUriWithType(uriInfo, type);
         updateRequestWithLinksTypeAndUri(request, typeUri, type);
         return resourcesService.resourceOperation(type, id, request, queryParameters, uriInfo, getTokenInfo(authorizationInfo), typeUri,
@@ -93,7 +95,7 @@ import com.sun.jersey.spi.container.ContainerRequest;
     @PUT
     @Path("/{type}/{id}")
     public Response putResource(@PathParam("type") String type, @PathParam("id") ResourceId id, @Context Request request,
-            @Context UriInfo uriInfo, @Context AuthorizationInfo authorizationInfo, InputStream inputStream,
+            @Context UriInfo uriInfo, @Auth AuthorizationInfo authorizationInfo, InputStream inputStream,
             @HeaderParam("Content-Type") MediaType contentType, @HeaderParam("Content-Length") Long contentLength,
             @Rest QueryParameters queryParameters) {
         return resourcesService.resourceOperation(type, id, request, queryParameters, uriInfo, getTokenInfo(authorizationInfo),
@@ -103,7 +105,7 @@ import com.sun.jersey.spi.container.ContainerRequest;
     @DELETE
     @Path("/{type}/{id}")
     public Response deleteResource(@PathParam("type") String type, @PathParam("id") ResourceId id, @Context Request request,
-            @Context UriInfo uriInfo, @Context AuthorizationInfo authorizationInfo, @Rest QueryParameters queryParameters) {
+            @Context UriInfo uriInfo, @Auth AuthorizationInfo authorizationInfo, @Rest QueryParameters queryParameters) {
         return resourcesService.resourceOperation(type, id, request, queryParameters, uriInfo, getTokenInfo(authorizationInfo),
                 getBaseUriWithType(uriInfo, type), HttpMethod.DELETE, null, null, null);
     }
@@ -111,7 +113,7 @@ import com.sun.jersey.spi.container.ContainerRequest;
     @GET
     @Path("/{type}/{id}/{rel}")
     public Response getRelation(@PathParam("type") String type, @PathParam("id") ResourceId id, @PathParam("rel") String rel,
-            @Context Request request, @Context UriInfo uriInfo, @Context AuthorizationInfo authorizationInfo,
+            @Context Request request, @Context UriInfo uriInfo, @Auth AuthorizationInfo authorizationInfo,
             @Rest QueryParameters queryParameters, @MatrixParam("r") String resource) {
         URI typeUri = getBaseUri(uriInfo);
         updateRequestWithLinksTypeAndUri(request, typeUri, type);
@@ -122,7 +124,7 @@ import com.sun.jersey.spi.container.ContainerRequest;
     @POST
     @Path("/{type}/{id}/{rel}")
     public Response postRelation(@PathParam("type") String type, @PathParam("id") ResourceId id, @PathParam("rel") String rel,
-            @Context Request request, @Context UriInfo uriInfo, @Context AuthorizationInfo authorizationInfo, InputStream inputStream,
+            @Context Request request, @Context UriInfo uriInfo, @Auth AuthorizationInfo authorizationInfo, InputStream inputStream,
             @HeaderParam("Content-Type") MediaType contentType) {
         return resourcesService.relationOperation(type, id, rel, request, uriInfo, getTokenInfo(authorizationInfo), HttpMethod.POST, null,
                 null, inputStream, contentType);
@@ -131,7 +133,7 @@ import com.sun.jersey.spi.container.ContainerRequest;
     @PUT
     @Path("/{type}/{id}/{rel}")
     public Response putRelation(@PathParam("type") String type, @PathParam("id") ResourceId id, @PathParam("rel") String rel,
-            @Context Request request, @Context UriInfo uriInfo, @Context AuthorizationInfo authorizationInfo,
+            @Context Request request, @Context UriInfo uriInfo, @Auth AuthorizationInfo authorizationInfo,
             @MatrixParam("r") String resource, InputStream inputStream, @HeaderParam("Content-Type") MediaType contentType) {
         return resourcesService.relationOperation(type, id, rel, request, uriInfo, getTokenInfo(authorizationInfo), HttpMethod.PUT, null,
                 resource, inputStream, contentType);
@@ -140,8 +142,7 @@ import com.sun.jersey.spi.container.ContainerRequest;
     @DELETE
     @Path("/{type}/{id}/{rel}")
     public Response deleteRelation(@PathParam("type") String type, @PathParam("id") ResourceId id, @PathParam("rel") String rel,
-            @Context Request request, @Context UriInfo uriInfo, @Context AuthorizationInfo authorizationInfo,
-            @MatrixParam("r") String resource) {
+            @Context Request request, @Context UriInfo uriInfo, @Auth AuthorizationInfo authorizationInfo, @MatrixParam("r") String resource) {
         return resourcesService.relationOperation(type, id, rel, request, uriInfo, getTokenInfo(authorizationInfo), HttpMethod.PUT, null,
                 resource, null, null);
     }
@@ -149,8 +150,8 @@ import com.sun.jersey.spi.container.ContainerRequest;
     private void updateRequestWithLinksTypeAndUri(Request request, URI typeUri, String type) {
         try {
             ContainerRequest containerRequest = (ContainerRequest) request;
-            containerRequest.getProperties().put(LinksFilter.TYPE, type);
-            containerRequest.getProperties().put(LinksFilter.URI, typeUri);
+            containerRequest.setProperty(LinksFilter.TYPE, type);
+            containerRequest.setProperty(LinksFilter.URI, typeUri);
         } catch (ClassCastException e) {
             LOG.error("Couldn't cast Request to ContainerRequest", e);
         }

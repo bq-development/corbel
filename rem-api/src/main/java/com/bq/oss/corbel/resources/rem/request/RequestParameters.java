@@ -4,9 +4,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 
-import com.sun.jersey.core.util.MultivaluedMapImpl;
 import org.springframework.http.MediaType;
 
 import com.bq.oss.lib.token.TokenInfo;
@@ -39,7 +39,7 @@ public interface RequestParameters<E> {
     Long getContentLength();
 
     static <E> RequestParameters<E> emptyParameters() {
-        return new RequestParameters<E>(){
+        return new RequestParameters<E>() {
             @Override
             public List<MediaType> getAcceptedMediaTypes() {
                 return Collections.emptyList();
@@ -67,12 +67,12 @@ public interface RequestParameters<E> {
 
             @Override
             public MultivaluedMap<String, String> getParams() {
-                return new MultivaluedMapImpl();
+                return new MultivaluedHashMap();
             }
 
             @Override
             public MultivaluedMap<String, String> getHeaders() {
-                return new MultivaluedMapImpl();
+                return new MultivaluedHashMap();
             }
 
             @Override

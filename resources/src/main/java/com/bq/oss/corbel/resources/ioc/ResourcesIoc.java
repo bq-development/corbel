@@ -4,6 +4,8 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+import javax.ws.rs.container.ContainerRequestFilter;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
@@ -66,7 +68,7 @@ import com.bq.oss.lib.ws.encoding.MatrixEncodingRequestFilter;
 import com.bq.oss.lib.ws.ioc.QueriesIoc;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.cache.CacheBuilder;
-import com.sun.jersey.spi.container.ContainerRequestFilter;
+
 
 /**
  * @author Alexander De Leon

@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -12,13 +13,21 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+import io.dropwizard.auth.Authenticator;
+import io.dropwizard.auth.oauth.OAuthFactory;
 import io.dropwizard.testing.junit.ResourceTestRule;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -45,9 +54,9 @@ import com.bq.oss.lib.ws.api.error.GenericExceptionMapper;
 import com.bq.oss.lib.ws.api.error.JsonValidationExceptionMapper;
 import com.bq.oss.lib.ws.auth.AuthorizationInfo;
 import com.bq.oss.lib.ws.auth.AuthorizationInfoProvider;
+import com.bq.oss.lib.ws.auth.AuthorizationRequestFilter;
 import com.bq.oss.lib.ws.queries.QueryParametersProvider;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.GenericType;
+import com.google.gson.JsonObject;
 
 public class DomainResourceTest {
     protected static final String AUTHORIZATION = "Authorization";
@@ -62,24 +71,35 @@ public class DomainResourceTest {
     private static final PaginationParser paginationParserMock = mock(PaginationParser.class);
     private static final QueryParser queryParserMock = mock(QueryParser.class);
     private static final AuthorizationInfo authorizationInfoMock = mock(AuthorizationInfo.class);
-    private static final AuthorizationInfoProvider authorizationInfoProviderSpy = spy(new AuthorizationInfoProvider());
     private final static String ISSUER_DOMAIN_ID = "domain";
     private final static String DOMAIN_ID = "jksdawqqqqdfjdaslkfj";
     private final static String CLIENT_ID = "zsdetzerqdfjdaslkfj";
     private static final String TEST_TOKEN = "xxxx";
+
+    private static final Authenticator<String, AuthorizationInfo> authenticator = mock(Authenticator.class);
+    private static OAuthFactory oAuthFactory = new OAuthFactory<>(authenticator, "realm", AuthorizationInfo.class);
+    private static final AuthorizationRequestFilter filter = spy(new AuthorizationRequestFilter(oAuthFactory, null, ""));
+
     @ClassRule public static ResourceTestRule RULE = ResourceTestRule
             .builder()
             .addResource(new DomainResource(clientService, domainService))
-            .addProvider(authorizationInfoProviderSpy)
+            .addProvider(filter)
+            .addProvider(new AuthorizationInfoProvider().getBinder())
             .addProvider(
                     new QueryParametersProvider(DEFAULT_LIMIT, MAX_DEFAULT_LIMIT, new QueryParametersBuilder(queryParserMock,
-                            aggregationParserMock, sortParserMock, paginationParserMock, searchParserMock)))
+                            aggregationParserMock, sortParserMock, paginationParserMock, searchParserMock)).getBinder())
             .addProvider(GenericExceptionMapper.class).addProvider(JsonValidationExceptionMapper.class).build();
 
     public DomainResourceTest() throws Exception {
         when(authorizationInfoMock.getClientId()).thenReturn(CLIENT_ID);
         when(authorizationInfoMock.getDomainId()).thenReturn(ISSUER_DOMAIN_ID);
-        doReturn(authorizationInfoMock).when(authorizationInfoProviderSpy).getValue(any());
+        when(authorizationInfoMock.getAccessRules()).thenReturn(new HashSet<JsonObject>());
+
+        HttpServletRequest requestMock = mock(HttpServletRequest.class);
+        when(requestMock.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + TEST_TOKEN);
+        when(authenticator.authenticate(TEST_TOKEN)).thenReturn(com.google.common.base.Optional.of(authorizationInfoMock));
+        doReturn(requestMock).when(filter).getRequest();
+        doNothing().when(filter).checkAccessRules(eq(authorizationInfoMock), any());
     }
 
     @Before
@@ -98,19 +118,18 @@ public class DomainResourceTest {
     public void testCreateDomain() throws DomainAlreadyExists {
         ArgumentCaptor<Domain> domainCaptor = ArgumentCaptor.forClass(Domain.class);
 
-        ClientResponse response = RULE.client().resource("/v1.0/domain").type(MediaType.APPLICATION_JSON_TYPE)
-                .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).post(ClientResponse.class, getDomain());
+        Response response = RULE.client().target("/v1.0/domain").request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
+                .post(Entity.json(getDomain()), Response.class);
 
         verify(domainService).insert(domainCaptor.capture());
         assertEquals(ISSUER_DOMAIN_ID + ":" + DOMAIN_ID, domainCaptor.getValue().getId());
-        assertEquals(ClientResponse.Status.CREATED.getStatusCode(), response.getStatus());
-        assertTrue(response.getHeaders().getFirst("Location").endsWith(DOMAIN_ID));
+        assertEquals(Response.Status.CREATED.getStatusCode(), response.getStatus());
+        assertTrue(response.getHeaderString("Location").endsWith(DOMAIN_ID));
     }
 
     @Test
     public void testEmptyCreateDomain() throws DomainAlreadyExists {
-        ClientResponse response = RULE.client().resource("/v1.0/domain").type(MediaType.APPLICATION_JSON_TYPE)
-                .post(ClientResponse.class, new Domain());
+        Response response = RULE.client().target("/v1.0/domain").request().post(Entity.json(new Domain()), Response.class);
         assertEquals(422, response.getStatus());
     }
 
@@ -120,12 +139,10 @@ public class DomainResourceTest {
 
         doThrow(DomainAlreadyExists.class).when(domainService).insert(Mockito.<Domain>any());
 
-        ClientResponse response = RULE.client().resource("/v1.0/domain").type(MediaType.APPLICATION_JSON_TYPE)
-                .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).post(ClientResponse.class, getDomain());
+        Response response = RULE.client().target("/v1.0/domain").request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
+                .post(Entity.json(getDomain()), Response.class);
 
-        verify(domainService).insert(domainCaptor.capture());
-        assertEquals(ISSUER_DOMAIN_ID + ":" + DOMAIN_ID, domainCaptor.getValue().getId());
-        assertEquals(ClientResponse.Status.CONFLICT.getStatusCode(), response.getStatus());
+        assertEquals(Response.Status.CONFLICT.getStatusCode(), response.getStatus());
     }
 
     @Test
@@ -134,7 +151,7 @@ public class DomainResourceTest {
 
         when(domainService.getDomain(eq(DOMAIN_ID))).thenReturn(Optional.ofNullable(expectedDomain));
 
-        Domain domain = RULE.client().resource("/v1.0/domain/" + DOMAIN_ID).accept(MediaType.APPLICATION_JSON_TYPE).get(Domain.class);
+        Domain domain = RULE.client().target("/v1.0/domain/" + DOMAIN_ID).request(MediaType.APPLICATION_JSON_TYPE).get(Domain.class);
 
         verify(domainService).getDomain(eq(DOMAIN_ID));
         assertEquals(DOMAIN_ID, domain.getId());
@@ -152,8 +169,7 @@ public class DomainResourceTest {
         when(domainService.getAll(Mockito.any(ResourceQuery.class), Mockito.any(Pagination.class), Mockito.any(Sort.class))).thenReturn(
                 domains);
 
-        List<Domain> domainsResponse = RULE.client().resource("/v1.0/domain").type(MediaType.APPLICATION_JSON_TYPE)
-                .get(new GenericType<List<Domain>>() {});
+        List<Domain> domainsResponse = RULE.client().target("/v1.0/domain").request().get(new GenericType<List<Domain>>() {});
 
         verify(domainService).getAll(null, defaultPagination, null);
         assertEquals(domains, domainsResponse);
@@ -163,32 +179,29 @@ public class DomainResourceTest {
     public void testGetUnknownDomain() {
         when(domainService.getDomain(eq(DOMAIN_ID))).thenReturn(Optional.empty());
 
-        ClientResponse response = RULE.client().resource("/v1.0/domain/" + DOMAIN_ID).accept(MediaType.APPLICATION_JSON_TYPE)
-                .get(ClientResponse.class);
+        Response response = RULE.client().target("/v1.0/domain/" + DOMAIN_ID).request(MediaType.APPLICATION_JSON_TYPE).get(Response.class);
 
         verify(domainService).getDomain(eq(DOMAIN_ID));
-        assertEquals(ClientResponse.Status.NOT_FOUND.getStatusCode(), response.getStatus());
+        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
     }
 
     @Test
     public void testUpdateDomain() {
         ArgumentCaptor<Domain> domainCaptor = ArgumentCaptor.forClass(Domain.class);
 
-        ClientResponse response = RULE.client().resource("/v1.0/domain/" + DOMAIN_ID).type(MediaType.APPLICATION_JSON_TYPE)
-                .put(ClientResponse.class, getDomain());
+        Response response = RULE.client().target("/v1.0/domain/" + DOMAIN_ID).request().put(Entity.json(getDomain()), Response.class);
 
         verify(domainService).update(domainCaptor.capture());
         assertEquals(DOMAIN_ID, domainCaptor.getValue().getId());
-        assertEquals(ClientResponse.Status.NO_CONTENT.getStatusCode(), response.getStatus());
+        assertEquals(Response.Status.NO_CONTENT.getStatusCode(), response.getStatus());
     }
 
     @Test
     public void testDeleteDomain() {
-        ClientResponse response = RULE.client().resource("/v1.0/domain/" + DOMAIN_ID).type(MediaType.APPLICATION_JSON_TYPE)
-                .delete(ClientResponse.class);
+        Response response = RULE.client().target("/v1.0/domain/" + DOMAIN_ID).request().delete(Response.class);
 
         verify(domainService).delete(eq(DOMAIN_ID));
-        assertEquals(ClientResponse.Status.NO_CONTENT.getStatusCode(), response.getStatus());
+        assertEquals(Response.Status.NO_CONTENT.getStatusCode(), response.getStatus());
     }
 
     private Client getClient() {
@@ -211,8 +224,8 @@ public class DomainResourceTest {
         when(domainService.getDomain(eq(DOMAIN_ID))).thenReturn(Optional.of(mockDomain));
         when(domainService.scopesAllowedInDomain(eq(client.getScopes()), eq(mockDomain))).thenReturn(true);
 
-        ClientResponse response = RULE.client().resource("/v1.0/domain/" + DOMAIN_ID + "/client").type(MediaType.APPLICATION_JSON_TYPE)
-                .post(ClientResponse.class, client);
+        Response response = RULE.client().target("/v1.0/domain/" + DOMAIN_ID + "/client").request()
+                .post(Entity.json(client), Response.class);
 
         verify(domainService).getDomain(eq(DOMAIN_ID));
         verify(domainService).scopesAllowedInDomain(eq(client.getScopes()), eq(mockDomain));
@@ -221,21 +234,21 @@ public class DomainResourceTest {
 
         assertEquals(CLIENT_ID, clientCaptor.getValue().getId());
         assertEquals(DOMAIN_ID, clientCaptor.getValue().getDomain());
-        assertEquals(ClientResponse.Status.CREATED.getStatusCode(), response.getStatus());
-        assertTrue(response.getHeaders().getFirst("Location").endsWith(CLIENT_ID));
+        assertEquals(Response.Status.CREATED.getStatusCode(), response.getStatus());
+        assertTrue(response.getHeaderString("Location").endsWith(CLIENT_ID));
     }
 
     @Test
     public void testCreateClientWithNonexistentDomain() throws ClientAlreadyExistsException {
         when(domainService.getDomain(eq(DOMAIN_ID))).thenReturn(Optional.empty());
 
-        ClientResponse response = RULE.client().resource("/v1.0/domain/" + DOMAIN_ID + "/client").type(MediaType.APPLICATION_JSON_TYPE)
-                .post(ClientResponse.class, getClient());
+        Response response = RULE.client().target("/v1.0/domain/" + DOMAIN_ID + "/client").request()
+                .post(Entity.json(getClient()), Response.class);
 
         verify(domainService).getDomain(eq(DOMAIN_ID));
         verifyNoMoreInteractions(domainService, clientService);
 
-        assertEquals(ClientResponse.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
+        assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
     }
 
     @Test
@@ -246,14 +259,14 @@ public class DomainResourceTest {
         when(domainService.getDomain(eq(DOMAIN_ID))).thenReturn(Optional.of(mockDomain));
         when(domainService.scopesAllowedInDomain(eq(client.getScopes()), eq(mockDomain))).thenReturn(false);
 
-        ClientResponse response = RULE.client().resource("/v1.0/domain/" + DOMAIN_ID + "/client").type(MediaType.APPLICATION_JSON_TYPE)
-                .post(ClientResponse.class, client);
+        Response response = RULE.client().target("/v1.0/domain/" + DOMAIN_ID + "/client").request()
+                .post(Entity.json(client), Response.class);
 
         verify(domainService).getDomain(eq(DOMAIN_ID));
         verify(domainService).scopesAllowedInDomain(eq(client.getScopes()), eq(mockDomain));
         verifyNoMoreInteractions(domainService, clientService);
 
-        assertEquals(ClientResponse.Status.FORBIDDEN.getStatusCode(), response.getStatus());
+        assertEquals(Response.Status.FORBIDDEN.getStatusCode(), response.getStatus());
     }
 
     @Test
@@ -262,8 +275,8 @@ public class DomainResourceTest {
 
         when(clientService.find(eq(CLIENT_ID))).thenReturn(Optional.ofNullable(expectedClient));
 
-        Client client = RULE.client().resource("/v1.0/domain/" + DOMAIN_ID + "/client/" + CLIENT_ID)
-                .accept(MediaType.APPLICATION_JSON_TYPE).get(Client.class);
+        Client client = RULE.client().target("/v1.0/domain/" + DOMAIN_ID + "/client/" + CLIENT_ID).request(MediaType.APPLICATION_JSON_TYPE)
+                .get(Client.class);
 
         verify(clientService).find(eq(CLIENT_ID));
         assertEquals(CLIENT_ID, client.getId());
@@ -280,7 +293,7 @@ public class DomainResourceTest {
         when(clientService.findClientsByDomain(eq(DOMAIN_ID), any(ResourceQuery.class), any(Pagination.class), any(Sort.class)))
                 .thenReturn(clientList);
 
-        List<Client> clients = RULE.client().resource("/v1.0/domain/" + DOMAIN_ID + "/client").accept(MediaType.APPLICATION_JSON_TYPE)
+        List<Client> clients = RULE.client().target("/v1.0/domain/" + DOMAIN_ID + "/client").request(MediaType.APPLICATION_JSON_TYPE)
                 .get(new GenericType<List<Client>>() {});
 
         verify(clientService).findClientsByDomain(DOMAIN_ID, null, defaultPagination, null);
@@ -291,11 +304,11 @@ public class DomainResourceTest {
     public void testGetUnknownClient() {
         when(clientService.find(eq(CLIENT_ID))).thenReturn(Optional.empty());
 
-        ClientResponse response = RULE.client().resource("/v1.0/domain/" + DOMAIN_ID + "/client/" + CLIENT_ID)
-                .accept(MediaType.APPLICATION_JSON_TYPE).get(ClientResponse.class);
+        Response response = RULE.client().target("/v1.0/domain/" + DOMAIN_ID + "/client/" + CLIENT_ID)
+                .request(MediaType.APPLICATION_JSON_TYPE).get(Response.class);
 
         verify(clientService).find(eq(CLIENT_ID));
-        assertEquals(ClientResponse.Status.NOT_FOUND.getStatusCode(), response.getStatus());
+        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
     }
 
     @Test
@@ -305,31 +318,31 @@ public class DomainResourceTest {
 
         when(clientService.find(eq(CLIENT_ID))).thenReturn(Optional.ofNullable(expectedClient));
 
-        ClientResponse response = RULE.client().resource("/v1.0/domain/" + DOMAIN_ID + "/client/" + CLIENT_ID)
-                .accept(MediaType.APPLICATION_JSON_TYPE).get(ClientResponse.class);
+        Response response = RULE.client().target("/v1.0/domain/" + DOMAIN_ID + "/client/" + CLIENT_ID)
+                .request(MediaType.APPLICATION_JSON_TYPE).get(Response.class);
 
         verify(clientService).find(eq(CLIENT_ID));
-        assertEquals(ClientResponse.Status.NOT_FOUND.getStatusCode(), response.getStatus());
+        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
     }
 
     @Test
     public void testModifyClient() {
         ArgumentCaptor<Client> clientCaptor = ArgumentCaptor.forClass(Client.class);
 
-        ClientResponse response = RULE.client().resource("/v1.0/domain/" + DOMAIN_ID + "/client/" + CLIENT_ID)
-                .type(MediaType.APPLICATION_JSON_TYPE).put(ClientResponse.class, getClient());
+        Response response = RULE.client().target("/v1.0/domain/" + DOMAIN_ID + "/client/" + CLIENT_ID).request()
+                .put(Entity.json(getClient()), Response.class);
 
         verify(clientService).update(clientCaptor.capture());
         assertEquals(CLIENT_ID, clientCaptor.getValue().getId());
         assertEquals(DOMAIN_ID, clientCaptor.getValue().getDomain());
-        assertEquals(ClientResponse.Status.NO_CONTENT.getStatusCode(), response.getStatus());
+        assertEquals(Response.Status.NO_CONTENT.getStatusCode(), response.getStatus());
     }
 
     @Test
     public void testDeleteClient() {
-        ClientResponse response = RULE.client().resource("/v1.0/domain/" + DOMAIN_ID + "/client/" + CLIENT_ID).delete(ClientResponse.class);
+        Response response = RULE.client().target("/v1.0/domain/" + DOMAIN_ID + "/client/" + CLIENT_ID).request().delete(Response.class);
 
         verify(clientService).delete(eq(DOMAIN_ID), eq(CLIENT_ID));
-        assertEquals(ClientResponse.Status.NO_CONTENT.getStatusCode(), response.getStatus());
+        assertEquals(Response.Status.NO_CONTENT.getStatusCode(), response.getStatus());
     }
 }

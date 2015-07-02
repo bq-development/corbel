@@ -18,6 +18,7 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.Providers;
 
 import org.eclipse.jetty.http.HttpStatus;
+import org.glassfish.jersey.server.ContainerRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpMethod;
@@ -43,9 +44,6 @@ import com.bq.oss.lib.ws.api.error.ApiRequestException;
 import com.bq.oss.lib.ws.api.error.ErrorResponseFactory;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.google.common.collect.Lists;
-import com.sun.jersey.api.core.HttpRequestContext;
-import com.sun.jersey.server.impl.model.HttpHelper;
-import com.sun.jersey.spi.container.ContainerRequest;
 
 /**
  * Created by Alexander De Leon on 26/05/15.
@@ -85,7 +83,6 @@ public class DefaultResourcesService implements ResourcesService {
     public Response collectionOperation(String type, Request request, UriInfo uriInfo, TokenInfo tokenInfo, URI typeUri, HttpMethod method,
             QueryParameters queryParameters, InputStream inputStream, MediaType contentType) {
         Response result;
-
         try {
             List<org.springframework.http.MediaType> acceptedMediaTypes = getRequestAcceptedMediaTypes(request);
             Rem rem = remService.getRem(type, acceptedMediaTypes, getRequestMethod(request));
@@ -210,8 +207,9 @@ public class DefaultResourcesService implements ResourcesService {
 
 
     private List<org.springframework.http.MediaType> getRequestAcceptedMediaTypes(Request request) {
-        return Lists.transform(HttpHelper.getAccept((HttpRequestContext) request),
-                input -> new org.springframework.http.MediaType(input.getType(), input.getSubtype(), input.getParameters()));
+        ContainerRequest containerRequest = (ContainerRequest) request;
+        return Lists.transform(containerRequest.getAcceptableMediaTypes(), input -> new org.springframework.http.MediaType(input.getType(),
+                input.getSubtype(), input.getParameters()));
     }
 
     private org.springframework.http.HttpMethod getRequestMethod(Request request) {

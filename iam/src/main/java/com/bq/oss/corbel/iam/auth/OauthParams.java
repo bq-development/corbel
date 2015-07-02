@@ -2,7 +2,7 @@ package com.bq.oss.corbel.iam.auth;
 
 import net.oauth.jsontoken.JsonToken;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import com.google.gson.JsonPrimitive;
 

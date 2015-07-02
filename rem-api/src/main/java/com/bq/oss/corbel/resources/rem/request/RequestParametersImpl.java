@@ -1,6 +1,5 @@
 package com.bq.oss.corbel.resources.rem.request;
 
-import java.util.Collections;
 import java.util.List;
 
 import javax.ws.rs.core.MultivaluedMap;
@@ -8,7 +7,6 @@ import javax.ws.rs.core.MultivaluedMap;
 import org.springframework.http.MediaType;
 
 import com.bq.oss.lib.token.TokenInfo;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 /**
  * @author Alexander De Leon
