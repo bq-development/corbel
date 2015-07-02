@@ -11,7 +11,7 @@ import com.bq.oss.corbel.resources.rem.exception.ImageOperationsException;
 
 public class ResizeAndFill implements ImageOperation {
 
-    private static final Pattern pattern = Pattern.compile("^\\((\\d+) *, *(\\w+)\\)$");
+    private final Pattern pattern = Pattern.compile("^\\((\\d+) *, *(\\w+)\\)$");
 
     @Override
     public IMOps apply(String parameter) throws ImageOperationsException {
@@ -33,6 +33,10 @@ public class ResizeAndFill implements ImageOperation {
 
         } catch (NumberFormatException e) {
             throw new ImageOperationsException("Bad width parameter: " + parameter, e);
+        }
+
+        if (width <= 0) {
+            throw new ImageOperationsException("Width for resizeAndFill must be greater than 0: " + parameter);
         }
 
         IMOperation subOperation = new IMOperation();

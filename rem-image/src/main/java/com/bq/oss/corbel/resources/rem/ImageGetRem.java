@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
@@ -37,14 +38,18 @@ public class ImageGetRem extends BaseRem<Void> {
     public static final String IMAGE_WIDTH_PARAMETER = "image:width";
     public static final String IMAGE_HEIGHT_PARAMETER = "image:height";
     private static final Logger LOG = LoggerFactory.getLogger(ImageGetRem.class);
-    private static final String TEMP_IMAGE_NAME = "temp";
+    private static final String TEMP_IMAGE_NAME = "temp_";
+    private static long MAX_TEMP_IMAGE_ID = 100000000000l;
+
     private final ImageOperationsService imageOperationsService;
     private final ImageCacheService imageCacheService;
+    private final AtomicLong tempIdCounter;
     private RemService remService;
 
     public ImageGetRem(ImageOperationsService imageOperationsService, ImageCacheService imageCacheService) {
         this.imageOperationsService = imageOperationsService;
         this.imageCacheService = imageCacheService;
+        this.tempIdCounter = new AtomicLong(0l);
     }
 
     @Override
@@ -90,17 +95,23 @@ public class ImageGetRem extends BaseRem<Void> {
             return ErrorResponseFactory.getInstance().badRequest(new Error("bad_request", e.getMessage()));
         }
 
+        final long uniqueCounter = tempIdCounter.getAndIncrement();
+
+        if (uniqueCounter >= MAX_TEMP_IMAGE_ID) {
+            tempIdCounter.set(0);
+        }
+
         StreamingOutput outputStream = output -> {
 
-            File file = File.createTempFile(TEMP_IMAGE_NAME, "");
+            File file = File.createTempFile(TEMP_IMAGE_NAME + uniqueCounter, "");
 
             try (FileOutputStream fileOutputStream = new FileOutputStream(file);
                     TeeOutputStream teeOutputStream = new TeeOutputStream(output, fileOutputStream);
                     InputStream input = (InputStream) response.getEntity()) {
                 imageOperationsService.applyConversion(operations, input, teeOutputStream);
             } catch (IOException | InterruptedException | IM4JavaException | ImageOperationsException e) {
-                LOG.error("Error while resizing a image", e);
-                throw new WebApplicationException(ErrorResponseFactory.getInstance().serverError(e));
+                LOG.error("Error working with image", e);
+                throw new WebApplicationException(ErrorResponseFactory.getInstance().invalidEntity(e.getMessage()));
             }
 
             imageCacheService.saveInCacheAsync(restorPutRem, resourceId, operationsChain, file.length(), collection, requestParameters,

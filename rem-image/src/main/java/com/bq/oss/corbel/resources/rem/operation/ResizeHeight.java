@@ -9,13 +9,19 @@ public class ResizeHeight implements ImageOperation {
 
     @Override
     public IMOps apply(String parameter) throws ImageOperationsException {
+        int height;
+
         try {
-
-            return new IMOperation().resize(null, Integer.parseInt(parameter));
-
+            height = Integer.parseInt(parameter);
         } catch (NumberFormatException e) {
             throw new ImageOperationsException("Bad image height: " + parameter, e);
         }
+
+        if (height <= 0) {
+            throw new ImageOperationsException("Height for resizeHeight must be greater than 0: " + parameter);
+        }
+
+        return new IMOperation().resize(null, height);
     }
 
     @Override

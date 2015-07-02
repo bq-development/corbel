@@ -30,8 +30,7 @@ public class DefaultImageOperationsService implements ImageOperationsService {
 
     @Override
     public void applyConversion(List<ImageOperationDescription> parameters, InputStream image, OutputStream out)
-            throws ImageOperationsException,
-            InterruptedException, IOException, IM4JavaException {
+            throws ImageOperationsException, InterruptedException, IOException, IM4JavaException {
 
         IMOperation imOperation = imOperationFactory.create();
         imOperation.addImage("-");

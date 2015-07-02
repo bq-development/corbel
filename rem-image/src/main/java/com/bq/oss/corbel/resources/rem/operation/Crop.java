@@ -11,7 +11,7 @@ import com.bq.oss.corbel.resources.rem.exception.ImageOperationsException;
 
 public class Crop implements ImageOperation {
 
-    private static final Pattern pattern = Pattern.compile("\\((\\d+) *, *(\\d+) *, *(\\d+) *, *(\\d+)\\)");
+    private final Pattern pattern = Pattern.compile("\\((\\d+) *, *(\\d+) *, *(\\d+) *, *(\\d+)\\)");
 
     @Override
     public IMOps apply(String parameter) throws ImageOperationsException {
@@ -32,9 +32,12 @@ public class Crop implements ImageOperation {
             xdest = Integer.parseInt(values.get(2));
             ydest = Integer.parseInt(values.get(3));
 
+            if (xorig >= xdest || yorig >= ydest) {
+                throw new ImageOperationsException("Bad dimensions parameter in crop operation: " + parameter);
+            }
 
         } catch (NumberFormatException e) {
-            throw new ImageOperationsException("Bad dimension parameter in crop operation: " + parameter, e);
+            throw new ImageOperationsException("Bad dimensions parameter in crop operation: " + parameter, e);
         }
 
         return new IMOperation().crop(xdest - xorig, ydest - yorig, xorig, yorig);

@@ -11,7 +11,7 @@ import com.bq.oss.corbel.resources.rem.exception.ImageOperationsException;
 
 public class CropFromCenter implements ImageOperation {
 
-    private static final Pattern pattern = Pattern.compile("\\((\\d+) *, *(\\d+)\\)");
+    private final Pattern pattern = Pattern.compile("\\((\\d+) *, *(\\d+)\\)");
 
     @Override
     public IMOps apply(String parameter) throws ImageOperationsException {
@@ -35,9 +35,12 @@ public class CropFromCenter implements ImageOperation {
             throw new ImageOperationsException("Bad dimension parameter in crop from center operation: " + parameter, e);
         }
 
+        if (xratio <= 0 || yratio <= 0) {
+            throw new ImageOperationsException("Parameters for cropFromCenter must be greater than 0: " + parameter);
+        }
+
         IMOperation subOperation = new IMOperation();
-        subOperation.gravity("center");
-        subOperation.crop(xratio, yratio, -xratio / 2, -yratio / 2);
+        subOperation.gravity("center").crop(xratio, yratio, -xratio / 2, -yratio / 2);
 
         return subOperation;
 

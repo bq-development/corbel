@@ -4,7 +4,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.im4java.core.IM4JavaException;
@@ -28,18 +28,15 @@ public class DefaultImageOperationsServiceIntegrationTest {
     public void setUp() {
         imageOperationsService = new DefaultImageOperationsService(new DefaultImageOperationsService.IMOperationFactory(),
                 new DefaultImageOperationsService.ConvertCmdFactory(), ImmutableMap.<String, ImageOperation>builder()
-                        .put("resizeHeight", new ResizeHeight()).put("resize", new Resize()).put("cropFromCenter", new CropFromCenter())
-                        .put("resizeAndFill", new ResizeAndFill()).build());
+                        .put("resizeWidth", new ResizeWidth()).put("resizeHeight", new ResizeHeight()).put("resize", new Resize())
+                        .put("crop", new Crop()).put("cropFromCenter", new CropFromCenter()).put("resizeAndFill", new ResizeAndFill())
+                        .build());
     }
 
     @Test
-    public void resizeTest() throws IOException, ImageOperationsException, InterruptedException, IM4JavaException {
+    public void test() throws IOException, ImageOperationsException, InterruptedException, IM4JavaException {
         try (InputStream image = new URL(IMAGE_URL).openStream(); FileOutputStream out = new FileOutputStream("/tmp/testImage.tiff")) {
-
-            List<ImageOperationDescription> parameters = Arrays.asList(new ImageOperationDescription("resizeHeight", "200"),
-                    new ImageOperationDescription("cropFromCenter", "(50, 50)"), new ImageOperationDescription("resize", "(100, 50)"),
-                    new ImageOperationDescription("resizeAndFill", "(200, blue)"));
-
+            List<ImageOperationDescription> parameters = Collections.singletonList(new ImageOperationDescription("crop", "(0, 0, 2, 2)"));
             imageOperationsService.applyConversion(parameters, image, out);
         }
     }

@@ -11,10 +11,12 @@ import com.bq.oss.corbel.resources.rem.exception.ImageOperationsException;
 
 public class Resize implements ImageOperation {
 
-    private static final Pattern pattern = Pattern.compile("^\\((\\d+) *, *(\\d+)\\)$");
+    private final Pattern pattern = Pattern.compile("^\\((\\d+) *, *(\\d+)\\)$");
 
     @Override
     public IMOps apply(String parameter) throws ImageOperationsException {
+
+        int width, height;
 
         try {
             Matcher matcher = pattern.matcher(parameter);
@@ -25,12 +27,19 @@ public class Resize implements ImageOperation {
 
             List<String> values = getValues(parameter, matcher);
 
-            return new IMOperation().resize(Integer.parseInt(values.get(0)), Integer.parseInt(values.get(1)), '!');
+            width = Integer.parseInt(values.get(0));
+            height = Integer.parseInt(values.get(1));
+
 
         } catch (NumberFormatException e) {
             throw new ImageOperationsException("Bad dimension parameter in resize: " + parameter, e);
         }
 
+        if (width <= 0 || height <= 0) {
+            throw new ImageOperationsException("Parameters for resize must be greater than 0: " + parameter);
+        }
+
+        return new IMOperation().resize(width, height, '!');
     }
 
     @Override

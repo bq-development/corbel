@@ -29,15 +29,14 @@ import com.google.common.collect.ImmutableMap;
 @RunWith(MockitoJUnitRunner.class) public class DefaultImageOperationsServiceTest {
 
     @Mock private static ImageOperation imageOperationMock;
-    private  Map<String, ImageOperation> operations;
+    private Map<String, ImageOperation> operations;
     @Mock private DefaultImageOperationsService.IMOperationFactory imOperationFactory;
     @Mock private DefaultImageOperationsService.ConvertCmdFactory convertCmdFactory;
     private DefaultImageOperationsService defaultImageOperationsService;
 
     @Before
     public void setUp() {
-        operations = ImmutableMap.<String, ImageOperation>builder()
-                .put("resizeWidth", imageOperationMock).build();
+        operations = ImmutableMap.<String, ImageOperation>builder().put("resizeWidth", imageOperationMock).build();
         defaultImageOperationsService = new DefaultImageOperationsService(imOperationFactory, convertCmdFactory, operations);
     }
 
