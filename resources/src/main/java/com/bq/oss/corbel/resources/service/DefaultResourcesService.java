@@ -1,41 +1,10 @@
 package com.bq.oss.corbel.resources.service;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.annotation.Annotation;
-import java.net.URI;
-import java.util.List;
-import java.util.Optional;
-
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-import javax.ws.rs.ext.MessageBodyReader;
-import javax.ws.rs.ext.Providers;
-
-import org.eclipse.jetty.http.HttpStatus;
-import org.glassfish.jersey.server.ContainerRequest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpMethod;
-
 import com.bq.oss.corbel.event.ResourceEvent;
 import com.bq.oss.corbel.eventbus.service.EventBus;
 import com.bq.oss.corbel.rem.internal.RemEntityTypeResolver;
 import com.bq.oss.corbel.resources.rem.Rem;
-import com.bq.oss.corbel.resources.rem.request.CollectionParameters;
-import com.bq.oss.corbel.resources.rem.request.CollectionParametersImpl;
-import com.bq.oss.corbel.resources.rem.request.RelationParameters;
-import com.bq.oss.corbel.resources.rem.request.RelationParametersImpl;
-import com.bq.oss.corbel.resources.rem.request.RequestParameters;
-import com.bq.oss.corbel.resources.rem.request.RequestParametersImpl;
-import com.bq.oss.corbel.resources.rem.request.ResourceId;
-import com.bq.oss.corbel.resources.rem.request.ResourceParameters;
-import com.bq.oss.corbel.resources.rem.request.ResourceParametersImpl;
+import com.bq.oss.corbel.resources.rem.request.*;
 import com.bq.oss.corbel.resources.rem.service.RemService;
 import com.bq.oss.lib.queries.builder.QueryParametersBuilder;
 import com.bq.oss.lib.queries.jaxrs.QueryParameters;
@@ -44,6 +13,22 @@ import com.bq.oss.lib.ws.api.error.ApiRequestException;
 import com.bq.oss.lib.ws.api.error.ErrorResponseFactory;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.google.common.collect.Lists;
+import org.eclipse.jetty.http.HttpStatus;
+import org.glassfish.jersey.server.ContainerRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpMethod;
+
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.*;
+import javax.ws.rs.ext.MessageBodyReader;
+import javax.ws.rs.ext.Providers;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.annotation.Annotation;
+import java.net.URI;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * Created by Alexander De Leon on 26/05/15.
@@ -87,7 +72,7 @@ public class DefaultResourcesService implements ResourcesService {
             List<org.springframework.http.MediaType> acceptedMediaTypes = getRequestAcceptedMediaTypes(request);
             Rem rem = remService.getRem(type, acceptedMediaTypes, getRequestMethod(request));
 
-            queryParameters = method.equals(HttpMethod.GET) ? queryParameters : getDefaultQueryParameters();
+            queryParameters = (method.equals(HttpMethod.GET) || method.equals(HttpMethod.DELETE)) ? queryParameters : getDefaultQueryParameters();
             RequestParameters<CollectionParameters> parameters = collectionParameters(queryParameters, tokenInfo, acceptedMediaTypes,
                     uriInfo.getQueryParameters(), request);
 
