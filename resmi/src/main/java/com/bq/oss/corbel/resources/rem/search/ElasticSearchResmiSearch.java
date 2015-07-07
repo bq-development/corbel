@@ -101,9 +101,8 @@ public class ElasticSearchResmiSearch implements ResmiSearch {
 
     @Override
     public JsonArray search(ResourceUri resourceUri, String search, String[] fields, int page, int size) {
-        //TODO: Search only in fields defined
         SearchResponse response = elasticsearchClient.prepareSearch(INDEX).setTypes(getElasticSearchType(resourceUri))
-                .setSearchType(SearchType.DFS_QUERY_THEN_FETCH).setQuery(QueryBuilders.queryStringQuery(search)).setFrom(page)
+                .setSearchType(SearchType.DFS_QUERY_THEN_FETCH).setQuery(QueryBuilders.multiMatchQuery(search, fields)).setFrom(page)
                 .setSize(size).execute().actionGet();
         JsonArray jsonArray = new JsonArray();
         response.getHits().forEach(hit -> jsonArray.add(gson.toJsonTree(hit.getSource())));
@@ -132,9 +131,8 @@ public class ElasticSearchResmiSearch implements ResmiSearch {
 
     @Override
     public AggregationResult count(ResourceUri resourceUri, String search, String[] fields) {
-        //TODO: Search only in fields defined
         CountResponse response = elasticsearchClient.prepareCount(INDEX).setTypes(getElasticSearchType(resourceUri))
-                .setQuery(QueryBuilders.queryStringQuery(search)).execute().actionGet();
+                .setQuery(QueryBuilders.multiMatchQuery(search, fields)).execute().actionGet();
         return new CountResult(response.getCount());
     }
 

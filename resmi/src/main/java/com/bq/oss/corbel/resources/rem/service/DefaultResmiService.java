@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -100,14 +101,13 @@ public class DefaultResmiService implements ResmiService {
     }
 
     @Override
-    public JsonArray findCollection(ResourceUri uri, Optional<? extends CollectionParameters> apiParameters) throws BadConfigurationException {
+    public JsonArray findCollection(ResourceUri uri, Optional<? extends CollectionParameters> apiParameters)
+            throws BadConfigurationException {
         if (apiParameters.flatMap(params -> params.getSearch()).isPresent()) {
             return findInSearchService(uri, apiParameters.get());
         } else {
-            return resmiDao.findCollection(uri,
-                    apiParameters.flatMap(params -> params.getQueries()),
-                    apiParameters.map(params -> params.getPagination()),
-                    apiParameters.flatMap(params -> params.getSort()));
+            return resmiDao.findCollection(uri, apiParameters.flatMap(params -> params.getQueries()),
+                    apiParameters.map(params -> params.getPagination()), apiParameters.flatMap(params -> params.getSort()));
         }
     }
 
@@ -132,8 +132,10 @@ public class DefaultResmiService implements ResmiService {
         }
 
         if (search.getFields().isPresent() && !search.getFields().get().isEmpty()) {
-            fields = Sets.intersection(search.getFields().get(), fields);
+            fields = new HashSet<>(Sets.intersection(search.getFields().get(), fields));
         }
+
+        fields.add(ID);
 
         return fields.toArray(new String[fields.size()]);
     }
@@ -141,9 +143,9 @@ public class DefaultResmiService implements ResmiService {
     private CollectionParameters buildParametersForBinding(CollectionParameters apiParameters, JsonArray searchResult) {
         List<String> ids = new ArrayList<>();
         for (JsonElement element : searchResult) {
-            ids.add(((JsonObject) element).get("id").getAsString());
+            ids.add(((JsonObject) element).get(ID).getAsString());
         }
-        ResourceQueryBuilder builder = new ResourceQueryBuilder().add("id", ids, QueryOperator.$IN);
+        ResourceQueryBuilder builder = new ResourceQueryBuilder().add(ID, ids, QueryOperator.$IN);
         return new CollectionParametersImpl(apiParameters.getPagination(), apiParameters.getSort(), Optional.of(Arrays.asList(builder
                 .build())), Optional.empty(), Optional.empty(), Optional.empty());
     }
@@ -159,8 +161,7 @@ public class DefaultResmiService implements ResmiService {
             return findInSearchService(uri, apiParameters.get());
         } else {
             return resmiDao.findRelation(uri, apiParameters.flatMap(params -> params.getQueries()),
-                    apiParameters.map(params -> params.getPagination()),
-                    apiParameters.flatMap(params -> params.getSort()));
+                    apiParameters.map(params -> params.getPagination()), apiParameters.flatMap(params -> params.getSort()));
         }
     }
 
