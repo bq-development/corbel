@@ -7,7 +7,7 @@ import java.io.InputStream;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.UUID;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
@@ -38,18 +38,15 @@ public class ImageGetRem extends BaseRem<Void> {
     public static final String IMAGE_WIDTH_PARAMETER = "image:width";
     public static final String IMAGE_HEIGHT_PARAMETER = "image:height";
     private static final Logger LOG = LoggerFactory.getLogger(ImageGetRem.class);
-    private static final String TEMP_IMAGE_NAME = "temp_";
-    private static long MAX_TEMP_IMAGE_ID = 100000000000l;
+    private static final String TEMP_IMAGE_PREFIX = "temp_";
 
     private final ImageOperationsService imageOperationsService;
     private final ImageCacheService imageCacheService;
-    private final AtomicLong tempIdCounter;
     private RemService remService;
 
     public ImageGetRem(ImageOperationsService imageOperationsService, ImageCacheService imageCacheService) {
         this.imageOperationsService = imageOperationsService;
         this.imageCacheService = imageCacheService;
-        this.tempIdCounter = new AtomicLong(0l);
     }
 
     @Override
@@ -95,15 +92,9 @@ public class ImageGetRem extends BaseRem<Void> {
             return ErrorResponseFactory.getInstance().badRequest(new Error("bad_request", e.getMessage()));
         }
 
-        final long uniqueCounter = tempIdCounter.getAndIncrement();
-
-        if (uniqueCounter >= MAX_TEMP_IMAGE_ID) {
-            tempIdCounter.set(0);
-        }
-
         StreamingOutput outputStream = output -> {
 
-            File file = File.createTempFile(TEMP_IMAGE_NAME + uniqueCounter, "");
+            File file = File.createTempFile(TEMP_IMAGE_PREFIX + UUID.randomUUID().toString(), "");
 
             try (FileOutputStream fileOutputStream = new FileOutputStream(file);
                     TeeOutputStream teeOutputStream = new TeeOutputStream(output, fileOutputStream);
