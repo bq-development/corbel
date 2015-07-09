@@ -9,13 +9,19 @@ public class ResizeWidth implements ImageOperation {
 
     @Override
     public IMOps apply(String parameter) throws ImageOperationsException {
+        int width;
+
         try {
-
-            return new IMOperation().resize(Integer.parseInt(parameter));
-
+            width = Integer.parseInt(parameter);
         } catch (NumberFormatException e) {
             throw new ImageOperationsException("Bad image width: " + parameter, e);
         }
+
+        if (width <= 0) {
+            throw new ImageOperationsException("Width for resizeWidth must be greater than 0: " + parameter);
+        }
+
+        return new IMOperation().resize(width);
     }
 
     @Override
