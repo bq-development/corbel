@@ -18,9 +18,13 @@ import com.bq.oss.corbel.resources.rem.request.*;
  */
 public interface RemService {
 
+    Rem getRem(String name);
+
     Rem<?> getRem(String type, List<MediaType> acceptedMediaTypes, HttpMethod method);
 
     Rem<?> getRem(String type, List<MediaType> acceptedMediaTypes, HttpMethod method, List<Rem> remsExcluded);
+
+    void registerExcludedRems(String uri, List<Rem> excludedRems);
 
     Response collection(Rem rem, String type, RequestParameters<CollectionParameters> parameters, URI uri, Optional entity);
 
@@ -29,6 +33,4 @@ public interface RemService {
     Response relation(Rem rem, String type, ResourceId id, String rel, RequestParameters<RelationParameters> parameters, Optional entity);
 
     List<RemDescription> getRegisteredRemDescriptions();
-
-    Rem getRem(String name);
 }
