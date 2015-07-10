@@ -82,6 +82,7 @@ public class RemResourceTest {
     private static final String jsonTest = "{\"field1\":\"field1content\"}";
     @ClassRule
     public static ResourceTestRule RULE;
+    private static TokenInfo tokenInfo = mock(TokenInfo.class);
     private static Rem<JsonObject> remMock = mock(Rem.class);
     private static RemRegistry registryMock = mock(RemRegistry.class);
     private static RemService remService = new DefaultRemService(registryMock);
@@ -144,6 +145,8 @@ public class RemResourceTest {
         when(requestMock.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + TEST_TOKEN);
         doReturn(requestMock).when(filter).getRequest();
         doNothing().when(filter).checkAccessRules(eq(authorizationInfoMock), any());
+        when(tokenInfo.getDomainId()).thenReturn(DOMAIN);
+        when(tokenInfo.getUserId()).thenReturn(TEST_USER_ID);
 
     }
 
@@ -382,7 +385,7 @@ public class RemResourceTest {
                 RULE.client().target(COLLECTION_URI).request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
                         .post(Entity.json(jsonTest), String.class)).isEqualTo(TEST_OK);
         assertThat(parametersCaptor.getValue().getTokenInfo().getUserId()).isSameAs(TEST_USER_ID);
-        verify(eventBusMock).dispatch(ResourceEvent.createResourceEvent(TEST_TYPE, RESOURCE_ID.getId(), DOMAIN));
+        verify(eventBusMock).dispatch(ResourceEvent.createResourceEvent(TEST_TYPE, RESOURCE_ID.getId(), DOMAIN, TEST_USER_ID));
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -498,7 +501,7 @@ public class RemResourceTest {
         assertThat(RULE.client().target(RESOURCE_URI).request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN).delete(String.class))
                 .isEqualTo(TEST_OK);
         assertThat(parametersCaptor.getValue().getTokenInfo().getUserId()).isSameAs(TEST_USER_ID);
-        verify(eventBusMock).dispatch(ResourceEvent.deleteResourceEvent(TEST_TYPE, RESOURCE_ID.getId(), DOMAIN));
+        verify(eventBusMock).dispatch(ResourceEvent.deleteResourceEvent(TEST_TYPE, RESOURCE_ID.getId(), DOMAIN, TEST_USER_ID));
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -530,7 +533,7 @@ public class RemResourceTest {
                 RULE.client().target(RESOURCE_URI).request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
                         .put(Entity.json(jsonTest), String.class)).isEqualTo(TEST_OK);
         assertThat(parametersCaptor.getValue().getTokenInfo().getUserId()).isSameAs(TEST_USER_ID);
-        verify(eventBusMock).dispatch(ResourceEvent.updateResourceEvent(TEST_TYPE, RESOURCE_ID.getId(), DOMAIN));
+        verify(eventBusMock).dispatch(ResourceEvent.updateResourceEvent(TEST_TYPE, RESOURCE_ID.getId(), DOMAIN, TEST_USER_ID));
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
