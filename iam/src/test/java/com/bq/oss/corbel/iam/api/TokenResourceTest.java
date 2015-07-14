@@ -45,6 +45,7 @@ import com.bq.oss.lib.ws.auth.AuthorizationInfo;
 import com.bq.oss.lib.ws.auth.AuthorizationInfoProvider;
 import com.bq.oss.lib.ws.auth.AuthorizationRequestFilter;
 import com.bq.oss.lib.ws.auth.BearerTokenAuthenticator;
+import com.bq.oss.lib.ws.auth.CookieOAuthFactory;
 import com.google.common.base.Optional;
 
 /**
@@ -79,7 +80,10 @@ public class TokenResourceTest {
 
     private static final Authenticator<String, AuthorizationInfo> authenticator = mock(Authenticator.class);
     private static OAuthFactory oAuthFactory = new OAuthFactory<>(authenticator, "realm", AuthorizationInfo.class);
-    private static final AuthorizationRequestFilter filter = spy(new AuthorizationRequestFilter(oAuthFactory, null, ""));
+    private static CookieOAuthFactory<AuthorizationInfo> cookieOAuthProvider = new CookieOAuthFactory<AuthorizationInfo>(authenticator,
+            "realm", AuthorizationInfo.class);
+    private static final AuthorizationRequestFilter filter = spy(new AuthorizationRequestFilter(oAuthFactory, cookieOAuthProvider,
+            "v.*/oauth/token"));
 
     @ClassRule public static ResourceTestRule RULE = ResourceTestRule.builder()
             .addResource(new TokenResource(authorizationServiceMock, upgradeTokenServiceMock, tokenCookieFactoryMock)).addProvider(filter)
@@ -111,7 +115,8 @@ public class TokenResourceTest {
         formData.add(ASSERTION, TEST_ASSERTION);
         formData.add(GRANT_TYPE, GrantType.JWT_BEARER);
 
-        Response response = RULE.client().target(OAUTH_TOKEN_ENDPOINT).request().post(Entity.form(formData), Response.class);
+        Response response = RULE.client().target(OAUTH_TOKEN_ENDPOINT).request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
+                .post(Entity.form(formData), Response.class);
 
         checkResponseContainsToken(response, TEST_TOKEN, REFRESH_TOKEN);
     }
@@ -155,7 +160,8 @@ public class TokenResourceTest {
     public void testPostMissingAssertion() throws SignatureException, UnauthorizedException {
         MultivaluedMap<String, String> formData = new MultivaluedHashMap();
         formData.add(GRANT_TYPE, GrantType.JWT_BEARER);
-        Response response = RULE.client().target(OAUTH_TOKEN_ENDPOINT).request().post(Entity.form(formData), Response.class);
+        Response response = RULE.client().target(OAUTH_TOKEN_ENDPOINT).request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
+                .post(Entity.form(formData), Response.class);
         checkErrorResponse(response, 400, INVALID_ASSERTION_ERROR_MESSAGE);
     }
 
@@ -273,7 +279,7 @@ public class TokenResourceTest {
         formData.add(GRANT_TYPE, GrantType.JWT_BEARER);
 
         Response response = RULE.client().target(OAUTH_TOKEN_ENDPOINT).request().header(REQUEST_COOKIE, true)
-                .post(Entity.form(formData), Response.class);
+                .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).post(Entity.form(formData), Response.class);
 
         checkResponseContainsTokenWithCookie(response, TEST_TOKEN, REFRESH_TOKEN);
     }
