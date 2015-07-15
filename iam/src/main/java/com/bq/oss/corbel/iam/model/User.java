@@ -79,6 +79,15 @@ public class User extends TraceableEntity implements HasScopes {
         return u;
     }
 
+    @JsonIgnore
+    public User getUserWithOnlyId(){
+        User returnedUser = new User();
+        returnedUser.setProperties(null);
+        returnedUser.setScopes(null);
+        returnedUser.setId( this.getId() );
+    return returnedUser;
+    }
+
     public String getDomain() {
         return domain;
     }

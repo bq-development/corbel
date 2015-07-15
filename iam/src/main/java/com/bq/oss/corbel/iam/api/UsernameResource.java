@@ -1,18 +1,19 @@
 package com.bq.oss.corbel.iam.api;
 
+import com.bq.oss.corbel.iam.service.UserService;
+import com.bq.oss.lib.ws.auth.AuthorizationInfo;
+import io.dropwizard.auth.Auth;
+
 import javax.ws.rs.HEAD;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Response;
 
-import com.bq.oss.corbel.iam.service.UserService;
-import com.bq.oss.lib.ws.auth.AuthorizationInfo;
-import io.dropwizard.auth.Auth;
-
 /**
  * @author Francisco Sanchez
  */
-@Path(ApiVersion.CURRENT + "/username") public class UsernameResource {
+@Path(ApiVersion.CURRENT + "/username")
+public class UsernameResource {
 
     private final UserService userService;
 
@@ -27,5 +28,4 @@ import io.dropwizard.auth.Auth;
         return userService.existsByUsernameAndDomain(username, domain) ? Response.ok().build() : IamErrorResponseFactory.getInstance()
                 .notFound();
     }
-
 }
