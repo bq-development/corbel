@@ -1,12 +1,10 @@
 package com.bq.oss.corbel.resources.rem.request;
 
-import java.util.List;
+import com.bq.oss.lib.token.TokenInfo;
 
 import javax.ws.rs.core.MultivaluedMap;
-
 import org.springframework.http.MediaType;
-
-import com.bq.oss.lib.token.TokenInfo;
+import java.util.List;
 
 public class RequestParametersImplCustomContentLength<E> implements RequestParameters<E> {
 

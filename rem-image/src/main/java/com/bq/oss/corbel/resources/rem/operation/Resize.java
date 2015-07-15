@@ -1,13 +1,12 @@
 package com.bq.oss.corbel.resources.rem.operation;
 
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
+import com.bq.oss.corbel.resources.rem.exception.ImageOperationsException;
 import org.im4java.core.IMOperation;
 import org.im4java.core.IMOps;
 
-import com.bq.oss.corbel.resources.rem.exception.ImageOperationsException;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Resize implements ImageOperation {
 
@@ -46,5 +45,4 @@ public class Resize implements ImageOperation {
     public String getOperationName() {
         return "resize";
     }
-
 }
