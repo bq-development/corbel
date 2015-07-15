@@ -19,6 +19,9 @@ import com.bq.oss.lib.ws.auth.ioc.AuthorizationIoc;
 import com.bq.oss.lib.ws.cors.ioc.CorsIoc;
 import com.bq.oss.lib.ws.dw.ioc.CommonFiltersIoc;
 import com.bq.oss.lib.ws.dw.ioc.DropwizardIoc;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JSR310Module;
 
 /**
  * @author Rubén Carrasco
@@ -45,6 +48,14 @@ import com.bq.oss.lib.ws.dw.ioc.DropwizardIoc;
                 env.getProperty("webfs.s3.secret")));
         amazonS3Client.setRegion(Region.getRegion(Regions.fromName(env.getProperty("webfs.s3.region"))));
         return amazonS3Client;
+    }
+
+    @Bean
+    public ObjectMapper getObjectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        mapper.registerModule(new JSR310Module());
+        return mapper;
     }
 
 }
