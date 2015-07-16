@@ -1,19 +1,17 @@
 package com.bq.oss.corbel.event;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-
+import com.bq.oss.corbel.eventbus.Event;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JSR310Module;
 import org.fest.util.Sets;
 import org.junit.Before;
 import org.junit.Test;
-
-import com.bq.oss.corbel.eventbus.Event;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+
+import java.util.Collections;
+import java.util.Date;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 
@@ -69,17 +67,17 @@ public class EventSerializationTest {
 
     @Test
     public void testResourceCreatedEvent() {
-        assertThanCanBeSendAndRetriveInEventBus(ResourceEvent.createResourceEvent("TYPE", "RESOURCE_ID", "DOMAIN"));
+        assertThanCanBeSendAndRetriveInEventBus(ResourceEvent.createResourceEvent("TYPE", "RESOURCE_ID", "DOMAIN_ID", "USER_ID"));
     }
 
     @Test
     public void testResourceModifiedEvent() {
-        assertThanCanBeSendAndRetriveInEventBus(ResourceEvent.updateResourceEvent("TYPE", "RESOURCE_ID", "DOMAIN"));
+        assertThanCanBeSendAndRetriveInEventBus(ResourceEvent.updateResourceEvent("TYPE", "RESOURCE_ID", "DOMAIN_ID", "USER_ID"));
     }
 
     @Test
     public void testResourceDeletedEvent() {
-        assertThanCanBeSendAndRetriveInEventBus(ResourceEvent.deleteResourceEvent("TYPE", "RESOURCE_ID", "DOMAIN"));
+        assertThanCanBeSendAndRetriveInEventBus(ResourceEvent.deleteResourceEvent("TYPE", "RESOURCE_ID", "DOMAIN_ID", "USER_ID"));
     }
 
     @Test
@@ -91,5 +89,4 @@ public class EventSerializationTest {
     public void testUserDeletedEvent() {
         assertThanCanBeSendAndRetriveInEventBus(new UserDeletedEvent("USER_ID", "DOMAIN"));
     }
-
 }

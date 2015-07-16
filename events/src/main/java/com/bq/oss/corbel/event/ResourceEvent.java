@@ -14,26 +14,48 @@ public class ResourceEvent extends EventWithSpecificDomain {
     private String type;
     private String resourceId;
     private Action action;
+    private String userId;
 
-    private ResourceEvent() {}
+    private ResourceEvent() {
+        /**
+         * Jackson2JsonMessageConverter requires this empty constructor
+         */
+    }
 
-    private ResourceEvent(String type, String resourceId, String domain, Action action) {
+    private ResourceEvent(String type, String resourceId, Action action, String domainId, String userId) {
+        super(domainId);
+        this.type = type;
+        this.resourceId = resourceId;
+        this.action = action;
+        this.userId = userId;
+    }
+
+    private ResourceEvent(String type, String resourceId, String domain, Action action, String userId) {
         super(domain);
         this.type = type;
         this.resourceId = resourceId;
         this.action = action;
+        this.userId = userId;
     }
 
-    public static ResourceEvent createResourceEvent(String type, String resourceId, String domain) {
-        return new ResourceEvent(type, resourceId, domain, Action.CREATE);
+    public static ResourceEvent createResourceEvent(String type, String resourceId, String domainId, String userId) {
+        return new ResourceEvent(type, resourceId, Action.CREATE, domainId, userId);
     }
 
-    public static ResourceEvent updateResourceEvent(String type, String resourceId, String domain) {
-        return new ResourceEvent(type, resourceId, domain, Action.UPDATE);
+    public static ResourceEvent updateResourceEvent(String type, String resourceId, String domainId, String userId) {
+        return new ResourceEvent(type, resourceId, Action.UPDATE, domainId, userId);
     }
 
-    public static ResourceEvent deleteResourceEvent(String type, String resourceId, String domain) {
-        return new ResourceEvent(type, resourceId, domain, Action.DELETE);
+    public static ResourceEvent deleteResourceEvent(String type, String resourceId, String domainId, String userId) {
+        return new ResourceEvent(type, resourceId, Action.DELETE, domainId, userId);
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 
     public String getType() {
