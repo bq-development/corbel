@@ -1,26 +1,5 @@
 package com.bq.oss.corbel.resources.rem;
 
-import com.bq.oss.corbel.resources.rem.exception.ImageOperationsException;
-import com.bq.oss.corbel.resources.rem.format.ImageFormat;
-import com.bq.oss.corbel.resources.rem.model.ImageOperationDescription;
-import com.bq.oss.corbel.resources.rem.request.RequestParameters;
-import com.bq.oss.corbel.resources.rem.request.ResourceId;
-import com.bq.oss.corbel.resources.rem.request.ResourceParameters;
-import com.bq.oss.corbel.resources.rem.service.ImageCacheService;
-import com.bq.oss.corbel.resources.rem.service.ImageOperationsService;
-import com.bq.oss.corbel.resources.rem.service.RemService;
-import com.bq.oss.lib.ws.api.error.ErrorResponseFactory;
-import com.bq.oss.lib.ws.model.Error;
-import org.apache.commons.io.output.TeeOutputStream;
-import org.im4java.core.IM4JavaException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.StreamingOutput;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -29,6 +8,30 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
+
+import org.apache.commons.io.output.TeeOutputStream;
+import org.im4java.core.IM4JavaException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+
+import com.bq.oss.corbel.resources.rem.exception.ImageOperationsException;
+import com.bq.oss.corbel.resources.rem.format.ImageFormat;
+import com.bq.oss.corbel.resources.rem.model.ImageOperationDescription;
+import com.bq.oss.corbel.resources.rem.plugin.RestorRemNames;
+import com.bq.oss.corbel.resources.rem.request.RequestParameters;
+import com.bq.oss.corbel.resources.rem.request.ResourceId;
+import com.bq.oss.corbel.resources.rem.request.ResourceParameters;
+import com.bq.oss.corbel.resources.rem.service.ImageCacheService;
+import com.bq.oss.corbel.resources.rem.service.ImageOperationsService;
+import com.bq.oss.corbel.resources.rem.service.RemService;
+import com.bq.oss.lib.ws.api.error.ErrorResponseFactory;
+import com.bq.oss.lib.ws.model.Error;
 
 
 public class ImageGetRem extends BaseRem<Void> {
@@ -51,9 +54,9 @@ public class ImageGetRem extends BaseRem<Void> {
 
     @Override
     public Response resource(String collection, ResourceId resourceId, RequestParameters<ResourceParameters> requestParameters,
-                             Optional<Void> entity) {
+            Optional<Void> entity) {
 
-        Rem<?> restorGetRem = remService.getRem("RestorGetRem");
+        Rem<?> restorGetRem = remService.getRem(RestorRemNames.RESTOR_GET);
 
         if (restorGetRem == null) {
             LOG.warn("RESTOR not found. May be is needed to install it?");
@@ -76,7 +79,8 @@ public class ImageGetRem extends BaseRem<Void> {
 
         MediaType mediaType = requestParameters.getAcceptedMediaTypes().get(0);
 
-        InputStream inputStream = imageCacheService.getFromCache(restorGetRem, resourceId, operationsChain, imageFormat, collection, requestParameters);
+        InputStream inputStream = imageCacheService.getFromCache(restorGetRem, resourceId, operationsChain, imageFormat, collection,
+                requestParameters);
 
         if (inputStream != null) {
             return Response.ok(inputStream).type(javax.ws.rs.core.MediaType.valueOf(mediaType.toString())).build();
@@ -98,16 +102,16 @@ public class ImageGetRem extends BaseRem<Void> {
             File file = File.createTempFile(TEMP_IMAGE_PREFIX + UUID.randomUUID().toString(), "");
 
             try (FileOutputStream fileOutputStream = new FileOutputStream(file);
-                 TeeOutputStream teeOutputStream = new TeeOutputStream(output, fileOutputStream);
-                 InputStream input = (InputStream) response.getEntity()) {
+                    TeeOutputStream teeOutputStream = new TeeOutputStream(output, fileOutputStream);
+                    InputStream input = (InputStream) response.getEntity()) {
                 imageOperationsService.applyConversion(operations, input, teeOutputStream, imageFormat);
             } catch (IOException | InterruptedException | IM4JavaException | ImageOperationsException e) {
                 LOG.error("Error working with image", e);
                 throw new WebApplicationException(ErrorResponseFactory.getInstance().invalidEntity(e.getMessage()));
             }
 
-            imageCacheService.saveInCacheAsync(restorPutRem, resourceId, operationsChain, imageFormat, file.length(), collection, requestParameters,
-                    file);
+            imageCacheService.saveInCacheAsync(restorPutRem, resourceId, operationsChain, imageFormat, file.length(), collection,
+                    requestParameters, file);
         };
 
         return Response.ok(outputStream).type(javax.ws.rs.core.MediaType.valueOf(mediaType.toString())).build();

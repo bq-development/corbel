@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpMethod;
 
+import com.bq.oss.corbel.resources.rem.plugin.RestorRemNames;
 import com.bq.oss.corbel.resources.rem.request.CollectionParameters;
 import com.bq.oss.corbel.resources.rem.request.RequestParameters;
 import com.bq.oss.corbel.resources.rem.request.ResourceId;
@@ -40,8 +41,7 @@ public class ImageDeleteRem extends BaseRem<InputStream> {
             Optional<InputStream> entity) {
 
         @SuppressWarnings("unchecked")
-        Rem<InputStream> restorDeleteRem = (Rem<InputStream>) remService.getRem(collection, requestParameters.getAcceptedMediaTypes(),
-                HttpMethod.DELETE, Collections.singletonList(this));
+        Rem<InputStream> restorDeleteRem = remService.getRem(RestorRemNames.RESTOR_DELETE);
 
         if (restorDeleteRem == null) {
             LOG.warn("RESTOR not found. May  be is needed to install it?");

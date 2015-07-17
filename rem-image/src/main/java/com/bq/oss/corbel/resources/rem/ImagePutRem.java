@@ -1,15 +1,14 @@
 package com.bq.oss.corbel.resources.rem;
 
 import java.io.InputStream;
-import java.util.Collections;
 import java.util.Optional;
 
 import javax.ws.rs.core.Response;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpMethod;
 
+import com.bq.oss.corbel.resources.rem.plugin.RestorRemNames;
 import com.bq.oss.corbel.resources.rem.request.RequestParameters;
 import com.bq.oss.corbel.resources.rem.request.ResourceId;
 import com.bq.oss.corbel.resources.rem.request.ResourceParameters;
@@ -38,12 +37,10 @@ public class ImagePutRem extends BaseRem<InputStream> {
             Optional<InputStream> entity) {
 
         @SuppressWarnings("unchecked")
-        Rem<InputStream> restorDeleteRem = (Rem<InputStream>) remService.getRem(collection, requestParameters.getAcceptedMediaTypes(),
-                HttpMethod.DELETE, Collections.singletonList(this));
+        Rem<InputStream> restorDeleteRem = remService.getRem(RestorRemNames.RESTOR_DELETE);
 
         @SuppressWarnings("unchecked")
-        Rem<InputStream> restorPutRem = (Rem<InputStream>) remService.getRem(collection, requestParameters.getAcceptedMediaTypes(),
-                HttpMethod.PUT, Collections.singletonList(this));
+        Rem<InputStream> restorPutRem = remService.getRem(RestorRemNames.RESTOR_PUT);
 
         if (restorDeleteRem == null || restorPutRem == null) {
             LOG.warn("RESTOR not found. May  be is needed to install it?");
