@@ -1,48 +1,5 @@
 package com.bq.oss.corbel.iam.api;
 
-import static org.fest.assertions.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
-import io.dropwizard.auth.Authenticator;
-import io.dropwizard.auth.oauth.OAuthFactory;
-import io.dropwizard.testing.junit.ResourceTestRule;
-
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.time.Clock;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
-import org.glassfish.jersey.client.ClientProperties;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
-
 import com.bq.oss.corbel.iam.exception.DuplicatedOauthServiceIdentityException;
 import com.bq.oss.corbel.iam.exception.IdentityAlreadyExistsException;
 import com.bq.oss.corbel.iam.exception.UserProfileConfigurationException;
@@ -57,16 +14,8 @@ import com.bq.oss.corbel.iam.service.UserService;
 import com.bq.oss.lib.queries.builder.QueryParametersBuilder;
 import com.bq.oss.lib.queries.builder.ResourceQueryBuilder;
 import com.bq.oss.lib.queries.exception.MalformedJsonQueryException;
-import com.bq.oss.lib.queries.parser.AggregationParser;
-import com.bq.oss.lib.queries.parser.PaginationParser;
-import com.bq.oss.lib.queries.parser.QueryParser;
-import com.bq.oss.lib.queries.parser.SearchParser;
-import com.bq.oss.lib.queries.parser.SortParser;
-import com.bq.oss.lib.queries.request.Aggregation;
-import com.bq.oss.lib.queries.request.AggregationOperator;
-import com.bq.oss.lib.queries.request.Count;
-import com.bq.oss.lib.queries.request.CountResult;
-import com.bq.oss.lib.queries.request.ResourceQuery;
+import com.bq.oss.lib.queries.parser.*;
+import com.bq.oss.lib.queries.request.*;
 import com.bq.oss.lib.ws.api.error.GenericExceptionMapper;
 import com.bq.oss.lib.ws.api.error.JsonValidationExceptionMapper;
 import com.bq.oss.lib.ws.auth.AuthorizationInfo;
@@ -75,6 +24,31 @@ import com.bq.oss.lib.ws.auth.AuthorizationRequestFilter;
 import com.bq.oss.lib.ws.model.Error;
 import com.bq.oss.lib.ws.queries.QueryParametersProvider;
 import com.google.common.collect.Sets;
+import io.dropwizard.auth.Authenticator;
+import io.dropwizard.auth.oauth.OAuthFactory;
+import io.dropwizard.testing.junit.ResourceTestRule;
+import org.glassfish.jersey.client.ClientProperties;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.time.Clock;
+import java.util.*;
+
+import static org.fest.assertions.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.*;
 
 /**
  * @author Alexander De Leon
@@ -854,6 +828,21 @@ public class UserResourceTest extends UserResourceTestBase {
 
         assertThat(response.getStatus()).isEqualTo(400);
     }
+
+    @Test
+    public void addGroupToUser() {
+        User userWithGroup = createTestUser();
+        userWithGroup.addGroups(Arrays.asList("groupId"));
+
+        when(userServiceMock.findById(TEST_USER_ID)).thenReturn(createTestUser());
+
+        Response response = RULE.client().target("/v1.0/user/"+TEST_USER_ID+"/groups").request(MediaType.APPLICATION_JSON)
+                .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).put(Entity.json(Arrays.asList("groupId")), Response.class);
+
+        verify(userServiceMock).update(userWithGroup);
+        assertThat(response.getStatus()).isEqualTo(204);
+    }
+
 
     @Test
     public void testGetIdentities() {
