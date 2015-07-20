@@ -8,7 +8,11 @@ import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.*;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.DependsOn;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
 
 import com.bq.oss.corbel.evci.api.EventResource;
@@ -35,15 +39,18 @@ import com.bq.oss.lib.rabbitmq.ioc.AbstractRabbitMQConfiguration;
 import com.bq.oss.lib.token.ioc.TokenIoc;
 import com.bq.oss.lib.ws.auth.ioc.AuthorizationIoc;
 import com.bq.oss.lib.ws.cors.ioc.CorsIoc;
+import com.bq.oss.lib.ws.dw.ioc.CommonFiltersIoc;
 import com.bq.oss.lib.ws.dw.ioc.DropwizardIoc;
 import com.bq.oss.lib.ws.dw.ioc.RabbitMQHealthCheckIoc;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JSR310Module;
 
-@Configuration @Import({ConfigurationIoC.class, DropwizardIoc.class, TokenIoc.class, AuthorizationIoc.class, CorsIoc.class,
-        EventBusListeningIoc.class, RabbitMQHealthCheckIoc.class}) @ComponentScan({"com.bq.oss.corbel.evci.eworker.plugin",
-        "com.bqreaders.silkroad.evci.eworker.plugin"}) public class EvciIoc extends AbstractRabbitMQConfiguration {
+@Configuration 
+@Import({ConfigurationIoC.class, DropwizardIoc.class, TokenIoc.class, AuthorizationIoc.class, CorsIoc.class,
+        EventBusListeningIoc.class, RabbitMQHealthCheckIoc.class, CommonFiltersIoc.class}) 
+@ComponentScan({"com.bq.oss.corbel.evci.eworker.plugin", "com.bqreaders.silkroad.evci.eworker.plugin"}) 
+public class EvciIoc extends AbstractRabbitMQConfiguration {
 
     @Autowired private Environment env;
 
