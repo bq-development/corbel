@@ -4,6 +4,7 @@ import java.time.Clock;
 import java.util.Arrays;
 import java.util.List;
 
+import com.bq.oss.corbel.iam.repository.*;
 import net.oauth.jsontoken.Checker;
 import net.oauth.jsontoken.JsonTokenParser;
 import net.oauth.jsontoken.crypto.SignatureAlgorithm;
@@ -57,13 +58,6 @@ import com.bq.oss.corbel.iam.model.Device;
 import com.bq.oss.corbel.iam.model.DeviceIdGenerator;
 import com.bq.oss.corbel.iam.model.Identity;
 import com.bq.oss.corbel.iam.model.IdentityIdGenerator;
-import com.bq.oss.corbel.iam.repository.ClientRepository;
-import com.bq.oss.corbel.iam.repository.DeviceRepository;
-import com.bq.oss.corbel.iam.repository.DomainRepository;
-import com.bq.oss.corbel.iam.repository.IdentityRepository;
-import com.bq.oss.corbel.iam.repository.ScopeRepository;
-import com.bq.oss.corbel.iam.repository.UserRepository;
-import com.bq.oss.corbel.iam.repository.UserTokenRepository;
 import com.bq.oss.corbel.iam.repository.decorator.LowerCaseDecorator;
 import com.bq.oss.corbel.iam.scope.MustacheScopeFillStrategy;
 import com.bq.oss.corbel.iam.scope.ScopeFillStrategy;
@@ -131,6 +125,8 @@ import com.google.gson.Gson;
     @Autowired private OneTimeAccessTokenRepository oneTimeAccessTokenRepository;
     @Autowired private UserTokenRepository userTokenRepository;
     @Autowired private DeviceRepository deviceRepository;
+    @Autowired private GroupsRepository groupsRepository;
+
 
     private UserRepository getUserRepository() {
         return new LowerCaseDecorator(userRepository);
@@ -302,8 +298,8 @@ import com.google.gson.Gson;
 
     @Bean
     public ScopeService getScopeService(EventsService eventsService) {
-        return new DefaultScopeService(scopeRepository, authorizationRulesRepository, getScopeFillStrategy(), env.getProperty("iam.uri"),
-                eventsService);
+        return new DefaultScopeService(scopeRepository, groupsRepository, authorizationRulesRepository,
+                getScopeFillStrategy(), env.getProperty("iam.uri"), eventsService);
     }
 
     @Bean

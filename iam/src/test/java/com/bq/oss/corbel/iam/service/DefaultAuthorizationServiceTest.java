@@ -52,6 +52,8 @@ import com.bq.oss.lib.token.model.TokenType;
 
     private static final String TEST_DOMAIN_ID = "test_domain_id";
 
+    private static final Set<String> TEST_USER_GROUPS = new HashSet<String>(Arrays.asList("Admins", "Users"));
+
     private JsonTokenParser jsonTokenParserMock;
     private DefaultAuthorizationService authorizationService;
     private AuthorizationRule authorizationProcessorMock;
@@ -84,8 +86,9 @@ import com.bq.oss.lib.token.model.TokenType;
                 userTokenRepository, userService);
 
         tokenGrant = new com.bq.oss.lib.token.TokenGrant(TEST_TOKEN, TEST_EXPIRATION);
+
         tokenInfo = TokenInfo.newBuilder().setType(TokenType.TOKEN).setClientId(TEST_CLIENT_ID).setState(Long.toString(TEST_EXPIRATION))
-                .setDomainId(TEST_DOMAIN_ID).setUserId(TEST_USER_ID).build();
+                .setDomainId(TEST_DOMAIN_ID).setUserId(TEST_USER_ID).setGroups(TEST_USER_GROUPS).build();
     }
 
     @Test
@@ -164,6 +167,7 @@ import com.bq.oss.lib.token.model.TokenType;
         if (withPrincipal) {
             User userMock = mock(User.class);
             when(userMock.getId()).thenReturn(TEST_USER_ID);
+            when(userMock.getGroups()).thenReturn(TEST_USER_GROUPS);
             when(contextMock.hasPrincipal()).thenReturn(true);
             when(contextMock.getPrincipal()).thenReturn(userMock);
             when(contextMock.getPrincipal(TEST_USER_ID)).thenReturn(userMock);

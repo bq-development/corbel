@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.bq.oss.corbel.iam.repository.GroupsRepository;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -49,6 +50,7 @@ import com.bq.oss.corbel.iam.utils.Message;
         User user = mock(User.class);
         Set<String> userScopesIds = mock(Set.class);
         Set<Scope> userScopes = mock(Set.class);
+        Set<Scope> groupsScopes = mock(Set.class);
 
         when(context.getRequestedDomain()).thenReturn(domain);
         when(context.getIssuerClient()).thenReturn(client);
@@ -59,8 +61,9 @@ import com.bq.oss.corbel.iam.utils.Message;
         when(scopeServiceMock.expandScopes(userScopesIds)).thenReturn(userScopes);
 
         when(context.getRequestedScopes()).thenReturn(new HashSet<>(Arrays.asList()));
-        when(scopeServiceMock.getAllowedScopes(domainScopes, clientScopes, userScopes, context.isCrossDomain(), context.hasPrincipal()))
-                .thenReturn(userScopes);
+
+        when(scopeServiceMock.getAllowedScopes(domainScopes, clientScopes, userScopes,
+                groupsScopes, context.isCrossDomain(), context.hasPrincipal())).thenReturn(userScopes);
 
         rule.process(context);
     }
@@ -81,11 +84,13 @@ import com.bq.oss.corbel.iam.utils.Message;
             Set<Scope> userScopes = mock(Set.class);
             when(context.getPrincipal()).thenReturn(user);
 
+            Set<Scope> groupsScopes = mock(Set.class);
+
 
             when(context.getRequestedScopes()).thenReturn(new HashSet<>(Arrays.asList("SCOPE_4")));
 
-            when(scopeServiceMock.getAllowedScopes(domainScopes, clientScopes, userScopes, context.isCrossDomain(), context.hasPrincipal()))
-                    .thenReturn(userScopes);
+            when(scopeServiceMock.getAllowedScopes(domainScopes, clientScopes, userScopes, groupsScopes,
+                    context.isCrossDomain(), context.hasPrincipal())).thenReturn(userScopes);
 
             Scope scope = mock(Scope.class);
             when(scope.getIdWithParameters()).thenReturn("SCOPE_A");

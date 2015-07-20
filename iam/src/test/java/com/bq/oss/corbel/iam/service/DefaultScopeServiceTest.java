@@ -3,21 +3,15 @@ package com.bq.oss.corbel.iam.service;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.Matchers.anyMap;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+import com.bq.oss.corbel.iam.model.Group;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Matchers;
@@ -25,6 +19,7 @@ import org.mockito.Mockito;
 
 import com.bq.oss.corbel.iam.exception.ScopeNameException;
 import com.bq.oss.corbel.iam.model.Scope;
+import com.bq.oss.corbel.iam.repository.GroupsRepository;
 import com.bq.oss.corbel.iam.repository.ScopeRepository;
 import com.bq.oss.corbel.iam.scope.ScopeFillStrategy;
 import com.bq.oss.lib.ws.auth.repository.AuthorizationRulesRepository;
@@ -69,6 +64,7 @@ public class DefaultScopeServiceTest {
 
     private DefaultScopeService service;
     private ScopeRepository scopeRepositoryMock;
+    private GroupsRepository groupsRepositoryMock;
     private AuthorizationRulesRepository authorizationRulesRepositoryMock;
     private ScopeFillStrategy fillStrategyMock;
 
@@ -77,11 +73,12 @@ public class DefaultScopeServiceTest {
     @Before
     public void setup() {
         scopeRepositoryMock = mock(ScopeRepository.class);
+        groupsRepositoryMock = mock(GroupsRepository.class);
         authorizationRulesRepositoryMock = mock(AuthorizationRulesRepository.class);
         fillStrategyMock = mock(ScopeFillStrategy.class);
         eventsServiceMock = mock(EventsService.class);
-        service = new DefaultScopeService(scopeRepositoryMock, authorizationRulesRepositoryMock, fillStrategyMock, IAM_AUDIENCE,
-                Clock.fixed(now, ZoneId.systemDefault()), eventsServiceMock);
+        service = new DefaultScopeService(scopeRepositoryMock, groupsRepositoryMock, authorizationRulesRepositoryMock, fillStrategyMock,
+                IAM_AUDIENCE, Clock.fixed(now, ZoneId.systemDefault()), eventsServiceMock);
     }
 
     @Test(expected = NullPointerException.class)
@@ -92,8 +89,6 @@ public class DefaultScopeServiceTest {
     @SuppressWarnings("unchecked")
     @Test
     public void testPublishAuthorizationRules() {
-        String principalId = "principalId";
-        String issuerClientId = "issuerClientId";
 
         Scope scope1 = mock(Scope.class);
         when(scope1.getId()).thenReturn("TOKEN_1");
@@ -164,7 +159,6 @@ public class DefaultScopeServiceTest {
     @Test
     public void testAddAuthorizationRules() {
 
-
         Scope scope1 = mock(Scope.class);
         when(scope1.getId()).thenReturn("TOKEN_1");
         when(scope1.getAudience()).thenReturn(MODULE_A);
@@ -231,6 +225,24 @@ public class DefaultScopeServiceTest {
         assertThat(expandedScopes).contains(scope1);
         assertThat(expandedScopes).contains(scope2);
         assertThat(expandedScopes).doesNotContain(compositeScope);
+    }
+
+    @Test
+    public void testGroupScopes() {
+
+        List<String> groups = Arrays.asList("Admins", "Users");
+
+        Group administrators = new Group("Admins", new HashSet<>(Arrays.asList(TEST_SCOPE_1, TEST_SCOPE_2)));
+        Group users = new Group("Users", new HashSet<>(Collections.singletonList(TEST_COMPOSITE_SCOPE)));
+
+        when(groupsRepositoryMock.findOne(Mockito.eq("Admins"))).thenReturn(administrators);
+        when(groupsRepositoryMock.findOne(Mockito.eq("Users"))).thenReturn(users);
+
+        Set<String> scopes = service.getGroupScopes(groups);
+
+        assertThat(scopes).contains(TEST_SCOPE_1);
+        assertThat(scopes).contains(TEST_SCOPE_2);
+        assertThat(scopes).contains(TEST_COMPOSITE_SCOPE);
     }
 
 

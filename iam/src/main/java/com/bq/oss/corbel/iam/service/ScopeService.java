@@ -1,6 +1,7 @@
 package com.bq.oss.corbel.iam.service;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 import org.springframework.cache.annotation.Cacheable;
@@ -15,9 +16,12 @@ import com.bq.oss.corbel.iam.model.Scope;
  * 
  */
 public interface ScopeService {
+
     String EXPAND_SCOPES_CACHE = "expandScopesCache";
 
     Scope getScope(String id);
+
+    Set<String> getGroupScopes(Collection<String> groups);
 
     Set<Scope> getScopes(Collection<String> scopes);
 
@@ -34,8 +38,8 @@ public interface ScopeService {
 
     void publishAuthorizationRules(String token, long tokenExpirationTime, Set<Scope> filledScopes);
 
-    Set<Scope> getAllowedScopes(Set<Scope> domainScopes, Set<Scope> clientScopes, Set<Scope> userScopess, boolean isCrossDomain,
-            boolean hasPrincipal);
+    Set<Scope> getAllowedScopes(Set<Scope> domainScopes, Set<Scope> clientScopes, Set<Scope> userScopes,
+                                Set<Scope> groupScopes, boolean isCrossDomain, boolean hasPrincipal);
 
     void create(Scope scope) throws ScopeNameException;
 

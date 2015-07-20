@@ -39,7 +39,7 @@
     <lib-config.version>0.2.0</lib-config.version>
     <lib-cli.version>0.3.0</lib-cli.version>
     <lib-mongodb.version>0.3.0</lib-mongodb.version>
-    <lib-token.version>0.6.0</lib-token.version>
+    <lib-token.version>0.7.0-SNAPSHOT</lib-token.version>
     <lib-queries.version>0.7.0</lib-queries.version>
     <lib-ws.version>0.8.0</lib-ws.version>
     <lib-rabbitmq.version>0.6.0</lib-rabbitmq.version>

@@ -44,7 +44,8 @@ public class DefaultRefreshTokenService implements RefreshTokenService {
             refreshToken = refreshTokenFactory.createToken(
                     TokenInfo.newBuilder().setType(TokenType.REFRESH).setState(Long.toString(System.currentTimeMillis()))
                             .setClientId(context.getIssuerClientId()).setOneUseToken(true).setUserId(context.getPrincipal().getId())
-                            .build(), refreshTokenDurationInSeconds, userTag(context), accessTokenTag(accessToken)).getAccessToken();
+                            .setGroups(context.getPrincipal().getGroups()).build(), refreshTokenDurationInSeconds, userTag(context),
+                            accessTokenTag(accessToken)).getAccessToken();
         }
         return refreshToken;
     }

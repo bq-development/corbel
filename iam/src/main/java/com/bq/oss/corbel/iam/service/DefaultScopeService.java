@@ -14,6 +14,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.bq.oss.corbel.iam.model.Group;
+import com.bq.oss.corbel.iam.repository.GroupsRepository;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +42,7 @@ public class DefaultScopeService implements ScopeService {
     private static final int FIRST_PARAM_POSITION = 1;
 
     private final ScopeRepository scopeRepository;
+    private final GroupsRepository groupsRepository;
     private final AuthorizationRulesRepository authorizationRulesRepository;
     private final ScopeFillStrategy fillStrategy;
     private final String iamAudience;
@@ -47,9 +50,11 @@ public class DefaultScopeService implements ScopeService {
 
     private final EventsService eventsService;
 
-    public DefaultScopeService(ScopeRepository scopeRepository, AuthorizationRulesRepository authorizationRulesRepository,
-            ScopeFillStrategy fillStrategy, String iamAudience, Clock clock, EventsService eventsService) {
+    public DefaultScopeService(ScopeRepository scopeRepository, GroupsRepository groupsRepository,
+                               AuthorizationRulesRepository authorizationRulesRepository, ScopeFillStrategy fillStrategy,
+                               String iamAudience, Clock clock, EventsService eventsService) {
         this.scopeRepository = scopeRepository;
+        this.groupsRepository = groupsRepository;
         this.authorizationRulesRepository = authorizationRulesRepository;
         this.fillStrategy = fillStrategy;
         this.iamAudience = iamAudience;
@@ -57,9 +62,10 @@ public class DefaultScopeService implements ScopeService {
         this.eventsService = eventsService;
     }
 
-    public DefaultScopeService(ScopeRepository scopeRepository, AuthorizationRulesRepository authorizationRulesRepository,
-            ScopeFillStrategy fillStrategy, String iamAudience, EventsService eventsService) {
-        this(scopeRepository, authorizationRulesRepository, fillStrategy, iamAudience, Clock.systemDefaultZone(), eventsService);
+    public DefaultScopeService(ScopeRepository scopeRepository, GroupsRepository groupsRepository,
+                               AuthorizationRulesRepository authorizationRulesRepository, ScopeFillStrategy fillStrategy,
+                               String iamAudience, EventsService eventsService) {
+        this(scopeRepository, groupsRepository, authorizationRulesRepository, fillStrategy, iamAudience, Clock.systemDefaultZone(), eventsService);
     }
 
     @Override
@@ -94,6 +100,18 @@ public class DefaultScopeService implements ScopeService {
             }
         }
         return Sets.newHashSet(fetchedScopes);
+    }
+
+    @Override
+    public Set<String> getGroupScopes(Collection<String> groups) {
+        Set<String> scopes = new HashSet<>();
+        groups.stream().forEach(groupId -> {
+            Group group = groupsRepository.findOne(groupId);
+            if(group != null) {
+                scopes.addAll(group.getScopes());
+            }
+        });
+        return scopes;
     }
 
     private boolean scopeHasCustomParameters(Scope scope) {
@@ -213,8 +231,9 @@ public class DefaultScopeService implements ScopeService {
     }
 
     @Override
-    public Set<Scope> getAllowedScopes(Set<Scope> domainScopes, Set<Scope> clientScopes, Set<Scope> userScopes, boolean isCrossDomain,
-            boolean hasPrincipal) {
+    public Set<Scope> getAllowedScopes(Set<Scope> domainScopes, Set<Scope> clientScopes, Set<Scope> userScopes,
+                                       Set<Scope> groupScopes, boolean isCrossDomain, boolean hasPrincipal) {
+
         if (isCrossDomain) {
             return domainScopes;
         }
@@ -222,7 +241,7 @@ public class DefaultScopeService implements ScopeService {
         Set<Scope> requestedScopes;
 
         if (hasPrincipal) {
-            requestedScopes = Sets.union(userScopes, clientScopes);
+            requestedScopes = Sets.union(clientScopes, Sets.union(userScopes, groupScopes));
         } else {
             requestedScopes = clientScopes;
         }

@@ -24,19 +24,25 @@ public class ScopesAuthorizationRule implements AuthorizationRule {
 
     @Override
     public void process(AuthorizationRequestContext context) throws UnauthorizedException {
-        Set<Scope> requestedExpandScopes;
-        Set<String> requestedScopes = context.getRequestedScopes();
 
-        Set<Scope> domainScopes = scopeService.expandScopes(context.getRequestedDomain().getScopes());
-        Set<Scope> clientScopes = !context.isCrossDomain() ? scopeService.expandScopes(context.getIssuerClient().getScopes()) : null;
-        Set<Scope> userScopes = !context.isCrossDomain() && context.hasPrincipal() ? scopeService.expandScopes(context.getPrincipal()
-                .getScopes()) : null;
-        Set<Scope> allowedScopes = scopeService.getAllowedScopes(domainScopes, clientScopes, userScopes, context.isCrossDomain(),
-                context.hasPrincipal());
+        Set<Scope> requestedExpandScopes, domainScopes, clientScopes = null, userScopes = null, groupScopes = null;
+
+        domainScopes = scopeService.expandScopes(context.getRequestedDomain().getScopes());
+
+        if(!context.isCrossDomain()) {
+            clientScopes = scopeService.expandScopes(context.getIssuerClient().getScopes());
+            if(context.hasPrincipal()) {
+                userScopes = scopeService.expandScopes(context.getPrincipal().getScopes());
+                groupScopes = scopeService.expandScopes(scopeService.getGroupScopes(context.getPrincipal().getGroups()));
+            }
+        }
+
+        Set<Scope> allowedScopes = scopeService.getAllowedScopes(domainScopes, clientScopes, userScopes, groupScopes,
+                                    context.isCrossDomain(), context.hasPrincipal());
 
 
-        if (!requestedScopes.isEmpty()) {
-            requestedExpandScopes = scopeService.expandScopes(requestedScopes);
+        if (!context.getRequestedScopes().isEmpty()) {
+            requestedExpandScopes = scopeService.expandScopes(context.getRequestedScopes());
             checkRequestedScopes(requestedExpandScopes, allowedScopes);
         } else {
             requestedExpandScopes = allowedScopes;

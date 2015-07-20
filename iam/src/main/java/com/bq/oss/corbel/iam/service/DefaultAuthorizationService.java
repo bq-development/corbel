@@ -148,7 +148,7 @@ public class DefaultAuthorizationService implements AuthorizationService {
         String oAuthService = context.getOAuthService();
         Provider provider = authorizationProviderFactory.getProvider(domain, oAuthService);
 
-        Optional<Identity> identity = Optional.empty();
+        Optional<Identity> identity;
         try {
             identity = Optional.ofNullable(provider.getIdentity(OauthParams, oAuthService, domain.getId()));
         } catch (MissingOAuthParamsException | UnauthorizedException | OauthServerConnectionException e) {
@@ -217,8 +217,8 @@ public class DefaultAuthorizationService implements AuthorizationService {
         Builder tokenBuilder = TokenInfo.newBuilder().setType(TokenType.TOKEN).setClientId(context.getIssuerClient().getId())
                 .setState(Long.toString(context.getAuthorizationExpiration())).setDomainId(context.getRequestedDomain().getId());
         Optional.ofNullable(context.getDeviceId()).ifPresent(deviceId -> tokenBuilder.setDeviceId(deviceId));
-        TokenInfo tokenInfo = context.hasPrincipal() ? tokenBuilder.setUserId(context.getPrincipal().getId()).build() : tokenBuilder
-                .build();
+        TokenInfo tokenInfo = context.hasPrincipal() ? tokenBuilder.setUserId(context.getPrincipal().getId())
+                .setGroups(context.getPrincipal().getGroups()).build() : tokenBuilder.build();
         return tokenFactory.createToken(tokenInfo, context.getAuthorizationExpiration()).getAccessToken();
     }
 
