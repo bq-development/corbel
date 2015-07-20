@@ -30,7 +30,7 @@ public class User extends TraceableEntity implements HasScopes {
     private Map<String, Object> properties = new HashMap<>();
     private String salt;
     private String password;
-    private List<String> groups;
+    private Set<String> groups = new HashSet<>();
 
     public User() {
         super();
@@ -234,19 +234,21 @@ public class User extends TraceableEntity implements HasScopes {
         ModelValidator.validateObject(this);
     }
 
-    public List<String> getGroups() {
+    public Set<String> getGroups() {
         return groups;
     }
 
-    public void setGroups(List<String> groups) {
+    public void setGroups(Set<String> groups) {
         this.groups = groups;
     }
 
-    public void addGroups(List<String> groups) {
-        if(this.groups == null) {
-            this.groups = new ArrayList<>();
-        }
+    public void addGroups(Set<String> groups) {
         this.groups.addAll(groups);
+    }
+
+    public void deleteGroup(String group) {
+        this.groups.remove(group);
+
     }
 
     @Override

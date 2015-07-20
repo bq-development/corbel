@@ -337,7 +337,7 @@ import java.util.stream.Collectors;
     @PUT
     @Path("/{id}/groups")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response addGroupToUser(@PathParam("id") String id, List<String> groups, @Auth AuthorizationInfo authorizationInfo) {
+    public Response addGroupsToUser(@PathParam("id") String id, Set<String> groups, @Auth AuthorizationInfo authorizationInfo) {
         User user = getUserResolvingMeAndUserDomainVerifying(id, authorizationInfo);
         Optional<Domain> domain = domainService.getDomain(authorizationInfo.getDomainId());
 
@@ -346,6 +346,22 @@ import java.util.stream.Collectors;
         }
 
         user.addGroups(groups);
+        userService.update(user);
+        return Response.noContent().build();
+    }
+
+    @DELETE
+    @Path("/{id}/groups/{groupId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response deleteGroupsToUser(@PathParam("id") String id, @PathParam("groupId") String groupId, @Auth AuthorizationInfo authorizationInfo) {
+        User user = getUserResolvingMeAndUserDomainVerifying(id, authorizationInfo);
+        Optional<Domain> domain = domainService.getDomain(authorizationInfo.getDomainId());
+
+        if (!domain.isPresent()) {
+            return IamErrorResponseFactory.getInstance().notFound();
+        }
+
+        user.deleteGroup(groupId);
         userService.update(user);
         return Response.noContent().build();
     }

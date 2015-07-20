@@ -832,14 +832,35 @@ public class UserResourceTest extends UserResourceTestBase {
     @Test
     public void addGroupToUser() {
         User userWithGroup = createTestUser();
-        userWithGroup.addGroups(Arrays.asList("groupId"));
+        Set<String> groups = new HashSet<>();
+        groups.add("groupId");
+        userWithGroup.addGroups(groups);
 
         when(userServiceMock.findById(TEST_USER_ID)).thenReturn(createTestUser());
 
         Response response = RULE.client().target("/v1.0/user/"+TEST_USER_ID+"/groups").request(MediaType.APPLICATION_JSON)
-                .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).put(Entity.json(Arrays.asList("groupId")), Response.class);
+                .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).put(Entity.json(groups), Response.class);
 
         verify(userServiceMock).update(userWithGroup);
+        assertThat(response.getStatus()).isEqualTo(204);
+    }
+
+    @Test
+    public void deleteGroupToUser() {
+        User userWithGroup = createTestUser();
+        Set<String> groups = new HashSet<>();
+        groups.add("groupId");
+        userWithGroup.addGroups(groups);
+
+        when(userServiceMock.findById(TEST_USER_ID)).thenReturn(userWithGroup);
+
+        Response response = RULE.client().target("/v1.0/user/"+TEST_USER_ID+"/groups/groupId").request(MediaType.APPLICATION_JSON)
+                .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).delete(Response.class);
+
+        User userWithGroupsEmpty = createTestUser();
+        userWithGroupsEmpty.setGroups(new HashSet<>());
+
+        verify(userServiceMock).update(userWithGroupsEmpty);
         assertThat(response.getStatus()).isEqualTo(204);
     }
 
