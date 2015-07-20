@@ -30,6 +30,7 @@ public class User extends TraceableEntity implements HasScopes {
     private Map<String, Object> properties = new HashMap<>();
     private String salt;
     private String password;
+    private List<String> groups;
 
     public User() {
         super();
@@ -49,6 +50,7 @@ public class User extends TraceableEntity implements HasScopes {
         this.properties = other.properties;
         this.salt = other.salt;
         this.password = other.password;
+        this.groups = other.groups;
     }
 
     public String getPassword() {
@@ -213,6 +215,9 @@ public class User extends TraceableEntity implements HasScopes {
         if (updateUser.getScopes() != null && !updateUser.getScopes().isEmpty()) {
             setScopes(new HashSet<>(updateUser.getScopes()));
         }
+        if (updateUser.getGroups() != null && !updateUser.getGroups().isEmpty()) {
+            setGroups(updateUser.getGroups());
+        }
         if (updateUser.getProperties() != null && !updateUser.getProperties().isEmpty()) {
             for (Map.Entry<String, Object> entry : updateUser.getProperties().entrySet()) {
                 if (entry.getValue() == null) {
@@ -229,50 +234,42 @@ public class User extends TraceableEntity implements HasScopes {
         ModelValidator.validateObject(this);
     }
 
+    public List<String> getGroups() {
+        return groups;
+    }
+
+    public void setGroups(List<String> groups) {
+        this.groups = groups;
+    }
+
+    public void addGroups(List<String> groups) {
+        if(this.groups == null) {
+            this.groups = new ArrayList<>();
+        }
+        this.groups.addAll(groups);
+    }
+
     @Override
     public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (!(o instanceof User)) {
-            return false;
-        }
-        if (!super.equals(o)) {
-            return false;
-        }
+        if (this == o) return true;
+        if (!(o instanceof User)) return false;
+        if (!super.equals(o)) return false;
 
         User user = (User) o;
 
-        if (country != null ? !country.equals(user.country) : user.country != null) {
-            return false;
-        }
-        if (domain != null ? !domain.equals(user.domain) : user.domain != null) {
-            return false;
-        }
-        if (email != null ? !email.equals(user.email) : user.email != null) {
-            return false;
-        }
-        if (firstName != null ? !firstName.equals(user.firstName) : user.firstName != null) {
-            return false;
-        }
-        if (lastName != null ? !lastName.equals(user.lastName) : user.lastName != null) {
-            return false;
-        }
-        if (phoneNumber != null ? !phoneNumber.equals(user.phoneNumber) : user.phoneNumber != null) {
-            return false;
-        }
-        if (profileUrl != null ? !profileUrl.equals(user.profileUrl) : user.profileUrl != null) {
-            return false;
-        }
-        if (properties != null ? !properties.equals(user.properties) : user.properties != null) {
-            return false;
-        }
-        if (scopes != null ? !scopes.equals(user.scopes) : user.scopes != null) {
-            return false;
-        }
-        if (username != null ? !username.equals(user.username) : user.username != null) {
-            return false;
-        }
+        if (country != null ? !country.equals(user.country) : user.country != null) return false;
+        if (domain != null ? !domain.equals(user.domain) : user.domain != null) return false;
+        if (email != null ? !email.equals(user.email) : user.email != null) return false;
+        if (firstName != null ? !firstName.equals(user.firstName) : user.firstName != null) return false;
+        if (groups != null ? !groups.equals(user.groups) : user.groups != null) return false;
+        if (lastName != null ? !lastName.equals(user.lastName) : user.lastName != null) return false;
+        if (password != null ? !password.equals(user.password) : user.password != null) return false;
+        if (phoneNumber != null ? !phoneNumber.equals(user.phoneNumber) : user.phoneNumber != null) return false;
+        if (profileUrl != null ? !profileUrl.equals(user.profileUrl) : user.profileUrl != null) return false;
+        if (properties != null ? !properties.equals(user.properties) : user.properties != null) return false;
+        if (salt != null ? !salt.equals(user.salt) : user.salt != null) return false;
+        if (scopes != null ? !scopes.equals(user.scopes) : user.scopes != null) return false;
+        if (username != null ? !username.equals(user.username) : user.username != null) return false;
 
         return true;
     }
@@ -290,6 +287,9 @@ public class User extends TraceableEntity implements HasScopes {
         result = 31 * result + (country != null ? country.hashCode() : 0);
         result = 31 * result + (scopes != null ? scopes.hashCode() : 0);
         result = 31 * result + (properties != null ? properties.hashCode() : 0);
+        result = 31 * result + (salt != null ? salt.hashCode() : 0);
+        result = 31 * result + (password != null ? password.hashCode() : 0);
+        result = 31 * result + (groups != null ? groups.hashCode() : 0);
         return result;
     }
 }

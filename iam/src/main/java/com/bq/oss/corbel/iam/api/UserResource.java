@@ -1,51 +1,9 @@
 package com.bq.oss.corbel.iam.api;
 
-import io.dropwizard.auth.Auth;
-
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.time.Clock;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import javax.validation.Valid;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.UriInfo;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.dao.DuplicateKeyException;
-
 import com.bq.oss.corbel.iam.exception.DuplicatedOauthServiceIdentityException;
 import com.bq.oss.corbel.iam.exception.IdentityAlreadyExistsException;
 import com.bq.oss.corbel.iam.exception.UserProfileConfigurationException;
-import com.bq.oss.corbel.iam.model.Device;
-import com.bq.oss.corbel.iam.model.Domain;
-import com.bq.oss.corbel.iam.model.Entity;
-import com.bq.oss.corbel.iam.model.Identity;
-import com.bq.oss.corbel.iam.model.TraceableEntity;
-import com.bq.oss.corbel.iam.model.User;
-import com.bq.oss.corbel.iam.model.UserWithIdentity;
+import com.bq.oss.corbel.iam.model.*;
 import com.bq.oss.corbel.iam.repository.CreateUserException;
 import com.bq.oss.corbel.iam.service.DeviceService;
 import com.bq.oss.corbel.iam.service.DomainService;
@@ -54,15 +12,24 @@ import com.bq.oss.corbel.iam.service.UserService;
 import com.bq.oss.corbel.iam.utils.Message;
 import com.bq.oss.lib.queries.builder.ResourceQueryBuilder;
 import com.bq.oss.lib.queries.jaxrs.QueryParameters;
-import com.bq.oss.lib.queries.request.Aggregation;
-import com.bq.oss.lib.queries.request.AggregationOperator;
-import com.bq.oss.lib.queries.request.AggregationResult;
-import com.bq.oss.lib.queries.request.Pagination;
-import com.bq.oss.lib.queries.request.ResourceQuery;
-import com.bq.oss.lib.queries.request.Sort;
+import com.bq.oss.lib.queries.request.*;
 import com.bq.oss.lib.ws.annotation.Rest;
 import com.bq.oss.lib.ws.auth.AuthorizationInfo;
 import com.bq.oss.lib.ws.model.Error;
+import io.dropwizard.auth.Auth;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DuplicateKeyException;
+
+import javax.validation.Valid;
+import javax.ws.rs.*;
+import javax.ws.rs.core.*;
+import javax.ws.rs.core.Response.Status;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.time.Clock;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Alexander De Leon
@@ -153,6 +120,7 @@ import com.bq.oss.lib.ws.model.Error;
     public Response updateUser(@PathParam("id") String userId, User userData, @Auth AuthorizationInfo authorizationInfo) {
         if (ME.equals(userId)) {
             userData.setScopes(null);
+            userData.setGroups(null);
         }
 
         User user = getUserResolvingMeAndUserDomainVerifying(userId, authorizationInfo);
@@ -364,6 +332,22 @@ import com.bq.oss.lib.ws.model.Error;
         } catch (UserProfileConfigurationException e) {
             return IamErrorResponseFactory.getInstance().serverError(new Error("misconfiguration", e.getMessage()));
         }
+    }
+
+    @PUT
+    @Path("/{id}/groups")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response addGroupToUser(@PathParam("id") String id, List<String> groups, @Auth AuthorizationInfo authorizationInfo) {
+        User user = getUserResolvingMeAndUserDomainVerifying(id, authorizationInfo);
+        Optional<Domain> domain = domainService.getDomain(authorizationInfo.getDomainId());
+
+        if (!domain.isPresent()) {
+            return IamErrorResponseFactory.getInstance().notFound();
+        }
+
+        user.addGroups(groups);
+        userService.update(user);
+        return Response.noContent().build();
     }
 
     private <T extends Entity> T ensureNoId(T entity) {
