@@ -5,10 +5,7 @@ import com.bq.oss.corbel.iam.service.UserService;
 import com.bq.oss.lib.ws.auth.AuthorizationInfo;
 import io.dropwizard.auth.Auth;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.Optional;
@@ -29,6 +26,13 @@ public class EmailResource {
         return getUserInDomainByEmail(userEmail, authorizationInfo).map(user ->
                         Response.ok(user.getUserWithOnlyId()).build()
         ).orElseGet(() -> IamErrorResponseFactory.getInstance().notFound());
+    }
+
+    @HEAD
+    @Path("/{email}")
+    public Response existsUserByEmailInDomain(@PathParam("email") String email, @Auth AuthorizationInfo authorizationInfo) {
+        String domain = authorizationInfo.getDomainId();
+        return userService.existsByEmailAndDomain(email, domain) ? Response.ok().build() : IamErrorResponseFactory.getInstance().notFound();
     }
 
     private Optional<User> getUserInDomainByEmail(String userEmail, AuthorizationInfo authorizationInfo) {

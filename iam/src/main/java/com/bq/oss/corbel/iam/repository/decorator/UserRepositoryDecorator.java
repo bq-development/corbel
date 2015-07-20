@@ -1,16 +1,15 @@
 package com.bq.oss.corbel.iam.repository.decorator;
 
-import java.util.List;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-
 import com.bq.oss.corbel.iam.model.User;
 import com.bq.oss.corbel.iam.repository.UserRepository;
 import com.bq.oss.lib.queries.request.AggregationResult;
 import com.bq.oss.lib.queries.request.Pagination;
 import com.bq.oss.lib.queries.request.ResourceQuery;
 import com.bq.oss.lib.queries.request.Sort;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+import java.util.List;
 
 /**
  * @author Francisco Sanchez
@@ -138,6 +137,11 @@ public class UserRepositoryDecorator implements UserRepository {
     @Override
     public boolean existsByUsernameAndDomain(String username, String domainId) {
         return decoratedUserRepository.existsByUsernameAndDomain(username, domainId);
+    }
+
+    @Override
+    public boolean existsByEmailAndDomain(String email, String domainId) {
+        return decoratedUserRepository.existsByEmailAndDomain(email, domainId);
     }
 
     @Override
