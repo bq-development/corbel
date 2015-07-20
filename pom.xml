@@ -41,7 +41,7 @@
     <lib-mongodb.version>0.3.0</lib-mongodb.version>
     <lib-token.version>0.5.0</lib-token.version>
     <lib-queries.version>0.7.0</lib-queries.version>
-    <lib-ws.version>0.8.0-SNAPSHOT</lib-ws.version>
+    <lib-ws.version>0.7.0</lib-ws.version>
     <lib-rabbitmq.version>0.6.0-SNAPSHOT</lib-rabbitmq.version>
     <spring.version>4.1.7.RELEASE</spring.version>
     <dropwizard.version>0.8.1</dropwizard.version>
