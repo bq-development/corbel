@@ -5,11 +5,10 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.bq.oss.corbel.iam.repository.GroupsRepository;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -39,6 +38,7 @@ import com.bq.oss.corbel.iam.utils.Message;
         rule = new ScopesAuthorizationRule(scopeServiceMock);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void testScopesAllowed() throws Exception {
         Domain domain = mock(Domain.class);
@@ -60,14 +60,15 @@ import com.bq.oss.corbel.iam.utils.Message;
         when(scopeServiceMock.expandScopes(clientScopesIds)).thenReturn(clientScopes);
         when(scopeServiceMock.expandScopes(userScopesIds)).thenReturn(userScopes);
 
-        when(context.getRequestedScopes()).thenReturn(new HashSet<>(Arrays.asList()));
+        when(context.getRequestedScopes()).thenReturn(new HashSet<>(Collections.emptyList()));
 
-        when(scopeServiceMock.getAllowedScopes(domainScopes, clientScopes, userScopes,
-                groupsScopes, context.isCrossDomain(), context.hasPrincipal())).thenReturn(userScopes);
+        when(scopeServiceMock.getAllowedScopes(domainScopes, clientScopes, userScopes, groupsScopes, context.isCrossDomain(),
+                context.hasPrincipal())).thenReturn(userScopes);
 
         rule.process(context);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void testScopesNotAllowed() throws Exception {
         try {
@@ -87,20 +88,21 @@ import com.bq.oss.corbel.iam.utils.Message;
             Set<Scope> groupsScopes = mock(Set.class);
 
 
-            when(context.getRequestedScopes()).thenReturn(new HashSet<>(Arrays.asList("SCOPE_4")));
+            when(context.getRequestedScopes()).thenReturn(new HashSet<>(Collections.singletonList("SCOPE_4")));
 
-            when(scopeServiceMock.getAllowedScopes(domainScopes, clientScopes, userScopes, groupsScopes,
-                    context.isCrossDomain(), context.hasPrincipal())).thenReturn(userScopes);
+            when(scopeServiceMock.getAllowedScopes(domainScopes, clientScopes, userScopes, groupsScopes, context.isCrossDomain(),
+                    context.hasPrincipal())).thenReturn(userScopes);
 
             Scope scope = mock(Scope.class);
             when(scope.getIdWithParameters()).thenReturn("SCOPE_A");
 
-            Set requestedScope = new HashSet<>(Arrays.asList(scope));
+            Set requestedScope = new HashSet<>(Collections.singletonList(scope));
             when(scopeServiceMock.expandScopes(eq(context.getRequestedScopes()))).thenReturn(requestedScope);
             rule.process(context);
             throw new Exception();
         } catch (UnauthorizedException e) {
-            assertThat(e.getMessage()).isEqualTo(Message.REQUESTED_SCOPES_UNAUTHORIZED.getMessage(new HashSet<>(Arrays.asList("SCOPE_A"))));
+            assertThat(e.getMessage())
+                    .isEqualTo(Message.REQUESTED_SCOPES_UNAUTHORIZED.getMessage(new HashSet<>(Collections.singletonList("SCOPE_A"))));
         }
     }
 

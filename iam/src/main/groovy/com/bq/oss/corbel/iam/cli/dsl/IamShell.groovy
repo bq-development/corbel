@@ -1,19 +1,17 @@
 package com.bq.oss.corbel.iam.cli.dsl
 
-import java.util.regex.Pattern
-
+import com.bq.oss.corbel.iam.model.*
+import com.bq.oss.corbel.iam.repository.*
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import io.corbel.lib.cli.console.Description
+import io.corbel.lib.cli.console.Shell
 import net.oauth.jsontoken.JsonToken
 import net.oauth.jsontoken.crypto.HmacSHA256Signer
-
 import org.bouncycastle.util.encoders.Base64
 import org.joda.time.Instant
 
-import com.bq.oss.corbel.iam.model.*
-import com.bq.oss.corbel.iam.repository.*
-import io.corbel.lib.cli.console.Description
-import io.corbel.lib.cli.console.Shell
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
+import java.util.regex.Pattern
 
 /**
  * @author Alexander De Leon
@@ -28,14 +26,17 @@ class IamShell {
     DomainRepository domainRepository
     IdentityRepository identityRepository
     String iamUri
+    GroupRepository groupRepository
 
-    public IamShell(ClientRepository clientRepository, ScopeRepository scopeRepository, UserRepository userRepository, DomainRepository domainRepository, String iamUri, IdentityRepository identityRepository) {
+    public IamShell(ClientRepository clientRepository, ScopeRepository scopeRepository, UserRepository userRepository,
+                    DomainRepository domainRepository, String iamUri, IdentityRepository identityRepository, GroupRepository groupRepository) {
         this.clientRepository = clientRepository
         this.scopeRepository = scopeRepository
         this.userRepository = userRepository
         this.domainRepository = domainRepository
         this.iamUri = iamUri
         this.identityRepository = identityRepository
+        this.groupRepository = groupRepository
     }
 
     @Description("Creates a new domain on the DB. The input parameter is a map containing the domain data.")
@@ -96,7 +97,7 @@ class IamShell {
         }
         assert pattern: "uri with value '${uri}' is wrong"
 
-        def rules =  new HashSet()
+        def rules = new HashSet()
         rules.add(element)
         def jsonParameters = null
         if (parameters) {
@@ -214,6 +215,29 @@ class IamShell {
         identity.setOauthService(identityFields.oauthService)
         identity.setOauthId(identityFields.oauthId)
         identityRepository.save(identity)
+    }
+
+    @Description('Create a new users group')
+    def createGroup(groupFields) {
+        assert groupFields.name: 'name is required'
+        assert groupFields.domain: 'domain is required'
+
+        groupRepository.save(new Group(null, groupFields.name, groupFields.domain, groupFields.scopes))
+    }
+
+    @Description('Remove a users group')
+    def removeGroup(String id) {
+        groupRepository.delete(id)
+    }
+
+    @Description('Add scopes to a group')
+    def addScopeToGroup(String id, String... scopes) {
+        groupRepository.addScopes(id, scopes)
+    }
+
+    @Description('Remove scopes to a group')
+    def removeScopeFromGroup(String id, String... scopes) {
+        groupRepository.removeScopes(id, scopes)
     }
 
     def scope(String id) {

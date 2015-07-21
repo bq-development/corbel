@@ -11,15 +11,18 @@ import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-import com.bq.oss.corbel.iam.model.Group;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.Matchers;
+import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.runners.MockitoJUnitRunner;
 
 import com.bq.oss.corbel.iam.exception.ScopeNameException;
+import com.bq.oss.corbel.iam.model.Group;
 import com.bq.oss.corbel.iam.model.Scope;
-import com.bq.oss.corbel.iam.repository.GroupsRepository;
+import com.bq.oss.corbel.iam.repository.GroupRepository;
 import com.bq.oss.corbel.iam.repository.ScopeRepository;
 import com.bq.oss.corbel.iam.scope.ScopeFillStrategy;
 import io.corbel.lib.ws.auth.repository.AuthorizationRulesRepository;
@@ -30,27 +33,21 @@ import com.google.gson.JsonParser;
  * @author Alexander De Leon
  * 
  */
-public class DefaultScopeServiceTest {
+@RunWith(MockitoJUnitRunner.class) public class DefaultScopeServiceTest {
 
-    private final Instant now = Instant.now();
     private static final JsonParser JSON_PARSER = new JsonParser();
-
     private static final long TEST_TOKEN_EXPIRATION_TIME = System.currentTimeMillis() + 36000;
     private static final String TEST_TOKEN = "token";
     private static final String MODULE_A = "moduleA";
-
-    private static final Set<JsonObject> RULES_1 = new HashSet<>(Arrays.asList(new JsonObject()));
+    private static final Set<JsonObject> RULES_1 = new HashSet<>(Collections.singletonList(new JsonObject()));
     private static final String MODULE_B = "moduleB";
-    private static final Set<JsonObject> RULES_2 = new HashSet<>(Arrays.asList(new JsonObject()));
+    private static final Set<JsonObject> RULES_2 = new HashSet<>(Collections.singletonList(new JsonObject()));
     private static final String TEST_USER_ID = "the_user";
     private static final String TEST_CLIENT_ID = "the_client";
-
     private static final String TEST_SCOPE_1 = "test_scope1";
     private static final String TEST_SCOPE_2 = "test_scope2";
     private static final String TEST_COMPOSITE_SCOPE = "test_composite_scope";
-
     private static final String IAM_AUDIENCE = "iamAudience";
-
     private static final String SCOPE_1_CUSTOM_PARAM_VALUE = "custom";
     private static final String TEST_SCOPE_1_WITH_PARAMS = "test_scope1;testId=" + SCOPE_1_CUSTOM_PARAM_VALUE;
     private static final String TEST_SCOPE_1_WITH_PARAMS_AND_ERRORS = "test_scope1;error;testId=" + SCOPE_1_CUSTOM_PARAM_VALUE;
@@ -60,24 +57,19 @@ public class DefaultScopeServiceTest {
     private static final JsonObject RULE_WITH_PARAMS = JSON_PARSER.parse("{\"uri\" : \"{{testId}}\"}").getAsJsonObject();
     private static final JsonObject RULE_PARAMS = JSON_PARSER.parse("{\"testId\" : \"custom\"}").getAsJsonObject();
     private static final JsonObject RULE_WITH_PARAMS_FILLED = JSON_PARSER.parse("{\"testId\" : \"custom\"}").getAsJsonObject();
-    private static final Set<JsonObject> RULES_3 = new HashSet<>(Arrays.asList(RULE_WITH_PARAMS));
-
+    private static final Set<JsonObject> RULES_3 = new HashSet<>(Collections.singletonList(RULE_WITH_PARAMS));
+    private final Instant now = Instant.now();
     private DefaultScopeService service;
-    private ScopeRepository scopeRepositoryMock;
-    private GroupsRepository groupsRepositoryMock;
-    private AuthorizationRulesRepository authorizationRulesRepositoryMock;
-    private ScopeFillStrategy fillStrategyMock;
 
-    private EventsService eventsServiceMock;
+    @Mock private ScopeRepository scopeRepositoryMock;
+    @Mock private GroupRepository groupRepositoryMock;
+    @Mock private AuthorizationRulesRepository authorizationRulesRepositoryMock;
+    @Mock private ScopeFillStrategy fillStrategyMock;
+    @Mock private EventsService eventsServiceMock;
 
     @Before
     public void setup() {
-        scopeRepositoryMock = mock(ScopeRepository.class);
-        groupsRepositoryMock = mock(GroupsRepository.class);
-        authorizationRulesRepositoryMock = mock(AuthorizationRulesRepository.class);
-        fillStrategyMock = mock(ScopeFillStrategy.class);
-        eventsServiceMock = mock(EventsService.class);
-        service = new DefaultScopeService(scopeRepositoryMock, groupsRepositoryMock, authorizationRulesRepositoryMock, fillStrategyMock,
+        service = new DefaultScopeService(scopeRepositoryMock, groupRepositoryMock, authorizationRulesRepositoryMock, fillStrategyMock,
                 IAM_AUDIENCE, Clock.fixed(now, ZoneId.systemDefault()), eventsServiceMock);
     }
 
@@ -180,8 +172,8 @@ public class DefaultScopeServiceTest {
 
         when(authorizationRulesRepositoryMock.getKeyForAuthorizationRules(TEST_TOKEN, MODULE_A)).thenReturn(key(TEST_TOKEN, MODULE_A));
         when(authorizationRulesRepositoryMock.getKeyForAuthorizationRules(TEST_TOKEN, MODULE_B)).thenReturn(key(TEST_TOKEN, MODULE_B));
-        when(authorizationRulesRepositoryMock.getKeyForAuthorizationRules(TEST_TOKEN, IAM_AUDIENCE)).thenReturn(
-                key(TEST_TOKEN, IAM_AUDIENCE));
+        when(authorizationRulesRepositoryMock.getKeyForAuthorizationRules(TEST_TOKEN, IAM_AUDIENCE))
+                .thenReturn(key(TEST_TOKEN, IAM_AUDIENCE));
         when(authorizationRulesRepositoryMock.getTimeToExpire(key(TEST_TOKEN, IAM_AUDIENCE))).thenReturn(TEST_TOKEN_EXPIRATION_TIME);
 
         when(authorizationRulesRepositoryMock.existsRules(key(TEST_TOKEN, MODULE_A))).thenReturn(true);
@@ -205,12 +197,12 @@ public class DefaultScopeServiceTest {
     @SuppressWarnings("unchecked")
     @Test
     public void testComposedScopes() {
-        Set<String> requestScopes = new HashSet<>(Arrays.asList(TEST_COMPOSITE_SCOPE));
+        Set<String> requestScopes = new HashSet<>(Collections.singletonList(TEST_COMPOSITE_SCOPE));
 
         Scope scope1 = new Scope(TEST_SCOPE_1, null, IAM_AUDIENCE, null, RULES_3, null);
         Scope scope2 = new Scope(TEST_SCOPE_2, null, IAM_AUDIENCE, null, RULES_3, null);
-        HashSet<String> scopesFromCompositScopes = new HashSet<>(Arrays.asList(TEST_COMPOSITE_SCOPE, TEST_SCOPE_1, TEST_SCOPE_2,
-                TEST_COMPOSITE_SCOPE));
+        HashSet<String> scopesFromCompositScopes = new HashSet<>(
+                Arrays.asList(TEST_COMPOSITE_SCOPE, TEST_SCOPE_1, TEST_SCOPE_2, TEST_COMPOSITE_SCOPE));
         Scope compositeScope = new Scope(TEST_COMPOSITE_SCOPE, Scope.COMPOSITE_SCOPE_TYPE, IAM_AUDIENCE, scopesFromCompositScopes, null,
                 null);
 
@@ -232,11 +224,11 @@ public class DefaultScopeServiceTest {
 
         List<String> groups = Arrays.asList("Admins", "Users");
 
-        Group administrators = new Group("Admins", new HashSet<>(Arrays.asList(TEST_SCOPE_1, TEST_SCOPE_2)));
-        Group users = new Group("Users", new HashSet<>(Collections.singletonList(TEST_COMPOSITE_SCOPE)));
+        Group administrators = new Group("Admins", "Admins", "MyDomain", new HashSet<>(Arrays.asList(TEST_SCOPE_1, TEST_SCOPE_2)));
+        Group users = new Group("Admins", "Users", "MyDomain", new HashSet<>(Collections.singletonList(TEST_COMPOSITE_SCOPE)));
 
-        when(groupsRepositoryMock.findOne(Mockito.eq("Admins"))).thenReturn(administrators);
-        when(groupsRepositoryMock.findOne(Mockito.eq("Users"))).thenReturn(users);
+        when(groupRepositoryMock.findOne(Mockito.eq("Admins"))).thenReturn(administrators);
+        when(groupRepositoryMock.findOne(Mockito.eq("Users"))).thenReturn(users);
 
         Set<String> scopes = service.getGroupScopes(groups);
 
@@ -251,7 +243,7 @@ public class DefaultScopeServiceTest {
     public void testScopeWithCustomParameters() {
         Scope scope1 = new Scope(TEST_SCOPE_1, null, IAM_AUDIENCE, null, RULES_3, RULE_PARAMS);
 
-        Set<String> requestScopes = new HashSet<>(Arrays.asList(TEST_SCOPE_1_WITH_PARAMS));
+        Set<String> requestScopes = new HashSet<>(Collections.singletonList(TEST_SCOPE_1_WITH_PARAMS));
         when(scopeRepositoryMock.findOne(Mockito.eq(TEST_SCOPE_1))).thenReturn(scope1);
         doAnswer(returnsFirstArg()).when(fillStrategyMock).fillScope(Matchers.<Scope>any(), anyMap());
         Set<Scope> scopes = service.getScopes(requestScopes);
@@ -263,7 +255,7 @@ public class DefaultScopeServiceTest {
     public void testScopeWithErrorsInCustomParameters() {
         Scope scope1 = new Scope(TEST_SCOPE_1, null, IAM_AUDIENCE, null, RULES_3, RULE_PARAMS);
 
-        Set<String> requestScopes = new HashSet<>(Arrays.asList(TEST_SCOPE_1_WITH_PARAMS_AND_ERRORS));
+        Set<String> requestScopes = new HashSet<>(Collections.singletonList(TEST_SCOPE_1_WITH_PARAMS_AND_ERRORS));
         when(scopeRepositoryMock.findOne(Mockito.eq(TEST_SCOPE_1))).thenReturn(scope1);
         doAnswer(returnsFirstArg()).when(fillStrategyMock).fillScope(Matchers.<Scope>any(), anyMap());
         Set<Scope> scopes = service.getScopes(requestScopes);
@@ -275,7 +267,7 @@ public class DefaultScopeServiceTest {
     public void testScopeWithoutCustomParametersDefined() {
         Scope scope1 = new Scope(TEST_SCOPE_1, null, IAM_AUDIENCE, null, RULES_3, RULE_PARAMS);
 
-        Set<String> requestScopes = new HashSet<>(Arrays.asList(TEST_SCOPE_1_WITHOUT_PARAMS));
+        Set<String> requestScopes = new HashSet<>(Collections.singletonList(TEST_SCOPE_1_WITHOUT_PARAMS));
         when(scopeRepositoryMock.findOne(Mockito.eq(TEST_SCOPE_1))).thenReturn(scope1);
         doAnswer(returnsFirstArg()).when(fillStrategyMock).fillScope(Matchers.<Scope>any(), anyMap());
         Set<Scope> scopes = service.getScopes(requestScopes);
@@ -287,7 +279,7 @@ public class DefaultScopeServiceTest {
     public void testScopeWithNotExistCustomParameters() {
         Scope scope1 = new Scope(TEST_SCOPE_1, null, IAM_AUDIENCE, null, RULES_3, RULE_PARAMS);
 
-        Set<String> requestScopes = new HashSet<>(Arrays.asList(TEST_SCOPE_1_WITH_NOT_EXIST_PARAMS));
+        Set<String> requestScopes = new HashSet<>(Collections.singletonList(TEST_SCOPE_1_WITH_NOT_EXIST_PARAMS));
         when(scopeRepositoryMock.findOne(Mockito.eq(TEST_SCOPE_1))).thenReturn(scope1);
         doAnswer(returnsFirstArg()).when(fillStrategyMock).fillScope(Matchers.<Scope>any(), anyMap());
         Set<Scope> scopes = service.getScopes(requestScopes);
@@ -299,7 +291,7 @@ public class DefaultScopeServiceTest {
     public void testScopeWithWrongCustomParameters() {
         Scope scope1 = new Scope(TEST_SCOPE_1, null, IAM_AUDIENCE, null, RULES_3, RULE_PARAMS);
 
-        Set<String> requestScopes = new HashSet<>(Arrays.asList(TEST_SCOPE_1_WITH_WRONG_PARAMS));
+        Set<String> requestScopes = new HashSet<>(Collections.singletonList(TEST_SCOPE_1_WITH_WRONG_PARAMS));
         when(scopeRepositoryMock.findOne(Mockito.eq(TEST_SCOPE_1))).thenReturn(scope1);
         doAnswer(returnsFirstArg()).when(fillStrategyMock).fillScope(Matchers.<Scope>any(), anyMap());
 

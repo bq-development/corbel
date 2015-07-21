@@ -1,5 +1,29 @@
 package com.bq.oss.corbel.iam.api;
 
+import static org.fest.assertions.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.*;
+
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.time.Clock;
+import java.util.*;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
+import org.glassfish.jersey.client.ClientProperties;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
+
 import com.bq.oss.corbel.iam.exception.DuplicatedOauthServiceIdentityException;
 import com.bq.oss.corbel.iam.exception.IdentityAlreadyExistsException;
 import com.bq.oss.corbel.iam.exception.UserProfileConfigurationException;
@@ -24,31 +48,10 @@ import io.corbel.lib.ws.auth.AuthorizationRequestFilter;
 import io.corbel.lib.ws.model.Error;
 import io.corbel.lib.ws.queries.QueryParametersProvider;
 import com.google.common.collect.Sets;
+
 import io.dropwizard.auth.Authenticator;
 import io.dropwizard.auth.oauth.OAuthFactory;
 import io.dropwizard.testing.junit.ResourceTestRule;
-import org.glassfish.jersey.client.ClientProperties;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.time.Clock;
-import java.util.*;
-
-import static org.fest.assertions.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.*;
 
 /**
  * @author Alexander De Leon
@@ -71,10 +74,13 @@ public class UserResourceTest extends UserResourceTestBase {
     private static final QueryParser queryParserMock = mock(QueryParser.class);
     private static final DeviceService devicesServiceMock = mock(DeviceService.class);
 
+    @SuppressWarnings("unchecked")
     private static final Authenticator<String, AuthorizationInfo> authenticator = mock(Authenticator.class);
-    private static OAuthFactory oAuthFactory = new OAuthFactory<>(authenticator, "realm", AuthorizationInfo.class);
-    private static final AuthorizationRequestFilter filter = spy(new AuthorizationRequestFilter(oAuthFactory, null, ""));
 
+    private static OAuthFactory oAuthFactory = new OAuthFactory<>(authenticator, "realm", AuthorizationInfo.class);
+
+    @SuppressWarnings("unchecked") private static final AuthorizationRequestFilter filter = spy(
+            new AuthorizationRequestFilter(oAuthFactory, null, ""));
 
     @ClassRule public static ResourceTestRule RULE = ResourceTestRule
             .builder()
@@ -149,7 +155,7 @@ public class UserResourceTest extends UserResourceTestBase {
         when(domainServiceMock.scopesAllowedInDomain(TEST_SCOPES, TEST_DOMAIN)).thenReturn(true);
         User user = getTestUser();
         user.setId(null);
-        when(userServiceMock.create(any())).thenThrow(CreateUserException.class);
+        when(userServiceMock.create(any())).thenThrow((Class) CreateUserException.class);
 
         Response response = addUserClient().post(Entity.json(user), Response.class);
         assertThat(response.getStatus()).isEqualTo(409);
@@ -220,6 +226,7 @@ public class UserResourceTest extends UserResourceTestBase {
     public void testGetUserInvalidAggregation() throws UnsupportedEncodingException, MalformedJsonQueryException {
         String aggRequest = "{\"$count\":\"*\"}";
         String queryString = "queryString";
+
         class OtherAggregation implements Aggregation {
 
             @Override
@@ -231,7 +238,8 @@ public class UserResourceTest extends UserResourceTestBase {
             public AggregationOperator getOperator() {
                 return null;
             }
-        };
+        }
+
         Aggregation operation = new OtherAggregation();
         ResourceQuery targetQuery = new ResourceQuery();
         when(queryParserMock.parse(queryString)).thenReturn(targetQuery);
@@ -990,7 +998,8 @@ public class UserResourceTest extends UserResourceTestBase {
             public AggregationOperator getOperator() {
                 return null;
             }
-        };
+        }
+
         Aggregation operation = new OtherAggretation();
         ResourceQuery targetQuery = new ResourceQuery();
         when(queryParserMock.parse(queryString)).thenReturn(targetQuery);

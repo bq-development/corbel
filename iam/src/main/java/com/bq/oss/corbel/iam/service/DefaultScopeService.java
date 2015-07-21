@@ -1,21 +1,11 @@
 package com.bq.oss.corbel.iam.service;
 
 import java.time.Clock;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import com.bq.oss.corbel.iam.model.Group;
-import com.bq.oss.corbel.iam.repository.GroupsRepository;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +13,9 @@ import org.springframework.util.CollectionUtils;
 
 import com.bq.oss.corbel.iam.exception.ScopeNameException;
 import com.bq.oss.corbel.iam.model.Entity;
+import com.bq.oss.corbel.iam.model.Group;
 import com.bq.oss.corbel.iam.model.Scope;
+import com.bq.oss.corbel.iam.repository.GroupRepository;
 import com.bq.oss.corbel.iam.repository.ScopeRepository;
 import com.bq.oss.corbel.iam.scope.ScopeFillStrategy;
 import io.corbel.lib.ws.auth.repository.AuthorizationRulesRepository;
@@ -42,7 +34,7 @@ public class DefaultScopeService implements ScopeService {
     private static final int FIRST_PARAM_POSITION = 1;
 
     private final ScopeRepository scopeRepository;
-    private final GroupsRepository groupsRepository;
+    private final GroupRepository groupRepository;
     private final AuthorizationRulesRepository authorizationRulesRepository;
     private final ScopeFillStrategy fillStrategy;
     private final String iamAudience;
@@ -50,11 +42,11 @@ public class DefaultScopeService implements ScopeService {
 
     private final EventsService eventsService;
 
-    public DefaultScopeService(ScopeRepository scopeRepository, GroupsRepository groupsRepository,
-                               AuthorizationRulesRepository authorizationRulesRepository, ScopeFillStrategy fillStrategy,
-                               String iamAudience, Clock clock, EventsService eventsService) {
+    public DefaultScopeService(ScopeRepository scopeRepository, GroupRepository groupRepository,
+            AuthorizationRulesRepository authorizationRulesRepository, ScopeFillStrategy fillStrategy, String iamAudience, Clock clock,
+            EventsService eventsService) {
         this.scopeRepository = scopeRepository;
-        this.groupsRepository = groupsRepository;
+        this.groupRepository = groupRepository;
         this.authorizationRulesRepository = authorizationRulesRepository;
         this.fillStrategy = fillStrategy;
         this.iamAudience = iamAudience;
@@ -62,10 +54,11 @@ public class DefaultScopeService implements ScopeService {
         this.eventsService = eventsService;
     }
 
-    public DefaultScopeService(ScopeRepository scopeRepository, GroupsRepository groupsRepository,
-                               AuthorizationRulesRepository authorizationRulesRepository, ScopeFillStrategy fillStrategy,
-                               String iamAudience, EventsService eventsService) {
-        this(scopeRepository, groupsRepository, authorizationRulesRepository, fillStrategy, iamAudience, Clock.systemDefaultZone(), eventsService);
+    public DefaultScopeService(ScopeRepository scopeRepository, GroupRepository groupRepository,
+            AuthorizationRulesRepository authorizationRulesRepository, ScopeFillStrategy fillStrategy, String iamAudience,
+            EventsService eventsService) {
+        this(scopeRepository, groupRepository, authorizationRulesRepository, fillStrategy, iamAudience, Clock.systemDefaultZone(),
+                eventsService);
     }
 
     @Override
@@ -106,8 +99,8 @@ public class DefaultScopeService implements ScopeService {
     public Set<String> getGroupScopes(Collection<String> groups) {
         Set<String> scopes = new HashSet<>();
         groups.stream().forEach(groupId -> {
-            Group group = groupsRepository.findOne(groupId);
-            if(group != null) {
+            Group group = groupRepository.findOne(groupId);
+            if (group != null) {
                 scopes.addAll(group.getScopes());
             }
         });
@@ -193,8 +186,8 @@ public class DefaultScopeService implements ScopeService {
 
             String keyForAuthorizationRules = authorizationRulesRepository.getKeyForAuthorizationRules(token, entry.getKey());
             if (authorizationRulesRepository.existsRules(keyForAuthorizationRules)) {
-                authorizationRulesRepository
-                        .addRules(keyForAuthorizationRules, audienceRules.toArray(new JsonObject[audienceRules.size()]));
+                authorizationRulesRepository.addRules(keyForAuthorizationRules,
+                        audienceRules.toArray(new JsonObject[audienceRules.size()]));
             } else {
                 // If is a new audience, we use the iam rules expire time because always iam has scopes for a token.
                 String iamKey = authorizationRulesRepository.getKeyForAuthorizationRules(token, iamAudience);
@@ -231,8 +224,8 @@ public class DefaultScopeService implements ScopeService {
     }
 
     @Override
-    public Set<Scope> getAllowedScopes(Set<Scope> domainScopes, Set<Scope> clientScopes, Set<Scope> userScopes,
-                                       Set<Scope> groupScopes, boolean isCrossDomain, boolean hasPrincipal) {
+    public Set<Scope> getAllowedScopes(Set<Scope> domainScopes, Set<Scope> clientScopes, Set<Scope> userScopes, Set<Scope> groupScopes,
+            boolean isCrossDomain, boolean hasPrincipal) {
 
         if (isCrossDomain) {
             return domainScopes;

@@ -4,7 +4,6 @@ import java.time.Clock;
 import java.util.Arrays;
 import java.util.List;
 
-import com.bq.oss.corbel.iam.repository.*;
 import net.oauth.jsontoken.Checker;
 import net.oauth.jsontoken.JsonTokenParser;
 import net.oauth.jsontoken.crypto.SignatureAlgorithm;
@@ -26,65 +25,29 @@ import com.bq.oss.corbel.event.ScopeUpdateEvent;
 import com.bq.oss.corbel.eventbus.EventHandler;
 import com.bq.oss.corbel.eventbus.ioc.EventBusListeningIoc;
 import com.bq.oss.corbel.eventbus.service.EventBus;
-import com.bq.oss.corbel.iam.api.DomainResource;
-import com.bq.oss.corbel.iam.api.EmailResource;
-import com.bq.oss.corbel.iam.api.ScopeResource;
-import com.bq.oss.corbel.iam.api.TokenResource;
-import com.bq.oss.corbel.iam.api.UserResource;
-import com.bq.oss.corbel.iam.api.UsernameResource;
+import com.bq.oss.corbel.iam.api.*;
 import com.bq.oss.corbel.iam.auth.AuthorizationRequestContextFactory;
 import com.bq.oss.corbel.iam.auth.AuthorizationRule;
-import com.bq.oss.corbel.iam.auth.provider.AuthorizationProviderFactory;
-import com.bq.oss.corbel.iam.auth.provider.FacebookProvider;
-import com.bq.oss.corbel.iam.auth.provider.GoogleProvider;
-import com.bq.oss.corbel.iam.auth.provider.OAuthServerProvider;
-import com.bq.oss.corbel.iam.auth.provider.Provider;
-import com.bq.oss.corbel.iam.auth.provider.SpringAuthorizationProviderFactory;
-import com.bq.oss.corbel.iam.auth.provider.TwitterProvider;
-import com.bq.oss.corbel.iam.auth.rule.ClientSideAuthenticationAllowedAuthorizationRule;
-import com.bq.oss.corbel.iam.auth.rule.MaxExpireAuthorizationRule;
-import com.bq.oss.corbel.iam.auth.rule.PrincipalExistsAuthorizationRule;
-import com.bq.oss.corbel.iam.auth.rule.RequestDomainAuthorizationRule;
-import com.bq.oss.corbel.iam.auth.rule.ScopesAuthorizationRule;
-import com.bq.oss.corbel.iam.auth.rule.VersionAuthorizationRule;
+import com.bq.oss.corbel.iam.auth.provider.*;
+import com.bq.oss.corbel.iam.auth.rule.*;
 import com.bq.oss.corbel.iam.cli.dsl.IamShell;
 import com.bq.oss.corbel.iam.eventbus.DomainDeletedEventHandler;
 import com.bq.oss.corbel.iam.eventbus.ScopeModifiedEventHandler;
 import com.bq.oss.corbel.iam.jwt.ClientVerifierProvider;
 import com.bq.oss.corbel.iam.jwt.TokenUpgradeVerifierProvider;
-import com.bq.oss.corbel.iam.model.Client;
-import com.bq.oss.corbel.iam.model.ClientIdGenerator;
-import com.bq.oss.corbel.iam.model.Device;
-import com.bq.oss.corbel.iam.model.DeviceIdGenerator;
-import com.bq.oss.corbel.iam.model.Identity;
-import com.bq.oss.corbel.iam.model.IdentityIdGenerator;
+import com.bq.oss.corbel.iam.model.*;
+import com.bq.oss.corbel.iam.repository.*;
 import com.bq.oss.corbel.iam.repository.decorator.LowerCaseDecorator;
 import com.bq.oss.corbel.iam.scope.MustacheScopeFillStrategy;
 import com.bq.oss.corbel.iam.scope.ScopeFillStrategy;
-import com.bq.oss.corbel.iam.service.AuthorizationService;
-import com.bq.oss.corbel.iam.service.ClientService;
-import com.bq.oss.corbel.iam.service.DefaultAuthorizationService;
-import com.bq.oss.corbel.iam.service.DefaultClientService;
-import com.bq.oss.corbel.iam.service.DefaultDeviceService;
-import com.bq.oss.corbel.iam.service.DefaultDomainService;
-import com.bq.oss.corbel.iam.service.DefaultEventsService;
-import com.bq.oss.corbel.iam.service.DefaultIdentityService;
-import com.bq.oss.corbel.iam.service.DefaultMailResetPasswordService;
-import com.bq.oss.corbel.iam.service.DefaultRefreshTokenService;
-import com.bq.oss.corbel.iam.service.DefaultScopeService;
-import com.bq.oss.corbel.iam.service.DefaultUpgradeTokenService;
-import com.bq.oss.corbel.iam.service.DefaultUserService;
-import com.bq.oss.corbel.iam.service.DeviceService;
-import com.bq.oss.corbel.iam.service.DomainService;
-import com.bq.oss.corbel.iam.service.EventsService;
-import com.bq.oss.corbel.iam.service.IdentityService;
-import com.bq.oss.corbel.iam.service.MailResetPasswordService;
-import com.bq.oss.corbel.iam.service.RefreshTokenService;
-import com.bq.oss.corbel.iam.service.ScopeService;
-import com.bq.oss.corbel.iam.service.UpgradeTokenService;
-import com.bq.oss.corbel.iam.service.UserService;
+import com.bq.oss.corbel.iam.service.*;
 import com.bq.oss.corbel.iam.utils.DefaultTokenCookieFactory;
 import com.bq.oss.corbel.iam.utils.TokenCookieFactory;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JSR310Module;
+import com.google.gson.Gson;
+
 import io.corbel.lib.config.ConfigurationIoC;
 import io.corbel.lib.mongo.IdGenerator;
 import io.corbel.lib.mongo.IdGeneratorMongoEventListener;
@@ -102,10 +65,6 @@ import io.corbel.lib.ws.digest.DigesterFactory;
 import io.corbel.lib.ws.dw.ioc.CommonFiltersIoc;
 import io.corbel.lib.ws.dw.ioc.DropwizardIoc;
 import io.corbel.lib.ws.ioc.QueriesIoc;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JSR310Module;
-import com.google.gson.Gson;
 
 /**
  * @author Alexander De Leon
@@ -125,8 +84,7 @@ import com.google.gson.Gson;
     @Autowired private OneTimeAccessTokenRepository oneTimeAccessTokenRepository;
     @Autowired private UserTokenRepository userTokenRepository;
     @Autowired private DeviceRepository deviceRepository;
-    @Autowired private GroupsRepository groupsRepository;
-
+    @Autowired private GroupRepository groupRepository;
 
     private UserRepository getUserRepository() {
         return new LowerCaseDecorator(userRepository);
@@ -155,8 +113,8 @@ import com.google.gson.Gson;
     @Bean
     public RefreshTokenService getRefreshTokenService(TokenParser tokenParser, TokenFactory tokenFactory,
             OneTimeAccessTokenRepository oneTimeAccessTokenRepository) {
-        return new DefaultRefreshTokenService(tokenParser, getUserRepository(), tokenFactory, env.getProperty(
-                "iam.auth.refreshToken.maxExpirationInSeconds", Long.class), oneTimeAccessTokenRepository);
+        return new DefaultRefreshTokenService(tokenParser, getUserRepository(), tokenFactory,
+                env.getProperty("iam.auth.refreshToken.maxExpirationInSeconds", Long.class), oneTimeAccessTokenRepository);
     }
 
     @Bean
@@ -200,6 +158,11 @@ import com.google.gson.Gson;
     }
 
     @Bean
+    public GroupResource getGroupResource(GroupService groupService) {
+        return new GroupResource(groupService);
+    }
+
+    @Bean
     public ClientService getClientService(ClientRepository clientRepository) {
         return new DefaultClientService(clientRepository);
     }
@@ -224,17 +187,22 @@ import com.google.gson.Gson;
     @Bean
     public MailResetPasswordService getMailResetPasswordService(EventsService eventsService, ScopeService scopeService,
             TokenFactory tokenFactory, ClientRepository clientRepository) {
-        return new DefaultMailResetPasswordService(eventsService, scopeService, tokenFactory, clientRepository, env.getProperty(
-                "iam.token.resetPasswordTokenScope", String.class), Clock.systemUTC(), env.getProperty(
-                "iam.token.resetPasswordTokenDurationInSec", Long.class),
-                env.getProperty("email.resetPassword.notification", String.class), env.getProperty("email.resetPassword.clientUrl",
-                        String.class));
+        return new DefaultMailResetPasswordService(eventsService, scopeService, tokenFactory, clientRepository,
+                env.getProperty("iam.token.resetPasswordTokenScope", String.class), Clock.systemUTC(),
+                env.getProperty("iam.token.resetPasswordTokenDurationInSec", Long.class),
+                env.getProperty("email.resetPassword.notification", String.class),
+                env.getProperty("email.resetPassword.clientUrl", String.class));
     }
 
     @Bean
     public EventsService getEventsService(EventBus eventBus) {
         return new DefaultEventsService(eventBus);
 
+    }
+
+    @Bean
+    public GroupService getGroupService() {
+        return new DefaultGroupService(groupRepository);
     }
 
     @Bean
@@ -291,15 +259,15 @@ import com.google.gson.Gson;
     }
 
     @Bean
-    public IamShell getIamShell() {
+    public IamShell getIamShell(GroupService groupService) {
         return new IamShell(clientRepository, scopeRepository, getUserRepository(), domainRepository, env.getProperty("iam.uri"),
-                identityRepository);
+                identityRepository, groupRepository);
     }
 
     @Bean
     public ScopeService getScopeService(EventsService eventsService) {
-        return new DefaultScopeService(scopeRepository, groupsRepository, authorizationRulesRepository,
-                getScopeFillStrategy(), env.getProperty("iam.uri"), eventsService);
+        return new DefaultScopeService(scopeRepository, groupRepository, authorizationRulesRepository, getScopeFillStrategy(),
+                env.getProperty("iam.uri"), eventsService);
     }
 
     @Bean
@@ -362,6 +330,10 @@ import com.google.gson.Gson;
 
     private IdGenerator<Identity> getIdentityIdGenerator() {
         return new IdentityIdGenerator();
+    }
+
+    private IdGenerator<Group> getGroupIdGenerator() {
+        return new GroupIdGenerator(DigesterFactory.murmur3_32());
     }
 
     @Bean

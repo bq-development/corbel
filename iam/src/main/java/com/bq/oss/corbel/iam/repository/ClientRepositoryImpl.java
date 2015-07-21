@@ -15,7 +15,7 @@ import com.bq.oss.corbel.iam.model.ClientCredential;
  * @author Alexander De Leon
  * 
  */
-public class ClientRepositoryImpl extends HasScopesRepositoryBase<Client, String> implements ClientRepositoryCustom {
+public class ClientRepositoryImpl extends HasScopesRepositoryBase<Client, String>implements ClientRepositoryCustom {
 
     private static final String FIELD_DOMAIN = "domain";
 
