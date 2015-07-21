@@ -1,17 +1,15 @@
 package com.bq.oss.corbel.iam.api;
 
-import io.dropwizard.testing.junit.ResourceTestRule;
-
-import java.util.Set;
-
-import javax.ws.rs.client.Invocation.Builder;
-import javax.ws.rs.core.MediaType;
-
 import com.bq.oss.corbel.iam.model.Domain;
 import com.bq.oss.corbel.iam.model.Identity;
 import com.bq.oss.corbel.iam.model.User;
 import com.bq.oss.corbel.iam.model.UserWithIdentity;
 import com.google.common.collect.Sets;
+import io.dropwizard.testing.junit.ResourceTestRule;
+
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.core.MediaType;
+import java.util.Set;
 
 /**
  * @author Alexander De Leon
@@ -29,7 +27,7 @@ public abstract class UserResourceTestBase {
     protected static final String TEST_USER_PHONE = "phone";
     protected static final String TEST_USER_URL = "url";
     protected static final Set<String> TEST_SCOPES = Sets.newHashSet("scope1", "scope2");
-    protected static final String TEST_USERID = "username";
+    protected static final String TEST_USERNAME = "username";
     protected static final String TEST_TOKEN = "xxxx";
     protected static final String AUTHORIZATION = "Authorization";
     protected static final String TEST_PROPERTY = "prop";
@@ -48,7 +46,7 @@ public abstract class UserResourceTestBase {
         user.setPhoneNumber(TEST_USER_PHONE);
         user.setProfileUrl(TEST_USER_URL);
         user.setScopes(null);
-        user.setUsername(TEST_USERID);
+        user.setUsername(TEST_USERNAME);
         user.addProperty(TEST_PROPERTY, TEST_PROPERTY_VAL);
         return user;
     }

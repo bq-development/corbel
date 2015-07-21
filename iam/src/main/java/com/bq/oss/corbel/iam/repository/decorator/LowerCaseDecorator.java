@@ -25,6 +25,11 @@ public class LowerCaseDecorator extends UserRepositoryDecorator {
     }
 
     @Override
+    public boolean existsByEmailAndDomain(String email, String domainId) {
+        return decoratedUserRepository.existsByEmailAndDomain(Strings.toLowerCase(email), domainId);
+    }
+
+    @Override
     public List<User> find(ResourceQuery resourceQuery, Pagination pagination, Sort sort) {
         emailQueryToLowerCase(resourceQuery);
         return decoratedUserRepository.find(resourceQuery, pagination, sort);

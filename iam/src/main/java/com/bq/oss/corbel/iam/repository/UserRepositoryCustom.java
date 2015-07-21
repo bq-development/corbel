@@ -10,6 +10,8 @@ public interface UserRepositoryCustom {
 
     boolean existsByUsernameAndDomain(String username, String domainId);
 
+    boolean existsByEmailAndDomain(String email, String domainId);
+
     void deleteByDomain(String domainId);
 
 }

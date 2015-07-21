@@ -56,7 +56,7 @@ public class EmailResourceTest extends UserResourceTestBase {
     }
 
     @Test
-    public void testCheckEmailAvailabilityOK() {
+    public void testGetUserByEmailOK() {
         User user = createTestUser();
         when(userServiceMock.findByDomainAndEmail(TEST_DOMAIN_ID, TEST_USER_EMAIL)).thenReturn(user);
         User response = RULE.client().target("/v1.0/email/" + TEST_USER_EMAIL).request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
@@ -67,13 +67,29 @@ public class EmailResourceTest extends UserResourceTestBase {
     }
 
     @Test
-    public void testCheckEmailAvailabilityKO() {
+    public void testGetUserByEmailKO() {
         when(userServiceMock.findUserDomain(TEST_USER_ID)).thenReturn(TEST_DOMAIN_ID);
         User user = createTestUser();
         when(userServiceMock.findByDomainAndEmail(TEST_DOMAIN_ID, TEST_USER_EMAIL)).thenReturn(user);
         Response response = RULE.client().target("/v1.0/email/" + TEST_USER_EMAIL + Instant.now().toString()).request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
                 .get();
 
+        assertThat(response.getStatus()).isEqualTo(404);
+    }
+
+    @Test
+    public void testExistsUserByEmail() {
+        when(userServiceMock.existsByEmailAndDomain(TEST_USER_EMAIL, TEST_DOMAIN_ID)).thenReturn(true);
+        Response response = RULE.client().target("/" + ApiVersion.CURRENT + "/email/" + TEST_USER_EMAIL).request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
+                .head();
+        assertThat(response.getStatus()).isEqualTo(200);
+    }
+
+    @Test
+    public void testNotExistsUserByEmail() {
+        when(userServiceMock.existsByEmailAndDomain(TEST_USER_EMAIL, TEST_DOMAIN_ID)).thenReturn(false);
+        Response response = RULE.client().target("/" + ApiVersion.CURRENT + "/email/" + TEST_USER_EMAIL + "RANDOM_SHEET").request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
+                .head();
         assertThat(response.getStatus()).isEqualTo(404);
     }
 }

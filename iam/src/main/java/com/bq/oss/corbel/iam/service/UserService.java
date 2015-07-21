@@ -1,9 +1,5 @@
 package com.bq.oss.corbel.iam.service;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-
 import com.bq.oss.corbel.iam.exception.UserProfileConfigurationException;
 import com.bq.oss.corbel.iam.model.Domain;
 import com.bq.oss.corbel.iam.model.User;
@@ -12,6 +8,10 @@ import com.bq.oss.lib.queries.request.AggregationResult;
 import com.bq.oss.lib.queries.request.Pagination;
 import com.bq.oss.lib.queries.request.ResourceQuery;
 import com.bq.oss.lib.queries.request.Sort;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 /**
  * @author Rubén Carrasco
@@ -37,7 +37,9 @@ public interface UserService {
 
     void delete(User user);
 
-    boolean existsByUsernameAndDomain(String username, String domain);
+    boolean existsByUsernameAndDomain(String username, String domainId);
+
+    boolean existsByEmailAndDomain(String email, String domainId);
 
     User getUserProfile(User user, Set<String> userProfileFields) throws UserProfileConfigurationException;
 

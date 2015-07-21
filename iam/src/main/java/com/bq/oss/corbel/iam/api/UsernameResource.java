@@ -1,13 +1,14 @@
 package com.bq.oss.corbel.iam.api;
 
+import com.bq.oss.corbel.iam.model.User;
 import com.bq.oss.corbel.iam.service.UserService;
 import com.bq.oss.lib.ws.auth.AuthorizationInfo;
 import io.dropwizard.auth.Auth;
 
-import javax.ws.rs.HEAD;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.Optional;
 
 /**
  * @author Francisco Sanchez
@@ -27,5 +28,18 @@ public class UsernameResource {
         String domain = authorizationInfo.getTokenReader().getInfo().getDomainId();
         return userService.existsByUsernameAndDomain(username, domain) ? Response.ok().build() : IamErrorResponseFactory.getInstance()
                 .notFound();
+    }
+
+    @Path("/{username}")
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getUserIdByUsername(@PathParam("username") String username, @Auth AuthorizationInfo authorizationInfo) {
+        return getUserInDomainByUsername(username, authorizationInfo).map(user ->
+                        Response.ok(user.getUserWithOnlyId()).build()
+        ).orElseGet(() -> IamErrorResponseFactory.getInstance().notFound());
+    }
+
+    private Optional<User> getUserInDomainByUsername(String username, AuthorizationInfo authorizationInfo) {
+        return Optional.ofNullable(userService.findByDomainAndUsername(authorizationInfo.getDomainId(), username));
     }
 }
