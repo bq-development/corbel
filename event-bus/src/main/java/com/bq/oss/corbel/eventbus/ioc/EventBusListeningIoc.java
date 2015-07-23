@@ -21,8 +21,8 @@ import com.bq.oss.corbel.eventbus.service.DefaultIncomingEventProcessor;
 import com.bq.oss.corbel.eventbus.service.EventBusRegistry;
 import com.bq.oss.corbel.eventbus.service.InMemoryEventBusRegistry;
 import com.bq.oss.corbel.eventbus.service.IncomingEventProcessor;
-import com.bq.oss.lib.rabbitmq.config.AmqpConfiguration;
-import com.bq.oss.lib.rabbitmq.config.BackoffOptions;
+import io.corbel.lib.rabbitmq.config.AmqpConfiguration;
+import io.corbel.lib.rabbitmq.config.BackoffOptions;
 
 /**
  * This IoC loads a context which allow registering {@link EventHandler} in the event bus an start listening for events.

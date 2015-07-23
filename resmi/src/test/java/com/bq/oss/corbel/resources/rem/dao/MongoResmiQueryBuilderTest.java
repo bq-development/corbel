@@ -9,12 +9,12 @@ import org.junit.Test;
 import org.springframework.data.mongodb.core.query.Query;
 
 import com.bq.oss.corbel.resources.rem.request.ResourceId;
-import com.bq.oss.lib.queries.exception.MalformedJsonQueryException;
-import com.bq.oss.lib.queries.parser.CustomJsonParser;
-import com.bq.oss.lib.queries.parser.JacksonQueryParser;
-import com.bq.oss.lib.queries.request.Pagination;
-import com.bq.oss.lib.queries.request.ResourceQuery;
-import com.bq.oss.lib.queries.request.Sort;
+import io.corbel.lib.queries.exception.MalformedJsonQueryException;
+import io.corbel.lib.queries.parser.CustomJsonParser;
+import io.corbel.lib.queries.parser.JacksonQueryParser;
+import io.corbel.lib.queries.request.Pagination;
+import io.corbel.lib.queries.request.ResourceQuery;
+import io.corbel.lib.queries.request.Sort;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class MongoResmiQueryBuilderTest {

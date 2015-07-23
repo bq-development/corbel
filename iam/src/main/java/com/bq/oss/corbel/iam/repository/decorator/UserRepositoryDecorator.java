@@ -2,10 +2,10 @@ package com.bq.oss.corbel.iam.repository.decorator;
 
 import com.bq.oss.corbel.iam.model.User;
 import com.bq.oss.corbel.iam.repository.UserRepository;
-import com.bq.oss.lib.queries.request.AggregationResult;
-import com.bq.oss.lib.queries.request.Pagination;
-import com.bq.oss.lib.queries.request.ResourceQuery;
-import com.bq.oss.lib.queries.request.Sort;
+import io.corbel.lib.queries.request.AggregationResult;
+import io.corbel.lib.queries.request.Pagination;
+import io.corbel.lib.queries.request.ResourceQuery;
+import io.corbel.lib.queries.request.Sort;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

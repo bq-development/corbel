@@ -30,8 +30,8 @@ import com.bq.oss.corbel.resources.rem.request.ResourceParameters;
 import com.bq.oss.corbel.resources.rem.service.ImageCacheService;
 import com.bq.oss.corbel.resources.rem.service.ImageOperationsService;
 import com.bq.oss.corbel.resources.rem.service.RemService;
-import com.bq.oss.lib.ws.api.error.ErrorResponseFactory;
-import com.bq.oss.lib.ws.model.Error;
+import io.corbel.lib.ws.api.error.ErrorResponseFactory;
+import io.corbel.lib.ws.model.Error;
 
 
 public class ImageGetRem extends BaseRem<Void> {

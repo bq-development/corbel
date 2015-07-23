@@ -1,7 +1,7 @@
 package com.bq.oss.corbel.iam.model;
 
-import com.bq.oss.lib.ws.digest.DigesterFactory;
-import com.bq.oss.lib.ws.model.ModelValidator;
+import io.corbel.lib.ws.digest.DigesterFactory;
+import io.corbel.lib.ws.model.ModelValidator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotEmpty;

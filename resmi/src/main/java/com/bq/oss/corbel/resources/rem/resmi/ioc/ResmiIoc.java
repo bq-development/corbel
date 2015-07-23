@@ -24,11 +24,11 @@ import com.bq.oss.corbel.resources.rem.search.ElasticSearchResmiSearch;
 import com.bq.oss.corbel.resources.rem.search.ResmiSearch;
 import com.bq.oss.corbel.resources.rem.service.*;
 import com.bq.oss.corbel.resources.rem.utils.ResmiJsonObjectMongoWriteConverter;
-import com.bq.oss.lib.config.ConfigurationIoC;
-import com.bq.oss.lib.mongo.IdInjectorMongoEventListener;
-import com.bq.oss.lib.mongo.JsonObjectMongoReadConverter;
-import com.bq.oss.lib.mongo.JsonObjectMongoWriteConverter;
-import com.bq.oss.lib.mongo.config.DefaultMongoConfiguration;
+import io.corbel.lib.config.ConfigurationIoC;
+import io.corbel.lib.mongo.IdInjectorMongoEventListener;
+import io.corbel.lib.mongo.JsonObjectMongoReadConverter;
+import io.corbel.lib.mongo.JsonObjectMongoWriteConverter;
+import io.corbel.lib.mongo.config.DefaultMongoConfiguration;
 import com.google.gson.Gson;
 
 /**

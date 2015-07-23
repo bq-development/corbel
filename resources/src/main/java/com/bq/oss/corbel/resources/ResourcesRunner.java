@@ -8,12 +8,12 @@ import com.bq.oss.corbel.resources.api.PluginInfoResource;
 import com.bq.oss.corbel.resources.api.RemResource;
 import com.bq.oss.corbel.resources.ioc.ResourcesIoc;
 import com.bq.oss.corbel.resources.rem.plugin.HealthCheckRegistry;
-import com.bq.oss.lib.ws.cli.CommandLineI;
-import com.bq.oss.lib.ws.cli.GenericConsole;
-import com.bq.oss.lib.ws.cli.ServiceRunnerWithVersionResource;
-import com.bq.oss.lib.ws.health.AuthorizationRedisHealthCheck;
-import com.bq.oss.lib.ws.health.BasicHealthCheck;
-import com.bq.oss.lib.ws.health.MongoHealthCheck;
+import io.corbel.lib.ws.cli.CommandLineI;
+import io.corbel.lib.ws.cli.GenericConsole;
+import io.corbel.lib.ws.cli.ServiceRunnerWithVersionResource;
+import io.corbel.lib.ws.health.AuthorizationRedisHealthCheck;
+import io.corbel.lib.ws.health.BasicHealthCheck;
+import io.corbel.lib.ws.health.MongoHealthCheck;
 import io.dropwizard.setup.Environment;
 
 public class ResourcesRunner extends ServiceRunnerWithVersionResource<ResourcesIoc> {

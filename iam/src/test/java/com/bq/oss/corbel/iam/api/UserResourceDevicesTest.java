@@ -36,17 +36,17 @@ import com.bq.oss.corbel.iam.service.DeviceService;
 import com.bq.oss.corbel.iam.service.DomainService;
 import com.bq.oss.corbel.iam.service.IdentityService;
 import com.bq.oss.corbel.iam.service.UserService;
-import com.bq.oss.lib.queries.builder.QueryParametersBuilder;
-import com.bq.oss.lib.queries.parser.AggregationParser;
-import com.bq.oss.lib.queries.parser.PaginationParser;
-import com.bq.oss.lib.queries.parser.QueryParser;
-import com.bq.oss.lib.queries.parser.SearchParser;
-import com.bq.oss.lib.queries.parser.SortParser;
-import com.bq.oss.lib.ws.api.error.GenericExceptionMapper;
-import com.bq.oss.lib.ws.auth.AuthorizationInfo;
-import com.bq.oss.lib.ws.auth.AuthorizationInfoProvider;
-import com.bq.oss.lib.ws.auth.AuthorizationRequestFilter;
-import com.bq.oss.lib.ws.queries.QueryParametersProvider;
+import io.corbel.lib.queries.builder.QueryParametersBuilder;
+import io.corbel.lib.queries.parser.AggregationParser;
+import io.corbel.lib.queries.parser.PaginationParser;
+import io.corbel.lib.queries.parser.QueryParser;
+import io.corbel.lib.queries.parser.SearchParser;
+import io.corbel.lib.queries.parser.SortParser;
+import io.corbel.lib.ws.api.error.GenericExceptionMapper;
+import io.corbel.lib.ws.auth.AuthorizationInfo;
+import io.corbel.lib.ws.auth.AuthorizationInfoProvider;
+import io.corbel.lib.ws.auth.AuthorizationRequestFilter;
+import io.corbel.lib.ws.queries.QueryParametersProvider;
 
 /**
  * @author Alexander De Leon

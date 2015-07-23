@@ -3,7 +3,7 @@ package com.bq.oss.corbel.resources.rem.plugin;
 import com.bq.oss.corbel.resources.rem.*;
 import com.bq.oss.corbel.resources.rem.ioc.RemImageIoc;
 import com.bq.oss.corbel.resources.rem.ioc.RemImageIocNames;
-import com.bq.oss.lib.config.ConfigurationHelper;
+import io.corbel.lib.config.ConfigurationHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;

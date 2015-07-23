@@ -8,7 +8,7 @@ import org.springframework.data.mongodb.core.index.Index;
 
 import com.bq.oss.corbel.resources.rem.model.ResourceUri;
 import com.bq.oss.corbel.resources.rem.request.ResourceId;
-import com.bq.oss.lib.queries.request.*;
+import io.corbel.lib.queries.request.*;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;

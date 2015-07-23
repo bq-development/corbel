@@ -6,7 +6,7 @@ import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 
 import com.bq.oss.corbel.resources.rem.request.*;
-import com.bq.oss.lib.queries.request.Pagination;
+import io.corbel.lib.queries.request.Pagination;
 
 public class ImageRemUtil {
 

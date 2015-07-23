@@ -14,7 +14,7 @@ import com.bq.oss.corbel.resources.rem.RemRegistry;
 import com.bq.oss.corbel.resources.rem.resmi.ioc.ResmiIoc;
 import com.bq.oss.corbel.resources.rem.resmi.ioc.ResmiRemNames;
 import com.bq.oss.corbel.resources.rem.service.ResmiService;
-import com.bq.oss.lib.config.ConfigurationHelper;
+import io.corbel.lib.config.ConfigurationHelper;
 
 @Component public class ResmiRemPlugin extends RemPlugin {
 

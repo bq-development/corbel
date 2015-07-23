@@ -5,7 +5,7 @@ import java.util.Optional;
 
 import org.bson.types.ObjectId;
 
-import com.bq.oss.lib.mongo.JsonObjectMongoWriteConverter;
+import io.corbel.lib.mongo.JsonObjectMongoWriteConverter;
 import com.google.gson.JsonElement;
 import com.mongodb.DBObject;
 

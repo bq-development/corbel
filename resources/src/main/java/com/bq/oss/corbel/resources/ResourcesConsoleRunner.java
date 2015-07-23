@@ -6,9 +6,9 @@ import java.util.Map;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import com.bq.oss.corbel.resources.ioc.ResourcesIoc;
-import com.bq.oss.lib.cli.console.Console;
-import com.bq.oss.lib.cli.console.Shell;
-import com.bq.oss.lib.ws.log.LogbackUtils;
+import io.corbel.lib.cli.console.Console;
+import io.corbel.lib.cli.console.Shell;
+import io.corbel.lib.ws.log.LogbackUtils;
 
 /**
  * @author Rubén Carrasco

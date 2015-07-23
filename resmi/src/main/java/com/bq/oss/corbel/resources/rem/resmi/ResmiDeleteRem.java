@@ -8,7 +8,7 @@ import javax.ws.rs.core.Response;
 import com.bq.oss.corbel.resources.rem.model.ResourceUri;
 import com.bq.oss.corbel.resources.rem.request.*;
 import com.bq.oss.corbel.resources.rem.service.ResmiService;
-import com.bq.oss.lib.ws.api.error.ErrorResponseFactory;
+import io.corbel.lib.ws.api.error.ErrorResponseFactory;
 import com.google.gson.JsonObject;
 
 /**

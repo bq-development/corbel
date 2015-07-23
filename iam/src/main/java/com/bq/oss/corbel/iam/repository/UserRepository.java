@@ -1,7 +1,7 @@
 package com.bq.oss.corbel.iam.repository;
 
 import com.bq.oss.corbel.iam.model.User;
-import com.bq.oss.lib.queries.mongo.repository.GenericFindRepository;
+import io.corbel.lib.queries.mongo.repository.GenericFindRepository;
 
 /**
  * @author Alberto J. Rubio

@@ -6,7 +6,7 @@ import javax.ws.rs.core.MultivaluedMap;
 
 import org.springframework.http.MediaType;
 
-import com.bq.oss.lib.token.TokenInfo;
+import io.corbel.lib.token.TokenInfo;
 
 /**
  * @author Alexander De Leon

@@ -14,7 +14,7 @@ import com.bq.oss.corbel.resources.rem.RemRegistry;
 import com.bq.oss.corbel.resources.rem.model.RemDescription;
 import com.bq.oss.corbel.resources.rem.request.*;
 import com.bq.oss.corbel.resources.rem.service.RemService;
-import com.bq.oss.lib.ws.api.error.ErrorResponseFactory;
+import io.corbel.lib.ws.api.error.ErrorResponseFactory;
 
 /**
  * @author Alberto J. Rubio

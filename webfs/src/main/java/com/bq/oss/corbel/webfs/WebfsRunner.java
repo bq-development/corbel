@@ -6,8 +6,8 @@ import org.springframework.context.ApplicationContext;
 
 import com.bq.oss.corbel.webfs.api.WebResource;
 import com.bq.oss.corbel.webfs.ioc.WebfsIoc;
-import com.bq.oss.lib.ws.cli.ServiceRunnerWithVersionResource;
-import com.bq.oss.lib.ws.health.BasicHealthCheck;
+import io.corbel.lib.ws.cli.ServiceRunnerWithVersionResource;
+import io.corbel.lib.ws.health.BasicHealthCheck;
 import io.dropwizard.setup.Environment;
 
 /**

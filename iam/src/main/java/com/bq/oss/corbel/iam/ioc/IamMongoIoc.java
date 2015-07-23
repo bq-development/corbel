@@ -18,11 +18,11 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 import com.bq.oss.corbel.iam.repository.MongoIndexes;
 import com.bq.oss.corbel.iam.repository.ScopeRepository;
 import com.bq.oss.corbel.iam.service.ScopeService;
-import com.bq.oss.lib.mongo.JsonObjectMongoReadConverter;
-import com.bq.oss.lib.mongo.JsonObjectMongoWriteConverter;
-import com.bq.oss.lib.mongo.config.DefaultMongoConfiguration;
-import com.bq.oss.lib.queries.mongo.repository.QueriesRepositoryFactoryBean;
-import com.bq.oss.lib.ws.dw.ioc.MongoHealthCheckIoc;
+import io.corbel.lib.mongo.JsonObjectMongoReadConverter;
+import io.corbel.lib.mongo.JsonObjectMongoWriteConverter;
+import io.corbel.lib.mongo.config.DefaultMongoConfiguration;
+import io.corbel.lib.queries.mongo.repository.QueriesRepositoryFactoryBean;
+import io.corbel.lib.ws.dw.ioc.MongoHealthCheckIoc;
 import com.google.common.cache.CacheBuilder;
 import com.google.gson.Gson;
 
@@ -30,7 +30,7 @@ import com.google.gson.Gson;
  * @author Alberto J. Rubio
  */
 @Configuration @Import({MongoHealthCheckIoc.class}) @EnableMongoRepositories(value = {"com.bq.oss.corbel.iam.repository",
-        "com.bq.oss.lib.token.repository"}, repositoryFactoryBeanClass = QueriesRepositoryFactoryBean.class) @EnableCaching public class IamMongoIoc
+        "io.corbel.lib.token.repository"}, repositoryFactoryBeanClass = QueriesRepositoryFactoryBean.class) @EnableCaching public class IamMongoIoc
         extends
             DefaultMongoConfiguration {
 

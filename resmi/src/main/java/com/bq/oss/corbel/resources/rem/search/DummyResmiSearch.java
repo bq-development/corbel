@@ -5,8 +5,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.bq.oss.corbel.resources.rem.model.ResourceUri;
-import com.bq.oss.lib.queries.request.AggregationResult;
-import com.bq.oss.lib.queries.request.CountResult;
+import io.corbel.lib.queries.request.AggregationResult;
+import io.corbel.lib.queries.request.CountResult;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 

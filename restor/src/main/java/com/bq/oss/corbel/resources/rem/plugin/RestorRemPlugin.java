@@ -13,7 +13,7 @@ import com.bq.oss.corbel.resources.rem.Rem;
 import com.bq.oss.corbel.resources.rem.RemRegistry;
 import com.bq.oss.corbel.resources.rem.restor.ioc.RestorIoc;
 import com.bq.oss.corbel.resources.rem.restor.ioc.RestorIocBeanNames;
-import com.bq.oss.lib.config.ConfigurationHelper;
+import io.corbel.lib.config.ConfigurationHelper;
 import com.codahale.metrics.health.HealthCheck;
 
 /**

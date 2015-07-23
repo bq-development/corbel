@@ -18,7 +18,7 @@ import org.junit.Test;
 import com.bq.oss.corbel.resources.rem.request.CollectionParameters;
 import com.bq.oss.corbel.resources.rem.request.RequestParameters;
 import com.bq.oss.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
-import com.bq.oss.lib.token.TokenInfo;
+import io.corbel.lib.token.TokenInfo;
 import com.google.gson.JsonObject;
 
 /**

@@ -2,7 +2,7 @@ package com.bq.oss.corbel.iam.api;
 
 import com.bq.oss.corbel.iam.model.User;
 import com.bq.oss.corbel.iam.service.UserService;
-import com.bq.oss.lib.ws.auth.AuthorizationInfo;
+import io.corbel.lib.ws.auth.AuthorizationInfo;
 import io.dropwizard.auth.Auth;
 
 import javax.ws.rs.*;

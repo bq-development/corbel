@@ -4,10 +4,10 @@ import com.bq.oss.corbel.iam.exception.UserProfileConfigurationException;
 import com.bq.oss.corbel.iam.model.Domain;
 import com.bq.oss.corbel.iam.model.User;
 import com.bq.oss.corbel.iam.repository.CreateUserException;
-import com.bq.oss.lib.queries.request.AggregationResult;
-import com.bq.oss.lib.queries.request.Pagination;
-import com.bq.oss.lib.queries.request.ResourceQuery;
-import com.bq.oss.lib.queries.request.Sort;
+import io.corbel.lib.queries.request.AggregationResult;
+import io.corbel.lib.queries.request.Pagination;
+import io.corbel.lib.queries.request.ResourceQuery;
+import io.corbel.lib.queries.request.Sort;
 
 import java.util.List;
 import java.util.Optional;

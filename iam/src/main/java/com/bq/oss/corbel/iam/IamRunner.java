@@ -2,11 +2,11 @@ package com.bq.oss.corbel.iam;
 
 import com.bq.oss.corbel.iam.api.*;
 import com.bq.oss.corbel.iam.ioc.IamIoc;
-import com.bq.oss.lib.ws.cli.GenericConsole;
-import com.bq.oss.lib.ws.cli.ServiceRunnerWithVersionResource;
-import com.bq.oss.lib.ws.health.AuthorizationRedisHealthCheck;
-import com.bq.oss.lib.ws.health.BasicHealthCheck;
-import com.bq.oss.lib.ws.health.MongoHealthCheck;
+import io.corbel.lib.ws.cli.GenericConsole;
+import io.corbel.lib.ws.cli.ServiceRunnerWithVersionResource;
+import io.corbel.lib.ws.health.AuthorizationRedisHealthCheck;
+import io.corbel.lib.ws.health.BasicHealthCheck;
+import io.corbel.lib.ws.health.MongoHealthCheck;
 import io.dropwizard.setup.Environment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -12,8 +12,8 @@ import javax.ws.rs.ext.Providers;
 import org.springframework.http.HttpMethod;
 
 import com.bq.oss.corbel.resources.rem.request.ResourceId;
-import com.bq.oss.lib.queries.jaxrs.QueryParameters;
-import com.bq.oss.lib.token.TokenInfo;
+import io.corbel.lib.queries.jaxrs.QueryParameters;
+import io.corbel.lib.token.TokenInfo;
 
 /**
  * Created by Francisco Sanchez on 26/05/15.

@@ -19,21 +19,21 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.bq.oss.lib</groupId>
+            <groupId>io.corbel.lib</groupId>
             <artifactId>ws</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.bq.oss.lib</groupId>
+            <groupId>io.corbel.lib</groupId>
             <artifactId>queries-mongo</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.bq.oss.lib</groupId>
+            <groupId>io.corbel.lib</groupId>
             <artifactId>mongodb</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.bq.oss.lib</groupId>
+            <groupId>io.corbel.lib</groupId>
             <artifactId>cli</artifactId>
             <scope>provided</scope>
         </dependency>

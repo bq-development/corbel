@@ -5,7 +5,7 @@ import java.util.List;
 import com.bq.oss.corbel.iam.model.Device;
 import com.bq.oss.corbel.iam.model.User;
 import com.bq.oss.corbel.iam.repository.DeviceRepository;
-import com.bq.oss.lib.mongo.IdGenerator;
+import io.corbel.lib.mongo.IdGenerator;
 
 /**
  * @author Francisco Sanchez

@@ -9,6 +9,6 @@ import javax.ws.rs.ext.Provider;
 
     @Override
     public Response toResponse(IllegalArgumentException e) {
-        return Response.status(Status.BAD_REQUEST).entity(new com.bq.oss.lib.ws.model.Error("bad_request", e.getMessage())).build();
+        return Response.status(Status.BAD_REQUEST).entity(new io.corbel.lib.ws.model.Error("bad_request", e.getMessage())).build();
     }
 }

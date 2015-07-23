@@ -12,14 +12,14 @@ import org.mockito.Mockito;
 import com.bq.oss.corbel.iam.auth.AuthorizationRequestContext;
 import com.bq.oss.corbel.iam.model.User;
 import com.bq.oss.corbel.iam.repository.UserRepository;
-import com.bq.oss.lib.token.TokenGrant;
-import com.bq.oss.lib.token.TokenInfo;
-import com.bq.oss.lib.token.exception.TokenVerificationException;
-import com.bq.oss.lib.token.factory.TokenFactory;
-import com.bq.oss.lib.token.model.TokenType;
-import com.bq.oss.lib.token.parser.TokenParser;
-import com.bq.oss.lib.token.reader.TokenReader;
-import com.bq.oss.lib.token.repository.OneTimeAccessTokenRepository;
+import io.corbel.lib.token.TokenGrant;
+import io.corbel.lib.token.TokenInfo;
+import io.corbel.lib.token.exception.TokenVerificationException;
+import io.corbel.lib.token.factory.TokenFactory;
+import io.corbel.lib.token.model.TokenType;
+import io.corbel.lib.token.parser.TokenParser;
+import io.corbel.lib.token.reader.TokenReader;
+import io.corbel.lib.token.repository.OneTimeAccessTokenRepository;
 
 /**
  * @author Alberto J. Rubio

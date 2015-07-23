@@ -26,7 +26,7 @@ import com.bq.oss.corbel.iam.model.Entity;
 import com.bq.oss.corbel.iam.model.Scope;
 import com.bq.oss.corbel.iam.repository.ScopeRepository;
 import com.bq.oss.corbel.iam.scope.ScopeFillStrategy;
-import com.bq.oss.lib.ws.auth.repository.AuthorizationRulesRepository;
+import io.corbel.lib.ws.auth.repository.AuthorizationRulesRepository;
 import com.google.common.collect.Sets;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;

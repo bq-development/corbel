@@ -13,13 +13,13 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import com.bq.oss.corbel.iam.repository.UserRepository;
-import com.bq.oss.lib.queries.ListQueryLiteral;
-import com.bq.oss.lib.queries.LongQueryLiteral;
-import com.bq.oss.lib.queries.QueryNodeImpl;
-import com.bq.oss.lib.queries.StringQueryLiteral;
-import com.bq.oss.lib.queries.builder.ResourceQueryBuilder;
-import com.bq.oss.lib.queries.request.QueryOperator;
-import com.bq.oss.lib.queries.request.ResourceQuery;
+import io.corbel.lib.queries.ListQueryLiteral;
+import io.corbel.lib.queries.LongQueryLiteral;
+import io.corbel.lib.queries.QueryNodeImpl;
+import io.corbel.lib.queries.StringQueryLiteral;
+import io.corbel.lib.queries.builder.ResourceQueryBuilder;
+import io.corbel.lib.queries.request.QueryOperator;
+import io.corbel.lib.queries.request.ResourceQuery;
 
 @RunWith(MockitoJUnitRunner.class) public class LowerCaseDecoratorTest {
 

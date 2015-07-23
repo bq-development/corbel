@@ -17,23 +17,23 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.bq.oss.lib</groupId>
+            <groupId>io.corbel.lib</groupId>
             <artifactId>token</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.bq.oss.lib</groupId>
+            <groupId>io.corbel.lib</groupId>
             <artifactId>ws</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.bq.oss.lib</groupId>
+            <groupId>io.corbel.lib</groupId>
             <artifactId>queries-mongo</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.bq.oss.lib</groupId>
+            <groupId>io.corbel.lib</groupId>
             <artifactId>mongodb</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.bq.oss.lib</groupId>
+            <groupId>io.corbel.lib</groupId>
             <artifactId>cli</artifactId>
         </dependency>
         <dependency>

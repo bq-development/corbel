@@ -12,9 +12,9 @@ import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter;
 import com.bq.oss.corbel.evci.eworker.Eworker;
 import com.bq.oss.corbel.evci.eworker.EworkerRegistry;
 import com.bq.oss.corbel.evci.service.EvciMQ;
-import com.bq.oss.lib.rabbitmq.config.AmqpConfigurer;
-import com.bq.oss.lib.rabbitmq.config.BackoffOptions;
-import com.bq.oss.lib.rabbitmq.converter.DomainObjectJsonMessageConverterFactory;
+import io.corbel.lib.rabbitmq.config.AmqpConfigurer;
+import io.corbel.lib.rabbitmq.config.BackoffOptions;
+import io.corbel.lib.rabbitmq.converter.DomainObjectJsonMessageConverterFactory;
 
 /**
  * Created by Alberto J. Rubio

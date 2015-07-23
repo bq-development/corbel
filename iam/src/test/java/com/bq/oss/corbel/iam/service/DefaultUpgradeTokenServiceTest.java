@@ -19,8 +19,8 @@ import org.mockito.runners.MockitoJUnitRunner;
 import com.bq.oss.corbel.iam.auth.AuthorizationRequestContextFactory;
 import com.bq.oss.corbel.iam.exception.UnauthorizedException;
 import com.bq.oss.corbel.iam.model.Scope;
-import com.bq.oss.lib.token.TokenInfo;
-import com.bq.oss.lib.token.reader.TokenReader;
+import io.corbel.lib.token.TokenInfo;
+import io.corbel.lib.token.reader.TokenReader;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 

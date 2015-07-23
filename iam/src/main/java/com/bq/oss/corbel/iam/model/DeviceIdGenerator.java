@@ -1,7 +1,7 @@
 package com.bq.oss.corbel.iam.model;
 
-import com.bq.oss.lib.mongo.IdGenerator;
-import com.bq.oss.lib.ws.digest.Digester;
+import io.corbel.lib.mongo.IdGenerator;
+import io.corbel.lib.ws.digest.Digester;
 import com.google.common.base.Joiner;
 
 /**

@@ -14,7 +14,7 @@ import javax.ws.rs.core.Response;
 import com.bq.oss.corbel.resources.rem.model.ResourceUri;
 import com.bq.oss.corbel.resources.rem.request.CollectionParameters;
 import com.bq.oss.corbel.resources.rem.request.RequestParameters;
-import com.bq.oss.lib.queries.request.ResourceQuery;
+import io.corbel.lib.queries.request.ResourceQuery;
 import org.junit.Before;
 import org.junit.Test;
 

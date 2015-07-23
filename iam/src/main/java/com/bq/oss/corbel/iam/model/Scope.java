@@ -7,10 +7,10 @@ import java.util.stream.Collectors;
 
 import org.hibernate.validator.constraints.NotEmpty;
 
-import com.bq.oss.lib.ws.json.serialization.JsonArrayToSetDeserializer;
-import com.bq.oss.lib.ws.json.serialization.JsonObjectDeserializer;
-import com.bq.oss.lib.ws.json.serialization.JsonObjectSerializer;
-import com.bq.oss.lib.ws.json.serialization.JsonObjectSetToJsonArraySerializer;
+import io.corbel.lib.ws.json.serialization.JsonArrayToSetDeserializer;
+import io.corbel.lib.ws.json.serialization.JsonObjectDeserializer;
+import io.corbel.lib.ws.json.serialization.JsonObjectSerializer;
+import io.corbel.lib.ws.json.serialization.JsonObjectSetToJsonArraySerializer;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;

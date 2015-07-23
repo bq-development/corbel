@@ -1,28 +1,5 @@
 package com.bq.oss.corbel.iam.api;
 
-import io.dropwizard.auth.Auth;
-
-import java.net.Inet4Address;
-import java.net.UnknownHostException;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Optional;
-
-import javax.validation.ConstraintViolationException;
-import javax.validation.Valid;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-
 import com.bq.oss.corbel.iam.exception.ClientAlreadyExistsException;
 import com.bq.oss.corbel.iam.exception.DomainAlreadyExists;
 import com.bq.oss.corbel.iam.exception.InvalidAggregationException;
@@ -32,16 +9,30 @@ import com.bq.oss.corbel.iam.model.TraceableEntity;
 import com.bq.oss.corbel.iam.service.ClientService;
 import com.bq.oss.corbel.iam.service.DomainService;
 import com.bq.oss.corbel.iam.utils.Message;
-import com.bq.oss.lib.queries.jaxrs.QueryParameters;
-import com.bq.oss.lib.queries.request.AggregationResult;
-import com.bq.oss.lib.queries.request.Pagination;
-import com.bq.oss.lib.queries.request.ResourceQuery;
-import com.bq.oss.lib.queries.request.Sort;
-import com.bq.oss.lib.ws.annotation.Rest;
-import com.bq.oss.lib.ws.api.error.ErrorResponseFactory;
-import com.bq.oss.lib.ws.auth.AuthorizationInfo;
-import com.bq.oss.lib.ws.model.Error;
 import com.google.common.base.Strings;
+import io.corbel.lib.queries.jaxrs.QueryParameters;
+import io.corbel.lib.queries.request.AggregationResult;
+import io.corbel.lib.queries.request.Pagination;
+import io.corbel.lib.queries.request.ResourceQuery;
+import io.corbel.lib.queries.request.Sort;
+import io.corbel.lib.ws.annotation.Rest;
+import io.corbel.lib.ws.api.error.ErrorResponseFactory;
+import io.corbel.lib.ws.auth.AuthorizationInfo;
+import io.corbel.lib.ws.model.Error;
+import io.dropwizard.auth.Auth;
+
+import javax.validation.ConstraintViolationException;
+import javax.validation.Valid;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
+import java.net.Inet4Address;
+import java.net.UnknownHostException;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Optional;
 
 @Path(ApiVersion.CURRENT + "/domain") public class DomainResource {
     private final ClientService clientService;
@@ -140,7 +131,7 @@ import com.google.common.base.Strings;
             clientService.createClient(client);
         } catch (ClientAlreadyExistsException e) {
             return IamErrorResponseFactory.getInstance().conflict(
-                    new com.bq.oss.lib.ws.model.Error("conflict", "The client already exists"));
+                    new io.corbel.lib.ws.model.Error("conflict", "The client already exists"));
         }
         return Response.created(uriInfo.getAbsolutePathBuilder().path(client.getId()).build()).build();
     }

@@ -7,9 +7,9 @@ import java.util.*;
 import com.bq.oss.corbel.iam.model.Client;
 import com.bq.oss.corbel.iam.model.Scope;
 import com.bq.oss.corbel.iam.repository.ClientRepository;
-import com.bq.oss.lib.token.TokenInfo;
-import com.bq.oss.lib.token.factory.TokenFactory;
-import com.bq.oss.lib.token.model.TokenType;
+import io.corbel.lib.token.TokenInfo;
+import io.corbel.lib.token.factory.TokenFactory;
+import io.corbel.lib.token.model.TokenType;
 
 public class DefaultMailResetPasswordService implements MailResetPasswordService {
     private final EventsService eventsService;

@@ -13,7 +13,7 @@ import com.bq.oss.corbel.iam.exception.InvalidAggregationException;
 import com.bq.oss.corbel.iam.model.Domain;
 import com.bq.oss.corbel.iam.model.Scope;
 import com.bq.oss.corbel.iam.repository.DomainRepository;
-import com.bq.oss.lib.queries.request.*;
+import io.corbel.lib.queries.request.*;
 
 /**
  * @author Alexander De Leon

@@ -17,10 +17,10 @@ import com.bq.oss.corbel.resources.rem.request.CollectionParameters;
 import com.bq.oss.corbel.resources.rem.request.RequestParameters;
 import com.bq.oss.corbel.resources.rem.request.ResourceId;
 import com.bq.oss.corbel.resources.rem.request.ResourceParameters;
-import com.bq.oss.lib.queries.QueryNodeImpl;
-import com.bq.oss.lib.queries.StringQueryLiteral;
-import com.bq.oss.lib.queries.request.QueryOperator;
-import com.bq.oss.lib.queries.request.ResourceQuery;
+import io.corbel.lib.queries.QueryNodeImpl;
+import io.corbel.lib.queries.StringQueryLiteral;
+import io.corbel.lib.queries.request.QueryOperator;
+import io.corbel.lib.queries.request.ResourceQuery;
 import com.google.gson.JsonArray;
 
 

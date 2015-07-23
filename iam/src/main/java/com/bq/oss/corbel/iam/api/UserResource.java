@@ -10,12 +10,12 @@ import com.bq.oss.corbel.iam.service.DomainService;
 import com.bq.oss.corbel.iam.service.IdentityService;
 import com.bq.oss.corbel.iam.service.UserService;
 import com.bq.oss.corbel.iam.utils.Message;
-import com.bq.oss.lib.queries.builder.ResourceQueryBuilder;
-import com.bq.oss.lib.queries.jaxrs.QueryParameters;
-import com.bq.oss.lib.queries.request.*;
-import com.bq.oss.lib.ws.annotation.Rest;
-import com.bq.oss.lib.ws.auth.AuthorizationInfo;
-import com.bq.oss.lib.ws.model.Error;
+import io.corbel.lib.queries.builder.ResourceQueryBuilder;
+import io.corbel.lib.queries.jaxrs.QueryParameters;
+import io.corbel.lib.queries.request.*;
+import io.corbel.lib.ws.annotation.Rest;
+import io.corbel.lib.ws.auth.AuthorizationInfo;
+import io.corbel.lib.ws.model.Error;
 import io.dropwizard.auth.Auth;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -353,7 +353,8 @@ import java.util.stream.Collectors;
     @DELETE
     @Path("/{id}/groups/{groupId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response deleteGroupsToUser(@PathParam("id") String id, @PathParam("groupId") String groupId, @Auth AuthorizationInfo authorizationInfo) {
+    public Response deleteGroupsToUser(@PathParam("id") String id, @PathParam("groupId") String groupId,
+            @Auth AuthorizationInfo authorizationInfo) {
         User user = getUserResolvingMeAndUserDomainVerifying(id, authorizationInfo);
         Optional<Domain> domain = domainService.getDomain(authorizationInfo.getDomainId());
 
@@ -441,8 +442,8 @@ import java.util.stream.Collectors;
                     identity.getOauthService(), identity.getDomain());
         }
         if (e instanceof DuplicatedOauthServiceIdentityException) {
-            return IamErrorResponseFactory.getInstance().oauthServiceDuplicated(Message.DUPLICATED_OAUTH_SERVICE_IDENTITY, identity.getUserId(),
-                    identity.getOauthService(), identity.getDomain());
+            return IamErrorResponseFactory.getInstance().oauthServiceDuplicated(Message.DUPLICATED_OAUTH_SERVICE_IDENTITY,
+                    identity.getUserId(), identity.getOauthService(), identity.getDomain());
         }
         if (e instanceof IllegalArgumentException) {
             return IamErrorResponseFactory.getInstance().invalidArgument(e.getMessage());

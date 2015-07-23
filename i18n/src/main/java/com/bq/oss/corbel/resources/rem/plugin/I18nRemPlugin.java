@@ -13,7 +13,7 @@ import com.bq.oss.corbel.resources.rem.RemRegistry;
 import com.bq.oss.corbel.resources.rem.i18n.I18nBaseRem;
 import com.bq.oss.corbel.resources.rem.i18n.ioc.I18nIoc;
 import com.bq.oss.corbel.resources.rem.i18n.ioc.I18nRemNames;
-import com.bq.oss.lib.config.ConfigurationHelper;
+import io.corbel.lib.config.ConfigurationHelper;
 import com.google.common.collect.ImmutableMap;
 
 @Component public class I18nRemPlugin extends RemPlugin {

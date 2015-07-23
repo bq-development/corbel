@@ -5,7 +5,7 @@ import java.util.Optional;
 
 import javax.ws.rs.core.Response;
 
-import com.bq.oss.lib.ws.api.error.ErrorResponseFactory;
+import io.corbel.lib.ws.api.error.ErrorResponseFactory;
 import com.bq.oss.corbel.resources.rem.request.RequestParameters;
 import com.bq.oss.corbel.resources.rem.dao.RestorDao;
 import com.bq.oss.corbel.resources.rem.request.ResourceId;

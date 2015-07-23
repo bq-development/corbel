@@ -1,9 +1,9 @@
 package com.bq.oss.corbel.iam.verifier;
 
 import com.bq.oss.corbel.iam.repository.UserRepository;
-import com.bq.oss.lib.token.exception.TokenVerificationException;
-import com.bq.oss.lib.token.reader.TokenReader;
-import com.bq.oss.lib.token.verifier.TokenVerifier;
+import io.corbel.lib.token.exception.TokenVerificationException;
+import io.corbel.lib.token.reader.TokenReader;
+import io.corbel.lib.token.verifier.TokenVerifier;
 
 /**
  * @author Alberto J. Rubio

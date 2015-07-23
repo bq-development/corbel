@@ -29,10 +29,10 @@ import org.springframework.http.HttpMethod;
 import com.bq.oss.corbel.resources.href.LinksFilter;
 import com.bq.oss.corbel.resources.rem.request.ResourceId;
 import com.bq.oss.corbel.resources.service.ResourcesService;
-import com.bq.oss.lib.queries.jaxrs.QueryParameters;
-import com.bq.oss.lib.token.TokenInfo;
-import com.bq.oss.lib.ws.annotation.Rest;
-import com.bq.oss.lib.ws.auth.AuthorizationInfo;
+import io.corbel.lib.queries.jaxrs.QueryParameters;
+import io.corbel.lib.token.TokenInfo;
+import io.corbel.lib.ws.annotation.Rest;
+import io.corbel.lib.ws.auth.AuthorizationInfo;
 
 /**
  * Entry point for any resource on the resources. Here we obtain the appropiate Resource Resolver Module (REM) and delegate on it the

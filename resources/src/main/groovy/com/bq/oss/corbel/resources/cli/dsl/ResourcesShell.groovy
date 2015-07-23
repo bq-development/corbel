@@ -4,8 +4,8 @@ import com.bq.oss.corbel.resources.model.RelationSchema
 import com.bq.oss.corbel.resources.rem.Rem
 import com.bq.oss.corbel.resources.rem.service.RemService
 import com.bq.oss.corbel.resources.repository.RelationSchemaRepository
-import com.bq.oss.lib.cli.console.Description
-import com.bq.oss.lib.cli.console.Shell
+import io.corbel.lib.cli.console.Description
+import io.corbel.lib.cli.console.Shell
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

@@ -2,7 +2,7 @@ package com.bq.oss.corbel.resources.rem.search;
 
 import com.bq.oss.corbel.resources.rem.model.ResourceUri;
 import com.bq.oss.corbel.resources.rem.model.SearchResource;
-import com.bq.oss.lib.queries.request.AggregationResult;
+import io.corbel.lib.queries.request.AggregationResult;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 

@@ -2,12 +2,12 @@ package com.bq.oss.corbel.iam.api;
 
 import com.bq.oss.corbel.iam.model.User;
 import com.bq.oss.corbel.iam.service.UserService;
-import com.bq.oss.lib.token.TokenInfo;
-import com.bq.oss.lib.token.reader.TokenReader;
-import com.bq.oss.lib.ws.auth.AuthorizationInfo;
-import com.bq.oss.lib.ws.auth.AuthorizationInfoProvider;
-import com.bq.oss.lib.ws.auth.AuthorizationRequestFilter;
-import com.bq.oss.lib.ws.auth.BearerTokenAuthenticator;
+import io.corbel.lib.token.TokenInfo;
+import io.corbel.lib.token.reader.TokenReader;
+import io.corbel.lib.ws.auth.AuthorizationInfo;
+import io.corbel.lib.ws.auth.AuthorizationInfoProvider;
+import io.corbel.lib.ws.auth.AuthorizationRequestFilter;
+import io.corbel.lib.ws.auth.BearerTokenAuthenticator;
 import com.google.common.base.Optional;
 import io.dropwizard.auth.oauth.OAuthFactory;
 import io.dropwizard.testing.junit.ResourceTestRule;

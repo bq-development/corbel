@@ -2,8 +2,8 @@ package com.bq.oss.corbel.resources.rem.i18n.api;
 
 import javax.ws.rs.core.Response;
 
-import com.bq.oss.lib.ws.api.error.ErrorResponseFactory;
-import com.bq.oss.lib.ws.model.Error;
+import io.corbel.lib.ws.api.error.ErrorResponseFactory;
+import io.corbel.lib.ws.model.Error;
 
 
 public class I18nErrorResponseFactory extends ErrorResponseFactory {

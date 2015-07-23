@@ -11,7 +11,7 @@ import org.springframework.data.mongodb.core.MongoOperations;
 import com.bq.oss.corbel.iam.model.Identity;
 import com.bq.oss.corbel.iam.model.User;
 import com.bq.oss.corbel.iam.model.UserToken;
-import com.bq.oss.lib.mongo.index.MongoIndex;
+import io.corbel.lib.mongo.index.MongoIndex;
 
 /**
  * @author Rubén Carrasco

@@ -7,7 +7,7 @@ import javax.ws.rs.core.Response;
 
 import com.amazonaws.services.s3.model.S3Object;
 import com.bq.oss.corbel.webfs.service.AmazonS3Service;
-import com.bq.oss.lib.ws.api.error.ErrorResponseFactory;
+import io.corbel.lib.ws.api.error.ErrorResponseFactory;
 
 /**
  * @author Rubén Carrasco

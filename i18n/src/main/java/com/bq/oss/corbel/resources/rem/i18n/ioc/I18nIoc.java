@@ -9,7 +9,7 @@ import com.bq.oss.corbel.resources.rem.Rem;
 import com.bq.oss.corbel.resources.rem.i18n.I18nDeleteRem;
 import com.bq.oss.corbel.resources.rem.i18n.I18nGetRem;
 import com.bq.oss.corbel.resources.rem.i18n.I18nPutRem;
-import com.bq.oss.lib.config.ConfigurationIoC;
+import io.corbel.lib.config.ConfigurationIoC;
 import com.google.gson.Gson;
 
 

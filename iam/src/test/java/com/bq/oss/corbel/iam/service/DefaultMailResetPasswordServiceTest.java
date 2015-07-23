@@ -14,8 +14,8 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import com.bq.oss.corbel.iam.model.Client;
 import com.bq.oss.corbel.iam.repository.ClientRepository;
-import com.bq.oss.lib.token.TokenGrant;
-import com.bq.oss.lib.token.factory.TokenFactory;
+import io.corbel.lib.token.TokenGrant;
+import io.corbel.lib.token.factory.TokenFactory;
 
 @RunWith(MockitoJUnitRunner.class) public class DefaultMailResetPasswordServiceTest {
 

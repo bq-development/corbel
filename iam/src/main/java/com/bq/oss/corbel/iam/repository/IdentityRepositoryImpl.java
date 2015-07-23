@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoOperations;
 
 import com.bq.oss.corbel.iam.model.Identity;
-import com.bq.oss.lib.mongo.utils.MongoCommonOperations;
+import io.corbel.lib.mongo.utils.MongoCommonOperations;
 import com.google.common.collect.ImmutableMap;
 
 /**

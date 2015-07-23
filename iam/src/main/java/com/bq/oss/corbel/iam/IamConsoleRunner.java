@@ -4,8 +4,8 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 
 import com.bq.oss.corbel.iam.cli.dsl.IamShell;
 import com.bq.oss.corbel.iam.ioc.IamIoc;
-import com.bq.oss.lib.cli.console.Console;
-import com.bq.oss.lib.ws.log.LogbackUtils;
+import io.corbel.lib.cli.console.Console;
+import io.corbel.lib.ws.log.LogbackUtils;
 
 /**
  * @author Alexander De Leon

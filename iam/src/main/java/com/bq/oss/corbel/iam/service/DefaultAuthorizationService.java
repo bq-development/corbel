@@ -33,11 +33,11 @@ import com.bq.oss.corbel.iam.model.User;
 import com.bq.oss.corbel.iam.model.UserToken;
 import com.bq.oss.corbel.iam.repository.UserTokenRepository;
 import com.bq.oss.corbel.iam.utils.Message;
-import com.bq.oss.lib.token.TokenInfo;
-import com.bq.oss.lib.token.TokenInfo.Builder;
-import com.bq.oss.lib.token.exception.TokenVerificationException;
-import com.bq.oss.lib.token.factory.TokenFactory;
-import com.bq.oss.lib.token.model.TokenType;
+import io.corbel.lib.token.TokenInfo;
+import io.corbel.lib.token.TokenInfo.Builder;
+import io.corbel.lib.token.exception.TokenVerificationException;
+import io.corbel.lib.token.factory.TokenFactory;
+import io.corbel.lib.token.model.TokenType;
 
 /**
  * @author Alexander De Leon

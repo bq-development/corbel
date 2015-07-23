@@ -10,7 +10,7 @@ import net.oauth.jsontoken.JsonToken;
 import net.oauth.jsontoken.JsonTokenParser;
 
 import com.bq.oss.corbel.iam.exception.UnauthorizedException;
-import com.bq.oss.lib.token.reader.TokenReader;
+import io.corbel.lib.token.reader.TokenReader;
 import com.google.gson.JsonObject;
 
 public class DefaultUpgradeTokenService implements UpgradeTokenService {

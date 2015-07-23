@@ -10,8 +10,8 @@ import com.bq.oss.corbel.iam.exception.ClientAlreadyExistsException;
 import com.bq.oss.corbel.iam.exception.InvalidAggregationException;
 import com.bq.oss.corbel.iam.model.Client;
 import com.bq.oss.corbel.iam.repository.ClientRepository;
-import com.bq.oss.lib.queries.builder.ResourceQueryBuilder;
-import com.bq.oss.lib.queries.request.*;
+import io.corbel.lib.queries.builder.ResourceQueryBuilder;
+import io.corbel.lib.queries.request.*;
 
 public class DefaultClientService implements ClientService {
     private ClientRepository clientRepository;

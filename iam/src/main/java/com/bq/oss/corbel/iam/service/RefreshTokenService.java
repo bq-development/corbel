@@ -4,7 +4,7 @@ import java.util.Optional;
 
 import com.bq.oss.corbel.iam.auth.AuthorizationRequestContext;
 import com.bq.oss.corbel.iam.model.User;
-import com.bq.oss.lib.token.exception.TokenVerificationException;
+import io.corbel.lib.token.exception.TokenVerificationException;
 
 /**
  * @author Alberto J. Rubio

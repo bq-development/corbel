@@ -18,7 +18,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.bq.oss.lib</groupId>
+            <groupId>io.corbel.lib</groupId>
             <artifactId>ws</artifactId>
         </dependency>
         <dependency>

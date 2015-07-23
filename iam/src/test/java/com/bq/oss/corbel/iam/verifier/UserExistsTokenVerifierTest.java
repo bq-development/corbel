@@ -9,9 +9,9 @@ import org.mockito.Mockito;
 
 import com.bq.oss.corbel.iam.model.User;
 import com.bq.oss.corbel.iam.repository.UserRepository;
-import com.bq.oss.lib.token.TokenInfo;
-import com.bq.oss.lib.token.exception.TokenVerificationException;
-import com.bq.oss.lib.token.reader.TokenReader;
+import io.corbel.lib.token.TokenInfo;
+import io.corbel.lib.token.exception.TokenVerificationException;
+import io.corbel.lib.token.reader.TokenReader;
 
 /**
  * @author Alberto J. Rubio

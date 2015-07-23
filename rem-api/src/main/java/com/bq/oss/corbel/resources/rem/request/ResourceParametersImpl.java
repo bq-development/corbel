@@ -3,12 +3,12 @@ package com.bq.oss.corbel.resources.rem.request;
 import java.util.List;
 import java.util.Optional;
 
-import com.bq.oss.lib.queries.jaxrs.QueryParameters;
-import com.bq.oss.lib.queries.request.Aggregation;
-import com.bq.oss.lib.queries.request.Pagination;
-import com.bq.oss.lib.queries.request.ResourceQuery;
-import com.bq.oss.lib.queries.request.Search;
-import com.bq.oss.lib.queries.request.Sort;
+import io.corbel.lib.queries.jaxrs.QueryParameters;
+import io.corbel.lib.queries.request.Aggregation;
+import io.corbel.lib.queries.request.Pagination;
+import io.corbel.lib.queries.request.ResourceQuery;
+import io.corbel.lib.queries.request.Search;
+import io.corbel.lib.queries.request.Sort;
 
 /**
  * Created by Francisco Sanchez on 26/05/15.

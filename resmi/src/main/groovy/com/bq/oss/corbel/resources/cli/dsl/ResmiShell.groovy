@@ -3,8 +3,8 @@ package com.bq.oss.corbel.resources.cli.dsl
 import com.bq.oss.corbel.resources.rem.model.ResourceUri
 import com.bq.oss.corbel.resources.rem.model.SearchResource
 import com.bq.oss.corbel.resources.rem.service.ResmiService
-import com.bq.oss.lib.cli.console.Description
-import com.bq.oss.lib.cli.console.Shell
+import io.corbel.lib.cli.console.Description
+import io.corbel.lib.cli.console.Shell
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import org.springframework.data.mongodb.core.index.Index

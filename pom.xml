@@ -37,13 +37,13 @@
     <appassembler.plugin.version>1.10</appassembler.plugin.version>
     <maven-surefire.plugin.version>2.17</maven-surefire.plugin.version>
     <buildmetadata-maven-plugin.version>1.5.2</buildmetadata-maven-plugin.version>
-    <lib-config.version>0.2.0</lib-config.version>
-    <lib-cli.version>0.3.0</lib-cli.version>
-    <lib-mongodb.version>0.3.0</lib-mongodb.version>
+    <lib-config.version>0.3.0-SNAPSHOT</lib-config.version>
+    <lib-cli.version>0.4.0-SNAPSHOT</lib-cli.version>
+    <lib-mongodb.version>0.4.0-SNAPSHOT</lib-mongodb.version>
     <lib-token.version>0.7.0-SNAPSHOT</lib-token.version>
     <lib-queries.version>0.8.0-SNAPSHOT</lib-queries.version>
     <lib-ws.version>0.9.0-SNAPSHOT</lib-ws.version>
-    <lib-rabbitmq.version>0.6.0</lib-rabbitmq.version>
+    <lib-rabbitmq.version>0.7.0-SNAPSHOT</lib-rabbitmq.version>
     <spring.version>4.1.7.RELEASE</spring.version>
     <dropwizard.version>0.8.1</dropwizard.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -117,42 +117,42 @@
         <version>${project.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.bq.oss.lib</groupId>
+        <groupId>io.corbel.lib</groupId>
         <artifactId>config</artifactId>
         <version>${lib-config.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.bq.oss.lib</groupId>
+        <groupId>io.corbel.lib</groupId>
         <artifactId>cli</artifactId>
         <version>${lib-cli.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.bq.oss.lib</groupId>
+        <groupId>io.corbel.lib</groupId>
         <artifactId>token</artifactId>
         <version>${lib-token.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.bq.oss.lib</groupId>
+        <groupId>io.corbel.lib</groupId>
         <artifactId>ws</artifactId>
         <version>${lib-ws.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.bq.oss.lib</groupId>
+        <groupId>io.corbel.lib</groupId>
         <artifactId>mongodb</artifactId>
         <version>${lib-mongodb.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.bq.oss.lib</groupId>
+        <groupId>io.corbel.lib</groupId>
         <artifactId>queries-api</artifactId>
         <version>${lib-queries.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.bq.oss.lib</groupId>
+        <groupId>io.corbel.lib</groupId>
         <artifactId>queries-mongo</artifactId>
         <version>${lib-queries.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.bq.oss.lib</groupId>
+        <groupId>io.corbel.lib</groupId>
         <artifactId>rabbitmq</artifactId>
         <version>${lib-rabbitmq.version}</version>
       </dependency>

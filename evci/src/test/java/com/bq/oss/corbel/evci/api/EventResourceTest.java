@@ -22,7 +22,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
 import com.bq.oss.corbel.evci.service.EventsService;
-import com.bq.oss.lib.ws.gson.GsonMessageReaderWriterProvider;
+import io.corbel.lib.ws.gson.GsonMessageReaderWriterProvider;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonNode;
 

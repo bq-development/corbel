@@ -4,8 +4,8 @@ import org.springframework.data.mongodb.core.query.Criteria;
 
 import com.bq.oss.corbel.resources.rem.model.ResourceUri;
 import com.bq.oss.corbel.resources.rem.request.ResourceId;
-import com.bq.oss.lib.queries.builder.QueryBuilder;
-import com.bq.oss.lib.queries.mongo.builder.MongoQueryBuilder;
+import io.corbel.lib.queries.builder.QueryBuilder;
+import io.corbel.lib.queries.mongo.builder.MongoQueryBuilder;
 
 /**
  * @author Alberto J. Rubio

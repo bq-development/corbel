@@ -19,7 +19,7 @@ import com.bq.oss.corbel.resources.rem.request.RequestParameters;
 import com.bq.oss.corbel.resources.rem.request.ResourceId;
 import com.bq.oss.corbel.resources.rem.request.ResourceParameters;
 import com.bq.oss.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
-import com.bq.oss.lib.queries.request.ResourceQuery;
+import io.corbel.lib.queries.request.ResourceQuery;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 

@@ -10,7 +10,7 @@ import com.bq.oss.corbel.resources.rem.service.DefaultImageOperationsService;
 import com.bq.oss.corbel.resources.rem.service.ImageCacheService;
 import com.bq.oss.corbel.resources.rem.service.ImageOperationsService;
 import com.bq.oss.corbel.resources.rem.util.ImageRemUtil;
-import com.bq.oss.lib.config.ConfigurationIoC;
+import io.corbel.lib.config.ConfigurationIoC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -1,8 +1,8 @@
 package com.bq.oss.corbel.iam.api;
 
 import com.bq.oss.corbel.iam.utils.Message;
-import com.bq.oss.lib.ws.api.error.ErrorResponseFactory;
-import com.bq.oss.lib.ws.model.Error;
+import io.corbel.lib.ws.api.error.ErrorResponseFactory;
+import io.corbel.lib.ws.model.Error;
 
 import javax.ws.rs.core.Response;
 

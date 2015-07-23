@@ -13,9 +13,9 @@ import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 
 import com.bq.oss.corbel.evci.eworker.Eworker;
-import com.bq.oss.lib.rabbitmq.config.AmqpConfigurer;
-import com.bq.oss.lib.rabbitmq.config.RabbitMQConfigurer;
-import com.bq.oss.lib.rabbitmq.converter.DomainObjectJsonMessageConverterFactory;
+import io.corbel.lib.rabbitmq.config.AmqpConfigurer;
+import io.corbel.lib.rabbitmq.config.RabbitMQConfigurer;
+import io.corbel.lib.rabbitmq.converter.DomainObjectJsonMessageConverterFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**

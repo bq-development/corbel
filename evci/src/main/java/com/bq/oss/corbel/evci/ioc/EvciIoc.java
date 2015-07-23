@@ -1,20 +1,5 @@
 package com.bq.oss.corbel.evci.ioc;
 
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.UnaryOperator;
-
-import org.springframework.amqp.core.AmqpTemplate;
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
-import org.springframework.amqp.support.converter.MessageConverter;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.DependsOn;
-import org.springframework.context.annotation.Import;
-import org.springframework.core.env.Environment;
-
 import com.bq.oss.corbel.evci.api.EventResource;
 import com.bq.oss.corbel.evci.api.EworkerInfoResource;
 import com.bq.oss.corbel.evci.client.DefaultEvciClient;
@@ -30,21 +15,31 @@ import com.bq.oss.corbel.eventbus.EventHandler;
 import com.bq.oss.corbel.eventbus.ioc.EventBusListeningIoc;
 import com.bq.oss.corbel.eworker.internal.AmqpEworkerRegistry;
 import com.bq.oss.corbel.eworker.internal.InMemoryArtifactIdRegistry;
-import com.bq.oss.lib.config.ConfigurationIoC;
-import com.bq.oss.lib.rabbitmq.config.AmqpConfiguration;
-import com.bq.oss.lib.rabbitmq.config.AmqpConfigurer;
-import com.bq.oss.lib.rabbitmq.config.BackoffOptions;
-import com.bq.oss.lib.rabbitmq.converter.DomainObjectJsonMessageConverterFactory;
-import com.bq.oss.lib.rabbitmq.ioc.AbstractRabbitMQConfiguration;
-import com.bq.oss.lib.token.ioc.TokenIoc;
-import com.bq.oss.lib.ws.auth.ioc.AuthorizationIoc;
-import com.bq.oss.lib.ws.cors.ioc.CorsIoc;
-import com.bq.oss.lib.ws.dw.ioc.CommonFiltersIoc;
-import com.bq.oss.lib.ws.dw.ioc.DropwizardIoc;
-import com.bq.oss.lib.ws.dw.ioc.RabbitMQHealthCheckIoc;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JSR310Module;
+import io.corbel.lib.config.ConfigurationIoC;
+import io.corbel.lib.rabbitmq.config.AmqpConfiguration;
+import io.corbel.lib.rabbitmq.config.AmqpConfigurer;
+import io.corbel.lib.rabbitmq.config.BackoffOptions;
+import io.corbel.lib.rabbitmq.converter.DomainObjectJsonMessageConverterFactory;
+import io.corbel.lib.rabbitmq.ioc.AbstractRabbitMQConfiguration;
+import io.corbel.lib.token.ioc.TokenIoc;
+import io.corbel.lib.ws.auth.ioc.AuthorizationIoc;
+import io.corbel.lib.ws.cors.ioc.CorsIoc;
+import io.corbel.lib.ws.dw.ioc.CommonFiltersIoc;
+import io.corbel.lib.ws.dw.ioc.DropwizardIoc;
+import io.corbel.lib.ws.dw.ioc.RabbitMQHealthCheckIoc;
+import org.springframework.amqp.core.AmqpTemplate;
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.amqp.support.converter.MessageConverter;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.*;
+import org.springframework.core.env.Environment;
+
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.UnaryOperator;
 
 @Configuration 
 @Import({ConfigurationIoC.class, DropwizardIoc.class, TokenIoc.class, AuthorizationIoc.class, CorsIoc.class,

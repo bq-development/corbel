@@ -3,8 +3,8 @@ package com.bq.oss.corbel.iam.repository;
 import java.util.List;
 
 import com.bq.oss.corbel.iam.model.Client;
-import com.bq.oss.lib.mongo.repository.PartialUpdateRepository;
-import com.bq.oss.lib.queries.mongo.repository.GenericFindRepository;
+import io.corbel.lib.mongo.repository.PartialUpdateRepository;
+import io.corbel.lib.queries.mongo.repository.GenericFindRepository;
 
 /**
  * @author Alberto J. Rubio

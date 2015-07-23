@@ -39,13 +39,13 @@ import com.bq.oss.corbel.iam.model.TokenGrant;
 import com.bq.oss.corbel.iam.service.AuthorizationService;
 import com.bq.oss.corbel.iam.service.UpgradeTokenService;
 import com.bq.oss.corbel.iam.utils.TokenCookieFactory;
-import com.bq.oss.lib.token.TokenInfo;
-import com.bq.oss.lib.token.reader.TokenReader;
-import com.bq.oss.lib.ws.auth.AuthorizationInfo;
-import com.bq.oss.lib.ws.auth.AuthorizationInfoProvider;
-import com.bq.oss.lib.ws.auth.AuthorizationRequestFilter;
-import com.bq.oss.lib.ws.auth.BearerTokenAuthenticator;
-import com.bq.oss.lib.ws.auth.CookieOAuthFactory;
+import io.corbel.lib.token.TokenInfo;
+import io.corbel.lib.token.reader.TokenReader;
+import io.corbel.lib.ws.auth.AuthorizationInfo;
+import io.corbel.lib.ws.auth.AuthorizationInfoProvider;
+import io.corbel.lib.ws.auth.AuthorizationRequestFilter;
+import io.corbel.lib.ws.auth.BearerTokenAuthenticator;
+import io.corbel.lib.ws.auth.CookieOAuthFactory;
 import com.google.common.base.Optional;
 
 /**
@@ -308,7 +308,7 @@ public class TokenResourceTest {
         assertThat(response).isNotNull();
         assertThat(response.getStatus()).isEqualTo(status);
         assertThat(response.getMediaType()).isEqualTo(MediaType.APPLICATION_JSON_TYPE);
-        com.bq.oss.lib.ws.model.Error error = response.readEntity(com.bq.oss.lib.ws.model.Error.class);
+        io.corbel.lib.ws.model.Error error = response.readEntity(io.corbel.lib.ws.model.Error.class);
         assertThat(error.getError()).isEqualTo(expectedMessage);
     }
 

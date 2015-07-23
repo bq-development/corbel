@@ -1,7 +1,7 @@
 package com.bq.oss.corbel.iam.service;
 
 import com.bq.oss.corbel.iam.exception.UnauthorizedException;
-import com.bq.oss.lib.token.reader.TokenReader;
+import io.corbel.lib.token.reader.TokenReader;
 
 public interface UpgradeTokenService {
 

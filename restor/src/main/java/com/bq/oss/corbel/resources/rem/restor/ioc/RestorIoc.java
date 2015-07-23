@@ -5,7 +5,7 @@ import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
-import com.bq.oss.lib.config.ConfigurationIoC;
+import io.corbel.lib.config.ConfigurationIoC;
 import com.bq.oss.corbel.resources.rem.Rem;
 import com.bq.oss.corbel.resources.rem.dao.DefaultKeyNormalizer;
 import com.bq.oss.corbel.resources.rem.dao.KeyNormalizer;

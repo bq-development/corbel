@@ -6,7 +6,7 @@ import java.util.Optional;
 import com.bq.oss.corbel.iam.exception.ClientAlreadyExistsException;
 import com.bq.oss.corbel.iam.exception.InvalidAggregationException;
 import com.bq.oss.corbel.iam.model.Client;
-import com.bq.oss.lib.queries.request.*;
+import io.corbel.lib.queries.request.*;
 
 public interface ClientService {
     void createClient(Client client) throws ClientAlreadyExistsException;

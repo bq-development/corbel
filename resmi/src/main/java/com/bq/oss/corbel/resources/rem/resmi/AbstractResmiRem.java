@@ -10,8 +10,8 @@ import com.bq.oss.corbel.resources.rem.Rem;
 import com.bq.oss.corbel.resources.rem.model.ResourceUri;
 import com.bq.oss.corbel.resources.rem.request.RelationParameters;
 import com.bq.oss.corbel.resources.rem.service.ResmiService;
-import com.bq.oss.lib.queries.request.AggregationResult;
-import com.bq.oss.lib.ws.api.error.ErrorResponseFactory;
+import io.corbel.lib.queries.request.AggregationResult;
+import io.corbel.lib.ws.api.error.ErrorResponseFactory;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 

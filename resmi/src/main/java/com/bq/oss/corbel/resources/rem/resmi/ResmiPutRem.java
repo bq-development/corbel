@@ -15,9 +15,9 @@ import com.bq.oss.corbel.resources.rem.model.ResourceUri;
 import com.bq.oss.corbel.resources.rem.request.*;
 import com.bq.oss.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
 import com.bq.oss.corbel.resources.rem.service.ResmiService;
-import com.bq.oss.lib.queries.request.ResourceQuery;
-import com.bq.oss.lib.ws.api.error.ErrorResponseFactory;
-import com.bq.oss.lib.ws.model.Error;
+import io.corbel.lib.queries.request.ResourceQuery;
+import io.corbel.lib.ws.api.error.ErrorResponseFactory;
+import io.corbel.lib.ws.model.Error;
 import com.google.gson.JsonObject;
 
 /**

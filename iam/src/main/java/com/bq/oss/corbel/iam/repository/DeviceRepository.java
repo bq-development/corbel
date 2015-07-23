@@ -5,7 +5,7 @@ import java.util.List;
 import org.springframework.data.repository.CrudRepository;
 
 import com.bq.oss.corbel.iam.model.Device;
-import com.bq.oss.lib.mongo.repository.PartialUpdateRepository;
+import io.corbel.lib.mongo.repository.PartialUpdateRepository;
 
 /**
  * @author Francisco Sanchez

@@ -9,8 +9,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
 import com.bq.oss.corbel.eventbus.rabbit.EventBusRabbitMQ;
-import com.bq.oss.lib.rabbitmq.config.AmqpConfiguration;
-import com.bq.oss.lib.rabbitmq.ioc.AbstractRabbitMQConfiguration;
+import io.corbel.lib.rabbitmq.config.AmqpConfiguration;
+import io.corbel.lib.rabbitmq.ioc.AbstractRabbitMQConfiguration;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JSR310Module;

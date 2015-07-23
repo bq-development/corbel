@@ -19,9 +19,9 @@ import com.bq.oss.corbel.iam.model.User;
 import com.bq.oss.corbel.iam.model.UserToken;
 import com.bq.oss.corbel.iam.repository.UserRepository;
 import com.bq.oss.corbel.iam.repository.UserTokenRepository;
-import com.bq.oss.lib.queries.builder.ResourceQueryBuilder;
-import com.bq.oss.lib.queries.request.ResourceQuery;
-import com.bq.oss.lib.ws.auth.repository.AuthorizationRulesRepository;
+import io.corbel.lib.queries.builder.ResourceQueryBuilder;
+import io.corbel.lib.queries.request.ResourceQuery;
+import io.corbel.lib.ws.auth.repository.AuthorizationRulesRepository;
 import com.google.gson.Gson;
 
 /**

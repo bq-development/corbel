@@ -10,8 +10,8 @@ import org.joda.time.Instant
 
 import com.bq.oss.corbel.iam.model.*
 import com.bq.oss.corbel.iam.repository.*
-import com.bq.oss.lib.cli.console.Description
-import com.bq.oss.lib.cli.console.Shell
+import io.corbel.lib.cli.console.Description
+import io.corbel.lib.cli.console.Shell
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 

@@ -26,10 +26,10 @@ import com.bq.oss.corbel.iam.exception.OauthServerConnectionException;
 import com.bq.oss.corbel.iam.exception.UnauthorizedException;
 import com.bq.oss.corbel.iam.model.*;
 import com.bq.oss.corbel.iam.repository.UserTokenRepository;
-import com.bq.oss.lib.token.TokenInfo;
-import com.bq.oss.lib.token.exception.TokenVerificationException;
-import com.bq.oss.lib.token.factory.TokenFactory;
-import com.bq.oss.lib.token.model.TokenType;
+import io.corbel.lib.token.TokenInfo;
+import io.corbel.lib.token.exception.TokenVerificationException;
+import io.corbel.lib.token.factory.TokenFactory;
+import io.corbel.lib.token.model.TokenType;
 
 /**
  * @author Alexander De Leon
@@ -63,7 +63,7 @@ import com.bq.oss.lib.token.model.TokenType;
     private ScopeService scopeServiceMock;
     private AuthorizationProviderFactory authorizationProviderFactoryMock;
     private RefreshTokenService refreshTokenServiceMock;
-    private com.bq.oss.lib.token.TokenGrant tokenGrant;
+    private io.corbel.lib.token.TokenGrant tokenGrant;
     private UserTokenRepository userTokenRepository;
 
     @Mock private UserService userService;
@@ -85,7 +85,7 @@ import com.bq.oss.lib.token.model.TokenType;
                 accessTokenFactoryMock, factory, scopeServiceMock, authorizationProviderFactoryMock, refreshTokenServiceMock,
                 userTokenRepository, userService);
 
-        tokenGrant = new com.bq.oss.lib.token.TokenGrant(TEST_TOKEN, TEST_EXPIRATION);
+        tokenGrant = new io.corbel.lib.token.TokenGrant(TEST_TOKEN, TEST_EXPIRATION);
 
         tokenInfo = TokenInfo.newBuilder().setType(TokenType.TOKEN).setClientId(TEST_CLIENT_ID).setState(Long.toString(TEST_EXPIRATION))
                 .setDomainId(TEST_DOMAIN_ID).setUserId(TEST_USER_ID).setGroups(TEST_USER_GROUPS).build();

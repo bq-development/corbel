@@ -18,7 +18,7 @@ import com.bq.oss.corbel.resources.rem.request.ResourceId;
 import com.bq.oss.corbel.resources.rem.request.ResourceParameters;
 import com.bq.oss.corbel.resources.rem.service.RemService;
 import com.bq.oss.corbel.resources.rem.util.ImageRemUtil;
-import com.bq.oss.lib.ws.api.error.ErrorResponseFactory;
+import io.corbel.lib.ws.api.error.ErrorResponseFactory;
 
 public class ImageDeleteRem extends BaseRem<InputStream> {
 

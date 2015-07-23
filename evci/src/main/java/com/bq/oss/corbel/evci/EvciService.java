@@ -7,10 +7,10 @@ import org.springframework.context.ApplicationContext;
 import com.bq.oss.corbel.evci.api.EventResource;
 import com.bq.oss.corbel.evci.api.EworkerInfoResource;
 import com.bq.oss.corbel.evci.ioc.EvciIoc;
-import com.bq.oss.lib.ws.cli.ServiceRunnerWithVersionResource;
-import com.bq.oss.lib.ws.health.AuthorizationRedisHealthCheck;
-import com.bq.oss.lib.ws.health.BasicHealthCheck;
-import com.bq.oss.lib.ws.health.RabbitMQHealthCheck;
+import io.corbel.lib.ws.cli.ServiceRunnerWithVersionResource;
+import io.corbel.lib.ws.health.AuthorizationRedisHealthCheck;
+import io.corbel.lib.ws.health.BasicHealthCheck;
+import io.corbel.lib.ws.health.RabbitMQHealthCheck;
 
 public class EvciService extends ServiceRunnerWithVersionResource<EvciIoc> {
 

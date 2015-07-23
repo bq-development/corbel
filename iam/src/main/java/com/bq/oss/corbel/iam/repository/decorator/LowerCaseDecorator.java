@@ -2,9 +2,9 @@ package com.bq.oss.corbel.iam.repository.decorator;
 
 import com.bq.oss.corbel.iam.model.User;
 import com.bq.oss.corbel.iam.repository.UserRepository;
-import com.bq.oss.lib.queries.ListQueryLiteral;
-import com.bq.oss.lib.queries.StringQueryLiteral;
-import com.bq.oss.lib.queries.request.*;
+import io.corbel.lib.queries.ListQueryLiteral;
+import io.corbel.lib.queries.StringQueryLiteral;
+import io.corbel.lib.queries.request.*;
 import org.bouncycastle.util.Strings;
 
 import java.util.List;

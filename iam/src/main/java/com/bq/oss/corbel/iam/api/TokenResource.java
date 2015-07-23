@@ -1,14 +1,5 @@
 package com.bq.oss.corbel.iam.api;
 
-import java.net.URLDecoder;
-
-import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.ResponseBuilder;
-import javax.ws.rs.core.UriInfo;
-
 import com.bq.oss.corbel.iam.auth.OauthParams;
 import com.bq.oss.corbel.iam.exception.*;
 import com.bq.oss.corbel.iam.model.GrantType;
@@ -16,11 +7,19 @@ import com.bq.oss.corbel.iam.model.TokenGrant;
 import com.bq.oss.corbel.iam.service.AuthorizationService;
 import com.bq.oss.corbel.iam.service.UpgradeTokenService;
 import com.bq.oss.corbel.iam.utils.TokenCookieFactory;
-import com.bq.oss.lib.ws.api.error.ErrorResponseFactory;
-import com.bq.oss.lib.ws.auth.AuthorizationInfo;
-import com.bq.oss.lib.ws.model.Error;
 import com.google.common.base.Optional;
+import io.corbel.lib.ws.api.error.ErrorResponseFactory;
+import io.corbel.lib.ws.auth.AuthorizationInfo;
+import io.corbel.lib.ws.model.Error;
 import io.dropwizard.auth.Auth;
+
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
+import javax.ws.rs.core.UriInfo;
+import java.net.URLDecoder;
 
 /**
  * @author Alexander De Leon

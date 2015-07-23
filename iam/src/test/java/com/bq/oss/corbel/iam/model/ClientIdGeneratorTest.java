@@ -6,7 +6,7 @@ import static org.mockito.Mockito.when;
 
 import org.junit.Test;
 
-import com.bq.oss.lib.ws.digest.Digester;
+import io.corbel.lib.ws.digest.Digester;
 
 /**
  * @author Alexander De Leon
