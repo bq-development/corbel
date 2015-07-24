@@ -58,7 +58,7 @@ import io.dropwizard.auth.Auth;
     }
 
     @PUT
-    @Path("/{id}/addScopes")
+    @Path("/{id}/scopes")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response addScopes(@PathParam("id") final String id, @Auth AuthorizationInfo authorizationInfo, List<String> scopes) {
         String domain = authorizationInfo.getDomainId();
@@ -73,10 +73,10 @@ import io.dropwizard.auth.Auth;
         }).orElseGet(() -> IamErrorResponseFactory.getInstance().groupNotExists(id));
     }
 
-    @PUT
-    @Path("/{id}/removeScopes")
+    @DELETE
+    @Path("/{id}/scopes/{scopeId}")
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response removeScopes(@PathParam("id") final String id, @Auth AuthorizationInfo authorizationInfo, List<String> scopes) {
+    public Response removeScopes(@PathParam("id") final String id, @PathParam("scopeId") final String scopeId, @Auth AuthorizationInfo authorizationInfo) {
         String domain = authorizationInfo.getDomainId();
 
         return groupService.get(id).map(group -> {
@@ -84,7 +84,7 @@ import io.dropwizard.auth.Auth;
                 return IamErrorResponseFactory.getInstance().unauthorizedGroupUpdate(id);
             }
 
-            groupService.removeScopes(id, scopes.stream().toArray(String[]::new));
+            groupService.removeScopes(id, scopeId);
             return Response.noContent().build();
         }).orElseGet(() -> IamErrorResponseFactory.getInstance().groupNotExists(id));
     }
