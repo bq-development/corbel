@@ -34,7 +34,7 @@ public class DefaultScopeService implements ScopeService {
     private static final int FIRST_PARAM_POSITION = 1;
 
     private final ScopeRepository scopeRepository;
-    private final GroupRepository groupRepository;
+    private final GroupService groupService;
     private final AuthorizationRulesRepository authorizationRulesRepository;
     private final ScopeFillStrategy fillStrategy;
     private final String iamAudience;
@@ -42,11 +42,11 @@ public class DefaultScopeService implements ScopeService {
 
     private final EventsService eventsService;
 
-    public DefaultScopeService(ScopeRepository scopeRepository, GroupRepository groupRepository,
+    public DefaultScopeService(ScopeRepository scopeRepository, GroupService groupService,
             AuthorizationRulesRepository authorizationRulesRepository, ScopeFillStrategy fillStrategy, String iamAudience, Clock clock,
             EventsService eventsService) {
         this.scopeRepository = scopeRepository;
-        this.groupRepository = groupRepository;
+        this.groupService = groupService;
         this.authorizationRulesRepository = authorizationRulesRepository;
         this.fillStrategy = fillStrategy;
         this.iamAudience = iamAudience;
@@ -54,10 +54,10 @@ public class DefaultScopeService implements ScopeService {
         this.eventsService = eventsService;
     }
 
-    public DefaultScopeService(ScopeRepository scopeRepository, GroupRepository groupRepository,
+    public DefaultScopeService(ScopeRepository scopeRepository, GroupService groupService,
             AuthorizationRulesRepository authorizationRulesRepository, ScopeFillStrategy fillStrategy, String iamAudience,
             EventsService eventsService) {
-        this(scopeRepository, groupRepository, authorizationRulesRepository, fillStrategy, iamAudience, Clock.systemDefaultZone(),
+        this(scopeRepository, groupService, authorizationRulesRepository, fillStrategy, iamAudience, Clock.systemDefaultZone(),
                 eventsService);
     }
 
@@ -98,12 +98,9 @@ public class DefaultScopeService implements ScopeService {
     @Override
     public Set<String> getGroupScopes(Collection<String> groups) {
         Set<String> scopes = new HashSet<>();
-        groups.stream().forEach(groupId -> {
-            Group group = groupRepository.findOne(groupId);
-            if (group != null) {
-                scopes.addAll(group.getScopes());
-            }
-        });
+        groups.stream().forEach(groupId ->
+            groupService.get(groupId).ifPresent(group -> scopes.addAll(group.getScopes()))
+        );
         return scopes;
     }
 

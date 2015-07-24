@@ -265,8 +265,8 @@ import io.corbel.lib.ws.ioc.QueriesIoc;
     }
 
     @Bean
-    public ScopeService getScopeService(EventsService eventsService) {
-        return new DefaultScopeService(scopeRepository, groupRepository, authorizationRulesRepository, getScopeFillStrategy(),
+    public ScopeService getScopeService(EventsService eventsService, GroupService groupService) {
+        return new DefaultScopeService(scopeRepository, groupService, authorizationRulesRepository, getScopeFillStrategy(),
                 env.getProperty("iam.uri"), eventsService);
     }
 

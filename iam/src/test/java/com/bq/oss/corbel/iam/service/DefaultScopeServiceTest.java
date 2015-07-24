@@ -22,7 +22,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 import com.bq.oss.corbel.iam.exception.ScopeNameException;
 import com.bq.oss.corbel.iam.model.Group;
 import com.bq.oss.corbel.iam.model.Scope;
-import com.bq.oss.corbel.iam.repository.GroupRepository;
 import com.bq.oss.corbel.iam.repository.ScopeRepository;
 import com.bq.oss.corbel.iam.scope.ScopeFillStrategy;
 import io.corbel.lib.ws.auth.repository.AuthorizationRulesRepository;
@@ -62,14 +61,15 @@ import com.google.gson.JsonParser;
     private DefaultScopeService service;
 
     @Mock private ScopeRepository scopeRepositoryMock;
-    @Mock private GroupRepository groupRepositoryMock;
+    @Mock private GroupService groupServiceMock;
     @Mock private AuthorizationRulesRepository authorizationRulesRepositoryMock;
     @Mock private ScopeFillStrategy fillStrategyMock;
     @Mock private EventsService eventsServiceMock;
 
     @Before
     public void setup() {
-        service = new DefaultScopeService(scopeRepositoryMock, groupRepositoryMock, authorizationRulesRepositoryMock, fillStrategyMock,
+        service = new DefaultScopeService(scopeRepositoryMock, groupServiceMock,
+                authorizationRulesRepositoryMock, fillStrategyMock,
                 IAM_AUDIENCE, Clock.fixed(now, ZoneId.systemDefault()), eventsServiceMock);
     }
 
@@ -227,8 +227,8 @@ import com.google.gson.JsonParser;
         Group administrators = new Group("Admins", "Admins", "MyDomain", new HashSet<>(Arrays.asList(TEST_SCOPE_1, TEST_SCOPE_2)));
         Group users = new Group("Admins", "Users", "MyDomain", new HashSet<>(Collections.singletonList(TEST_COMPOSITE_SCOPE)));
 
-        when(groupRepositoryMock.findOne(Mockito.eq("Admins"))).thenReturn(administrators);
-        when(groupRepositoryMock.findOne(Mockito.eq("Users"))).thenReturn(users);
+        when(groupServiceMock.get(Mockito.eq("Admins"))).thenReturn(Optional.of(administrators));
+        when(groupServiceMock.get(Mockito.eq("Users"))).thenReturn(Optional.of(users));
 
         Set<String> scopes = service.getGroupScopes(groups);
 
