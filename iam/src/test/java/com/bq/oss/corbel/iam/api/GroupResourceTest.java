@@ -181,7 +181,7 @@ public class GroupResourceTest {
 
         when(groupService.get(eq(ID))).thenReturn(Optional.of(group));
 
-        assertThat(RULE.client().target("/" + ApiVersion.CURRENT + "/group/" + ID + "/addScopes").request().put(Entity.json(scopesToJson))
+        assertThat(RULE.client().target("/" + ApiVersion.CURRENT + "/group/" + ID + "/scopes").request().put(Entity.json(scopesToJson))
                 .getStatus()).isEqualTo(Response.Status.NO_CONTENT.getStatusCode());
 
         verify(groupService).get(eq(ID));
@@ -196,7 +196,7 @@ public class GroupResourceTest {
 
         when(groupService.get(eq(ID))).thenReturn(Optional.empty());
 
-        assertThat(RULE.client().target("/" + ApiVersion.CURRENT + "/group/" + ID + "/addScopes").request().put(Entity.json(scopesToJson))
+        assertThat(RULE.client().target("/" + ApiVersion.CURRENT + "/group/" + ID + "/scopes").request().put(Entity.json(scopesToJson))
                 .getStatus()).isEqualTo(Response.Status.NOT_FOUND.getStatusCode());
 
         verify(groupService).get(eq(ID));
@@ -211,7 +211,7 @@ public class GroupResourceTest {
 
         when(groupService.get(eq(ID))).thenReturn(Optional.of(group));
 
-        assertThat(RULE.client().target("/" + ApiVersion.CURRENT + "/group/" + ID + "/addScopes").request().put(Entity.json(scopesToJson))
+        assertThat(RULE.client().target("/" + ApiVersion.CURRENT + "/group/" + ID + "/scopes").request().put(Entity.json(scopesToJson))
                 .getStatus()).isEqualTo(Response.Status.UNAUTHORIZED.getStatusCode());
 
         verify(groupService).get(eq(ID));
@@ -221,13 +221,12 @@ public class GroupResourceTest {
     @Test
     public void removeScopesFromGroupTest() throws JsonProcessingException {
         Group group = new Group(ID, NAME, DOMAIN, SCOPES);
-        List<String> scopes = Collections.singletonList("scope");
-        String scopesToJson = new ObjectMapper().writer().writeValueAsString(scopes);
+        String scope = "scope";
 
         when(groupService.get(eq(ID))).thenReturn(Optional.of(group));
 
-        assertThat(RULE.client().target("/" + ApiVersion.CURRENT + "/group/" + ID + "/removeScopes").request()
-                .put(Entity.json(scopesToJson)).getStatus()).isEqualTo(Response.Status.NO_CONTENT.getStatusCode());
+        assertThat(RULE.client().target("/" + ApiVersion.CURRENT + "/group/" + ID + "/scopes/" + scope).request().delete().getStatus())
+                .isEqualTo(Response.Status.NO_CONTENT.getStatusCode());
 
         verify(groupService).get(eq(ID));
         verify(groupService).removeScopes(eq(ID), any());
@@ -236,13 +235,12 @@ public class GroupResourceTest {
 
     @Test
     public void removeScopesFromInexistentGroupTest() throws JsonProcessingException {
-        List<String> scopes = Collections.singletonList("scope");
-        String scopesToJson = new ObjectMapper().writer().writeValueAsString(scopes);
+        String scope = "scope";
 
         when(groupService.get(eq(ID))).thenReturn(Optional.empty());
 
-        assertThat(RULE.client().target("/" + ApiVersion.CURRENT + "/group/" + ID + "/removeScopes").request()
-                .put(Entity.json(scopesToJson)).getStatus()).isEqualTo(Response.Status.NOT_FOUND.getStatusCode());
+        assertThat(RULE.client().target("/" + ApiVersion.CURRENT + "/group/" + ID + "/scopes/" + scope).request().delete().getStatus())
+                .isEqualTo(Response.Status.NOT_FOUND.getStatusCode());
 
         verify(groupService).get(eq(ID));
         verifyNoMoreInteractions(groupService);
@@ -251,13 +249,12 @@ public class GroupResourceTest {
     @Test
     public void removeScopesFromUnauthorizedGroupTest() throws JsonProcessingException {
         Group group = new Group(ID, NAME, ANOTHER_DOMAIN, SCOPES);
-        List<String> scopes = Collections.singletonList("scope");
-        String scopesToJson = new ObjectMapper().writer().writeValueAsString(scopes);
+        String scope = "scope";
 
         when(groupService.get(eq(ID))).thenReturn(Optional.of(group));
 
-        assertThat(RULE.client().target("/" + ApiVersion.CURRENT + "/group/" + ID + "/removeScopes").request()
-                .put(Entity.json(scopesToJson)).getStatus()).isEqualTo(Response.Status.UNAUTHORIZED.getStatusCode());
+        assertThat(RULE.client().target("/" + ApiVersion.CURRENT + "/group/" + ID + "/scopes/" + scope).request().delete().getStatus())
+                .isEqualTo(Response.Status.UNAUTHORIZED.getStatusCode());
 
         verify(groupService).get(eq(ID));
         verifyNoMoreInteractions(groupService);
