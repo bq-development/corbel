@@ -1,5 +1,11 @@
 package com.bq.oss.corbel.iam.service;
 
+import io.corbel.lib.token.TokenInfo;
+import io.corbel.lib.token.TokenInfo.Builder;
+import io.corbel.lib.token.exception.TokenVerificationException;
+import io.corbel.lib.token.factory.TokenFactory;
+import io.corbel.lib.token.model.TokenType;
+
 import java.security.SignatureException;
 import java.util.Collections;
 import java.util.Date;
@@ -33,11 +39,6 @@ import com.bq.oss.corbel.iam.model.User;
 import com.bq.oss.corbel.iam.model.UserToken;
 import com.bq.oss.corbel.iam.repository.UserTokenRepository;
 import com.bq.oss.corbel.iam.utils.Message;
-import io.corbel.lib.token.TokenInfo;
-import io.corbel.lib.token.TokenInfo.Builder;
-import io.corbel.lib.token.exception.TokenVerificationException;
-import io.corbel.lib.token.factory.TokenFactory;
-import io.corbel.lib.token.model.TokenType;
 
 /**
  * @author Alexander De Leon
@@ -55,12 +56,14 @@ public class DefaultAuthorizationService implements AuthorizationService {
     private final RefreshTokenService refreshTokenService;
     private final UserTokenRepository userTokenRepository;
     private final UserService userService;
+    private final EventsService eventsService;
 
     public DefaultAuthorizationService(JsonTokenParser jsonTokenParser, List<AuthorizationRule> rules, TokenFactory accessTokenFactory,
             AuthorizationRequestContextFactory contextFactory, ScopeService scopeService,
             AuthorizationProviderFactory authorizationProviderFactory, RefreshTokenService refreshTokenService,
-            UserTokenRepository userTokenRepository, UserService userService) {
+            UserTokenRepository userTokenRepository, UserService userService, EventsService eventsService) {
         this.jsonTokenParser = jsonTokenParser;
+        this.eventsService = eventsService;
         this.rules = Collections.unmodifiableList(rules);
         this.tokenFactory = accessTokenFactory;
         this.contextFactory = contextFactory;
@@ -90,13 +93,13 @@ public class DefaultAuthorizationService implements AuthorizationService {
             } else {
                 tokenGrant = grantAccess(context);
             }
+            return tokenGrant;
         } catch (SignatureException | TokenVerificationException e) {
             throw new UnauthorizedException(e.getMessage());
         } catch (IllegalStateException | IllegalArgumentException | NullPointerException e) {
             logInvalidAssertion(assertion, e);
             throw new UnauthorizedException(getMessageByException(e));
         }
-        return tokenGrant;
     }
 
 
@@ -122,8 +125,6 @@ public class DefaultAuthorizationService implements AuthorizationService {
             }
             return null;
         }).orElse("Invalid assertion");
-
-
     }
 
     private void checkOauthParams(AuthorizationRequestContext context, OauthParams params) throws MissingOAuthParamsException {
@@ -194,6 +195,9 @@ public class DefaultAuthorizationService implements AuthorizationService {
 
         if (context.hasPrincipal()) {
             storeUserToken(tokenGrant, context);
+            eventsService.sendClientAuthenticationEvent(context.getIssuerClientDomain().getId(), context.getPrincipal().getId());
+        } else {
+            eventsService.sendClientAuthenticationEvent(context.getIssuerClientDomain().getId(), context.getIssuerClientId());
         }
 
         publishScope(tokenGrant, context);

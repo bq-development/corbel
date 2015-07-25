@@ -2,10 +2,15 @@ package com.bq.oss.corbel.iam.service;
 
 import java.util.Map;
 
-import com.bq.oss.corbel.event.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.bq.oss.corbel.event.AuthorizationEvent;
+import com.bq.oss.corbel.event.DomainDeletedEvent;
+import com.bq.oss.corbel.event.NotificationEvent;
+import com.bq.oss.corbel.event.ScopeUpdateEvent;
+import com.bq.oss.corbel.event.UserCreatedEvent;
+import com.bq.oss.corbel.event.UserDeletedEvent;
 import com.bq.oss.corbel.eventbus.service.EventBus;
 import com.bq.oss.corbel.iam.model.User;
 
@@ -54,5 +59,15 @@ public class DefaultEventsService implements EventsService {
     @Override
     public void sendDeleteScope(String scope) {
         eventBus.dispatch(ScopeUpdateEvent.deleteScopeEvent(scope, null));
+    }
+
+    @Override
+    public void sendUserAuthenticationEvent(String domainId, String id) {
+        eventBus.dispatch(AuthorizationEvent.userAuthenticationEvent(domainId, id));
+    }
+
+    @Override
+    public void sendClientAuthenticationEvent(String domainId, String id) {
+        eventBus.dispatch(AuthorizationEvent.clientAuthenticationEvent(domainId, id));
     }
 }
