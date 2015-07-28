@@ -9,10 +9,12 @@ import com.bq.oss.corbel.eventbus.EventWithSpecificDomain;
  */
 public class AuthorizationEvent extends EventWithSpecificDomain {
 
-    private final IssuerType issuerType;
-    private final String id;
+    private IssuerType issuerType;
+    private String id;
 
-    private AuthorizationEvent(String domainId, IssuerType issuerType, String id) {
+    public AuthorizationEvent() {}
+
+    public AuthorizationEvent(String domainId, IssuerType issuerType, String id) {
         super(domainId);
         this.issuerType = issuerType;
         this.id = id;
@@ -24,6 +26,14 @@ public class AuthorizationEvent extends EventWithSpecificDomain {
 
     public String getId() {
         return id;
+    }
+
+    public void setIssuerType(IssuerType issuerType) {
+        this.issuerType = issuerType;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     @Override
