@@ -1,10 +1,21 @@
 package com.bq.oss.corbel.iam.service;
 
 import static org.fest.assertions.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import io.corbel.lib.token.TokenInfo;
+import io.corbel.lib.token.exception.TokenVerificationException;
+import io.corbel.lib.token.factory.TokenFactory;
+import io.corbel.lib.token.model.TokenType;
 
 import java.security.SignatureException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import net.oauth.jsontoken.JsonToken;
 import net.oauth.jsontoken.JsonTokenParser;
@@ -24,12 +35,12 @@ import com.bq.oss.corbel.iam.exception.MissingBasicParamsException;
 import com.bq.oss.corbel.iam.exception.MissingOAuthParamsException;
 import com.bq.oss.corbel.iam.exception.OauthServerConnectionException;
 import com.bq.oss.corbel.iam.exception.UnauthorizedException;
-import com.bq.oss.corbel.iam.model.*;
+import com.bq.oss.corbel.iam.model.Client;
+import com.bq.oss.corbel.iam.model.Domain;
+import com.bq.oss.corbel.iam.model.Scope;
+import com.bq.oss.corbel.iam.model.TokenGrant;
+import com.bq.oss.corbel.iam.model.User;
 import com.bq.oss.corbel.iam.repository.UserTokenRepository;
-import io.corbel.lib.token.TokenInfo;
-import io.corbel.lib.token.exception.TokenVerificationException;
-import io.corbel.lib.token.factory.TokenFactory;
-import io.corbel.lib.token.model.TokenType;
 
 /**
  * @author Alexander De Leon
@@ -65,6 +76,7 @@ import io.corbel.lib.token.model.TokenType;
     private RefreshTokenService refreshTokenServiceMock;
     private io.corbel.lib.token.TokenGrant tokenGrant;
     private UserTokenRepository userTokenRepository;
+    private EventsService eventsService;
 
     @Mock private UserService userService;
 
@@ -78,12 +90,13 @@ import io.corbel.lib.token.model.TokenType;
         authorizationProviderFactoryMock = mock(AuthorizationProviderFactory.class);
         refreshTokenServiceMock = mock(RefreshTokenService.class);
         userTokenRepository = mock(UserTokenRepository.class);
+        eventsService = mock(EventsService.class);
 
         AuthorizationRequestContextFactory factory = mock(AuthorizationRequestContextFactory.class);
         when(factory.fromJsonToken(Mockito.any(JsonToken.class))).thenReturn(contextMock);
         authorizationService = new DefaultAuthorizationService(jsonTokenParserMock, Arrays.asList(authorizationProcessorMock),
                 accessTokenFactoryMock, factory, scopeServiceMock, authorizationProviderFactoryMock, refreshTokenServiceMock,
-                userTokenRepository, userService);
+                userTokenRepository, userService, eventsService);
 
         tokenGrant = new io.corbel.lib.token.TokenGrant(TEST_TOKEN, TEST_EXPIRATION);
 
@@ -103,6 +116,7 @@ import io.corbel.lib.token.model.TokenType;
         when(scopeServiceMock.getScope(TEST_SCOPE_1)).thenReturn(mock(Scope.class));
         TokenGrant grant = authorizationService.authorize(TEST_JWT);
         assertThat(grant).isNotNull();
+        verify(eventsService).sendClientAuthenticationEvent(TEST_DOMAIN_ID, TEST_CLIENT_ID);
     }
 
     @Test
@@ -118,6 +132,7 @@ import io.corbel.lib.token.model.TokenType;
         TokenGrant grant = authorizationService.authorize(TEST_JWT);
         verify(scopeServiceMock).publishAuthorizationRules(TEST_TOKEN, TEST_EXPIRATION, filledScopes);
         assertThat(grant).isNotNull();
+        verify(eventsService).sendClientAuthenticationEvent(TEST_DOMAIN_ID, TEST_USER_ID);
     }
 
     @Test
@@ -137,6 +152,7 @@ import io.corbel.lib.token.model.TokenType;
         TokenGrant grant = authorizationService.authorize(TEST_JWT);
         verify(scopeServiceMock).publishAuthorizationRules(TEST_TOKEN, TEST_EXPIRATION, filledScopes);
         assertThat(grant).isNotNull();
+        verify(eventsService).sendClientAuthenticationEvent(TEST_DOMAIN_ID, TEST_USER_ID);
     }
 
     @Test(expected = UnauthorizedException.class)

@@ -2,7 +2,6 @@ package com.bq.oss.corbel.iam.service;
 
 import java.util.Map;
 
-import com.bq.oss.corbel.iam.model.Scope;
 import com.bq.oss.corbel.iam.model.User;
 
 /**
@@ -21,4 +20,8 @@ public interface EventsService {
     void sendCreateScope(String scope);
 
     void sendDeleteScope(String scope);
+
+    void sendUserAuthenticationEvent(String domainId, String id);
+
+    void sendClientAuthenticationEvent(String domainId, String id);
 }
