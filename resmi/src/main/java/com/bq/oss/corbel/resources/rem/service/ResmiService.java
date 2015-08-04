@@ -1,5 +1,8 @@
 package com.bq.oss.corbel.resources.rem.service;
 
+import io.corbel.lib.queries.request.AggregationResult;
+import io.corbel.lib.queries.request.ResourceQuery;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -12,8 +15,6 @@ import com.bq.oss.corbel.resources.rem.model.SearchResource;
 import com.bq.oss.corbel.resources.rem.request.CollectionParameters;
 import com.bq.oss.corbel.resources.rem.request.RelationParameters;
 import com.bq.oss.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
-import io.corbel.lib.queries.request.AggregationResult;
-import io.corbel.lib.queries.request.ResourceQuery;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -52,8 +53,6 @@ public interface ResmiService {
     void deleteRelation(ResourceUri uri);
 
     List<SearchResource> getSearchableFields();
-
-    void addSearchableFields(SearchResource searchResource);
 
     void ensureExpireIndex(ResourceUri uri);
 

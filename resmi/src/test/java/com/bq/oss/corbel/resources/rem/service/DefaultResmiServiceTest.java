@@ -8,6 +8,15 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import io.corbel.lib.queries.request.AggregationResult;
+import io.corbel.lib.queries.request.Average;
+import io.corbel.lib.queries.request.AverageResult;
+import io.corbel.lib.queries.request.Count;
+import io.corbel.lib.queries.request.CountResult;
+import io.corbel.lib.queries.request.Pagination;
+import io.corbel.lib.queries.request.ResourceQuery;
+import io.corbel.lib.queries.request.Search;
+import io.corbel.lib.queries.request.Sort;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -29,21 +38,11 @@ import com.bq.oss.corbel.resources.rem.dao.NotFoundException;
 import com.bq.oss.corbel.resources.rem.dao.RelationMoveOperation;
 import com.bq.oss.corbel.resources.rem.dao.ResmiDao;
 import com.bq.oss.corbel.resources.rem.model.ResourceUri;
-import com.bq.oss.corbel.resources.rem.model.SearchResource;
 import com.bq.oss.corbel.resources.rem.request.CollectionParameters;
 import com.bq.oss.corbel.resources.rem.request.RelationParameters;
 import com.bq.oss.corbel.resources.rem.request.ResourceId;
 import com.bq.oss.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
 import com.bq.oss.corbel.resources.rem.search.ResmiSearch;
-import io.corbel.lib.queries.request.AggregationResult;
-import io.corbel.lib.queries.request.Average;
-import io.corbel.lib.queries.request.AverageResult;
-import io.corbel.lib.queries.request.Count;
-import io.corbel.lib.queries.request.CountResult;
-import io.corbel.lib.queries.request.Pagination;
-import io.corbel.lib.queries.request.ResourceQuery;
-import io.corbel.lib.queries.request.Search;
-import io.corbel.lib.queries.request.Sort;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -99,8 +98,9 @@ import com.google.gson.JsonPrimitive;
     public void findTest() throws BadConfigurationException {
         ResourceUri resourceUri = new ResourceUri(TYPE);
         JsonArray fakeResult = new JsonArray();
-        when(resmiDao.findCollection(eq(resourceUri), eq(Optional.of(resourceQueriesMock)), eq(Optional.of(paginationMock)), eq(Optional.of(sortMock))))
-                .thenReturn(fakeResult);
+        when(
+                resmiDao.findCollection(eq(resourceUri), eq(Optional.of(resourceQueriesMock)), eq(Optional.of(paginationMock)),
+                        eq(Optional.of(sortMock)))).thenReturn(fakeResult);
         when(collectionParametersMock.getSearch()).thenReturn(Optional.empty());
         JsonArray result = defaultResmiService.findCollection(resourceUri, Optional.of(collectionParametersMock));
         assertThat(fakeResult).isEqualTo(result);
@@ -111,13 +111,15 @@ import com.google.gson.JsonPrimitive;
         ResourceUri resourceUri = new ResourceUri(TYPE);
 
         JsonArray fakeResult = new JsonArray();
-        String search = "my+search";
+        Optional<String> search = Optional.of("my+search");
         when(paginationMock.getPage()).thenReturn(PAGE);
         when(paginationMock.getPageSize()).thenReturn(SIZE);
         when(resourceSearchMock.getText()).thenReturn(search);
-        when(resourceSearchMock.getFields()).thenReturn(Optional.empty());
+        when(resourceSearchMock.getParams()).thenReturn(Optional.empty());
         when(searchableFieldRegistry.getFieldsFromResourceUri(eq(RESOURCE_URI))).thenReturn(new HashSet(Arrays.asList("t1", "t2")));
-        when(resmiSearch.search(eq(RESOURCE_URI), eq(search), any(), eq(PAGE), eq(SIZE))).thenReturn(fakeResult);
+        when(
+                resmiSearch.search(eq(RESOURCE_URI), eq(search.get()), eq(Optional.of(resourceQueriesMock)), eq(paginationMock),
+                        eq(Optional.of(sortMock)))).thenReturn(fakeResult);
 
         JsonArray result = defaultResmiService.findCollection(resourceUri, Optional.of(collectionParametersMock));
         assertThat(fakeResult).isEqualTo(result);
@@ -141,8 +143,9 @@ import com.google.gson.JsonPrimitive;
         JsonElement fakeResult = new JsonObject();
         ResourceUri resourceUri = new ResourceUri(TYPE, ID, RELATION_TYPE, "test");
 
-        when(resmiDao.findRelation(eq(resourceUri), eq(Optional.of(resourceQueriesMock)), eq(Optional.of(paginationMock)), eq(Optional.of(sortMock))))
-                .thenReturn(fakeResult);
+        when(
+                resmiDao.findRelation(eq(resourceUri), eq(Optional.of(resourceQueriesMock)), eq(Optional.of(paginationMock)),
+                        eq(Optional.of(sortMock)))).thenReturn(fakeResult);
         when(collectionParametersMock.getSearch()).thenReturn(Optional.empty());
         when(relationParametersMock.getPredicateResource()).thenReturn(Optional.of("test"));
 
@@ -309,20 +312,6 @@ import com.google.gson.JsonPrimitive;
         Optional<String> dstId = Optional.of("dst");
         defaultResmiService.deleteRelation(uri);
         verify(resmiDao).deleteRelation(uri);
-    }
-
-    @Test
-    public void getSearchableFieldsTest() {
-        defaultResmiService.getSearchableFields();
-        verify(resmiDao).findAll(DefaultResmiService.SEARCHABLE_FIELDS, SearchResource.class);
-    }
-
-    @Test
-    public void addSearchableFieldsTest() {
-        ResourceUri uri = new ResourceUri(DefaultResmiService.SEARCHABLE_FIELDS);
-        SearchResource searchResource = new SearchResource(TYPE, new HashSet(Arrays.asList("t1", "t2")));
-        defaultResmiService.addSearchableFields(searchResource);
-        verify(resmiDao).saveResource(uri, searchResource);
     }
 
     @Test

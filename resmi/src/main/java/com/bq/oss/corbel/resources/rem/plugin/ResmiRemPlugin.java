@@ -13,6 +13,7 @@ import com.bq.oss.corbel.resources.rem.Rem;
 import com.bq.oss.corbel.resources.rem.RemRegistry;
 import com.bq.oss.corbel.resources.rem.resmi.ioc.ResmiIoc;
 import com.bq.oss.corbel.resources.rem.resmi.ioc.ResmiRemNames;
+import com.bq.oss.corbel.resources.rem.search.ResmiSearch;
 import com.bq.oss.corbel.resources.rem.service.ResmiService;
 import io.corbel.lib.config.ConfigurationHelper;
 
@@ -35,6 +36,7 @@ import io.corbel.lib.config.ConfigurationHelper;
     protected void console() {
         init();
         shell.setResmiService(context.getBean(ResmiService.class));
+        shell.setResmiSearch(context.getBean(ResmiSearch.class));
     }
 
     @Override

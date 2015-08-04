@@ -1,11 +1,19 @@
 package com.bq.oss.corbel.resources.rem.service;
 
+import io.corbel.lib.queries.builder.ResourceQueryBuilder;
+import io.corbel.lib.queries.request.Aggregation;
+import io.corbel.lib.queries.request.AggregationResult;
+import io.corbel.lib.queries.request.Average;
+import io.corbel.lib.queries.request.QueryOperator;
+import io.corbel.lib.queries.request.ResourceQuery;
+import io.corbel.lib.queries.request.Search;
+import io.corbel.lib.queries.request.Sum;
+
 import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -25,14 +33,6 @@ import com.bq.oss.corbel.resources.rem.request.CollectionParametersImpl;
 import com.bq.oss.corbel.resources.rem.request.RelationParameters;
 import com.bq.oss.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
 import com.bq.oss.corbel.resources.rem.search.ResmiSearch;
-import io.corbel.lib.queries.builder.ResourceQueryBuilder;
-import io.corbel.lib.queries.request.Aggregation;
-import io.corbel.lib.queries.request.AggregationResult;
-import io.corbel.lib.queries.request.Average;
-import io.corbel.lib.queries.request.QueryOperator;
-import io.corbel.lib.queries.request.ResourceQuery;
-import io.corbel.lib.queries.request.Search;
-import io.corbel.lib.queries.request.Sum;
 import com.google.common.collect.Sets;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -97,7 +97,11 @@ public class DefaultResmiService implements ResmiService {
     private AggregationResult countWithSearchService(ResourceUri resourceUri, CollectionParameters apiParameters)
             throws BadConfigurationException {
         Search searchObject = apiParameters.getSearch().get();
-        return search.count(resourceUri, searchObject.getText(), getSearchableFields(resourceUri, searchObject));
+        if (searchObject.getText().isPresent()) {
+            return search.count(resourceUri, searchObject.getText().get());
+        } else {
+            return search.count(resourceUri, searchObject.getTemplate().get(), searchObject.getParams().get());
+        }
     }
 
     @Override
@@ -113,9 +117,14 @@ public class DefaultResmiService implements ResmiService {
 
     private JsonArray findInSearchService(ResourceUri resourceUri, CollectionParameters apiParameters) throws BadConfigurationException {
         Search searchObject = apiParameters.getSearch().get();
-
-        JsonArray searchResult = search.search(resourceUri, searchObject.getText(), getSearchableFields(resourceUri, searchObject),
-                apiParameters.getPagination().getPage(), apiParameters.getPagination().getPageSize());
+        JsonArray searchResult;
+        if (searchObject.getText().isPresent()) {
+            searchResult = search.search(resourceUri, searchObject.getText().get(), apiParameters.getQueries(),
+                    apiParameters.getPagination(), apiParameters.getSort());
+        } else {
+            searchResult = search.search(resourceUri, searchObject.getTemplate().get(), searchObject.getParams().get(), apiParameters
+                    .getPagination().getPage(), apiParameters.getPagination().getPageSize());
+        }
 
         if (searchObject.isBinded()) {
             CollectionParameters parameters = buildParametersForBinding(apiParameters, searchResult);
@@ -123,21 +132,6 @@ public class DefaultResmiService implements ResmiService {
         } else {
             return searchResult;
         }
-    }
-
-    private String[] getSearchableFields(ResourceUri resourceUri, Search search) throws BadConfigurationException {
-        Set<String> fields = searchableFieldsRegistry.getFieldsFromResourceUri(resourceUri);
-        if (fields.isEmpty()) {
-            throw new BadConfigurationException(String.format("Resource %1$s has no index defined", resourceUri.getType()));
-        }
-
-        if (search.getFields().isPresent() && !search.getFields().get().isEmpty()) {
-            fields = new HashSet<>(Sets.intersection(search.getFields().get(), fields));
-        }
-
-        fields.add(ID);
-
-        return fields.toArray(new String[fields.size()]);
     }
 
     private CollectionParameters buildParametersForBinding(CollectionParameters apiParameters, JsonArray searchResult) {
@@ -280,13 +274,6 @@ public class DefaultResmiService implements ResmiService {
     @Override
     public List<SearchResource> getSearchableFields() {
         return resmiDao.findAll(SEARCHABLE_FIELDS, SearchResource.class);
-    }
-
-    @Override
-    public void addSearchableFields(SearchResource searchResource) {
-        search.addResource(searchResource);
-        resmiDao.saveResource(new ResourceUri(SEARCHABLE_FIELDS), searchResource);
-        searchableFieldsRegistry.addFields(searchResource);
     }
 
     private void setId(String userId, JsonObject jsonObject) {

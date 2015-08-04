@@ -1,18 +1,22 @@
 package com.bq.oss.corbel.resources.cli.dsl
 
-import com.bq.oss.corbel.resources.rem.model.ResourceUri
-import com.bq.oss.corbel.resources.rem.model.SearchResource
-import com.bq.oss.corbel.resources.rem.service.ResmiService
 import io.corbel.lib.cli.console.Description
 import io.corbel.lib.cli.console.Shell
+
+import org.springframework.data.mongodb.core.index.Index
+
+import com.bq.oss.corbel.resources.rem.model.ResourceUri
+import com.bq.oss.corbel.resources.rem.model.SearchResource
+import com.bq.oss.corbel.resources.rem.search.ResmiSearch
+import com.bq.oss.corbel.resources.rem.service.ResmiService
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
-import org.springframework.data.mongodb.core.index.Index
 
 @Shell("resmi")
 class ResmiShell {
 
     ResmiService resmiService
+    ResmiSearch resmiSearch
 
     @Description("Creates a mongo expiration index named \"_expireAt\" on the specified collection .")
     def ensureExpireIndex(String collection) {
@@ -52,6 +56,33 @@ class ResmiShell {
         assert relation: "relation is required"
         assert fields: "fields is required"
         resmiService.addSearchableFields(new SearchResource(type, relation, fields.collect().toSet()))
+    }
+
+    @Description("Defines a full text search index for a type.")
+    def defineIndex(String type, String relation, JsonObject mapping) {
+        assert type: "type is required"
+        assert mapping: "mapping is required"
+        resmiSearch.setupMapping(new ResourceUri(type, null, relation), mapping)
+    }
+
+    @Description("Adds a full text search template")
+    def addTemplate(String type, String relation, String name, Map<String, Object> template) {
+        assert type: "type is required"
+        assert name: "name is required"
+        assert template: "template is required"
+        resmiSearch.addTemplate(new ResourceUri(type, null, relation), name, template)
+    }
+
+    @Description("Adds an alias to resmi index")
+    def addAlias(String alias) {
+        assert alias: "alias is required"
+        resmiSearch.addAlias(alias)
+    }
+
+    @Description("Removes an alias to resmi index")
+    def removeAlias(String alias) {
+        assert alias: "alias is required"
+        resmiSearch.removeAlias(alias)
     }
 
     def index = IndexBuilder.index

@@ -112,7 +112,7 @@ import com.google.gson.Gson;
 
     @Bean
     public ResmiService getResmiService() throws Exception {
-        return new DefaultResmiService(getMongoResmiDao(), getSearchClient(), getSearchableFieldsRegistry(), getClock());
+        return new DefaultResmiService(getMongoResmiDao(), getResmiSearch(), getSearchableFieldsRegistry(), getClock());
     }
 
     @Bean
@@ -126,7 +126,7 @@ import com.google.gson.Gson;
     }
 
     @Bean
-    public ResmiSearch getSearchClient() {
+    public ResmiSearch getResmiSearch() {
         if (elasticSearchEnabled) {
             return new ElasticSearchResmiSearch(applicationContext.getBean(Client.class), elasticSearchIndexSettings,
                     elasticSearchMappingSettings, getNamespaceNormilizer(), getGson());

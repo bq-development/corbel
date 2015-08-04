@@ -1,31 +1,36 @@
 package com.bq.oss.corbel.resources.rem.search;
 
-import java.io.IOException;
-import java.util.LinkedHashMap;
+import io.corbel.lib.queries.request.AggregationResult;
+import io.corbel.lib.queries.request.CountResult;
+import io.corbel.lib.queries.request.Pagination;
+import io.corbel.lib.queries.request.ResourceQuery;
+import io.corbel.lib.queries.request.Sort;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Scanner;
 import java.util.concurrent.ExecutionException;
 
+import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
+import org.elasticsearch.action.admin.indices.close.CloseIndexRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
+import org.elasticsearch.action.admin.indices.open.OpenIndexRequest;
 import org.elasticsearch.action.count.CountResponse;
-import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.Client;
-import org.elasticsearch.cluster.metadata.MappingMetaData;
-import org.elasticsearch.common.collect.ImmutableOpenMap;
-import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.script.ScriptService.ScriptType;
+import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.bq.oss.corbel.resources.rem.dao.NamespaceNormalizer;
 import com.bq.oss.corbel.resources.rem.model.ResourceUri;
-import com.bq.oss.corbel.resources.rem.model.SearchResource;
-import io.corbel.lib.queries.request.AggregationResult;
-import io.corbel.lib.queries.request.CountResult;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -36,6 +41,8 @@ import com.google.gson.JsonPrimitive;
  */
 public class ElasticSearchResmiSearch implements ResmiSearch {
 
+    private static final String MUSTACHE = "mustache";
+
     private static final Logger LOG = LoggerFactory.getLogger(ElasticSearchResmiSearch.class);
 
     public static final String INDEX = "resmi";
@@ -43,69 +50,89 @@ public class ElasticSearchResmiSearch implements ResmiSearch {
     private final Client elasticsearchClient;
     private final Gson gson;
     private final NamespaceNormalizer namespaceNormalizer;
-    private final String mappingSettingsPath;
 
     public ElasticSearchResmiSearch(Client elasticsearchClient, String indexSettingsPath, String mappingSettingsPath,
             NamespaceNormalizer namespaceNormalizer, Gson gson) {
-        createResourcesIndex(elasticsearchClient, INDEX, indexSettingsPath);
         this.elasticsearchClient = elasticsearchClient;
         this.namespaceNormalizer = namespaceNormalizer;
-        this.mappingSettingsPath = mappingSettingsPath;
         this.gson = gson;
+        createResourcesIndex(indexSettingsPath);
     }
 
-    private void createResourcesIndex(Client elasticsearchClient, String index, String indexSettingsPath) {
-        if (!elasticsearchClient.admin().indices().prepareExists(index).execute().actionGet().isExists()) {
-            CreateIndexRequest indexRequest = new CreateIndexRequest(index);
-            indexRequest.settings(new Scanner(getClass().getResourceAsStream(indexSettingsPath), "UTF-8").useDelimiter("\\A").next());
+    @SuppressWarnings("resource")
+    private void createResourcesIndex(String indexSettingsPath) {
+        if (!elasticsearchClient.admin().indices().prepareExists(INDEX).execute().actionGet().isExists()) {
+            CreateIndexRequest indexRequest = new CreateIndexRequest(INDEX).settings(new Scanner(getClass().getResourceAsStream(
+                    indexSettingsPath), "UTF-8").useDelimiter("\\A").next());
             elasticsearchClient.admin().indices().create(indexRequest).actionGet();
         }
     }
 
     @Override
-    public void addResource(SearchResource fields) {
-        String type = getElasticSearchType(fields.getResourceUri());
-        try {
-            boolean mappingTypeNotCreated = false;
-            ImmutableOpenMap<String, ImmutableOpenMap<String, MappingMetaData>> mappings = elasticsearchClient.admin().indices()
-                    .prepareGetMappings(INDEX).execute().actionGet().mappings();
-            if (!mappings.get(INDEX).containsKey(type)) {
-                PutMappingRequest mappingRequest = new PutMappingRequest(INDEX).type(type);
-                mappingRequest.source(new Scanner(getClass().getResourceAsStream(mappingSettingsPath), "UTF-8").useDelimiter("\\A").next());
-                elasticsearchClient.admin().indices().putMapping(mappingRequest).actionGet();
-                mappingTypeNotCreated = true;
-            }
-            PutMappingRequest mappingRequest = new PutMappingRequest(INDEX).type(type);
-            mappingRequest.ignoreConflicts(true);
-            XContentBuilder properties = XContentFactory.jsonBuilder().startObject().startObject("properties");
-            for (String field : fields.getFields()) {
-                if (mappingTypeNotCreated || !checkFieldCurrentlyMapped(mappings, type, field)) {
-                    properties.startObject(field);
-                    properties.field("type", SearchResource.DEFAULT_FIELD_TYPE);
-                    properties.field("index", "not_analyzed");
-                    properties.endObject();
-                }
-            }
-            properties.endObject().endObject();
-            mappingRequest.source(properties);
-            elasticsearchClient.admin().indices().putMapping(mappingRequest).actionGet();
-        } catch (IOException e) {
-            LOG.error("Unable to create mapping properties for " + type + " type", e);
-        }
-    }
-
-    private boolean checkFieldCurrentlyMapped(ImmutableOpenMap<String, ImmutableOpenMap<String, MappingMetaData>> mappings, String type,
-            String field) throws IOException {
-        return ((LinkedHashMap) mappings.get(INDEX).get(type).getSourceAsMap().get("properties")).containsKey(field);
+    public void addAlias(String alias) {
+        IndicesAliasesRequest request = new IndicesAliasesRequest().addAlias(alias, INDEX);
+        elasticsearchClient.admin().indices().aliases(request).actionGet();
     }
 
     @Override
-    public JsonArray search(ResourceUri resourceUri, String search, String[] fields, int page, int size) {
-        SearchResponse response = elasticsearchClient.prepareSearch(INDEX).setTypes(getElasticSearchType(resourceUri))
-                .setSearchType(SearchType.DFS_QUERY_THEN_FETCH).setQuery(QueryBuilders.multiMatchQuery(search, fields)).setFrom(page)
-                .setSize(size).execute().actionGet();
+    public void removeAlias(String alias) {
+        IndicesAliasesRequest request = new IndicesAliasesRequest().removeAlias(alias, INDEX);
+        elasticsearchClient.admin().indices().aliases(request).actionGet();
+    }
+
+    @Override
+    public void setupMapping(ResourceUri resourceUri, JsonObject mapping) {
+        elasticsearchClient.admin().indices().close(new CloseIndexRequest(INDEX)).actionGet();
+        PutMappingRequest mappingRequest = new PutMappingRequest(INDEX).type(getElasticSearchType(resourceUri)).source(mapping.toString())
+                .ignoreConflicts(true);
+        elasticsearchClient.admin().indices().putMapping(mappingRequest).actionGet();
+        elasticsearchClient.admin().indices().open(new OpenIndexRequest(INDEX)).actionGet();
+    }
+
+    @Override
+    public void addTemplate(ResourceUri resourceUri, String name, JsonObject template) {
+        elasticsearchClient.preparePutIndexedScript(MUSTACHE, getElasticSearchType(resourceUri) + ":" + name, template.toString()).get();
+    }
+
+    @Override
+    public JsonArray search(ResourceUri resourceUri, String templateName, Map<String, Object> templateParams, int page, int size) {
+        return search(resourceUri, templateName, templateParams, Optional.of(page), Optional.of(size));
+    }
+
+    @Override
+    public AggregationResult count(ResourceUri resourceUri, String templateName, Map<String, Object> templateParams) {
+        JsonArray jsonArray = search(resourceUri, templateName, templateParams, Optional.empty(), Optional.empty());
+        return new CountResult(jsonArray.size());
+    }
+
+    private JsonArray search(ResourceUri resourceUri, String templateName, Map<String, Object> templateParams, Optional<Integer> page,
+            Optional<Integer> size) {
+        SearchRequestBuilder requestBuilder = elasticsearchClient.prepareSearch(INDEX).setTypes(getElasticSearchType(resourceUri))
+                .setSearchType(SearchType.DFS_QUERY_THEN_FETCH).setTemplateName(templateName).setTemplateType(ScriptType.INDEXED)
+                .setTemplateParams(templateParams);
+        if (page.isPresent() && size.isPresent()) {
+            requestBuilder.setFrom(page.get()).setSize(size.get());
+        }
         JsonArray jsonArray = new JsonArray();
-        response.getHits().forEach(hit -> jsonArray.add(gson.toJsonTree(hit.getSource())));
+        requestBuilder.execute().actionGet().getHits().forEach(hit -> jsonArray.add(gson.toJsonTree(hit.getSource())));
+        return jsonArray;
+    }
+
+    @Override
+    public JsonArray search(ResourceUri uri, String search, Optional<List<ResourceQuery>> resourceQueries, Pagination pagination,
+            Optional<Sort> sort) {
+
+        SearchRequestBuilder request = elasticsearchClient.prepareSearch(INDEX).setTypes(getElasticSearchType(uri))
+                .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
+                .setQuery(ElasticSearchResourceQueryBuilder.build(search, resourceQueries.orElse(Collections.emptyList())))
+                .setFrom(pagination.getPage()).setSize(pagination.getPageSize());
+
+        if (sort.isPresent()) {
+            request.addSort(sort.get().getField(), SortOrder.valueOf(sort.get().getDirection().name()));
+        }
+
+        JsonArray jsonArray = new JsonArray();
+        request.execute().actionGet().getHits().forEach(hit -> jsonArray.add(gson.toJsonTree(hit.getSource())));
         return jsonArray;
     }
 
@@ -130,9 +157,9 @@ public class ElasticSearchResmiSearch implements ResmiSearch {
     }
 
     @Override
-    public AggregationResult count(ResourceUri resourceUri, String search, String[] fields) {
+    public AggregationResult count(ResourceUri resourceUri, String search) {
         CountResponse response = elasticsearchClient.prepareCount(INDEX).setTypes(getElasticSearchType(resourceUri))
-                .setQuery(QueryBuilders.multiMatchQuery(search, fields)).execute().actionGet();
+                .setQuery(QueryBuilders.queryStringQuery(search)).execute().actionGet();
         return new CountResult(response.getCount());
     }
 
