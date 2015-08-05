@@ -276,6 +276,12 @@ public class DefaultResmiService implements ResmiService {
         return resmiDao.findAll(SEARCHABLE_FIELDS, SearchResource.class);
     }
 
+    @Override
+    public void addSearchableFields(SearchResource searchResource) {
+        resmiDao.saveResource(new ResourceUri(SEARCHABLE_FIELDS), searchResource);
+        searchableFieldsRegistry.addFields(searchResource);
+    }
+
     private void setId(String userId, JsonObject jsonObject) {
         String id = userId != null ? generateIdWithUserId(userId) : generateId();
         jsonObject.add(ResmiService.ID, new JsonPrimitive(id));

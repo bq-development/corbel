@@ -54,6 +54,8 @@ public interface ResmiService {
 
     List<SearchResource> getSearchableFields();
 
+    void addSearchableFields(SearchResource searchResource);
+
     void ensureExpireIndex(ResourceUri uri);
 
     void ensureIndex(ResourceUri uri, Index index);

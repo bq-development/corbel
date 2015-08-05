@@ -59,7 +59,7 @@ class ResmiShell {
     }
 
     @Description("Defines a full text search index for a type.")
-    def defineIndex(String type, String relation, JsonObject mapping) {
+    def setMapping(String type, String relation, JsonObject mapping) {
         assert type: "type is required"
         assert mapping: "mapping is required"
         resmiSearch.setupMapping(new ResourceUri(type, null, relation), mapping)
