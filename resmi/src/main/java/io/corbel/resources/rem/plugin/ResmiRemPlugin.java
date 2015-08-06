@@ -1,5 +1,14 @@
 package io.corbel.resources.rem.plugin;
 
+import io.corbel.lib.config.ConfigurationHelper;
+import io.corbel.resources.cli.dsl.ResmiShell;
+import io.corbel.resources.rem.Rem;
+import io.corbel.resources.rem.RemRegistry;
+import io.corbel.resources.rem.resmi.ioc.ResmiIoc;
+import io.corbel.resources.rem.resmi.ioc.ResmiRemNames;
+import io.corbel.resources.rem.search.ElasticSearchService;
+import io.corbel.resources.rem.service.ResmiService;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,15 +16,6 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
-
-import io.corbel.resources.cli.dsl.ResmiShell;
-import io.corbel.resources.rem.Rem;
-import io.corbel.resources.rem.RemRegistry;
-import io.corbel.resources.rem.resmi.ioc.ResmiIoc;
-import io.corbel.resources.rem.resmi.ioc.ResmiRemNames;
-import io.corbel.resources.rem.search.ResmiSearch;
-import io.corbel.resources.rem.service.ResmiService;
-import io.corbel.lib.config.ConfigurationHelper;
 
 @Component public class ResmiRemPlugin extends RemPlugin {
 
@@ -36,7 +36,7 @@ import io.corbel.lib.config.ConfigurationHelper;
     protected void console() {
         init();
         shell.setResmiService(context.getBean(ResmiService.class));
-        shell.setResmiSearch(context.getBean(ResmiSearch.class));
+        shell.setElasticSearchService(context.getBean(ElasticSearchService.class));
     }
 
     @Override

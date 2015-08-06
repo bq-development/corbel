@@ -2,13 +2,13 @@ package io.corbel.resources.cli.dsl
 
 import io.corbel.lib.cli.console.Description
 import io.corbel.lib.cli.console.Shell
+import io.corbel.resources.rem.model.ResourceUri
+import io.corbel.resources.rem.model.SearchResource
+import io.corbel.resources.rem.search.ElasticSearchService;
+import io.corbel.resources.rem.service.ResmiService
 
 import org.springframework.data.mongodb.core.index.Index
 
-import io.corbel.resources.rem.model.ResourceUri
-import io.corbel.resources.rem.model.SearchResource
-import io.corbel.resources.rem.search.ResmiSearch
-import io.corbel.resources.rem.service.ResmiService
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 
@@ -16,7 +16,7 @@ import com.google.gson.JsonParser
 class ResmiShell {
 
     ResmiService resmiService
-    ResmiSearch resmiSearch
+    ElasticSearchService elasticSearchService
 
     @Description("Creates a mongo expiration index named \"_expireAt\" on the specified collection .")
     def ensureExpireIndex(String collection) {
@@ -58,31 +58,40 @@ class ResmiShell {
         resmiService.addSearchableFields(new SearchResource(type, relation, fields.collect().toSet()))
     }
 
-    @Description("Defines a full text search index for a type.")
-    def setMapping(String type, String relation, JsonObject mapping) {
+    @Description("Defines an index settings.")
+    def createIndex(String name, String settings) {
+        assert name: "name is required"
+        assert settings: "settings is required"
+        elasticSearchService.createIndex(name, settings)
+    }
+
+    @Description("Defines a full text search mapping for a type.")
+    def setMapping(String index, String type, String mapping) {
+        assert index: "index is required"
         assert type: "type is required"
         assert mapping: "mapping is required"
-        resmiSearch.setupMapping(new ResourceUri(type, null, relation), mapping)
+        elasticSearchService.setupMapping(index, type, mapping)
     }
 
     @Description("Adds a full text search template")
-    def addTemplate(String type, String relation, String name, Map<String, Object> template) {
-        assert type: "type is required"
+    def addTemplate(String name, Map<String, Object> template) {
         assert name: "name is required"
         assert template: "template is required"
-        resmiSearch.addTemplate(new ResourceUri(type, null, relation), name, template)
+        elasticSearchService.addTemplate(name, template)
     }
 
-    @Description("Adds an alias to resmi index")
-    def addAlias(String alias) {
+    @Description("Adds an alias to an index")
+    def addAlias(String index, String alias) {
+        assert index: "index is required"
         assert alias: "alias is required"
-        resmiSearch.addAlias(alias)
+        elasticSearchService.addAlias(index, alias)
     }
 
-    @Description("Removes an alias to resmi index")
-    def removeAlias(String alias) {
+    @Description("Removes an alias from an index")
+    def removeAlias(String index, String alias) {
+        assert index: "index is required"
         assert alias: "alias is required"
-        resmiSearch.removeAlias(alias)
+        elasticSearchService.removeAlias(index, alias)
     }
 
     def index = IndexBuilder.index

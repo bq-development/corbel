@@ -1,5 +1,30 @@
 package io.corbel.resources.rem.resmi.ioc;
 
+import io.corbel.lib.config.ConfigurationIoC;
+import io.corbel.lib.mongo.IdInjectorMongoEventListener;
+import io.corbel.lib.mongo.JsonObjectMongoReadConverter;
+import io.corbel.lib.mongo.JsonObjectMongoWriteConverter;
+import io.corbel.lib.mongo.config.DefaultMongoConfiguration;
+import io.corbel.resources.rem.Rem;
+import io.corbel.resources.rem.dao.DefaultResmiOrder;
+import io.corbel.resources.rem.dao.MongoResmiDao;
+import io.corbel.resources.rem.dao.NamespaceNormalizer;
+import io.corbel.resources.rem.dao.ResmiDao;
+import io.corbel.resources.rem.dao.ResmiOrder;
+import io.corbel.resources.rem.resmi.ResmiDeleteRem;
+import io.corbel.resources.rem.resmi.ResmiGetRem;
+import io.corbel.resources.rem.resmi.ResmiPostRem;
+import io.corbel.resources.rem.resmi.ResmiPutRem;
+import io.corbel.resources.rem.search.ElasticSearchResmiSearch;
+import io.corbel.resources.rem.search.ElasticSearchService;
+import io.corbel.resources.rem.search.ResmiSearch;
+import io.corbel.resources.rem.service.DefaultNamespaceNormalizer;
+import io.corbel.resources.rem.service.DefaultResmiService;
+import io.corbel.resources.rem.service.InMemorySearchableFieldsRegistry;
+import io.corbel.resources.rem.service.ResmiService;
+import io.corbel.resources.rem.service.SearchableFieldsRegistry;
+import io.corbel.resources.rem.utils.ResmiJsonObjectMongoWriteConverter;
+
 import java.time.Clock;
 import java.util.Arrays;
 
@@ -13,22 +38,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
 import org.springframework.data.mongodb.core.convert.CustomConversions;
 
-import io.corbel.resources.rem.Rem;
-import io.corbel.resources.rem.dao.*;
-import io.corbel.resources.rem.resmi.ResmiDeleteRem;
-import io.corbel.resources.rem.resmi.ResmiGetRem;
-import io.corbel.resources.rem.resmi.ResmiPostRem;
-import io.corbel.resources.rem.resmi.ResmiPutRem;
-import io.corbel.resources.rem.search.DummyResmiSearch;
-import io.corbel.resources.rem.search.ElasticSearchResmiSearch;
-import io.corbel.resources.rem.search.ResmiSearch;
-import io.corbel.resources.rem.service.*;
-import io.corbel.resources.rem.utils.ResmiJsonObjectMongoWriteConverter;
-import io.corbel.lib.config.ConfigurationIoC;
-import io.corbel.lib.mongo.IdInjectorMongoEventListener;
-import io.corbel.lib.mongo.JsonObjectMongoReadConverter;
-import io.corbel.lib.mongo.JsonObjectMongoWriteConverter;
-import io.corbel.lib.mongo.config.DefaultMongoConfiguration;
 import com.google.gson.Gson;
 
 /**
@@ -38,12 +47,6 @@ import com.google.gson.Gson;
 @Import({ConfigurationIoC.class, DefaultElasticSearchConfiguration.class}) public class ResmiIoc extends DefaultMongoConfiguration {
 
     @Value("${resmi.elasticsearch.enabled:true}") private boolean elasticSearchEnabled;
-
-    @Value("${resmi.elasticsearch.index.settings:/elasticsearch/index.settings}")
-    private String elasticSearchIndexSettings;
-
-    @Value("${resmi.elasticsearch.mapping.settings:/elasticsearch/mapping.settings}")
-    private String elasticSearchMappingSettings;
 
     @Autowired private Environment env;
 
@@ -56,8 +59,7 @@ import com.google.gson.Gson;
 
     @Bean
     public ResmiDao getMongoResmiDao() throws Exception {
-        return new MongoResmiDao(mongoTemplate(), getJsonObjectMongoWriteConverter(),
-                getNamespaceNormilizer(), getMongoResmiOrder());
+        return new MongoResmiDao(mongoTemplate(), getJsonObjectMongoWriteConverter(), getNamespaceNormilizer(), getMongoResmiOrder());
     }
 
     @Bean
@@ -128,11 +130,15 @@ import com.google.gson.Gson;
     @Bean
     public ResmiSearch getResmiSearch() {
         if (elasticSearchEnabled) {
-            return new ElasticSearchResmiSearch(applicationContext.getBean(Client.class), elasticSearchIndexSettings,
-                    elasticSearchMappingSettings, getNamespaceNormilizer(), getGson());
+            return new ElasticSearchResmiSearch(getElasticeSerachService(), getNamespaceNormilizer());
         } else {
-            return new DummyResmiSearch();
+            return null;
         }
+    }
+
+    @Bean
+    public ElasticSearchService getElasticeSerachService() {
+        return new ElasticSearchService(applicationContext.getBean(Client.class), getGson());
     }
 
     @Bean

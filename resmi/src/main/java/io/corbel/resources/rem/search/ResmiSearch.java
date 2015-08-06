@@ -21,21 +21,13 @@ public interface ResmiSearch {
     JsonArray search(ResourceUri uri, String search, Optional<List<ResourceQuery>> resourceQueries, Pagination pagination,
             Optional<Sort> sort);
 
-    void indexDocument(ResourceUri uri, JsonObject fields);
-
-    void deleteDocument(ResourceUri uri);
-
-    AggregationResult count(ResourceUri uri, String search);
+    AggregationResult count(ResourceUri uri, String search, Optional<List<ResourceQuery>> resourceQueries);
 
     JsonArray search(ResourceUri resourceUri, String templateName, Map<String, Object> templateParams, int page, int size);
 
-    void setupMapping(ResourceUri resourceUri, JsonObject mapping);
-
-    void addTemplate(ResourceUri resourceUri, String name, JsonObject template);
-
     AggregationResult count(ResourceUri resourceUri, String templateName, Map<String, Object> templateParams);
 
-    void addAlias(String alias);
+    void indexDocument(ResourceUri uri, JsonObject fields);
 
-    void removeAlias(String alias);
+    void deleteDocument(ResourceUri uri);
 }

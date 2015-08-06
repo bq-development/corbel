@@ -22,25 +22,25 @@ import org.elasticsearch.index.query.QueryBuilders;
  */
 public class ElasticSearchResourceQueryBuilder {
 
-    public static QueryBuilder build(String search, ResourceQuery resourceQuery) {
-        return build(search, resourceQuery != null ? Arrays.asList(resourceQuery) : Collections.emptyList());
+    public static QueryBuilder build(String search, ResourceQuery query) {
+        return build(search, query != null ? Arrays.asList(query) : Collections.emptyList());
     }
 
-    public static QueryBuilder build(String search, List<ResourceQuery> resourceQueries) {
-        if (resourceQueries == null || resourceQueries.isEmpty()) {
+    public static QueryBuilder build(String search, List<ResourceQuery> queries) {
+        if (queries == null || queries.isEmpty()) {
             return QueryBuilders.queryStringQuery(search);
         } else {
             OrFilterBuilder orBuilder = FilterBuilders.orFilter();
-            for (ResourceQuery resourceQuery : resourceQueries) {
-                orBuilder.add(getFilterBuilder(resourceQuery));
+            for (ResourceQuery query : queries) {
+                orBuilder.add(getFilterBuilder(query));
             }
             return QueryBuilders.filteredQuery(QueryBuilders.queryStringQuery(search), orBuilder);
         }
     }
 
-    private static FilterBuilder getFilterBuilder(ResourceQuery resourceQuery) {
+    private static FilterBuilder getFilterBuilder(ResourceQuery query) {
         AndFilterBuilder andFilterBuilder = FilterBuilders.andFilter();
-        for (QueryNode node : resourceQuery) {
+        for (QueryNode node : query) {
             andFilterBuilder.add(getFilterBuilder(node));
         }
         return andFilterBuilder;

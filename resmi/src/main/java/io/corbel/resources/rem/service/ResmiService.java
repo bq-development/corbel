@@ -27,7 +27,7 @@ public interface ResmiService {
     String ID = "id";
     String _ID = "_id";
 
-    JsonArray findCollection(ResourceUri uri, Optional<? extends CollectionParameters> apiParameters) throws BadConfigurationException;
+    JsonArray findCollection(ResourceUri uri, Optional<CollectionParameters> apiParameters) throws BadConfigurationException;
 
     JsonObject findResource(ResourceUri uri);
 
