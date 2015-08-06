@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>com.bq.oss.corbel</groupId>
+		<groupId>io.corbel</groupId>
 		<artifactId>corbel</artifactId>
 		<version>1.21.0-SNAPSHOT</version>
 	</parent>
@@ -155,7 +155,7 @@
             <artifactId>spring-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.bq.oss.corbel</groupId>
+            <groupId>io.corbel</groupId>
             <artifactId>events</artifactId>
         </dependency>
         <dependency>
@@ -172,7 +172,7 @@
 				<configuration>
 					<programs>
 						<program>
-							<mainClass>com.bq.oss.corbel.iam.IamRunner</mainClass>
+							<mainClass>io.corbel.iam.IamRunner</mainClass>
 							<id>${project.name}</id>
 						</program>
 					</programs>

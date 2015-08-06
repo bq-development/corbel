@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.bq.oss.corbel</groupId>
+        <groupId>io.corbel</groupId>
         <artifactId>corbel</artifactId>
         <version>1.21.0-SNAPSHOT</version>
     </parent>
@@ -27,7 +27,7 @@
             <artifactId>ws</artifactId>
         </dependency>
 		<dependency>
-			<groupId>com.bq.oss.corbel</groupId>
+			<groupId>io.corbel</groupId>
 			<artifactId>eworker-api</artifactId>
 		</dependency>
         <dependency>
@@ -47,7 +47,7 @@
 			<artifactId>rabbitmq</artifactId>
 		</dependency>
 		<dependency>
-            <groupId>com.bq.oss.corbel</groupId>
+            <groupId>io.corbel</groupId>
 			<artifactId>events</artifactId>
 		</dependency>
 	</dependencies>
@@ -61,7 +61,7 @@
                 <configuration>
                     <programs>
                         <program>
-                            <mainClass>com.bq.oss.corbel.evci.EvciRunner</mainClass>
+                            <mainClass>io.corbel.evci.EvciRunner</mainClass>
                             <id>${project.name}</id>
                             <jvmSettings>
                                 <extraArguments>
