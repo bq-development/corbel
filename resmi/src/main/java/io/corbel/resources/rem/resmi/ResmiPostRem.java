@@ -6,20 +6,17 @@ import java.util.Optional;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
-import io.corbel.resources.rem.dao.NotFoundException;
-import io.corbel.resources.rem.model.ResourceUri;
-import io.corbel.resources.rem.request.CollectionParameters;
-import io.corbel.resources.rem.request.RelationParameters;
-import io.corbel.resources.rem.request.RequestParameters;
-import io.corbel.resources.rem.request.ResourceId;
-import io.corbel.resources.rem.request.ResourceParameters;
-import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
-import io.corbel.resources.rem.service.ResmiService;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
 import io.corbel.lib.token.TokenInfo;
 import io.corbel.lib.ws.api.error.ErrorResponseFactory;
 import io.corbel.lib.ws.model.Error;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import io.corbel.resources.rem.dao.NotFoundException;
+import io.corbel.resources.rem.model.ResourceUri;
+import io.corbel.resources.rem.request.*;
+import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
+import io.corbel.resources.rem.service.ResmiService;
 
 /**
  * @author Rubén Carrasco
@@ -58,15 +55,16 @@ public class ResmiPostRem extends AbstractResmiRem {
             return ErrorResponseFactory.getInstance().methodNotAllowed();
         }
 
-        ResourceUri resourceUri = buildRelationUri(type, id.getId(), relation, parameters.getOptionalApiParameters().flatMap(params -> params.getPredicateResource()));
+        ResourceUri resourceUri = buildRelationUri(type, id.getId(), relation,
+                parameters.getOptionalApiParameters().flatMap(RelationParameters::getPredicateResource));
 
         try {
             JsonObject requestEntity = entity.orElse(null);
             resmiService.createRelation(resourceUri, requestEntity);
             return created();
         } catch (NotFoundException | NullPointerException | IllegalArgumentException e) {
-            return ErrorResponseFactory.getInstance().badRequest(
-                    new Error("bad_request", e.getClass().getSimpleName() + ": " + e.getMessage()));
+            return ErrorResponseFactory.getInstance()
+                    .badRequest(new Error("bad_request", e.getClass().getSimpleName() + ": " + e.getMessage()));
         } catch (StartsWithUnderscoreException e) {
             return ErrorResponseFactory.getInstance().invalidEntity("Invalid attribute name \"" + e.getMessage() + "\"");
         }

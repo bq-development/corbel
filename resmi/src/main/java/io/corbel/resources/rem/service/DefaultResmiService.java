@@ -1,27 +1,19 @@
 package io.corbel.resources.rem.service;
 
-import io.corbel.lib.queries.builder.ResourceQueryBuilder;
-import io.corbel.lib.queries.request.Aggregation;
-import io.corbel.lib.queries.request.AggregationResult;
-import io.corbel.lib.queries.request.Average;
-import io.corbel.lib.queries.request.QueryOperator;
-import io.corbel.lib.queries.request.ResourceQuery;
-import io.corbel.lib.queries.request.Search;
-import io.corbel.lib.queries.request.Sum;
-
 import java.time.Clock;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import org.springframework.data.mongodb.core.index.Index;
 
+import com.google.common.collect.Sets;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
+
+import io.corbel.lib.queries.builder.ResourceQueryBuilder;
+import io.corbel.lib.queries.request.*;
 import io.corbel.resources.rem.dao.NotFoundException;
 import io.corbel.resources.rem.dao.RelationMoveOperation;
 import io.corbel.resources.rem.dao.ResmiDao;
@@ -33,11 +25,6 @@ import io.corbel.resources.rem.request.CollectionParametersImpl;
 import io.corbel.resources.rem.request.RelationParameters;
 import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
 import io.corbel.resources.rem.search.ResmiSearch;
-import com.google.common.collect.Sets;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
 
 /**
  * @author Francisco Sanchez
@@ -106,11 +93,11 @@ public class DefaultResmiService implements ResmiService {
 
     @Override
     public JsonArray findCollection(ResourceUri uri, Optional<CollectionParameters> apiParameters) throws BadConfigurationException {
-        if (apiParameters.flatMap(params -> params.getSearch()).isPresent()) {
+        if (apiParameters.flatMap(CollectionParameters::getSearch).isPresent()) {
             return findInSearchService(uri, apiParameters.get());
         } else {
-            return resmiDao.findCollection(uri, apiParameters.flatMap(params -> params.getQueries()),
-                    apiParameters.map(params -> params.getPagination()), apiParameters.flatMap(params -> params.getSort()));
+            return resmiDao.findCollection(uri, apiParameters.flatMap(CollectionParameters::getQueries),
+                    apiParameters.map(CollectionParameters::getPagination), apiParameters.flatMap(CollectionParameters::getSort));
         }
     }
 
@@ -121,8 +108,8 @@ public class DefaultResmiService implements ResmiService {
             searchResult = search.search(resourceUri, searchObject.getText().get(), apiParameters.getQueries(),
                     apiParameters.getPagination(), apiParameters.getSort());
         } else {
-            searchResult = search.search(resourceUri, searchObject.getTemplate().get(), searchObject.getParams().get(), apiParameters
-                    .getPagination().getPage(), apiParameters.getPagination().getPageSize());
+            searchResult = search.search(resourceUri, searchObject.getTemplate().get(), searchObject.getParams().get(),
+                    apiParameters.getPagination().getPage(), apiParameters.getPagination().getPageSize());
         }
 
         if (searchObject.isBinded()) {
@@ -139,8 +126,8 @@ public class DefaultResmiService implements ResmiService {
             ids.add(((JsonObject) element).get(ID).getAsString());
         }
         ResourceQueryBuilder builder = new ResourceQueryBuilder().add(ID, ids, QueryOperator.$IN);
-        return new CollectionParametersImpl(apiParameters.getPagination(), apiParameters.getSort(), Optional.of(Arrays.asList(builder
-                .build())), Optional.empty(), Optional.empty(), Optional.empty());
+        return new CollectionParametersImpl(apiParameters.getPagination(), apiParameters.getSort(),
+                Optional.of(Collections.singletonList(builder.build())), Optional.empty(), Optional.empty(), Optional.empty());
     }
 
     @Override
@@ -150,11 +137,11 @@ public class DefaultResmiService implements ResmiService {
 
     @Override
     public JsonElement findRelation(ResourceUri uri, Optional<RelationParameters> apiParameters) throws BadConfigurationException {
-        if (apiParameters.flatMap(params -> params.getSearch()).isPresent()) {
+        if (apiParameters.flatMap(CollectionParameters::getSearch).isPresent()) {
             return findInSearchService(uri, apiParameters.get());
         } else {
-            return resmiDao.findRelation(uri, apiParameters.flatMap(params -> params.getQueries()),
-                    apiParameters.map(params -> params.getPagination()), apiParameters.flatMap(params -> params.getSort()));
+            return resmiDao.findRelation(uri, apiParameters.flatMap(CollectionParameters::getQueries),
+                    apiParameters.map(CollectionParameters::getPagination), apiParameters.flatMap(CollectionParameters::getSort));
         }
     }
 
@@ -193,9 +180,12 @@ public class DefaultResmiService implements ResmiService {
 
     private void indexInSearchService(ResourceUri resourceUri, JsonObject jsonObject) {
         Set<String> fields = searchableFieldsRegistry.getFieldsFromResourceUri(resourceUri);
-        if (!fields.isEmpty()) {
-            jsonObject = pickJSonFields(jsonObject, fields);
+
+        if (fields.isEmpty()) {
+            return;
         }
+
+        jsonObject = pickJSonFields(Optional.ofNullable(jsonObject).orElseGet(JsonObject::new), fields);
         search.indexDocument(resourceUri, jsonObject);
     }
 
@@ -207,6 +197,7 @@ public class DefaultResmiService implements ResmiService {
 
     @Override
     public JsonObject createRelation(ResourceUri uri, JsonObject requestEntity) throws NotFoundException, StartsWithUnderscoreException {
+
         verifyNotUnderscore(requestEntity);
         addDates(requestEntity);
         resmiDao.createRelation(uri, requestEntity);

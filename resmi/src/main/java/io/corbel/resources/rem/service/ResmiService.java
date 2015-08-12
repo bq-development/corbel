@@ -1,13 +1,16 @@
 package io.corbel.resources.rem.service;
 
-import io.corbel.lib.queries.request.AggregationResult;
-import io.corbel.lib.queries.request.ResourceQuery;
-
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.mongodb.core.index.Index;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
+import io.corbel.lib.queries.request.AggregationResult;
+import io.corbel.lib.queries.request.ResourceQuery;
 import io.corbel.resources.rem.dao.NotFoundException;
 import io.corbel.resources.rem.dao.RelationMoveOperation;
 import io.corbel.resources.rem.model.ResourceUri;
@@ -15,9 +18,6 @@ import io.corbel.resources.rem.model.SearchResource;
 import io.corbel.resources.rem.request.CollectionParameters;
 import io.corbel.resources.rem.request.RelationParameters;
 import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 
 /**
  * @author Francisco Sanchez

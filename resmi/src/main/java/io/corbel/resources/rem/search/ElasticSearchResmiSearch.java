@@ -1,13 +1,5 @@
 package io.corbel.resources.rem.search;
 
-import io.corbel.lib.queries.request.AggregationResult;
-import io.corbel.lib.queries.request.CountResult;
-import io.corbel.lib.queries.request.Pagination;
-import io.corbel.lib.queries.request.ResourceQuery;
-import io.corbel.lib.queries.request.Sort;
-import io.corbel.resources.rem.dao.NamespaceNormalizer;
-import io.corbel.resources.rem.model.ResourceUri;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +8,10 @@ import java.util.Optional;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+
+import io.corbel.lib.queries.request.*;
+import io.corbel.resources.rem.dao.NamespaceNormalizer;
+import io.corbel.resources.rem.model.ResourceUri;
 
 /**
  * @author Francisco Sanchez
@@ -51,15 +47,16 @@ public class ElasticSearchResmiSearch implements ResmiSearch {
 
     @Override
     public AggregationResult count(ResourceUri uri, String search, Optional<List<ResourceQuery>> queries) {
-        return new CountResult(elasticeSerachService.count(INDEX, getElasticSearchType(uri), search,
-                queries.orElse(Collections.emptyList())));
+        return new CountResult(
+                elasticeSerachService.count(INDEX, getElasticSearchType(uri), search, queries.orElse(Collections.emptyList())));
     }
 
     @Override
     public void indexDocument(ResourceUri uri, JsonObject fields) {
-        JsonPrimitive resourceId = uri.isResource() ? new JsonPrimitive(uri.getTypeId()) : new JsonPrimitive(uri.getRelationId());
-        fields.add("id", resourceId);
-        elasticeSerachService.indexDocument(INDEX, getElasticSearchType(uri), getElasticSearchId(uri), fields.toString());
+        Optional.ofNullable(uri.isResource() ? uri.getTypeId() : uri.getRelationId()).map(JsonPrimitive::new).ifPresent(resourceId -> {
+            fields.add("id", resourceId);
+            elasticeSerachService.indexDocument(INDEX, getElasticSearchType(uri), getElasticSearchId(uri), fields.toString());
+        });
     }
 
     @Override
@@ -68,12 +65,10 @@ public class ElasticSearchResmiSearch implements ResmiSearch {
     }
 
     private String getElasticSearchType(ResourceUri uri) {
-        return Optional
-                .ofNullable(namespaceNormalizer.normalize(uri.getType()))
-                .map(type -> type
-                        + Optional.ofNullable(uri.getRelation())
-                                .map(relation -> ":" + uri.getTypeId() + ":" + namespaceNormalizer.normalize(relation))
-                                .orElse(EMPTY_STRING)).orElse(EMPTY_STRING);
+        return Optional.ofNullable(namespaceNormalizer.normalize(uri.getType()))
+                .map(type -> type + Optional.ofNullable(uri.getRelation())
+                        .map(relation -> ":" + uri.getTypeId() + ":" + namespaceNormalizer.normalize(relation)).orElse(EMPTY_STRING))
+                .orElse(EMPTY_STRING);
     }
 
     private String getElasticSearchId(ResourceUri uri) {

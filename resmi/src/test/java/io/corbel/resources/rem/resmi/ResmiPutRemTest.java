@@ -10,18 +10,19 @@ import java.util.Optional;
 
 import javax.ws.rs.core.Response;
 
-import io.corbel.resources.rem.model.ResourceUri;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
+
+import io.corbel.lib.queries.request.ResourceQuery;
 import io.corbel.resources.rem.dao.NotFoundException;
+import io.corbel.resources.rem.model.ResourceUri;
 import io.corbel.resources.rem.request.RequestParameters;
 import io.corbel.resources.rem.request.ResourceId;
 import io.corbel.resources.rem.request.ResourceParameters;
 import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
-import io.corbel.lib.queries.request.ResourceQuery;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
 
 public class ResmiPutRemTest extends ResmiRemTest {
 
@@ -40,6 +41,7 @@ public class ResmiPutRemTest extends ResmiRemTest {
 
     private RequestParameters<ResourceParameters> getResourceParametersMockWithCondition(Optional<List<ResourceQuery>> conditions) {
         ResourceParameters resourceParametersMock = mock(ResourceParameters.class);
+        @SuppressWarnings("unchecked")
         RequestParameters<ResourceParameters> requestParametersMock = mock(RequestParameters.class);
         when(requestParametersMock.getOptionalApiParameters()).thenReturn(Optional.of(resourceParametersMock));
         when(resourceParametersMock.getConditions()).thenReturn(conditions);
@@ -66,9 +68,10 @@ public class ResmiPutRemTest extends ResmiRemTest {
 
         JsonObject json = new JsonObject();
         json.add("a", new JsonPrimitive("1"));
+        @SuppressWarnings("unchecked")
         List<ResourceQuery> resourceQueryListMock = mock(List.class);
-        RequestParameters<ResourceParameters> requestParametersMock = getResourceParametersMockWithCondition(Optional
-                .of(resourceQueryListMock));
+        RequestParameters<ResourceParameters> requestParametersMock = getResourceParametersMockWithCondition(
+                Optional.of(resourceQueryListMock));
 
         when(resmiServiceMock.conditionalUpdateResource(resourceUri, json, resourceQueryListMock)).thenReturn(json);
         Response response = putRem.resource(TEST_TYPE, TEST_ID, requestParametersMock, Optional.of(json));
@@ -80,9 +83,10 @@ public class ResmiPutRemTest extends ResmiRemTest {
         ResourceUri resourceUri = new ResourceUri(TEST_TYPE, ID);
         JsonObject json = new JsonObject();
         json.add("a", new JsonPrimitive("1"));
+        @SuppressWarnings("unchecked")
         List<ResourceQuery> resourceQueryListMock = mock(List.class);
-        RequestParameters<ResourceParameters> requestParametersMock = getResourceParametersMockWithCondition(Optional
-                .of(resourceQueryListMock));
+        RequestParameters<ResourceParameters> requestParametersMock = getResourceParametersMockWithCondition(
+                Optional.of(resourceQueryListMock));
 
         when(resmiServiceMock.conditionalUpdateResource(resourceUri, json, resourceQueryListMock)).thenReturn(null);
         Response response = putRem.resource(TEST_TYPE, TEST_ID, requestParametersMock, Optional.of(json));
@@ -117,6 +121,7 @@ public class ResmiPutRemTest extends ResmiRemTest {
 
     @Test
     public void testPutRelation() {
+        @SuppressWarnings("unchecked")
         Response response = putRem.relation(TEST_TYPE, TEST_ID, TEST_RELATION, getParameters(TEST_URI), Optional.empty());
         assertThat(response.getStatus()).isEqualTo(201);
     }
@@ -128,24 +133,28 @@ public class ResmiPutRemTest extends ResmiRemTest {
 
         doThrow(new StartsWithUnderscoreException("_b")).when(resmiServiceMock).createRelation(any(), eq(json));
 
+        @SuppressWarnings("unchecked")
         Response response = putRem.relation(TEST_TYPE, TEST_ID, TEST_RELATION, getParameters(TEST_URI), Optional.ofNullable(json));
         assertThat(response.getStatus()).isEqualTo(422);
     }
 
     @Test
     public void testPutRelationWithData() {
+        @SuppressWarnings("unchecked")
         Response response = putRem.relation(TEST_TYPE, TEST_ID, TEST_RELATION, getParameters(TEST_URI), Optional.of(getTestRelationData()));
         assertThat(response.getStatus()).isEqualTo(201);
     }
 
     @Test
     public void testInvalidUriPutRelation() {
+        @SuppressWarnings("unchecked")
         Response response = putRem.relation(TEST_TYPE, TEST_ID, TEST_RELATION, getParameters(TEST_INVALID_URI), Optional.empty());
         assertThat(response.getStatus()).isEqualTo(400);
     }
 
     @Test
     public void testNullUriPutRelation() {
+        @SuppressWarnings("unchecked")
         Response response = putRem.relation(TEST_TYPE, TEST_ID, TEST_RELATION, getParametersWithEmptyUri(), Optional.of(getTestResource()));
         assertThat(response.getStatus()).isEqualTo(400);
     }
