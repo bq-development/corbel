@@ -87,7 +87,7 @@ public class ResmiPutRem extends AbstractResmiRem {
 
             resmiService.createRelation(resourceUri, entity.orElse(null));
             return created();
-        } catch (NotFoundException | UnsupportedEncodingException | NullPointerException | IllegalArgumentException e) {
+        } catch (NotFoundException | UnsupportedEncodingException | IllegalArgumentException e) {
             return ErrorResponseFactory.getInstance()
                     .badRequest(new Error("bad_request", e.getClass().getSimpleName() + ": " + e.getMessage()));
         } catch (StartsWithUnderscoreException e) {

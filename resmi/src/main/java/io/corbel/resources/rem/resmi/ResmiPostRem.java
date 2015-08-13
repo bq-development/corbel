@@ -62,7 +62,7 @@ public class ResmiPostRem extends AbstractResmiRem {
             JsonObject requestEntity = entity.orElse(null);
             resmiService.createRelation(resourceUri, requestEntity);
             return created();
-        } catch (NotFoundException | NullPointerException | IllegalArgumentException e) {
+        } catch (NotFoundException | IllegalArgumentException e) {
             return ErrorResponseFactory.getInstance()
                     .badRequest(new Error("bad_request", e.getClass().getSimpleName() + ": " + e.getMessage()));
         } catch (StartsWithUnderscoreException e) {
