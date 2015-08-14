@@ -76,8 +76,9 @@ public class ResmiPutRem extends AbstractResmiRem {
 
         try {
             String uri = URLDecoder.decode(parameters.getOptionalApiParameters().get().getPredicateResource().get(), "UTF-8");
+
             if (!JsonRelation.validateUri(uri)) {
-                return ErrorResponseFactory.getInstance().badRequest(new Error("bad_request", "Resource URI not present"));
+                return ErrorResponseFactory.getInstance().badRequest(new Error("bad_request", "Resource URI not valid"));
             }
 
             if (entity.filter(requestEntity -> requestEntity.has("_order")).isPresent()) {

@@ -5,13 +5,14 @@ import java.util.Optional;
 
 import javax.ws.rs.core.Response;
 
+import com.google.gson.JsonObject;
+
+import io.corbel.lib.ws.api.error.ErrorResponseFactory;
+import io.corbel.lib.ws.model.Error;
 import io.corbel.resources.rem.model.ResourceUri;
 import io.corbel.resources.rem.request.*;
 import io.corbel.resources.rem.service.BadConfigurationException;
 import io.corbel.resources.rem.service.ResmiService;
-import io.corbel.lib.ws.api.error.ErrorResponseFactory;
-import io.corbel.lib.ws.model.Error;
-import com.google.gson.JsonObject;
 
 /**
  * @author Rubén Carrasco
@@ -27,7 +28,7 @@ public class ResmiGetRem extends AbstractResmiRem {
     public Response collection(String type, RequestParameters<CollectionParameters> parameters, URI uri, Optional<JsonObject> entity) {
         ResourceUri resourceUri = buildCollectionUri(type);
         try {
-            if (parameters.getOptionalApiParameters().flatMap(params -> params.getAggregation()).isPresent()) {
+            if (parameters.getOptionalApiParameters().flatMap(CollectionParameters::getAggregation).isPresent()) {
                 return buildResponse(resmiService.aggregate(resourceUri, parameters.getOptionalApiParameters().get()));
             } else {
                 return buildResponse(resmiService.findCollection(resourceUri, parameters.getOptionalApiParameters()));
@@ -49,9 +50,10 @@ public class ResmiGetRem extends AbstractResmiRem {
     @Override
     public Response relation(String type, ResourceId id, String relation, RequestParameters<RelationParameters> parameters,
             Optional<JsonObject> entity) {
-        ResourceUri resourceUri = buildRelationUri(type, id.getId(), relation, parameters.getOptionalApiParameters().flatMap(params -> params.getPredicateResource()));
+        ResourceUri resourceUri = buildRelationUri(type, id.getId(), relation,
+                parameters.getOptionalApiParameters().flatMap(RelationParameters::getPredicateResource));
         try {
-            if (parameters.getOptionalApiParameters().flatMap(params -> params.getAggregation()).isPresent()) {
+            if (parameters.getOptionalApiParameters().flatMap(CollectionParameters::getAggregation).isPresent()) {
                 return buildResponse(resmiService.aggregate(resourceUri, parameters.getOptionalApiParameters().get()));
             } else {
                 return buildResponse(resmiService.findRelation(resourceUri, parameters.getOptionalApiParameters()));

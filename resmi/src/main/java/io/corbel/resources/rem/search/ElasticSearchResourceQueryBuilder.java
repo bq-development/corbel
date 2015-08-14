@@ -1,20 +1,14 @@
 package io.corbel.resources.rem.search;
 
-import io.corbel.lib.queries.request.QueryLiteral;
-import io.corbel.lib.queries.request.QueryNode;
-import io.corbel.lib.queries.request.ResourceQuery;
-
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.elasticsearch.index.query.AndFilterBuilder;
-import org.elasticsearch.index.query.FilterBuilder;
-import org.elasticsearch.index.query.FilterBuilders;
-import org.elasticsearch.index.query.OrFilterBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.*;
+
+import io.corbel.lib.queries.request.QueryLiteral;
+import io.corbel.lib.queries.request.QueryNode;
+import io.corbel.lib.queries.request.ResourceQuery;
 
 /**
  * @author Rubén Carrasco
@@ -23,7 +17,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 public class ElasticSearchResourceQueryBuilder {
 
     public static QueryBuilder build(String search, ResourceQuery query) {
-        return build(search, query != null ? Arrays.asList(query) : Collections.emptyList());
+        return build(search, query != null ? Collections.singletonList(query) : Collections.emptyList());
     }
 
     public static QueryBuilder build(String search, List<ResourceQuery> queries) {
@@ -62,19 +56,19 @@ public class ElasticSearchResourceQueryBuilder {
             case $LTE:
                 return FilterBuilders.rangeFilter(node.getField()).lte(node.getValue().getLiteral());
             case $EXISTS:
-                return (Boolean) node.getValue().getLiteral() ? FilterBuilders.existsFilter(node.getField()) : FilterBuilders
-                        .notFilter(FilterBuilders.existsFilter(node.getField()));
+                return (Boolean) node.getValue().getLiteral() ? FilterBuilders.existsFilter(node.getField())
+                        : FilterBuilders.notFilter(FilterBuilders.existsFilter(node.getField()));
             case $IN:
                 return FilterBuilders.inFilter(node.getField(), getValues((List<QueryLiteral>) node.getValue().getLiteral()));
             case $NIN:
-                return FilterBuilders.notFilter(FilterBuilders.inFilter(node.getField(), getValues((List<QueryLiteral>) node.getValue()
-                        .getLiteral())));
+                return FilterBuilders
+                        .notFilter(FilterBuilders.inFilter(node.getField(), getValues((List<QueryLiteral>) node.getValue().getLiteral())));
             default:
                 return null;
         }
     }
 
     private static Object[] getValues(@SuppressWarnings("rawtypes") List<QueryLiteral> literals) {
-        return literals.stream().map(literal -> literal.getLiteral()).collect(Collectors.toList()).toArray();
+        return literals.stream().map(QueryLiteral::getLiteral).collect(Collectors.toList()).toArray();
     }
 }

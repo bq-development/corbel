@@ -41,7 +41,7 @@ public class ElasticSearchResmiSearch implements ResmiSearch {
     @Override
     public JsonArray search(ResourceUri uri, String search, Optional<List<ResourceQuery>> queries, Pagination pagination,
             Optional<Sort> sort) {
-        return elasticeSerachService.search(INDEX, getElasticSearchType(uri), search, queries.orElse(Collections.emptyList()), pagination,
+        return elasticeSerachService.search(INDEX, getElasticSearchType(uri), search, queries.orElseGet(Collections::emptyList), pagination,
                 sort);
     }
 

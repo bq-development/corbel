@@ -1,7 +1,6 @@
 package io.corbel.resources.rem.service;
 
 import java.time.Clock;
-import java.time.Instant;
 import java.util.*;
 
 import org.springframework.data.mongodb.core.index.Index;
@@ -150,7 +149,7 @@ public class DefaultResmiService implements ResmiService {
             throws StartsWithUnderscoreException {
         verifyNotUnderscore(object);
         optionalUserId.ifPresent(userId -> setId(userId, object));
-        addDates(object);
+        createDates(object);
         resmiDao.saveResource(uri, object);
         indexInSearchService(uri.setTypeId(object.get(ID).getAsString()), object);
         return object;
@@ -158,10 +157,12 @@ public class DefaultResmiService implements ResmiService {
 
     @Override
     public JsonObject updateResource(ResourceUri uri, JsonObject jsonObject) throws StartsWithUnderscoreException {
+
         verifyNotUnderscore(jsonObject);
-        addDates(jsonObject);
+        createDates(jsonObject);
         resmiDao.updateResource(uri, jsonObject);
         indexInSearchService(uri, jsonObject);
+
         return jsonObject;
     }
 
@@ -169,7 +170,7 @@ public class DefaultResmiService implements ResmiService {
     public JsonObject conditionalUpdateResource(ResourceUri uri, JsonObject jsonObject, List<ResourceQuery> resourceQueries)
             throws StartsWithUnderscoreException {
         verifyNotUnderscore(jsonObject);
-        addDates(jsonObject);
+        updateDates(jsonObject);
         boolean found = resmiDao.conditionalUpdateResource(uri, jsonObject, resourceQueries);
         if (found) {
             indexInSearchService(uri, jsonObject);
@@ -197,9 +198,8 @@ public class DefaultResmiService implements ResmiService {
 
     @Override
     public JsonObject createRelation(ResourceUri uri, JsonObject requestEntity) throws NotFoundException, StartsWithUnderscoreException {
-
         verifyNotUnderscore(requestEntity);
-        addDates(requestEntity);
+        createDates(requestEntity);
         resmiDao.createRelation(uri, requestEntity);
         indexInSearchService(uri, requestEntity);
         return requestEntity;
@@ -286,7 +286,7 @@ public class DefaultResmiService implements ResmiService {
         return UUID.randomUUID().toString();
     }
 
-    private void addDates(JsonObject entity) {
+    private void updateDates(JsonObject entity) {
         if (entity == null) {
             return;
         }
@@ -294,12 +294,21 @@ public class DefaultResmiService implements ResmiService {
         Date date = Date.from(clock.instant());
         String formatedDate = formatDate(date);
 
-        JsonElement createdAt = entity.get(_CREATED_AT);
-        if (createdAt == null) {
-            entity.addProperty(_CREATED_AT, formatedDate);
-        } else {
-            entity.addProperty(_CREATED_AT, formatDate(Date.from(Instant.ofEpochMilli(createdAt.getAsLong()))));
+        entity.remove(_CREATED_AT);
+        entity.remove(_UPDATED_AT);
+        entity.addProperty(_UPDATED_AT, formatedDate);
+    }
+
+    private void createDates(JsonObject entity) {
+        if (entity == null) {
+            return;
         }
+
+        Date date = Date.from(clock.instant());
+        String formatedDate = formatDate(date);
+
+        entity.remove(_CREATED_AT);
+        entity.addProperty(_CREATED_AT, formatedDate);
 
         entity.remove(_UPDATED_AT);
         entity.addProperty(_UPDATED_AT, formatedDate);
@@ -310,15 +319,18 @@ public class DefaultResmiService implements ResmiService {
     }
 
     private JsonObject verifyNotUnderscore(JsonObject entity) throws StartsWithUnderscoreException {
-        if (entity != null) {
-            for (Map.Entry<String, JsonElement> entry : entity.entrySet()) {
-                String key = entry.getKey();
+        if (entity == null) {
+            return null;
+        }
 
-                if (key.startsWith("_") && !ignorableReservedAttributeNames.contains(key)) {
-                    throw new StartsWithUnderscoreException(entry.getKey());
-                }
+        for (Map.Entry<String, JsonElement> entry : entity.entrySet()) {
+            String key = entry.getKey();
+
+            if (key.startsWith("_") && !ignorableReservedAttributeNames.contains(key)) {
+                throw new StartsWithUnderscoreException(entry.getKey());
             }
         }
+
         return entity;
     }
 
