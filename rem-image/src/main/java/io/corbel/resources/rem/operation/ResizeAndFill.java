@@ -29,7 +29,6 @@ public class ResizeAndFill implements ImageOperation {
 
             width = Integer.parseInt(values.get(0));
             color = values.get(1);
-
         } catch (NumberFormatException e) {
             throw new ImageOperationsException("Bad width parameter: " + parameter, e);
         }
@@ -40,7 +39,7 @@ public class ResizeAndFill implements ImageOperation {
 
         IMOperation subOperation = new IMOperation();
         subOperation.resize(width, width);
-        subOperation.background(color);
+        subOperation.background("#"+color);
         subOperation.gravity("center");
         subOperation.extent(width, width);
 

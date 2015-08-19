@@ -22,7 +22,7 @@ public class ImageOperationsTest {
     @Test
     public void cropFromCenterTest() throws ImageOperationsException {
         List<String> inputParameters = Collections.singletonList("(10, 20)");
-        List<String> expectedOutputs = Collections.singletonList("[-gravity, center, -crop, 10x20-5-10]");
+        List<String> expectedOutputs = Collections.singletonList("[-gravity, center, -crop, 10x20+0+0]");
 
         operationTest(inputParameters, expectedOutputs, new CropFromCenter());
     }
@@ -37,8 +37,8 @@ public class ImageOperationsTest {
 
     @Test
     public void resizeAndFillTest() throws ImageOperationsException {
-        List<String> inputParameters = Collections.singletonList("(10, orange)");
-        List<String> expectedOutputs = Collections.singletonList("[-resize, 10x10, -background, orange, -gravity, center, -extent, 10x10]");
+        List<String> inputParameters = Collections.singletonList("(10, FF7300)");
+        List<String> expectedOutputs = Collections.singletonList("[-resize, 10x10, -background, #FF7300, -gravity, center, -extent, 10x10]");
 
         operationTest(inputParameters, expectedOutputs, new ResizeAndFill());
     }
