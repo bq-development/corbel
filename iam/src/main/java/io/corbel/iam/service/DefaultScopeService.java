@@ -1,7 +1,22 @@
 package io.corbel.iam.service;
 
+import io.corbel.iam.exception.ScopeNameException;
+import io.corbel.iam.model.Entity;
+import io.corbel.iam.model.Scope;
+import io.corbel.iam.repository.ScopeRepository;
+import io.corbel.iam.scope.ScopeFillStrategy;
+import io.corbel.lib.ws.auth.repository.AuthorizationRulesRepository;
+
 import java.time.Clock;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -11,12 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.CollectionUtils;
 
-import io.corbel.iam.exception.ScopeNameException;
-import io.corbel.iam.model.Entity;
-import io.corbel.iam.model.Scope;
-import io.corbel.iam.repository.ScopeRepository;
-import io.corbel.iam.scope.ScopeFillStrategy;
-import io.corbel.lib.ws.auth.repository.AuthorizationRulesRepository;
 import com.google.common.collect.Sets;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -96,9 +105,7 @@ public class DefaultScopeService implements ScopeService {
     @Override
     public Set<String> getGroupScopes(Collection<String> groups) {
         Set<String> scopes = new HashSet<>();
-        groups.stream().forEach(groupId ->
-            groupService.get(groupId).ifPresent(group -> scopes.addAll(group.getScopes()))
-        );
+        groups.stream().forEach(groupId -> groupService.get(groupId).ifPresent(group -> scopes.addAll(group.getScopes())));
         return scopes;
     }
 
@@ -114,7 +121,7 @@ public class DefaultScopeService implements ScopeService {
                 if (Pattern.matches(entry.getValue().getAsString(), value)) {
                     scope.getParameters().add(entry.getKey(), new JsonPrimitive(value));
                 } else {
-                    throw new IllegalStateException("Custom parameter " + entry.getKey() + " don't match with any asset parameter");
+                    throw new IllegalStateException("Custom parameter " + entry.getKey() + " doesn't match with any asset parameter");
                 }
             } else {
                 throw new IllegalStateException("Asset doesn't contain parameter " + entry.getKey() + " value");
@@ -182,8 +189,8 @@ public class DefaultScopeService implements ScopeService {
 
             String keyForAuthorizationRules = authorizationRulesRepository.getKeyForAuthorizationRules(token, entry.getKey());
             if (authorizationRulesRepository.existsRules(keyForAuthorizationRules)) {
-                authorizationRulesRepository.addRules(keyForAuthorizationRules,
-                        audienceRules.toArray(new JsonObject[audienceRules.size()]));
+                authorizationRulesRepository
+                        .addRules(keyForAuthorizationRules, audienceRules.toArray(new JsonObject[audienceRules.size()]));
             } else {
                 // If is a new audience, we use the iam rules expire time because always iam has scopes for a token.
                 String iamKey = authorizationRulesRepository.getKeyForAuthorizationRules(token, iamAudience);
