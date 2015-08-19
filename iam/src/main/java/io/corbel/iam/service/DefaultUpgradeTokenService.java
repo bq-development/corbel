@@ -44,7 +44,8 @@ public class DefaultUpgradeTokenService implements UpgradeTokenService {
 
     private void publishScopes(Set<String> scopesIds, TokenReader tokenReader) {
         Set<Scope> scopes = scopeService.expandScopes(scopesIds);
-        scopes = scopeService.fillScopes(scopes, tokenReader.getInfo().getUserId(), tokenReader.getInfo().getClientId());
+        scopes = scopeService.fillScopes(scopes, tokenReader.getInfo().getUserId(), tokenReader.getInfo().getClientId(),
+                tokenReader.getInfo().getDomainId());
         scopeService.addAuthorizationRules(tokenReader.getToken(), scopes);
     }
 }

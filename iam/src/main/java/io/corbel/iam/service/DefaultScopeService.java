@@ -13,9 +13,7 @@ import org.springframework.util.CollectionUtils;
 
 import io.corbel.iam.exception.ScopeNameException;
 import io.corbel.iam.model.Entity;
-import io.corbel.iam.model.Group;
 import io.corbel.iam.model.Scope;
-import io.corbel.iam.repository.GroupRepository;
 import io.corbel.iam.repository.ScopeRepository;
 import io.corbel.iam.scope.ScopeFillStrategy;
 import io.corbel.lib.ws.auth.repository.AuthorizationRulesRepository;
@@ -139,15 +137,16 @@ public class DefaultScopeService implements ScopeService {
     }
 
     @Override
-    public Set<Scope> fillScopes(Set<Scope> scope, String userId, String clientId) {
-        return scope.stream().map(s -> fillScope(s, userId, clientId)).collect(Collectors.toSet());
+    public Set<Scope> fillScopes(Set<Scope> scope, String userId, String clientId, String domainId) {
+        return scope.stream().map(s -> fillScope(s, userId, clientId, domainId)).collect(Collectors.toSet());
     }
 
     @Override
-    public Scope fillScope(Scope scope, String userId, String clientId) {
+    public Scope fillScope(Scope scope, String userId, String clientId, String domainId) {
         Validate.notNull(scope, "scope must not be null");
         Validate.notNull(clientId, "clientId must not be null");
-        Map<String, String> params = createDefaultParams("userId", userId, "clientId", clientId);
+        Validate.notNull(domainId, "domainId must not be null");
+        Map<String, String> params = createDefaultParams("userId", userId, "clientId", clientId, "domainId", domainId);
         fillParamsWithCustomParameters(scope, params);
         return fillStrategy.fillScope(scope, params);
     }

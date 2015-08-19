@@ -27,9 +27,9 @@ public interface ScopeService {
 
     Set<Scope> getScopes(String... scopes);
 
-    Set<Scope> fillScopes(Set<Scope> filledScopes, String userId, String clientId);
+    Set<Scope> fillScopes(Set<Scope> filledScopes, String userId, String clientId, String domainId);
 
-    Scope fillScope(Scope scope, String userId, String clientId);
+    Scope fillScope(Scope scope, String userId, String clientId, String domainId);
 
     void addAuthorizationRules(String token, Set<Scope> filledScopes);
 

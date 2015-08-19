@@ -208,7 +208,8 @@ public class DefaultAuthorizationService implements AuthorizationService {
         Set<Scope> expandedRequestedScopes = context.getExpandedRequestedScopes();
         String principalId = context.hasPrincipal() ? context.getPrincipal().getId() : null;
         String issuerClientId = context.getIssuerClientId();
-        Set<Scope> filledScopes = scopeService.fillScopes(expandedRequestedScopes, principalId, issuerClientId);
+        String domainId = context.getRequestedDomain().getId();
+        Set<Scope> filledScopes = scopeService.fillScopes(expandedRequestedScopes, principalId, issuerClientId, domainId);
         scopeService.publishAuthorizationRules(tokenGrant.getAccessToken(), tokenGrant.getExpiresAt(), filledScopes);
     }
 

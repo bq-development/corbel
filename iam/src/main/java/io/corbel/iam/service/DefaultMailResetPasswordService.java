@@ -48,7 +48,7 @@ public class DefaultMailResetPasswordService implements MailResetPasswordService
     private void sendMailResetPasswordEvent(String notificationId, Client client, String userId, String email, String domainId) {
 
         String token = createEmailResetPasswordToken(client.getId(), userId, domainId);
-        setTokenScope(token, client.getId(), userId);
+        setTokenScope(token, client.getId(), userId, domainId);
 
         String resetUrl = Optional.ofNullable(client.getResetUrl()).orElse(defaultResetUrl);
         String clientUrl = resetUrl.replace("{token}", token);
@@ -65,11 +65,11 @@ public class DefaultMailResetPasswordService implements MailResetPasswordService
                         .setDomainId(domainId).build(), defaultTokenDurationInSeconds).getAccessToken();
     }
 
-    private void setTokenScope(String token, String clientId, String userId) {
+    private void setTokenScope(String token, String clientId, String userId, String domainId) {
         long expireAt = clock.instant().plus(defaultTokenDurationInSeconds, ChronoUnit.SECONDS).toEpochMilli();
         Set<String> scopes = new HashSet<>();
         scopes.add(resetPasswordTokenScope);
-        Set<Scope> filledScopes = scopeService.fillScopes(scopeService.expandScopes(scopes), userId, clientId);
+        Set<Scope> filledScopes = scopeService.fillScopes(scopeService.expandScopes(scopes), userId, clientId, domainId);
         scopeService.publishAuthorizationRules(token, expireAt, filledScopes);
     }
 }

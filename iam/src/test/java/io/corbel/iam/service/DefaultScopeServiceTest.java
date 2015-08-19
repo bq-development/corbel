@@ -43,6 +43,7 @@ import com.google.gson.JsonParser;
     private static final Set<JsonObject> RULES_2 = new HashSet<>(Collections.singletonList(new JsonObject()));
     private static final String TEST_USER_ID = "the_user";
     private static final String TEST_CLIENT_ID = "the_client";
+    private static final String TEST_DOMAIN = "domain";
     private static final String TEST_SCOPE_1 = "test_scope1";
     private static final String TEST_SCOPE_2 = "test_scope2";
     private static final String TEST_COMPOSITE_SCOPE = "test_composite_scope";
@@ -126,10 +127,11 @@ import com.google.gson.JsonParser;
         Scope scope1 = mock(Scope.class);
         when(scope1.getAudience()).thenReturn(MODULE_A);
         when(scope1.getRules()).thenReturn(RULES_1);
-        service.fillScope(scope1, TEST_USER_ID, TEST_CLIENT_ID);
+        service.fillScope(scope1, TEST_USER_ID, TEST_CLIENT_ID, TEST_DOMAIN);
         Map<String, String> params = new HashMap<>();
         params.put("userId", TEST_USER_ID);
         params.put("clientId", TEST_CLIENT_ID);
+        params.put("domainId", TEST_DOMAIN);
         verify(fillStrategyMock).fillScope(Mockito.same(scope1), Mockito.eq(params));
     }
 
@@ -139,10 +141,11 @@ import com.google.gson.JsonParser;
         when(scope1.getAudience()).thenReturn(MODULE_A);
         when(scope1.getRules()).thenReturn(RULES_3);
         when(scope1.getParameters()).thenReturn(RULE_PARAMS);
-        service.fillScope(scope1, TEST_USER_ID, TEST_CLIENT_ID);
+        service.fillScope(scope1, TEST_USER_ID, TEST_CLIENT_ID, TEST_DOMAIN);
         Map<String, String> params = new HashMap<>();
         params.put("userId", TEST_USER_ID);
         params.put("clientId", TEST_CLIENT_ID);
+        params.put("domainId", TEST_DOMAIN);
         params.put("testId", SCOPE_1_CUSTOM_PARAM_VALUE);
         verify(fillStrategyMock).fillScope(Mockito.same(scope1), Mockito.eq(params));
     }
