@@ -32,12 +32,11 @@
     <url>https://github.com/corbel-platform/corbel/issues</url>
     <system>GitHub Issues</system>
   </issueManagement>
-
   <properties>
     <appassembler.plugin.version>1.10</appassembler.plugin.version>
     <maven-surefire.plugin.version>2.17</maven-surefire.plugin.version>
     <buildmetadata-maven-plugin.version>1.5.2</buildmetadata-maven-plugin.version>
-    <lib-config.version>0.3.0-SNAPSHOT</lib-config.version>
+    <lib-config.version>0.2.0</lib-config.version>
     <lib-cli.version>0.4.0-SNAPSHOT</lib-cli.version>
     <lib-mongodb.version>0.4.0-SNAPSHOT</lib-mongodb.version>
     <lib-token.version>0.7.0-SNAPSHOT</lib-token.version>
@@ -48,7 +47,6 @@
     <dropwizard.version>0.8.1</dropwizard.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
-
   <modules>
     <module>eworker-api</module>
     <module>evci</module>
@@ -455,9 +453,9 @@
               <configuration>
                 <target>
                   <exec executable="chmod" dir="${project.build.directory}/generated-resources/appassembler/jsw/${project.name}">
-                    <arg value="-R" />
-                    <arg value="a+x" />
-                    <arg value="bin" />
+                    <arg value="-R"/>
+                    <arg value="a+x"/>
+                    <arg value="bin"/>
                   </exec>
                 </target>
               </configuration>
@@ -471,7 +469,7 @@
               <configuration>
                 <target>
                   <exec executable="mkdir" dir="${project.build.directory}/generated-resources/appassembler/jsw/${project.name}">
-                    <arg value="plugins" />
+                    <arg value="plugins"/>
                   </exec>
                 </target>
               </configuration>
