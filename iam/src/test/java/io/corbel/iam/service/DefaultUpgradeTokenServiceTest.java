@@ -29,6 +29,7 @@ import com.google.gson.JsonPrimitive;
     private static final String TEST_ASSERTION = "123.456.789";
     private static final String TEST_TOKEN = "the_access_token";
     private static final String TEST_CLIENT = "client";
+    private static final String TEST_DOMAIN = "domain";
     private static final String TEST_USER = "user";
     private static final String TEST_SCOPES = "SCOPE_1 SCOPE_2";
 
@@ -45,6 +46,7 @@ import com.google.gson.JsonPrimitive;
         upgradeTokenService = new DefaultUpgradeTokenService(jsonTokenParser, scopeServiceMock);
         when(accessToken.getClientId()).thenReturn(TEST_CLIENT);
         when(accessToken.getUserId()).thenReturn(TEST_USER);
+        when(accessToken.getDomainId()).thenReturn(TEST_DOMAIN);
         when(accessToken.toString()).thenReturn(TEST_TOKEN);
         when(tokenReader.getInfo()).thenReturn(accessToken);
         when(tokenReader.getToken()).thenReturn(TEST_TOKEN);
@@ -62,12 +64,12 @@ import com.google.gson.JsonPrimitive;
         Set<String> scopesIds = new HashSet<String>(Arrays.asList("SCOPE_1", "SCOPE_2"));
 
         when(scopeServiceMock.expandScopes(scopesIds)).thenReturn(scopes);
-        when(scopeServiceMock.fillScopes(scopes, TEST_USER, TEST_CLIENT)).thenReturn(scopes);
+        when(scopeServiceMock.fillScopes(scopes, TEST_USER, TEST_CLIENT, TEST_DOMAIN)).thenReturn(scopes);
 
         when(jsonTokenParser.verifyAndDeserialize(TEST_ASSERTION)).thenReturn(validJsonToken);
         upgradeTokenService.upgradeToken(TEST_ASSERTION, tokenReader);
 
-        verify(scopeServiceMock).fillScopes(scopes, TEST_USER, TEST_CLIENT);
+        verify(scopeServiceMock).fillScopes(scopes, TEST_USER, TEST_CLIENT, TEST_DOMAIN);
         verify(scopeServiceMock).addAuthorizationRules(TEST_TOKEN, scopes);
     }
 
@@ -94,7 +96,7 @@ import com.google.gson.JsonPrimitive;
         when(jsonTokenParser.verifyAndDeserialize(TEST_ASSERTION)).thenReturn(validJsonToken);
         upgradeTokenService.upgradeToken(TEST_ASSERTION, tokenReader);
 
-        verify(scopeServiceMock).fillScopes(scopes, TEST_USER, TEST_CLIENT);
+        verify(scopeServiceMock).fillScopes(scopes, TEST_USER, TEST_CLIENT, TEST_DOMAIN);
         verify(scopeServiceMock).addAuthorizationRules(TEST_TOKEN, scopes);
     }
 }
