@@ -1,6 +1,15 @@
 package io.corbel.resources.rem.dao;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import io.corbel.lib.queries.exception.MalformedJsonQueryException;
+import io.corbel.lib.queries.parser.CustomJsonParser;
+import io.corbel.lib.queries.parser.JacksonQueryParser;
+import io.corbel.lib.queries.request.Pagination;
+import io.corbel.lib.queries.request.ResourceQuery;
+import io.corbel.lib.queries.request.Sort;
+import io.corbel.resources.rem.request.ResourceId;
 
 import java.util.List;
 
@@ -8,13 +17,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.data.mongodb.core.query.Query;
 
-import io.corbel.resources.rem.request.ResourceId;
-import io.corbel.lib.queries.exception.MalformedJsonQueryException;
-import io.corbel.lib.queries.parser.CustomJsonParser;
-import io.corbel.lib.queries.parser.JacksonQueryParser;
-import io.corbel.lib.queries.request.Pagination;
-import io.corbel.lib.queries.request.ResourceQuery;
-import io.corbel.lib.queries.request.Sort;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class MongoResmiQueryBuilderTest {
@@ -32,10 +34,11 @@ public class MongoResmiQueryBuilderTest {
     public static final Sort SORT_TESTED = new Sort(SORT_DIRECTION_TESTED, SORT_FIELD_TESTED);
 
     private static ResourceQuery resourceQuery;
+    private static JacksonQueryParser parser;
 
     @BeforeClass
     public static void setUp() throws MalformedJsonQueryException {
-        JacksonQueryParser parser = new JacksonQueryParser(new CustomJsonParser(new ObjectMapper().getFactory()));
+        parser = new JacksonQueryParser(new CustomJsonParser(new ObjectMapper().getFactory()));
         String queryString = "[{\"$in\":{\"categories\":[\"Metallica\"]}}]";
         resourceQuery = parser.parse(queryString);
     }
@@ -100,6 +103,33 @@ public class MongoResmiQueryBuilderTest {
                 .sort(SORT_TESTED).build();
         assertTrue(query.getQueryObject().toMap().get("_src_id").equals("1"));
         assertTrue(query.getSortObject().get(SORT_FIELD_TESTED).equals(MONGO_SORT_DIRECTION_TESTED));
+    }
+
+    @Test
+    public void testCreatedAtResourceQuery() throws MalformedJsonQueryException {
+        String queryString = "[{\"$lt\":{\"_createdAt\":123456}}]";
+        ResourceQuery resourceQuery = parser.parse(queryString);
+        Query query = new MongoResmiQueryBuilder().query(resourceQuery).build();
+        assertEquals("{\"$lt\":{\"$date\":\"1970-01-01T00:02:03.456Z\"}}", query.getQueryObject().toMap().get("_createdAt").toString()
+                .replace(" ", ""));
+    }
+
+    @Test
+    public void testUpdatedAtResourceQuery() throws MalformedJsonQueryException {
+        String queryString = "[{\"$gt\":{\"_updatedAt\":123456}}]";
+        ResourceQuery resourceQuery = parser.parse(queryString);
+        Query query = new MongoResmiQueryBuilder().query(resourceQuery).build();
+        assertEquals("{\"$gt\":{\"$date\":\"1970-01-01T00:02:03.456Z\"}}", query.getQueryObject().toMap().get("_updatedAt").toString()
+                .replace(" ", ""));
+    }
+
+    @Test
+    public void testWithISODateResourceQuery() throws MalformedJsonQueryException {
+        String queryString = "[{\"$gt\":{\"_updatedAt\":\"ISODate(1970-01-01T00:02:03Z)\"}}]";
+        ResourceQuery resourceQuery = parser.parse(queryString);
+        Query query = new MongoResmiQueryBuilder().query(resourceQuery).build();
+        assertEquals("{\"$gt\":{\"$date\":\"1970-01-01T00:02:03.000Z\"}}", query.getQueryObject().toMap().get("_updatedAt").toString()
+                .replace(" ", ""));
     }
 
 }

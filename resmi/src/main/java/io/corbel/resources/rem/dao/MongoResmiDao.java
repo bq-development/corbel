@@ -1,5 +1,18 @@
 package io.corbel.resources.rem.dao;
 
+import io.corbel.lib.mongo.JsonObjectMongoWriteConverter;
+import io.corbel.lib.mongo.utils.GsonUtil;
+import io.corbel.lib.queries.mongo.builder.CriteriaBuilder;
+import io.corbel.lib.queries.request.AverageResult;
+import io.corbel.lib.queries.request.CountResult;
+import io.corbel.lib.queries.request.Pagination;
+import io.corbel.lib.queries.request.ResourceQuery;
+import io.corbel.lib.queries.request.Sort;
+import io.corbel.lib.queries.request.SumResult;
+import io.corbel.resources.rem.model.GenericDocument;
+import io.corbel.resources.rem.model.ResourceUri;
+import io.corbel.resources.rem.utils.JsonUtils;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -21,13 +34,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-
-import io.corbel.lib.mongo.JsonObjectMongoWriteConverter;
-import io.corbel.lib.mongo.utils.GsonUtil;
-import io.corbel.lib.queries.request.*;
-import io.corbel.resources.rem.model.GenericDocument;
-import io.corbel.resources.rem.model.ResourceUri;
-import io.corbel.resources.rem.utils.JsonUtils;
 
 /**
  * @author Alberto J. Rubio
@@ -129,8 +135,8 @@ public class MongoResmiDao implements ResmiDao {
             query = builder.build();
         }
 
-        return mongoOperations.findAndModify(query, update, FindAndModifyOptions.options().upsert(upsert).returnNew(true), JsonObject.class,
-                collection);
+        return mongoOperations.findAndModify(query, update, FindAndModifyOptions.options().upsert(upsert).returnNew(true),
+                JsonObject.class, collection);
     }
 
     @Override
@@ -233,7 +239,7 @@ public class MongoResmiDao implements ResmiDao {
     @Override
     public List<GenericDocument> deleteCollection(ResourceUri uri, Optional<List<ResourceQuery>> queries) {
         List<ResourceQuery> resourceQueries = queries.orElse(Collections.<ResourceQuery>emptyList());
-        Criteria criteria = new MongoResmiQueryBuilder().getCriteriaFromResourceQueries(resourceQueries);
+        Criteria criteria = CriteriaBuilder.buildFromResourceQueries(resourceQueries);
         return findAllAndRemove(uri, criteria);
     }
 
@@ -278,17 +284,18 @@ public class MongoResmiDao implements ResmiDao {
     @Override
     public AverageResult average(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field) {
         List<AggregationOperation> aggregations = new ArrayList<>();
-        aggregations.add(Aggregation.match(new MongoResmiQueryBuilder().getCriteriaFromResourceQueries(resourceQueries)));
+        aggregations.add(Aggregation.match(CriteriaBuilder.buildFromResourceQueries(resourceQueries)));
         aggregations.add(Aggregation.group().avg(field).as("average"));
 
-        return mongoOperations.aggregate(Aggregation.newAggregation(aggregations), getMongoCollectionName(resourceUri), AverageResult.class)
+        return mongoOperations
+                .aggregate(Aggregation.newAggregation(aggregations), getMongoCollectionName(resourceUri), AverageResult.class)
                 .getUniqueMappedResult();
     }
 
     @Override
     public SumResult sum(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field) {
         List<AggregationOperation> aggregations = new ArrayList<>();
-        aggregations.add(Aggregation.match(new MongoResmiQueryBuilder().getCriteriaFromResourceQueries(resourceQueries)));
+        aggregations.add(Aggregation.match(CriteriaBuilder.buildFromResourceQueries(resourceQueries)));
         aggregations.add(Aggregation.group().sum(field).as("sum"));
 
         return mongoOperations.aggregate(Aggregation.newAggregation(aggregations), getMongoCollectionName(resourceUri), SumResult.class)
@@ -296,9 +303,11 @@ public class MongoResmiDao implements ResmiDao {
     }
 
     private String getMongoCollectionName(ResourceUri resourceUri) {
-        return Optional.ofNullable(namespaceNormalizer.normalize(resourceUri.getType()))
-                .map(type -> type + Optional.ofNullable(resourceUri.getRelation())
-                        .map(relation -> RELATION_CONCATENATOR + namespaceNormalizer.normalize(relation)).orElse(EMPTY_STRING))
+        return Optional
+                .ofNullable(namespaceNormalizer.normalize(resourceUri.getType()))
+                .map(type -> type
+                        + Optional.ofNullable(resourceUri.getRelation())
+                                .map(relation -> RELATION_CONCATENATOR + namespaceNormalizer.normalize(relation)).orElse(EMPTY_STRING))
                 .orElse(EMPTY_STRING);
     }
 }
