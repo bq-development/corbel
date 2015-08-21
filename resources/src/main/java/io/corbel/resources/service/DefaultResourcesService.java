@@ -2,27 +2,24 @@ package io.corbel.resources.service;
 
 import io.corbel.event.ResourceEvent;
 import io.corbel.eventbus.service.EventBus;
-import io.corbel.rem.internal.RemEntityTypeResolver;
-import io.corbel.resources.rem.Rem;
-import io.corbel.resources.rem.request.*;
-import io.corbel.resources.rem.service.RemService;
 import io.corbel.lib.queries.builder.QueryParametersBuilder;
 import io.corbel.lib.queries.jaxrs.QueryParameters;
 import io.corbel.lib.token.TokenInfo;
 import io.corbel.lib.ws.api.error.ApiRequestException;
 import io.corbel.lib.ws.api.error.ErrorResponseFactory;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.google.common.collect.Lists;
-import org.eclipse.jetty.http.HttpStatus;
-import org.glassfish.jersey.server.ContainerRequest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpMethod;
+import io.corbel.rem.internal.RemEntityTypeResolver;
+import io.corbel.resources.rem.Rem;
+import io.corbel.resources.rem.request.CollectionParameters;
+import io.corbel.resources.rem.request.CollectionParametersImpl;
+import io.corbel.resources.rem.request.RelationParameters;
+import io.corbel.resources.rem.request.RelationParametersImpl;
+import io.corbel.resources.rem.request.RequestParameters;
+import io.corbel.resources.rem.request.RequestParametersImpl;
+import io.corbel.resources.rem.request.ResourceId;
+import io.corbel.resources.rem.request.ResourceParameters;
+import io.corbel.resources.rem.request.ResourceParametersImpl;
+import io.corbel.resources.rem.service.RemService;
 
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.*;
-import javax.ws.rs.ext.MessageBodyReader;
-import javax.ws.rs.ext.Providers;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
@@ -30,13 +27,32 @@ import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedHashMap;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Request;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.ext.MessageBodyReader;
+import javax.ws.rs.ext.Providers;
+
+import org.eclipse.jetty.http.HttpStatus;
+import org.glassfish.jersey.server.ContainerRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpMethod;
+
+import com.fasterxml.jackson.core.JsonParseException;
+import com.google.common.collect.Lists;
+
 /**
  * Created by Alexander De Leon on 26/05/15.
  */
 public class DefaultResourcesService implements ResourcesService {
 
     private static final Logger LOG = LoggerFactory.getLogger(DefaultResourcesService.class);
-    private static final Annotation[] EMPTY_ANNOTATIONS = new Annotation[]{};
+    private static final Annotation[] EMPTY_ANNOTATIONS = new Annotation[] {};
 
     private final RemService remService;
     private final RemEntityTypeResolver remEntityTypeResolver;
@@ -50,7 +66,7 @@ public class DefaultResourcesService implements ResourcesService {
     private Providers providers;
 
     public DefaultResourcesService(RemService remService, RemEntityTypeResolver remEntityTypeResolver, int defaultPageSize,
-                                   int maxPageSize, QueryParametersBuilder queryParametersBuilder, EventBus eventBus) {
+            int maxPageSize, QueryParametersBuilder queryParametersBuilder, EventBus eventBus) {
         this.remService = remService;
         this.remEntityTypeResolver = remEntityTypeResolver;
         this.defaultPageSize = defaultPageSize;
@@ -66,13 +82,14 @@ public class DefaultResourcesService implements ResourcesService {
 
     @Override
     public Response collectionOperation(String type, Request request, UriInfo uriInfo, TokenInfo tokenInfo, URI typeUri, HttpMethod method,
-                                        QueryParameters queryParameters, InputStream inputStream, MediaType contentType) {
+            QueryParameters queryParameters, InputStream inputStream, MediaType contentType) {
         Response result;
         try {
             List<org.springframework.http.MediaType> acceptedMediaTypes = getRequestAcceptedMediaTypes(request);
             Rem rem = remService.getRem(type, acceptedMediaTypes, getRequestMethod(request));
 
-            queryParameters = (method.equals(HttpMethod.GET) || method.equals(HttpMethod.DELETE)) ? queryParameters : getDefaultQueryParameters();
+            queryParameters = (method.equals(HttpMethod.GET) || method.equals(HttpMethod.DELETE)) ? queryParameters
+                    : getDefaultQueryParameters();
             RequestParameters<CollectionParameters> parameters = collectionParameters(queryParameters, tokenInfo, acceptedMediaTypes,
                     uriInfo.getQueryParameters(), request);
 
@@ -100,7 +117,7 @@ public class DefaultResourcesService implements ResourcesService {
 
     @Override
     public Response resourceOperation(String type, ResourceId id, Request request, QueryParameters queryParameters, UriInfo uriInfo,
-                                      TokenInfo tokenInfo, URI typeUri, HttpMethod method, InputStream inputStream, MediaType contentType, Long contentLength) {
+            TokenInfo tokenInfo, URI typeUri, HttpMethod method, InputStream inputStream, MediaType contentType, Long contentLength) {
 
         if (id.isWildcard()) {
             return collectionOperation(type, request, uriInfo, tokenInfo, typeUri, method, queryParameters, inputStream, contentType);
@@ -143,10 +160,10 @@ public class DefaultResourcesService implements ResourcesService {
 
     @Override
     public Response relationOperation(String type, ResourceId id, String rel, Request request, UriInfo uriInfo, TokenInfo tokenInfo,
-                                      HttpMethod method, QueryParameters queryParameters, String resource, InputStream inputStream, MediaType contentType) {
+            HttpMethod method, QueryParameters queryParameters, String resource, InputStream inputStream, MediaType contentType) {
         try {
             List<org.springframework.http.MediaType> acceptedMediaTypes = getRequestAcceptedMediaTypes(request);
-            Rem rem = remService.getRem(type, acceptedMediaTypes, getRequestMethod(request));
+            Rem rem = remService.getRem(type + "/" + id.getId() + "/" + rel, acceptedMediaTypes, getRequestMethod(request));
 
             queryParameters = method.equals(HttpMethod.GET) ? queryParameters : getDefaultQueryParameters();
             RequestParameters<RelationParameters> parameters = relationParameters(queryParameters, Optional.ofNullable(resource),
@@ -166,21 +183,21 @@ public class DefaultResourcesService implements ResourcesService {
     }
 
     private RequestParameters<CollectionParameters> collectionParameters(QueryParameters queryParameters, TokenInfo tokenInfo,
-                                                                         List<org.springframework.http.MediaType> acceptedMediaTypes, MultivaluedMap<String, String> params, Request request) {
+            List<org.springframework.http.MediaType> acceptedMediaTypes, MultivaluedMap<String, String> params, Request request) {
         return new RequestParametersImpl<>(new CollectionParametersImpl(queryParameters), tokenInfo, acceptedMediaTypes, null, params,
                 getHeadersFromRequest(request));
     }
 
     private RequestParameters<ResourceParameters> resourceParameters(QueryParameters queryParameters, TokenInfo tokenInfo,
-                                                                     List<org.springframework.http.MediaType> acceptedMediaTypes, Long contentLength, MultivaluedMap<String, String> params,
-                                                                     Request request) {
+            List<org.springframework.http.MediaType> acceptedMediaTypes, Long contentLength, MultivaluedMap<String, String> params,
+            Request request) {
         return new RequestParametersImpl<>(new ResourceParametersImpl(queryParameters), tokenInfo, acceptedMediaTypes, contentLength,
                 params, getHeadersFromRequest(request));
     }
 
     private RequestParameters<RelationParameters> relationParameters(QueryParameters queryParameters,
-                                                                     Optional<String> predicateResourceUri, TokenInfo tokenInfo, List<org.springframework.http.MediaType> acceptedMediaTypes,
-                                                                     MultivaluedMap<String, String> params, Request request) {
+            Optional<String> predicateResourceUri, TokenInfo tokenInfo, List<org.springframework.http.MediaType> acceptedMediaTypes,
+            MultivaluedMap<String, String> params, Request request) {
         return new RequestParametersImpl<>(new RelationParametersImpl(queryParameters, predicateResourceUri), tokenInfo,
                 acceptedMediaTypes, null, params, getHeadersFromRequest(request));
     }
