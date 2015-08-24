@@ -29,6 +29,7 @@ import org.springframework.util.CollectionUtils;
 import com.google.common.collect.Sets;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 
 /**
@@ -89,7 +90,7 @@ public class DefaultScopeService implements ScopeService {
                 String[] scopeIdAndParams = scopeId.split(";");
                 Optional.ofNullable(getScope(scopeIdAndParams[SCOPE_ID_POSITION])).ifPresent(scope -> {
                     if (scopeHasCustomParameters(scope)) {
-                        fillScopeCustomParameters(scope, scopeIdAndParams);
+                        scope = fillScopeCustomParameters(scope, scopeIdAndParams);
                     }
                     fetchedScopes.add(scope);
                 });
@@ -113,13 +114,22 @@ public class DefaultScopeService implements ScopeService {
         return scope.getParameters() != null;
     }
 
-    private void fillScopeCustomParameters(Scope scope, String[] scopeIdAndParams) {
+    /**
+     * Return a NEW scope with filled params.
+     * 
+     * @param scope Original scope
+     * @param scopeIdAndParams
+     * @return New scope with filled params.
+     */
+    private Scope fillScopeCustomParameters(Scope scope, String[] scopeIdAndParams) {
+        Scope resultScope = new Scope(scope.getId(), scope.getType(), scope.getAudience(), scope.getScopes(), scope.getRules(),
+                new JsonParser().parse(scope.getParameters().toString()).getAsJsonObject());
         Map<String, String> parameters = createParametersMap(scopeIdAndParams);
-        scope.getParameters().entrySet().stream().forEach(entry -> {
+        resultScope.getParameters().entrySet().stream().forEach(entry -> {
             if (parameters.containsKey(entry.getKey())) {
                 String value = parameters.get(entry.getKey());
                 if (Pattern.matches(entry.getValue().getAsString(), value)) {
-                    scope.getParameters().add(entry.getKey(), new JsonPrimitive(value));
+                    resultScope.getParameters().add(entry.getKey(), new JsonPrimitive(value));
                 } else {
                     throw new IllegalStateException("Custom parameter " + entry.getKey() + " doesn't match with any asset parameter");
                 }
@@ -127,6 +137,7 @@ public class DefaultScopeService implements ScopeService {
                 throw new IllegalStateException("Asset doesn't contain parameter " + entry.getKey() + " value");
             }
         });
+        return resultScope;
     }
 
     private Map<String, String> createParametersMap(String[] scopeIdAndParams) {
