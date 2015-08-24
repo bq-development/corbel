@@ -71,7 +71,7 @@ public class RemResourceTest {
     private static final ResourceId RESOURCE_ID = new ResourceId("123");
     private static final ResourceId RESOURCE_WILDCARD_ID = new ResourceId("_");
     private static final String TEST_REL = "test:ToRelationObject";
-    private static final String COLLECTION_URI = "/" + ApiVersion.CURRENT + "/resource/" + TEST_TYPE;
+    private static final String COLLECTION_URI = "/" + ApiVersion.CURRENT + "/" + DOMAIN + "/resource/" + TEST_TYPE;
     private static final String RESOURCE_URI = COLLECTION_URI + "/" + RESOURCE_ID.getId();
     private static final String RESOURCE_WILDCARD_URI = COLLECTION_URI + "/" + RESOURCE_WILDCARD_ID.getId();
     private static final String RELATION_URI = RESOURCE_URI + "/" + TEST_REL;
