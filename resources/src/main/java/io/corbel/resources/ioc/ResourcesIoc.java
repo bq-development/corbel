@@ -89,7 +89,7 @@ import com.google.common.cache.CacheBuilder;
     // This bean fixed the problem with nginx sending the matrix param in a non encoded form.
     @Bean
     public ContainerRequestFilter matrixEncodingFilter() {
-        return new MatrixEncodingRequestFilter("^(.*/v1.0/resource/.+/.+/.+;r=)(.+)$");
+        return new MatrixEncodingRequestFilter("^(.*/v1.0/.+/resource/.+/.+/.+;r=)(.+)$");
     }
 
     @Bean
