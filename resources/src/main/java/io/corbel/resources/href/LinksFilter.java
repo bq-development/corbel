@@ -11,6 +11,7 @@ import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import io.corbel.resources.api.ApiVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,7 +66,7 @@ public class LinksFilter implements ContainerResponseFilter {
     private java.net.URI getUriWithProxyPassPath(ContainerRequestContext request) {
         URI uri = (java.net.URI) request.getProperty("uri");
         return Optional.ofNullable(request.getHeaderString("X-Forwarded-Uri")).map(originalUri -> {
-            String proxyPassPath = originalUri.replace(request.getUriInfo().getAbsolutePath().getPath(), "");
+            String proxyPassPath = originalUri.split("/" + ApiVersion.CURRENT)[0];
             try {
                 return new URI(uri.getScheme(), uri.getHost(), proxyPassPath + uri.getPath(), uri.getFragment());
             } catch (URISyntaxException e) {

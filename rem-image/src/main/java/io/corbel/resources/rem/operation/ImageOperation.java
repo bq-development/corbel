@@ -20,7 +20,6 @@ public interface ImageOperation {
         for (int i = 1; i < groupCount; ++i) {
             valuesToReturn.add(param.substring(matcher.start(i), matcher.end(i)));
         }
-
         return valuesToReturn;
     }
 }

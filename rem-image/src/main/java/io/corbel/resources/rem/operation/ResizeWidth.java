@@ -20,7 +20,7 @@ public class ResizeWidth implements ImageOperation {
             throw new ImageOperationsException("Width for resizeWidth must be greater than 0: " + parameter);
         }
 
-        return new IMOperation().resize(width);
+        return new IMOperation().resize(width, -1, ">");
     }
 
     @Override

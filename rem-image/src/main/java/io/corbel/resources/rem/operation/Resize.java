@@ -38,7 +38,7 @@ public class Resize implements ImageOperation {
             throw new ImageOperationsException("Parameters for resize must be greater than 0: " + parameter);
         }
 
-        return new IMOperation().resize(width, height, '!');
+        return new IMOperation().resize(width, height, ">!");
     }
 
     @Override
