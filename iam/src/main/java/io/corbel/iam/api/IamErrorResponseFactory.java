@@ -98,7 +98,7 @@ public final class IamErrorResponseFactory extends ErrorResponseFactory {
     }
 
     public Response groupAlreadyExists(String nameAndDomain) {
-        return conflict(new Error("group_not_exists", Message.GROUP_ALREADY_EXISTS.getMessage(nameAndDomain)));
+        return conflict(new Error("group_already_exists", Message.GROUP_ALREADY_EXISTS.getMessage(nameAndDomain)));
     }
 
     public Response unauthorizedGroupDeletion(String id) {
