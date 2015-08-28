@@ -1,17 +1,15 @@
 package io.corbel.iam.service;
 
-import java.util.List;
-import java.util.Optional;
-
-import org.springframework.dao.DataIntegrityViolationException;
-
 import io.corbel.iam.exception.GroupAlreadyExistsException;
 import io.corbel.iam.model.Group;
 import io.corbel.iam.repository.GroupRepository;
-
 import io.corbel.lib.queries.request.Pagination;
 import io.corbel.lib.queries.request.ResourceQuery;
 import io.corbel.lib.queries.request.Sort;
+import org.springframework.dao.DataIntegrityViolationException;
+
+import java.util.List;
+import java.util.Optional;
 
 public class DefaultGroupService implements GroupService {
 
@@ -41,7 +39,8 @@ public class DefaultGroupService implements GroupService {
         group.setId(null);
 
         try {
-            return groupRepository.save(group);
+            groupRepository.insert(group);
+            return group;
         } catch (DataIntegrityViolationException e) {
             throw new GroupAlreadyExistsException(group.getName() + " in domain " + group.getDomain());
         }

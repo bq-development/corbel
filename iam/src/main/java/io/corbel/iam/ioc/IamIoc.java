@@ -1,5 +1,32 @@
 package io.corbel.iam.ioc;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JSR310Module;
+import com.google.gson.Gson;
+import io.corbel.event.DomainDeletedEvent;
+import io.corbel.event.ScopeUpdateEvent;
+import io.corbel.eventbus.EventHandler;
+import io.corbel.eventbus.ioc.EventBusListeningIoc;
+import io.corbel.eventbus.service.EventBus;
+import io.corbel.iam.api.*;
+import io.corbel.iam.auth.AuthorizationRequestContextFactory;
+import io.corbel.iam.auth.AuthorizationRule;
+import io.corbel.iam.auth.provider.*;
+import io.corbel.iam.auth.rule.*;
+import io.corbel.iam.cli.dsl.IamShell;
+import io.corbel.iam.eventbus.DomainDeletedEventHandler;
+import io.corbel.iam.eventbus.ScopeModifiedEventHandler;
+import io.corbel.iam.jwt.ClientVerifierProvider;
+import io.corbel.iam.jwt.TokenUpgradeVerifierProvider;
+import io.corbel.iam.model.*;
+import io.corbel.iam.repository.*;
+import io.corbel.iam.repository.decorator.LowerCaseDecorator;
+import io.corbel.iam.scope.MustacheScopeFillStrategy;
+import io.corbel.iam.scope.ScopeFillStrategy;
+import io.corbel.iam.service.*;
+import io.corbel.iam.utils.DefaultTokenCookieFactory;
+import io.corbel.iam.utils.TokenCookieFactory;
 import io.corbel.lib.config.ConfigurationIoC;
 import io.corbel.lib.mongo.IdGenerator;
 import io.corbel.lib.mongo.IdGeneratorMongoEventListener;
@@ -17,18 +44,12 @@ import io.corbel.lib.ws.digest.DigesterFactory;
 import io.corbel.lib.ws.dw.ioc.CommonFiltersIoc;
 import io.corbel.lib.ws.dw.ioc.DropwizardIoc;
 import io.corbel.lib.ws.ioc.QueriesIoc;
-
-import java.time.Clock;
-import java.util.Arrays;
-import java.util.List;
-
 import net.oauth.jsontoken.Checker;
 import net.oauth.jsontoken.JsonTokenParser;
 import net.oauth.jsontoken.crypto.SignatureAlgorithm;
 import net.oauth.jsontoken.discovery.VerifierProvider;
 import net.oauth.jsontoken.discovery.VerifierProviders;
 import net.oauth.signatures.SignedJsonAssertionAudienceChecker;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.cache.CacheManager;
@@ -38,107 +59,43 @@ import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Scope;
 import org.springframework.core.env.Environment;
 
-import io.corbel.event.DomainDeletedEvent;
-import io.corbel.event.ScopeUpdateEvent;
-import io.corbel.eventbus.EventHandler;
-import io.corbel.eventbus.ioc.EventBusListeningIoc;
-import io.corbel.eventbus.service.EventBus;
-import io.corbel.iam.api.DomainResource;
-import io.corbel.iam.api.EmailResource;
-import io.corbel.iam.api.GroupResource;
-import io.corbel.iam.api.ScopeResource;
-import io.corbel.iam.api.TokenResource;
-import io.corbel.iam.api.UserResource;
-import io.corbel.iam.api.UsernameResource;
-import io.corbel.iam.auth.AuthorizationRequestContextFactory;
-import io.corbel.iam.auth.AuthorizationRule;
-import io.corbel.iam.auth.provider.AuthorizationProviderFactory;
-import io.corbel.iam.auth.provider.FacebookProvider;
-import io.corbel.iam.auth.provider.GoogleProvider;
-import io.corbel.iam.auth.provider.OAuthServerProvider;
-import io.corbel.iam.auth.provider.Provider;
-import io.corbel.iam.auth.provider.SpringAuthorizationProviderFactory;
-import io.corbel.iam.auth.provider.TwitterProvider;
-import io.corbel.iam.auth.rule.ClientSideAuthenticationAllowedAuthorizationRule;
-import io.corbel.iam.auth.rule.MaxExpireAuthorizationRule;
-import io.corbel.iam.auth.rule.PrincipalExistsAuthorizationRule;
-import io.corbel.iam.auth.rule.RequestDomainAuthorizationRule;
-import io.corbel.iam.auth.rule.ScopesAuthorizationRule;
-import io.corbel.iam.auth.rule.VersionAuthorizationRule;
-import io.corbel.iam.cli.dsl.IamShell;
-import io.corbel.iam.eventbus.DomainDeletedEventHandler;
-import io.corbel.iam.eventbus.ScopeModifiedEventHandler;
-import io.corbel.iam.jwt.ClientVerifierProvider;
-import io.corbel.iam.jwt.TokenUpgradeVerifierProvider;
-import io.corbel.iam.model.Client;
-import io.corbel.iam.model.ClientIdGenerator;
-import io.corbel.iam.model.Device;
-import io.corbel.iam.model.DeviceIdGenerator;
-import io.corbel.iam.model.Group;
-import io.corbel.iam.model.GroupIdGenerator;
-import io.corbel.iam.model.Identity;
-import io.corbel.iam.model.IdentityIdGenerator;
-import io.corbel.iam.repository.ClientRepository;
-import io.corbel.iam.repository.DeviceRepository;
-import io.corbel.iam.repository.DomainRepository;
-import io.corbel.iam.repository.GroupRepository;
-import io.corbel.iam.repository.IdentityRepository;
-import io.corbel.iam.repository.ScopeRepository;
-import io.corbel.iam.repository.UserRepository;
-import io.corbel.iam.repository.UserTokenRepository;
-import io.corbel.iam.repository.decorator.LowerCaseDecorator;
-import io.corbel.iam.scope.MustacheScopeFillStrategy;
-import io.corbel.iam.scope.ScopeFillStrategy;
-import io.corbel.iam.service.AuthorizationService;
-import io.corbel.iam.service.ClientService;
-import io.corbel.iam.service.DefaultAuthorizationService;
-import io.corbel.iam.service.DefaultClientService;
-import io.corbel.iam.service.DefaultDeviceService;
-import io.corbel.iam.service.DefaultDomainService;
-import io.corbel.iam.service.DefaultEventsService;
-import io.corbel.iam.service.DefaultGroupService;
-import io.corbel.iam.service.DefaultIdentityService;
-import io.corbel.iam.service.DefaultMailResetPasswordService;
-import io.corbel.iam.service.DefaultRefreshTokenService;
-import io.corbel.iam.service.DefaultScopeService;
-import io.corbel.iam.service.DefaultUpgradeTokenService;
-import io.corbel.iam.service.DefaultUserService;
-import io.corbel.iam.service.DeviceService;
-import io.corbel.iam.service.DomainService;
-import io.corbel.iam.service.EventsService;
-import io.corbel.iam.service.GroupService;
-import io.corbel.iam.service.IdentityService;
-import io.corbel.iam.service.MailResetPasswordService;
-import io.corbel.iam.service.RefreshTokenService;
-import io.corbel.iam.service.ScopeService;
-import io.corbel.iam.service.UpgradeTokenService;
-import io.corbel.iam.service.UserService;
-import io.corbel.iam.utils.DefaultTokenCookieFactory;
-import io.corbel.iam.utils.TokenCookieFactory;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JSR310Module;
-import com.google.gson.Gson;
+import java.time.Clock;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * @author Alexander De Leon
  */
-@SuppressWarnings("unused") @Configuration @Import({ConfigurationIoC.class, IamMongoIoc.class, IamProviderIoc.class,
+@SuppressWarnings("unused")
+@Configuration
+@Import({ConfigurationIoC.class, IamMongoIoc.class, IamProviderIoc.class,
         TokenVerifiersIoc.class, OneTimeAccessTokenIoc.class, DropwizardIoc.class, AuthorizationIoc.class, CorsIoc.class, QueriesIoc.class,
-        EventBusListeningIoc.class, CommonFiltersIoc.class}) public class IamIoc {
+        EventBusListeningIoc.class, CommonFiltersIoc.class})
+public class IamIoc {
 
-    @Autowired(required = true) private Environment env;
+    @Autowired(required = true)
+    private Environment env;
 
-    @Autowired private ClientRepository clientRepository;
-    @Autowired private DomainRepository domainRepository;
-    @Autowired private UserRepository userRepository;
-    @Autowired private ScopeRepository scopeRepository;
-    @Autowired private AuthorizationRulesRepository authorizationRulesRepository;
-    @Autowired private IdentityRepository identityRepository;
-    @Autowired private OneTimeAccessTokenRepository oneTimeAccessTokenRepository;
-    @Autowired private UserTokenRepository userTokenRepository;
-    @Autowired private DeviceRepository deviceRepository;
-    @Autowired private GroupRepository groupRepository;
+    @Autowired
+    private ClientRepository clientRepository;
+    @Autowired
+    private DomainRepository domainRepository;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private ScopeRepository scopeRepository;
+    @Autowired
+    private AuthorizationRulesRepository authorizationRulesRepository;
+    @Autowired
+    private IdentityRepository identityRepository;
+    @Autowired
+    private OneTimeAccessTokenRepository oneTimeAccessTokenRepository;
+    @Autowired
+    private UserTokenRepository userTokenRepository;
+    @Autowired
+    private DeviceRepository deviceRepository;
+    @Autowired
+    private GroupRepository groupRepository;
 
     private UserRepository getUserRepository() {
         return new LowerCaseDecorator(userRepository);
@@ -157,7 +114,7 @@ import com.google.gson.Gson;
 
     @Bean
     public AuthorizationService getAuthorizationService(RefreshTokenService refreshTokenService, TokenFactory tokenFactory,
-            ScopeService scopeService, ScopesAuthorizationRule scopesAuthorizationRule, UserService userService, EventsService eventsService) {
+                                                        ScopeService scopeService, ScopesAuthorizationRule scopesAuthorizationRule, UserService userService, EventsService eventsService) {
         return new DefaultAuthorizationService(getJsonTokenParser(), getAuthorizationRules(scopesAuthorizationRule), tokenFactory,
                 getAuthorizationRequestContextFactory(scopeService), scopeService, getAuthorizationProviderFactory(), refreshTokenService,
                 userTokenRepository, userService, eventsService);
@@ -166,7 +123,7 @@ import com.google.gson.Gson;
 
     @Bean
     public RefreshTokenService getRefreshTokenService(TokenParser tokenParser, TokenFactory tokenFactory,
-            OneTimeAccessTokenRepository oneTimeAccessTokenRepository) {
+                                                      OneTimeAccessTokenRepository oneTimeAccessTokenRepository) {
         return new DefaultRefreshTokenService(tokenParser, getUserRepository(), tokenFactory, env.getProperty(
                 "iam.auth.refreshToken.maxExpirationInSeconds", Long.class), oneTimeAccessTokenRepository);
     }
@@ -187,7 +144,7 @@ import com.google.gson.Gson;
 
     @Bean
     public UserResource getUserResource(UserService userService, DomainService domainService, IdentityService identityService,
-            DeviceService deviceService) {
+                                        DeviceService deviceService) {
         return new UserResource(userService, domainService, identityService, deviceService, Clock.systemUTC());
     }
 
@@ -233,19 +190,19 @@ import com.google.gson.Gson;
 
     @Bean
     public UserService getUserService(EventsService eventsService, RefreshTokenService refreshTokenService,
-            MailResetPasswordService mailResetPasswordService, Gson gson) {
+                                      MailResetPasswordService mailResetPasswordService, Gson gson) {
         return new DefaultUserService(getUserRepository(), eventsService, userTokenRepository, authorizationRulesRepository,
                 refreshTokenService, mailResetPasswordService, gson);
     }
 
     @Bean
     public MailResetPasswordService getMailResetPasswordService(EventsService eventsService, ScopeService scopeService,
-            TokenFactory tokenFactory, ClientRepository clientRepository) {
+                                                                TokenFactory tokenFactory, ClientRepository clientRepository) {
         return new DefaultMailResetPasswordService(eventsService, scopeService, tokenFactory, clientRepository, env.getProperty(
                 "iam.token.resetPasswordTokenScope", String.class), Clock.systemUTC(), env.getProperty(
                 "iam.token.resetPasswordTokenDurationInSec", Long.class),
                 env.getProperty("email.resetPassword.notification", String.class), env.getProperty("email.resetPassword.clientUrl",
-                        String.class));
+                String.class));
     }
 
     @Bean
@@ -337,6 +294,11 @@ import com.google.gson.Gson;
     @Bean
     public IdGeneratorMongoEventListener<Device> getDeviceIdGeneratorMongoEventListener() {
         return new IdGeneratorMongoEventListener<>(getDeviceIdGenerator(), Device.class);
+    }
+
+    @Bean
+    public IdGeneratorMongoEventListener<Group> geGroupIdGeneratorMongoEventListener() {
+        return new IdGeneratorMongoEventListener<>(getGroupIdGenerator(), Group.class);
     }
 
     @Bean
