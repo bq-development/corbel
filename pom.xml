@@ -41,7 +41,7 @@
     <lib-mongodb.version>0.4.0</lib-mongodb.version>
     <lib-token.version>0.7.0</lib-token.version>
     <lib-queries.version>0.9.0-SNAPSHOT</lib-queries.version>
-    <lib-ws.version>0.10.0-SNAPSHOT</lib-ws.version>
+    <lib-ws.version>0.10.0</lib-ws.version>
     <lib-rabbitmq.version>0.7.0</lib-rabbitmq.version>
     <spring.version>4.1.7.RELEASE</spring.version>
     <dropwizard.version>0.8.1</dropwizard.version>
@@ -453,9 +453,9 @@
               <configuration>
                 <target>
                   <exec executable="chmod" dir="${project.build.directory}/generated-resources/appassembler/jsw/${project.name}">
-                    <arg value="-R" />
-                    <arg value="a+x" />
-                    <arg value="bin" />
+                    <arg value="-R"/>
+                    <arg value="a+x"/>
+                    <arg value="bin"/>
                   </exec>
                 </target>
               </configuration>
@@ -469,7 +469,7 @@
               <configuration>
                 <target>
                   <exec executable="mkdir" dir="${project.build.directory}/generated-resources/appassembler/jsw/${project.name}">
-                    <arg value="plugins" />
+                    <arg value="plugins"/>
                   </exec>
                 </target>
               </configuration>
