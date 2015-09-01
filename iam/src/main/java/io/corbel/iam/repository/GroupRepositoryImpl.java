@@ -16,7 +16,6 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 public class GroupRepositoryImpl extends HasScopesRepositoryBase<Group, String> implements GroupRepositoryCustom {
 
     private static final String FIELD_DOMAIN = "domain";
-    private static final String FIELD_NAME = "name";
 
     @Autowired
     public GroupRepositoryImpl(MongoOperations mongoOperations) {
@@ -26,7 +25,7 @@ public class GroupRepositoryImpl extends HasScopesRepositoryBase<Group, String> 
     @Override
     public List<Group> findByDomain(String domain, List<ResourceQuery> resourceQueries, Pagination pagination, Sort sort) {
         Query query = new MongoQueryBuilder().query(resourceQueries).pagination(pagination).sort(sort).build()
-                .addCriteria(where("domain").is(domain));
+                .addCriteria(where(FIELD_DOMAIN).is(domain));
         return mongo.find(query, Group.class);
     }
 

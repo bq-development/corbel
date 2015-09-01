@@ -1,9 +1,30 @@
 package io.corbel.iam.ioc;
 
+import java.time.Clock;
+import java.util.Arrays;
+import java.util.List;
+
+import net.oauth.jsontoken.Checker;
+import net.oauth.jsontoken.JsonTokenParser;
+import net.oauth.jsontoken.crypto.SignatureAlgorithm;
+import net.oauth.jsontoken.discovery.VerifierProvider;
+import net.oauth.jsontoken.discovery.VerifierProviders;
+import net.oauth.signatures.SignedJsonAssertionAudienceChecker;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.cache.CacheManager;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Scope;
+import org.springframework.core.env.Environment;
+
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JSR310Module;
 import com.google.gson.Gson;
+
 import io.corbel.event.DomainDeletedEvent;
 import io.corbel.event.ScopeUpdateEvent;
 import io.corbel.eventbus.EventHandler;
@@ -44,24 +65,6 @@ import io.corbel.lib.ws.digest.DigesterFactory;
 import io.corbel.lib.ws.dw.ioc.CommonFiltersIoc;
 import io.corbel.lib.ws.dw.ioc.DropwizardIoc;
 import io.corbel.lib.ws.ioc.QueriesIoc;
-import net.oauth.jsontoken.Checker;
-import net.oauth.jsontoken.JsonTokenParser;
-import net.oauth.jsontoken.crypto.SignatureAlgorithm;
-import net.oauth.jsontoken.discovery.VerifierProvider;
-import net.oauth.jsontoken.discovery.VerifierProviders;
-import net.oauth.signatures.SignedJsonAssertionAudienceChecker;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.ConfigurableBeanFactory;
-import org.springframework.cache.CacheManager;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Scope;
-import org.springframework.core.env.Environment;
-
-import java.time.Clock;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * @author Alexander De Leon
@@ -213,7 +216,7 @@ public class IamIoc {
 
     @Bean
     public GroupService getGroupService() {
-        return new DefaultGroupService(groupRepository);
+        return new DefaultGroupService(groupRepository, scopeRepository);
     }
 
     @Bean
@@ -255,8 +258,8 @@ public class IamIoc {
     }
 
     @Bean
-    public ScopesAuthorizationRule getScopesAuthorizationRule(ScopeService scopeService) {
-        return new ScopesAuthorizationRule(scopeService);
+    public ScopesAuthorizationRule getScopesAuthorizationRule(ScopeService scopeService, GroupService groupService) {
+        return new ScopesAuthorizationRule(scopeService, groupService);
     }
 
     @Bean
@@ -276,9 +279,9 @@ public class IamIoc {
     }
 
     @Bean
-    public ScopeService getScopeService(EventsService eventsService, GroupService groupService) {
-        return new DefaultScopeService(scopeRepository, groupService, authorizationRulesRepository, getScopeFillStrategy(),
-                env.getProperty("iam.uri"), eventsService);
+    public ScopeService getScopeService(EventsService eventsService) {
+        return new DefaultScopeService(scopeRepository, authorizationRulesRepository, getScopeFillStrategy(), env.getProperty("iam.uri"),
+                Clock.systemDefaultZone(), eventsService);
     }
 
     @Bean

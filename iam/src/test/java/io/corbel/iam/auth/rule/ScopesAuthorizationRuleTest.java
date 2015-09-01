@@ -21,6 +21,7 @@ import io.corbel.iam.model.Client;
 import io.corbel.iam.model.Domain;
 import io.corbel.iam.model.Scope;
 import io.corbel.iam.model.User;
+import io.corbel.iam.service.GroupService;
 import io.corbel.iam.service.ScopeService;
 import io.corbel.iam.utils.Message;
 
@@ -29,13 +30,14 @@ import io.corbel.iam.utils.Message;
  */
 @RunWith(MockitoJUnitRunner.class) public class ScopesAuthorizationRuleTest {
     @Mock ScopeService scopeServiceMock;
+    @Mock GroupService groupServiceMock;
     private AuthorizationRequestContext context;
     private ScopesAuthorizationRule rule;
 
     @Before
     public void setUp() {
         context = mock(AuthorizationRequestContext.class);
-        rule = new ScopesAuthorizationRule(scopeServiceMock);
+        rule = new ScopesAuthorizationRule(scopeServiceMock, groupServiceMock);
     }
 
     @SuppressWarnings("unchecked")
@@ -50,7 +52,6 @@ import io.corbel.iam.utils.Message;
         User user = mock(User.class);
         Set<String> userScopesIds = mock(Set.class);
         Set<Scope> userScopes = mock(Set.class);
-        Set<Scope> groupsScopes = mock(Set.class);
 
         when(context.getRequestedDomain()).thenReturn(domain);
         when(context.getIssuerClient()).thenReturn(client);
@@ -62,9 +63,6 @@ import io.corbel.iam.utils.Message;
 
         when(context.getRequestedScopes()).thenReturn(new HashSet<>(Collections.emptyList()));
 
-        when(scopeServiceMock.getAllowedScopes(domainScopes, clientScopes, userScopes, groupsScopes, context.isCrossDomain(),
-                context.hasPrincipal())).thenReturn(userScopes);
-
         rule.process(context);
     }
 
@@ -72,26 +70,14 @@ import io.corbel.iam.utils.Message;
     @Test
     public void testScopesNotAllowed() throws Exception {
         try {
-
             Domain domain = mock(Domain.class);
-            Set<Scope> domainScopes = mock(Set.class);
             when(context.getRequestedDomain()).thenReturn(domain);
-
             Client client = mock(Client.class);
-            Set<Scope> clientScopes = mock(Set.class);
             when(context.getIssuerClient()).thenReturn(client);
-
             User user = mock(User.class);
-            Set<Scope> userScopes = mock(Set.class);
             when(context.getPrincipal()).thenReturn(user);
 
-            Set<Scope> groupsScopes = mock(Set.class);
-
-
             when(context.getRequestedScopes()).thenReturn(new HashSet<>(Collections.singletonList("SCOPE_4")));
-
-            when(scopeServiceMock.getAllowedScopes(domainScopes, clientScopes, userScopes, groupsScopes, context.isCrossDomain(),
-                    context.hasPrincipal())).thenReturn(userScopes);
 
             Scope scope = mock(Scope.class);
             when(scope.getIdWithParameters()).thenReturn("SCOPE_A");

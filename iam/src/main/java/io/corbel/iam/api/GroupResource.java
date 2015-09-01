@@ -11,9 +11,9 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import io.corbel.iam.exception.GroupAlreadyExistsException;
+import io.corbel.iam.exception.NotExistentScopeException;
 import io.corbel.iam.model.Group;
 import io.corbel.iam.service.GroupService;
-
 import io.corbel.lib.queries.jaxrs.QueryParameters;
 import io.corbel.lib.ws.annotation.Rest;
 import io.corbel.lib.ws.auth.AuthorizationInfo;
@@ -30,7 +30,6 @@ import io.dropwizard.auth.Auth;
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response getAll(@Auth AuthorizationInfo authorizationInfo, @Rest QueryParameters queryParameters) {
-
         return Response
                 .ok(groupService.getAll(authorizationInfo.getDomainId(), queryParameters.getQueries().orElseGet(Collections::emptyList),
                         queryParameters.getPagination(), queryParameters.getSort().orElse(null)))
@@ -41,11 +40,12 @@ import io.dropwizard.auth.Auth;
     @Consumes(MediaType.APPLICATION_JSON)
     public Response create(@Context UriInfo uriInfo, @Auth AuthorizationInfo authorizationInfo, @Valid Group group) {
         group.setDomain(authorizationInfo.getDomainId());
-
         try {
             return Response.created(uriInfo.getAbsolutePathBuilder().path(groupService.create(group).getId()).build()).build();
         } catch (GroupAlreadyExistsException e) {
             return IamErrorResponseFactory.getInstance().groupAlreadyExists(e.getMessage());
+        } catch (NotExistentScopeException e) {
+            return IamErrorResponseFactory.getInstance().scopesNotExist(e.getMessage());
         }
     }
 
@@ -67,8 +67,11 @@ import io.dropwizard.auth.Auth;
             if (!group.getDomain().equals(domain)) {
                 return IamErrorResponseFactory.getInstance().unauthorizedGroupUpdate(id);
             }
-
-            groupService.addScopes(id, scopes.stream().toArray(String[]::new));
+            try {
+                groupService.addScopes(id, scopes.stream().toArray(String[]::new));
+            } catch (NotExistentScopeException e) {
+                return IamErrorResponseFactory.getInstance().scopesNotExist(e.getMessage());
+            }
             return Response.noContent().build();
         }).orElseGet(() -> IamErrorResponseFactory.getInstance().groupNotExists(id));
     }

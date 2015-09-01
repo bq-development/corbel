@@ -1,22 +1,7 @@
 package io.corbel.iam.service;
 
-import io.corbel.iam.exception.ScopeNameException;
-import io.corbel.iam.model.Entity;
-import io.corbel.iam.model.Scope;
-import io.corbel.iam.repository.ScopeRepository;
-import io.corbel.iam.scope.ScopeFillStrategy;
-import io.corbel.lib.ws.auth.repository.AuthorizationRulesRepository;
-
 import java.time.Clock;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -32,6 +17,13 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 
+import io.corbel.iam.exception.ScopeNameException;
+import io.corbel.iam.model.Entity;
+import io.corbel.iam.model.Scope;
+import io.corbel.iam.repository.ScopeRepository;
+import io.corbel.iam.scope.ScopeFillStrategy;
+import io.corbel.lib.ws.auth.repository.AuthorizationRulesRepository;
+
 /**
  * @author Alexander De Leon
  * 
@@ -42,7 +34,6 @@ public class DefaultScopeService implements ScopeService {
     private static final int FIRST_PARAM_POSITION = 1;
 
     private final ScopeRepository scopeRepository;
-    private final GroupService groupService;
     private final AuthorizationRulesRepository authorizationRulesRepository;
     private final ScopeFillStrategy fillStrategy;
     private final String iamAudience;
@@ -50,23 +41,15 @@ public class DefaultScopeService implements ScopeService {
 
     private final EventsService eventsService;
 
-    public DefaultScopeService(ScopeRepository scopeRepository, GroupService groupService,
+    public DefaultScopeService(ScopeRepository scopeRepository,
             AuthorizationRulesRepository authorizationRulesRepository, ScopeFillStrategy fillStrategy, String iamAudience, Clock clock,
             EventsService eventsService) {
         this.scopeRepository = scopeRepository;
-        this.groupService = groupService;
         this.authorizationRulesRepository = authorizationRulesRepository;
         this.fillStrategy = fillStrategy;
         this.iamAudience = iamAudience;
         this.clock = clock;
         this.eventsService = eventsService;
-    }
-
-    public DefaultScopeService(ScopeRepository scopeRepository, GroupService groupService,
-            AuthorizationRulesRepository authorizationRulesRepository, ScopeFillStrategy fillStrategy, String iamAudience,
-            EventsService eventsService) {
-        this(scopeRepository, groupService, authorizationRulesRepository, fillStrategy, iamAudience, Clock.systemDefaultZone(),
-                eventsService);
     }
 
     @Override
@@ -101,13 +84,6 @@ public class DefaultScopeService implements ScopeService {
             }
         }
         return Sets.newHashSet(fetchedScopes);
-    }
-
-    @Override
-    public Set<String> getGroupScopes(Collection<String> groups) {
-        Set<String> scopes = new HashSet<>();
-        groups.stream().forEach(groupId -> groupService.get(groupId).ifPresent(group -> scopes.addAll(group.getScopes())));
-        return scopes;
     }
 
     private boolean scopeHasCustomParameters(Scope scope) {
@@ -235,25 +211,6 @@ public class DefaultScopeService implements ScopeService {
             }
         }
         return expandedScopes;
-    }
-
-    @Override
-    public Set<Scope> getAllowedScopes(Set<Scope> domainScopes, Set<Scope> clientScopes, Set<Scope> userScopes, Set<Scope> groupScopes,
-            boolean isCrossDomain, boolean hasPrincipal) {
-
-        if (isCrossDomain) {
-            return domainScopes;
-        }
-
-        Set<Scope> requestedScopes;
-
-        if (hasPrincipal) {
-            requestedScopes = Sets.union(clientScopes, Sets.union(userScopes, groupScopes));
-        } else {
-            requestedScopes = clientScopes;
-        }
-
-        return Sets.intersection(requestedScopes, domainScopes);
     }
 
     @Override

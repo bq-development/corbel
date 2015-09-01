@@ -1,22 +1,27 @@
 package io.corbel.iam.service;
 
+import java.util.*;
+import java.util.stream.Collectors;
+
+import org.springframework.dao.DataIntegrityViolationException;
+
 import io.corbel.iam.exception.GroupAlreadyExistsException;
+import io.corbel.iam.exception.NotExistentScopeException;
 import io.corbel.iam.model.Group;
 import io.corbel.iam.repository.GroupRepository;
+import io.corbel.iam.repository.ScopeRepository;
 import io.corbel.lib.queries.request.Pagination;
 import io.corbel.lib.queries.request.ResourceQuery;
 import io.corbel.lib.queries.request.Sort;
-import org.springframework.dao.DataIntegrityViolationException;
-
-import java.util.List;
-import java.util.Optional;
 
 public class DefaultGroupService implements GroupService {
 
     private final GroupRepository groupRepository;
+    private final ScopeRepository scopeRepository;
 
-    public DefaultGroupService(GroupRepository groupRepository) {
+    public DefaultGroupService(GroupRepository groupRepository, ScopeRepository scopeRepository) {
         this.groupRepository = groupRepository;
+        this.scopeRepository = scopeRepository;
     }
 
     @Override
@@ -35,10 +40,19 @@ public class DefaultGroupService implements GroupService {
     }
 
     @Override
-    public Group create(Group group) throws GroupAlreadyExistsException {
-        group.setId(null);
+    public Set<String> getGroupScopes(Collection<String> groups) {
+        Set<String> scopes = new HashSet<>();
+        groups.stream().forEach(
+                groupId -> Optional.ofNullable(groupRepository.findOne(groupId)).ifPresent(group -> scopes.addAll(group.getScopes())));
+        return scopes;
+    }
 
+
+    @Override
+    public Group create(Group group) throws GroupAlreadyExistsException, NotExistentScopeException {
+        group.setId(null);
         try {
+            checkScopes(group.getScopes());
             groupRepository.insert(group);
             return group;
         } catch (DataIntegrityViolationException e) {
@@ -47,7 +61,8 @@ public class DefaultGroupService implements GroupService {
     }
 
     @Override
-    public void addScopes(String id, String... scopes) {
+    public void addScopes(String id, String... scopes) throws NotExistentScopeException {
+        checkScopes(Arrays.asList(scopes));
         groupRepository.addScopes(id, scopes);
     }
 
@@ -59,6 +74,14 @@ public class DefaultGroupService implements GroupService {
     @Override
     public void delete(String id, String domain) {
         groupRepository.deleteByIdAndDomain(id, domain);
+    }
+
+    private void checkScopes(Collection<String> scopes) throws NotExistentScopeException {
+        String notExistentScopes = scopes.stream().filter(scope -> scopeRepository.findOne(scope) == null)
+                .collect(Collectors.joining(", "));
+        if (!notExistentScopes.isEmpty()) {
+            throw new NotExistentScopeException(notExistentScopes);
+        }
     }
 
 }
