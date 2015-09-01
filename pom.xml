@@ -40,7 +40,7 @@
     <lib-cli.version>0.4.0</lib-cli.version>
     <lib-mongodb.version>0.4.0</lib-mongodb.version>
     <lib-token.version>0.7.0</lib-token.version>
-    <lib-queries.version>0.9.0</lib-queries.version>
+    <lib-queries.version>0.8.0</lib-queries.version>
     <lib-ws.version>0.10.0</lib-ws.version>
     <lib-rabbitmq.version>0.7.0</lib-rabbitmq.version>
     <spring.version>4.1.7.RELEASE</spring.version>
