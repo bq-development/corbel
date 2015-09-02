@@ -1,9 +1,10 @@
 package io.corbel.iam.service;
 
-import io.corbel.iam.exception.GroupAlreadyExistsException;
-import io.corbel.iam.model.Group;
-import io.corbel.iam.repository.GroupRepository;
-import io.corbel.lib.queries.request.ResourceQuery;
+import static org.fest.assertions.api.Assertions.assertThat;
+import static org.mockito.Mockito.*;
+
+import java.util.*;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -13,10 +14,13 @@ import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.dao.DataIntegrityViolationException;
 
-import java.util.*;
-
-import static org.fest.assertions.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
+import io.corbel.iam.exception.GroupAlreadyExistsException;
+import io.corbel.iam.exception.NotExistentScopeException;
+import io.corbel.iam.model.Group;
+import io.corbel.iam.model.Scope;
+import io.corbel.iam.repository.GroupRepository;
+import io.corbel.iam.repository.ScopeRepository;
+import io.corbel.lib.queries.request.ResourceQuery;
 
 @RunWith(MockitoJUnitRunner.class) public class DefaultGroupServiceTest {
 
@@ -24,15 +28,22 @@ import static org.mockito.Mockito.*;
     private static final String NEW_ID = "newId";
     private static final String NAME = "name";
     private static final String DOMAIN = "domain";
-    private static final Set<String> SCOPES = new HashSet<>(Arrays.asList("scope1", "scope2"));
 
-    @Mock private GroupRepository groupRepository;
+    public static final String SCOPE_1 = "scope1";
+    public static final String SCOPE_2 = "scope2";
+    public static final String SCOPE_3 = "scope3";
+
+    private static final Set<String> SCOPES = new HashSet<>(Arrays.asList(SCOPE_1, SCOPE_2));
+
+    @Mock private GroupRepository groupRepositoryMock;
+    @Mock
+    private ScopeRepository scopeRepositoryMock;
 
     private GroupService groupService;
 
     @Before
     public void setUp() {
-        groupService = new DefaultGroupService(groupRepository);
+        groupService = new DefaultGroupService(groupRepositoryMock, scopeRepositoryMock);
     }
 
     @Test
@@ -41,22 +52,22 @@ import static org.mockito.Mockito.*;
 
         List<ResourceQuery> resourceQueries = Collections.emptyList();
 
-        when(groupRepository.findByDomain(DOMAIN, resourceQueries, null, null)).thenReturn(Collections.singletonList(group));
+        when(groupRepositoryMock.findByDomain(DOMAIN, resourceQueries, null, null)).thenReturn(Collections.singletonList(group));
 
         List<Group> groups = groupService.getAll(DOMAIN, resourceQueries, null, null);
 
         assertThat(groups).hasSize(1);
         assertThat(groups).contains(group);
 
-        verify(groupRepository).findByDomain(DOMAIN, resourceQueries, null, null);
-        verifyNoMoreInteractions(groupRepository);
+        verify(groupRepositoryMock).findByDomain(DOMAIN, resourceQueries, null, null);
+        verifyNoMoreInteractions(groupRepositoryMock);
     }
 
     @Test
     public void getGroupTest() {
         Group expectedGroup = getGroup();
 
-        when(groupRepository.findByIdAndDomain(ID, DOMAIN)).thenReturn(expectedGroup);
+        when(groupRepositoryMock.findByIdAndDomain(ID, DOMAIN)).thenReturn(expectedGroup);
 
         Optional<Group> group = groupService.get(ID, DOMAIN);
 
@@ -64,8 +75,8 @@ import static org.mockito.Mockito.*;
 
         assertThat(group.get()).isEqualTo(expectedGroup);
 
-        verify(groupRepository).findByIdAndDomain(ID, DOMAIN);
-        verifyNoMoreInteractions(groupRepository);
+        verify(groupRepositoryMock).findByIdAndDomain(ID, DOMAIN);
+        verifyNoMoreInteractions(groupRepositoryMock);
     }
 
     @Test
@@ -74,15 +85,15 @@ import static org.mockito.Mockito.*;
 
         assertThat(group.isPresent()).isFalse();
 
-        verify(groupRepository).findByIdAndDomain(ID, DOMAIN);
-        verifyNoMoreInteractions(groupRepository);
+        verify(groupRepositoryMock).findByIdAndDomain(ID, DOMAIN);
+        verifyNoMoreInteractions(groupRepositoryMock);
     }
 
     @Test
     public void getGroupWithoutDomainTest() {
         Group expectedGroup = getGroup();
 
-        when(groupRepository.findOne(ID)).thenReturn(expectedGroup);
+        when(groupRepositoryMock.findOne(ID)).thenReturn(expectedGroup);
 
         Optional<Group> group = groupService.get(ID);
 
@@ -90,8 +101,8 @@ import static org.mockito.Mockito.*;
 
         assertThat(group.get()).isEqualTo(expectedGroup);
 
-        verify(groupRepository).findOne(ID);
-        verifyNoMoreInteractions(groupRepository);
+        verify(groupRepositoryMock).findOne(ID);
+        verifyNoMoreInteractions(groupRepositoryMock);
     }
 
     @Test
@@ -100,19 +111,23 @@ import static org.mockito.Mockito.*;
 
         assertThat(group.isPresent()).isFalse();
 
-        verify(groupRepository).findOne(ID);
-        verifyNoMoreInteractions(groupRepository);
+        verify(groupRepositoryMock).findOne(ID);
+        verifyNoMoreInteractions(groupRepositoryMock);
     }
 
     @Test
-    public void createGroupTest() throws GroupAlreadyExistsException {
+    public void createGroupTest() throws GroupAlreadyExistsException, NotExistentScopeException {
         Group group = getGroup();
 
+        when(scopeRepositoryMock.findOne(SCOPE_1)).thenReturn(mock(Scope.class));
+        when(scopeRepositoryMock.findOne(SCOPE_2)).thenReturn(mock(Scope.class));
         groupService.create(group);
 
         ArgumentCaptor<Group> capturedGroup = ArgumentCaptor.forClass(Group.class);
 
-        verify(groupRepository).insert(capturedGroup.capture());
+        verify(groupRepositoryMock).insert(capturedGroup.capture());
+        verify(scopeRepositoryMock).findOne(SCOPE_1);
+        verify(scopeRepositoryMock).findOne(SCOPE_2);
 
         Group savedGroup = capturedGroup.getValue();
 
@@ -121,23 +136,23 @@ import static org.mockito.Mockito.*;
         assertThat(savedGroup.getDomain()).isEqualTo(group.getDomain());
         assertThat(savedGroup.getScopes()).isEqualTo(group.getScopes());
 
-        verifyNoMoreInteractions(groupRepository);
+        verifyNoMoreInteractions(groupRepositoryMock, scopeRepositoryMock);
     }
 
     @Test(expected = GroupAlreadyExistsException.class)
-    public void createAlreadyExistentGroupTest() throws GroupAlreadyExistsException {
+    public void createAlreadyExistentGroupTest() throws GroupAlreadyExistsException, NotExistentScopeException {
         Group group = getGroup();
 
-        doThrow( new DataIntegrityViolationException(NEW_ID)).when(groupRepository).insert(Mockito.<Group>any());
+        when(scopeRepositoryMock.findOne(any())).thenReturn(mock(Scope.class));
+        doThrow(new DataIntegrityViolationException(NEW_ID)).when(groupRepositoryMock).insert(Mockito.<Group>any());
 
         try {
             groupService.create(group);
-
         } catch (GroupAlreadyExistsException e) {
 
             ArgumentCaptor<Group> capturedGroup = ArgumentCaptor.forClass(Group.class);
 
-            verify(groupRepository).insert(capturedGroup.capture());
+            verify(groupRepositoryMock).insert(capturedGroup.capture());
 
             Group savedGroup = capturedGroup.getValue();
 
@@ -146,7 +161,7 @@ import static org.mockito.Mockito.*;
             assertThat(savedGroup.getDomain()).isEqualTo(group.getDomain());
             assertThat(savedGroup.getScopes()).isEqualTo(group.getScopes());
 
-            verifyNoMoreInteractions(groupRepository);
+            verifyNoMoreInteractions(groupRepositoryMock);
 
             throw e;
         }
@@ -156,18 +171,28 @@ import static org.mockito.Mockito.*;
     public void deleteGroupTest() {
         groupService.delete(ID, DOMAIN);
 
-        verify(groupRepository).deleteByIdAndDomain(ID, DOMAIN);
-        verifyNoMoreInteractions(groupRepository);
+        verify(groupRepositoryMock).deleteByIdAndDomain(ID, DOMAIN);
+        verifyNoMoreInteractions(groupRepositoryMock);
     }
 
     @Test
-    public void addScopesToGroupTest() {
+    public void addScopesToGroupTest() throws NotExistentScopeException {
         String[] scopes = {"newScope"};
 
+        when(scopeRepositoryMock.findOne("newScope")).thenReturn(mock(Scope.class));
         groupService.addScopes(ID, scopes);
 
-        verify(groupRepository).addScopes(eq(ID), any());
-        verifyNoMoreInteractions(groupRepository);
+        verify(groupRepositoryMock).addScopes(eq(ID), any());
+        verify(scopeRepositoryMock).findOne("newScope");
+
+        verifyNoMoreInteractions(groupRepositoryMock, scopeRepositoryMock);
+    }
+
+    @Test(expected = NotExistentScopeException.class)
+    public void addNotExistenteScopesToGroupTest() throws NotExistentScopeException {
+        String[] scopes = {"newScope"};
+        when(scopeRepositoryMock.findOne("newScope")).thenReturn(null);
+        groupService.addScopes(ID, scopes);
     }
 
     @Test
@@ -176,8 +201,25 @@ import static org.mockito.Mockito.*;
 
         groupService.removeScopes(ID, scopes);
 
-        verify(groupRepository).removeScopes(eq(ID), any());
-        verifyNoMoreInteractions(groupRepository);
+        verify(groupRepositoryMock).removeScopes(eq(ID), any());
+        verifyNoMoreInteractions(groupRepositoryMock);
+    }
+
+
+    @Test
+    public void testGroupScopes() {
+        List<String> groups = Arrays.asList("Admins", "Users");
+        Group administrators = new Group("Admins", "Admins", "MyDomain", new HashSet<>(Arrays.asList(SCOPE_1)));
+        Group users = new Group("Admins", "Users", "MyDomain", new HashSet<>(Arrays.asList(SCOPE_2, SCOPE_3)));
+
+        when(groupRepositoryMock.findOne("Admins")).thenReturn(administrators);
+        when(groupRepositoryMock.findOne("Users")).thenReturn(users);
+
+        Set<String> scopes = groupService.getGroupScopes(groups);
+
+        assertThat(scopes).contains(SCOPE_1);
+        assertThat(scopes).contains(SCOPE_2);
+        assertThat(scopes).contains(SCOPE_3);
     }
 
     private Group getGroup() {

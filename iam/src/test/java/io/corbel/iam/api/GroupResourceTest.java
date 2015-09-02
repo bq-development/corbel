@@ -15,12 +15,13 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-import io.corbel.iam.exception.GroupAlreadyExistsException;
-import io.corbel.iam.model.Group;
-import io.corbel.iam.service.GroupService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.corbel.iam.exception.GroupAlreadyExistsException;
+import io.corbel.iam.exception.NotExistentScopeException;
+import io.corbel.iam.model.Group;
+import io.corbel.iam.service.GroupService;
 import io.corbel.lib.queries.builder.QueryParametersBuilder;
 import io.corbel.lib.queries.parser.*;
 import io.corbel.lib.ws.api.error.GenericExceptionMapper;
@@ -81,7 +82,7 @@ public class GroupResourceTest {
     }
 
     @Test
-    public void createGroupTest() throws JsonProcessingException, GroupAlreadyExistsException {
+    public void createGroupTest() throws JsonProcessingException, GroupAlreadyExistsException, NotExistentScopeException {
         Group group = new Group(null, NAME, DOMAIN, SCOPES);
         Group createdGroup = new Group(ID, NAME, DOMAIN, SCOPES);
 
@@ -96,8 +97,23 @@ public class GroupResourceTest {
         assertThat(((String) response.getHeaders().getFirst("Location")).endsWith(createdGroup.getId())).isTrue();
     }
 
+
     @Test
-    public void createAlreadyExistingGroupTest() throws GroupAlreadyExistsException, JsonProcessingException {
+    public void createGroupWithBadScopesTest() throws JsonProcessingException, GroupAlreadyExistsException, NotExistentScopeException {
+        Group group = new Group(null, NAME, DOMAIN, SCOPES);
+
+        when(groupService.create(eq(group))).thenThrow(NotExistentScopeException.class);
+
+        String groupJson = new ObjectMapper().writer().writeValueAsString(group);
+
+        Response response = RULE.client().target("/" + ApiVersion.CURRENT + "/group").request().post(Entity.json(groupJson),
+                Response.class);
+
+        assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+    }
+
+    @Test
+    public void createAlreadyExistingGroupTest() throws GroupAlreadyExistsException, JsonProcessingException, NotExistentScopeException {
         Group group = new Group(null, NAME, DOMAIN, SCOPES);
 
         when(groupService.create(eq(group))).thenThrow(new GroupAlreadyExistsException(NAME + " " + ID));
@@ -174,7 +190,7 @@ public class GroupResourceTest {
     }
 
     @Test
-    public void addScopesToGroupTest() throws JsonProcessingException {
+    public void addScopesToGroupTest() throws JsonProcessingException, NotExistentScopeException {
         Group group = new Group(ID, NAME, DOMAIN, SCOPES);
         List<String> scopes = Collections.singletonList("scope");
         String scopesToJson = new ObjectMapper().writer().writeValueAsString(scopes);
@@ -186,6 +202,25 @@ public class GroupResourceTest {
 
         verify(groupService).get(eq(ID));
         verify(groupService).addScopes(eq(ID), any());
+        verifyNoMoreInteractions(groupService);
+    }
+
+    @Test
+    public void addInexistentScopesToGroupTest() throws JsonProcessingException, NotExistentScopeException {
+        Group group = new Group(ID, NAME, DOMAIN, SCOPES);
+        List<String> scopes = Collections.singletonList("scope");
+        String scopesToJson = new ObjectMapper().writer().writeValueAsString(scopes);
+
+        when(groupService.get(eq(ID))).thenReturn(Optional.of(group));
+        doThrow(NotExistentScopeException.class).when(groupService).addScopes(ID, "scope");
+
+        Response response = RULE.client().target("/" + ApiVersion.CURRENT + "/group/" + ID + "/scopes").request()
+                .put(Entity.json(scopesToJson));
+
+        assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+
+        verify(groupService).get(eq(ID));
+        verify(groupService).addScopes(ID, "scope");
         verifyNoMoreInteractions(groupService);
     }
 

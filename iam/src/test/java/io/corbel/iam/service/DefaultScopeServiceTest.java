@@ -3,28 +3,12 @@ package io.corbel.iam.service;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.Matchers.anyMap;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import io.corbel.iam.exception.ScopeNameException;
-import io.corbel.iam.model.Group;
-import io.corbel.iam.model.Scope;
-import io.corbel.iam.repository.ScopeRepository;
-import io.corbel.iam.scope.ScopeFillStrategy;
-import io.corbel.lib.ws.auth.repository.AuthorizationRulesRepository;
+import static org.mockito.Mockito.*;
 
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Before;
@@ -37,6 +21,12 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+
+import io.corbel.iam.exception.ScopeNameException;
+import io.corbel.iam.model.Scope;
+import io.corbel.iam.repository.ScopeRepository;
+import io.corbel.iam.scope.ScopeFillStrategy;
+import io.corbel.lib.ws.auth.repository.AuthorizationRulesRepository;
 
 /**
  * @author Alexander De Leon
@@ -69,23 +59,22 @@ import com.google.gson.JsonParser;
     private static final JsonObject RULE_WITH_PARAMS_FILLED = JSON_PARSER.parse("{\"testId\" : \"custom\"}").getAsJsonObject();
     private static final Set<JsonObject> RULES_3 = new HashSet<>(Collections.singletonList(RULE_WITH_PARAMS));
     private final Instant now = Instant.now();
-    private DefaultScopeService service;
+    private DefaultScopeService defaultScopeService;
 
     @Mock private ScopeRepository scopeRepositoryMock;
-    @Mock private GroupService groupServiceMock;
     @Mock private AuthorizationRulesRepository authorizationRulesRepositoryMock;
     @Mock private ScopeFillStrategy fillStrategyMock;
     @Mock private EventsService eventsServiceMock;
 
     @Before
     public void setup() {
-        service = new DefaultScopeService(scopeRepositoryMock, groupServiceMock, authorizationRulesRepositoryMock, fillStrategyMock,
+        defaultScopeService = new DefaultScopeService(scopeRepositoryMock, authorizationRulesRepositoryMock, fillStrategyMock,
                 IAM_AUDIENCE, Clock.fixed(now, ZoneId.systemDefault()), eventsServiceMock);
     }
 
     @Test(expected = NullPointerException.class)
     public void testPublishAuthorizationRulesIllegalArgument() {
-        service.publishAuthorizationRules(TEST_TOKEN, TEST_TOKEN_EXPIRATION_TIME, null);
+        defaultScopeService.publishAuthorizationRules(TEST_TOKEN, TEST_TOKEN_EXPIRATION_TIME, null);
     }
 
     @SuppressWarnings("unchecked")
@@ -114,7 +103,7 @@ import com.google.gson.JsonParser;
         when(authorizationRulesRepositoryMock.getKeyForAuthorizationRules(TEST_TOKEN, MODULE_A)).thenReturn(key(TEST_TOKEN, MODULE_A));
         when(authorizationRulesRepositoryMock.getKeyForAuthorizationRules(TEST_TOKEN, MODULE_B)).thenReturn(key(TEST_TOKEN, MODULE_B));
 
-        service.publishAuthorizationRules(TEST_TOKEN, TEST_TOKEN_EXPIRATION_TIME, scopes);
+        defaultScopeService.publishAuthorizationRules(TEST_TOKEN, TEST_TOKEN_EXPIRATION_TIME, scopes);
 
         verify(authorizationRulesRepositoryMock).save(key(TEST_TOKEN, MODULE_A), TEST_TOKEN_EXPIRATION_TIME - now.toEpochMilli(),
                 array(RULES_1));
@@ -127,7 +116,7 @@ import com.google.gson.JsonParser;
         String id = "scope_id";
         Scope expectedScope = mock(Scope.class);
         when(scopeRepositoryMock.findOne(id)).thenReturn(expectedScope);
-        assertThat(service.getScope(id)).isSameAs(expectedScope);
+        assertThat(defaultScopeService.getScope(id)).isSameAs(expectedScope);
 
     }
 
@@ -136,7 +125,7 @@ import com.google.gson.JsonParser;
         Scope scope1 = mock(Scope.class);
         when(scope1.getAudience()).thenReturn(MODULE_A);
         when(scope1.getRules()).thenReturn(RULES_1);
-        service.fillScope(scope1, TEST_USER_ID, TEST_CLIENT_ID, TEST_DOMAIN);
+        defaultScopeService.fillScope(scope1, TEST_USER_ID, TEST_CLIENT_ID, TEST_DOMAIN);
         Map<String, String> params = new HashMap<>();
         params.put("userId", TEST_USER_ID);
         params.put("clientId", TEST_CLIENT_ID);
@@ -150,7 +139,7 @@ import com.google.gson.JsonParser;
         when(scope1.getAudience()).thenReturn(MODULE_A);
         when(scope1.getRules()).thenReturn(RULES_3);
         when(scope1.getParameters()).thenReturn(RULE_WITH_PARAMS_FILLED);
-        service.fillScope(scope1, TEST_USER_ID, TEST_CLIENT_ID, TEST_DOMAIN);
+        defaultScopeService.fillScope(scope1, TEST_USER_ID, TEST_CLIENT_ID, TEST_DOMAIN);
         Map<String, String> params = new HashMap<>();
         params.put("userId", TEST_USER_ID);
         params.put("clientId", TEST_CLIENT_ID);
@@ -191,7 +180,7 @@ import com.google.gson.JsonParser;
         when(authorizationRulesRepositoryMock.existsRules(key(TEST_TOKEN, MODULE_A))).thenReturn(true);
         when(authorizationRulesRepositoryMock.existsRules(key(TEST_TOKEN, MODULE_B))).thenReturn(false);
 
-        service.addAuthorizationRules(TEST_TOKEN, scopes);
+        defaultScopeService.addAuthorizationRules(TEST_TOKEN, scopes);
 
         verify(authorizationRulesRepositoryMock).addRules(key(TEST_TOKEN, MODULE_A), array(RULES_1));
         verify(authorizationRulesRepositoryMock).save(key(TEST_TOKEN, MODULE_B), TimeUnit.SECONDS.toMillis(TEST_TOKEN_EXPIRATION_TIME),
@@ -224,31 +213,12 @@ import com.google.gson.JsonParser;
 
         doAnswer(returnsFirstArg()).when(fillStrategyMock).fillScope(Matchers.<Scope>any(), anyMap());
 
-        Set<Scope> expandedScopes = service.expandScopes(requestScopes);
+        Set<Scope> expandedScopes = defaultScopeService.expandScopes(requestScopes);
 
         assertThat(expandedScopes).contains(scope1);
         assertThat(expandedScopes).contains(scope2);
         assertThat(expandedScopes).doesNotContain(compositeScope);
     }
-
-    @Test
-    public void testGroupScopes() {
-
-        List<String> groups = Arrays.asList("Admins", "Users");
-
-        Group administrators = new Group("Admins", "Admins", "MyDomain", new HashSet<>(Arrays.asList(TEST_SCOPE_1, TEST_SCOPE_2)));
-        Group users = new Group("Admins", "Users", "MyDomain", new HashSet<>(Collections.singletonList(TEST_COMPOSITE_SCOPE)));
-
-        when(groupServiceMock.get(Mockito.eq("Admins"))).thenReturn(Optional.of(administrators));
-        when(groupServiceMock.get(Mockito.eq("Users"))).thenReturn(Optional.of(users));
-
-        Set<String> scopes = service.getGroupScopes(groups);
-
-        assertThat(scopes).contains(TEST_SCOPE_1);
-        assertThat(scopes).contains(TEST_SCOPE_2);
-        assertThat(scopes).contains(TEST_COMPOSITE_SCOPE);
-    }
-
 
     @SuppressWarnings("unchecked")
     @Test
@@ -258,7 +228,7 @@ import com.google.gson.JsonParser;
         Set<String> requestScopes = new HashSet<>(Collections.singletonList(TEST_SCOPE_1_WITH_PARAMS));
         when(scopeRepositoryMock.findOne(Mockito.eq(TEST_SCOPE_1))).thenReturn(scope1);
         doAnswer(returnsFirstArg()).when(fillStrategyMock).fillScope(Matchers.<Scope>any(), anyMap());
-        Set<Scope> scopes = service.getScopes(requestScopes);
+        Set<Scope> scopes = defaultScopeService.getScopes(requestScopes);
         Scope scope2 = scopes.iterator().next();
         assertThat(scope2.getParameters()).isEqualTo(RULE_WITH_PARAMS_FILLED);
         assertThat(scope1).isNotEqualTo(scope2);
@@ -272,7 +242,7 @@ import com.google.gson.JsonParser;
         Set<String> requestScopes = new HashSet<>(Collections.singletonList(TEST_SCOPE_1_WITH_PARAMS_AND_ERRORS));
         when(scopeRepositoryMock.findOne(Mockito.eq(TEST_SCOPE_1))).thenReturn(scope1);
         doAnswer(returnsFirstArg()).when(fillStrategyMock).fillScope(Matchers.<Scope>any(), anyMap());
-        Set<Scope> scopes = service.getScopes(requestScopes);
+        Set<Scope> scopes = defaultScopeService.getScopes(requestScopes);
         assertThat(scopes.iterator().next().getParameters()).isEqualTo(RULE_WITH_PARAMS_FILLED);
     }
 
@@ -284,7 +254,7 @@ import com.google.gson.JsonParser;
         Set<String> requestScopes = new HashSet<>(Collections.singletonList(TEST_SCOPE_1_WITHOUT_PARAMS));
         when(scopeRepositoryMock.findOne(Mockito.eq(TEST_SCOPE_1))).thenReturn(scope1);
         doAnswer(returnsFirstArg()).when(fillStrategyMock).fillScope(Matchers.<Scope>any(), anyMap());
-        Set<Scope> scopes = service.getScopes(requestScopes);
+        Set<Scope> scopes = defaultScopeService.getScopes(requestScopes);
         assertThat(scopes.iterator().next().getParameters()).isEqualTo(RULE_WITH_PARAMS_FILLED);
     }
 
@@ -296,7 +266,7 @@ import com.google.gson.JsonParser;
         Set<String> requestScopes = new HashSet<>(Collections.singletonList(TEST_SCOPE_1_WITH_NOT_EXIST_PARAMS));
         when(scopeRepositoryMock.findOne(Mockito.eq(TEST_SCOPE_1))).thenReturn(scope1);
         doAnswer(returnsFirstArg()).when(fillStrategyMock).fillScope(Matchers.<Scope>any(), anyMap());
-        Set<Scope> scopes = service.getScopes(requestScopes);
+        Set<Scope> scopes = defaultScopeService.getScopes(requestScopes);
         assertThat(scopes.iterator().next().getParameters()).isEqualTo(RULE_WITH_PARAMS_FILLED);
     }
 
@@ -309,7 +279,7 @@ import com.google.gson.JsonParser;
         when(scopeRepositoryMock.findOne(Mockito.eq(TEST_SCOPE_1))).thenReturn(scope1);
         doAnswer(returnsFirstArg()).when(fillStrategyMock).fillScope(Matchers.<Scope>any(), anyMap());
 
-        Set<Scope> scopes = service.getScopes(requestScopes);
+        Set<Scope> scopes = defaultScopeService.getScopes(requestScopes);
         assertThat(scopes.iterator().next().getParameters()).isEqualTo(RULE_WITH_PARAMS_FILLED);
     }
 
@@ -317,7 +287,7 @@ import com.google.gson.JsonParser;
     public void testCreateScope() throws ScopeNameException {
         Scope scope = mock(Scope.class);
         when(scope.getId()).thenReturn(TEST_SCOPE_1);
-        service.create(scope);
+        defaultScopeService.create(scope);
         verify(scopeRepositoryMock).save(scope);
     }
 
@@ -325,12 +295,12 @@ import com.google.gson.JsonParser;
     @Test(expected = ScopeNameException.class)
     public void testCreateIncorrectScope() throws ScopeNameException {
         Scope scope = new Scope(";", null, null, null, null, null);
-        service.create(scope);
+        defaultScopeService.create(scope);
     }
 
     @Test
     public void testDeleteScope() {
-        service.delete(TEST_SCOPE_1);
+        defaultScopeService.delete(TEST_SCOPE_1);
         verify(scopeRepositoryMock).delete(TEST_SCOPE_1);
     }
 

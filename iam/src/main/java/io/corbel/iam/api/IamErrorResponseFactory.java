@@ -3,7 +3,6 @@ package io.corbel.iam.api;
 import javax.ws.rs.core.Response;
 
 import io.corbel.iam.utils.Message;
-
 import io.corbel.lib.ws.api.error.ErrorResponseFactory;
 import io.corbel.lib.ws.model.Error;
 
@@ -63,6 +62,10 @@ public final class IamErrorResponseFactory extends ErrorResponseFactory {
 
     public Response scopesNotAllowed(String domain) {
         return forbidden(new Error("scopes_not_allowed", Message.SCOPES_NOT_ALLOWED.getMessage(domain)));
+    }
+
+    public Response scopesNotExist(String scopes) {
+        return badRequest(new Error("not_existent_scope", scopes));
     }
 
     public Response domainQueryParamNotAllowed() {
