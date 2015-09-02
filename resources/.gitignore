@@ -2,3 +2,4 @@
 target
 .settings
 .project
+/src/main/resources/logback.xml
