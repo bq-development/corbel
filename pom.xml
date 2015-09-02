@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.corbel</groupId>
   <artifactId>corbel</artifactId>
-  <version>1.22.0-SNAPSHOT</version>
+  <version>1.22.0</version>
   <packaging>pom</packaging>
   <name>corbel</name>
   <description>Corbel Platform</description>
@@ -22,7 +22,7 @@
     <connection>scm:git:ssh://bq-devtools@git.dev.bqsoftware.net:29418/corbel</connection>
     <developerConnection>scm:git:ssh://bq-devtools@git.dev.bqsoftware.net:29418/corbel</developerConnection>
     <url>https://github.com/bq/corbel</url>
-    <tag>HEAD</tag>
+    <tag>corbel-1.22.0</tag>
   </scm>
   <ciManagement>
     <system>Travis CI</system>
@@ -453,9 +453,9 @@
               <configuration>
                 <target>
                   <exec executable="chmod" dir="${project.build.directory}/generated-resources/appassembler/jsw/${project.name}">
-                    <arg value="-R"/>
-                    <arg value="a+x"/>
-                    <arg value="bin"/>
+                    <arg value="-R" />
+                    <arg value="a+x" />
+                    <arg value="bin" />
                   </exec>
                 </target>
               </configuration>
@@ -469,7 +469,7 @@
               <configuration>
                 <target>
                   <exec executable="mkdir" dir="${project.build.directory}/generated-resources/appassembler/jsw/${project.name}">
-                    <arg value="plugins"/>
+                    <arg value="plugins" />
                   </exec>
                 </target>
               </configuration>
