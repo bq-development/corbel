@@ -20,7 +20,7 @@ public class ResizeHeight implements ImageOperation {
             throw new ImageOperationsException("Height for resizeHeight must be greater than 0: " + parameter);
         }
 
-        return new IMOperation().resize(null, height);
+        return new IMOperation().resize(null, height, ">");
     }
 
     @Override

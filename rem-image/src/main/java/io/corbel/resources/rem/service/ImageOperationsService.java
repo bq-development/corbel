@@ -21,11 +21,12 @@ public interface ImageOperationsService {
      * @param image      The input image
      * @param out        The result will be write on this OutputStream (remember close it after use!)
      * @param format     (Optional) Image's output format (aka extension).
+     * @param imMemoryLimit
      * @throws IOException          There's a problem with the streams provided
      * @throws InterruptedException System error with ImageMagic
      * @throws IM4JavaException     At least width or height
      */
 
-    void applyConversion(List<ImageOperationDescription> parameters, InputStream image, OutputStream out, Optional<ImageFormat> format) throws ImageOperationsException,
+    void applyConversion(List<ImageOperationDescription> parameters, InputStream image, OutputStream out, Optional<ImageFormat> format, String imMemoryLimit) throws ImageOperationsException,
             InterruptedException, IOException, IM4JavaException;
 }

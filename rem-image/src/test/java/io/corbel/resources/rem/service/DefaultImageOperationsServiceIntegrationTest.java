@@ -1,10 +1,10 @@
 package io.corbel.resources.rem.service;
 
+import com.google.common.collect.ImmutableMap;
 import io.corbel.resources.rem.exception.ImageOperationsException;
 import io.corbel.resources.rem.format.ImageFormat;
 import io.corbel.resources.rem.model.ImageOperationDescription;
 import io.corbel.resources.rem.operation.*;
-import com.google.common.collect.ImmutableMap;
 import org.im4java.core.IM4JavaException;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -23,6 +23,7 @@ import java.util.Optional;
 @Ignore// Needs imagemagick package installed
 public class DefaultImageOperationsServiceIntegrationTest {
 
+    private static String IM_MEMORY_LIMIT = "200MiB";
     private static final String IMAGE_PATH = "src/test/resources/logo.png";
     private static final String IMAGE_URL = "http://upload.wikimedia.org/wikipedia/commons/b/b6/SIPI_Jelly_Beans_4.1.07.tiff";
     private Optional<ImageFormat> imageFormatNull = Optional.empty();
@@ -42,7 +43,7 @@ public class DefaultImageOperationsServiceIntegrationTest {
     public void test() throws IOException, ImageOperationsException, InterruptedException, IM4JavaException {
         try (InputStream image = new URL(IMAGE_URL).openStream(); FileOutputStream out = new FileOutputStream("/tmp/testImage.tiff")) {
             List<ImageOperationDescription> parameters = Collections.singletonList(new ImageOperationDescription("crop", "(0, 0, 2, 2)"));
-            imageOperationsService.applyConversion(parameters, image, out, imageFormatNull);
+            imageOperationsService.applyConversion(parameters, image, out, imageFormatNull, IM_MEMORY_LIMIT);
         }
     }
 
@@ -55,7 +56,7 @@ public class DefaultImageOperationsServiceIntegrationTest {
                     new ImageOperationDescription("extension", "PNG"),
                     new ImageOperationDescription("resize", "(100, 50)"), new ImageOperationDescription("resizeAndFill", "(200, blue)")
             );
-            imageOperationsService.applyConversion(parameters, in, out, imageFormatNull);
+            imageOperationsService.applyConversion(parameters, in, out, imageFormatNull, IM_MEMORY_LIMIT);
         }
     }
 }

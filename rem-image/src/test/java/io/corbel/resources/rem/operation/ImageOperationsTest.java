@@ -30,7 +30,7 @@ public class ImageOperationsTest {
     @Test
     public void resizeTest() throws ImageOperationsException {
         List<String> inputParameters = Collections.singletonList("(10, 20)");
-        List<String> expectedOutputs = Collections.singletonList("[-resize, 10x20!]");
+        List<String> expectedOutputs = Collections.singletonList("[-resize, 10x20>!]");
 
         operationTest(inputParameters, expectedOutputs, new Resize());
     }
@@ -46,7 +46,7 @@ public class ImageOperationsTest {
     @Test
     public void resizeHeightTest() throws ImageOperationsException {
         List<String> inputParameters = Collections.singletonList("10");
-        List<String> expectedOutputs = Collections.singletonList("[-resize, x10]");
+        List<String> expectedOutputs = Collections.singletonList("[-resize, x10>]");
 
         operationTest(inputParameters, expectedOutputs, new ResizeHeight());
     }
@@ -54,7 +54,7 @@ public class ImageOperationsTest {
     @Test
     public void resizeWidthTest() throws ImageOperationsException {
         List<String> inputParameters = Collections.singletonList("10");
-        List<String> expectedOutputs = Collections.singletonList("[-resize, 10]");
+        List<String> expectedOutputs = Collections.singletonList("[-resize, 10x-1>]");
 
         operationTest(inputParameters, expectedOutputs, new ResizeWidth());
     }

@@ -1,25 +1,7 @@
 package io.corbel.resources.rem;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.StreamingOutput;
-
-import org.apache.commons.io.output.TeeOutputStream;
-import org.im4java.core.IM4JavaException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-
+import io.corbel.lib.ws.api.error.ErrorResponseFactory;
+import io.corbel.lib.ws.model.Error;
 import io.corbel.resources.rem.exception.ImageOperationsException;
 import io.corbel.resources.rem.format.ImageFormat;
 import io.corbel.resources.rem.model.ImageOperationDescription;
@@ -30,8 +12,24 @@ import io.corbel.resources.rem.request.ResourceParameters;
 import io.corbel.resources.rem.service.ImageCacheService;
 import io.corbel.resources.rem.service.ImageOperationsService;
 import io.corbel.resources.rem.service.RemService;
-import io.corbel.lib.ws.api.error.ErrorResponseFactory;
-import io.corbel.lib.ws.model.Error;
+import org.apache.commons.io.output.TeeOutputStream;
+import org.im4java.core.IM4JavaException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 
 public class ImageGetRem extends BaseRem<Void> {
@@ -45,16 +43,18 @@ public class ImageGetRem extends BaseRem<Void> {
 
     private final ImageOperationsService imageOperationsService;
     private final ImageCacheService imageCacheService;
+    private final String imMemoryLimit;
     private RemService remService;
 
-    public ImageGetRem(ImageOperationsService imageOperationsService, ImageCacheService imageCacheService) {
+    public ImageGetRem(ImageOperationsService imageOperationsService, ImageCacheService imageCacheService, String memoryLimit) {
         this.imageOperationsService = imageOperationsService;
         this.imageCacheService = imageCacheService;
+        this.imMemoryLimit = memoryLimit;
     }
 
     @Override
     public Response resource(String collection, ResourceId resourceId, RequestParameters<ResourceParameters> requestParameters,
-            Optional<Void> entity) {
+                             Optional<Void> entity) {
 
         Rem<?> restorGetRem = remService.getRem(RestorRemNames.RESTOR_GET);
 
@@ -102,9 +102,9 @@ public class ImageGetRem extends BaseRem<Void> {
             File file = File.createTempFile(TEMP_IMAGE_PREFIX + UUID.randomUUID().toString(), "");
 
             try (FileOutputStream fileOutputStream = new FileOutputStream(file);
-                    TeeOutputStream teeOutputStream = new TeeOutputStream(output, fileOutputStream);
-                    InputStream input = (InputStream) response.getEntity()) {
-                imageOperationsService.applyConversion(operations, input, teeOutputStream, imageFormat);
+                 TeeOutputStream teeOutputStream = new TeeOutputStream(output, fileOutputStream);
+                 InputStream input = (InputStream) response.getEntity()) {
+                imageOperationsService.applyConversion(operations, input, teeOutputStream, imageFormat, imMemoryLimit);
             } catch (IOException | InterruptedException | IM4JavaException | ImageOperationsException e) {
                 LOG.error("Error working with image", e);
                 throw new WebApplicationException(ErrorResponseFactory.getInstance().invalidEntity(e.getMessage()));

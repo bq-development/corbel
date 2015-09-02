@@ -39,7 +39,7 @@ public class ResizeAndFill implements ImageOperation {
 
         IMOperation subOperation = new IMOperation();
         subOperation.resize(width, width);
-        subOperation.background("#"+color);
+        subOperation.background("#" + color);
         subOperation.gravity("center");
         subOperation.extent(width, width);
 

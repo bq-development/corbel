@@ -31,9 +31,9 @@ public class DefaultImageOperationsService implements ImageOperationsService {
     }
 
     @Override
-    public void applyConversion(List<ImageOperationDescription> parameters, InputStream image, OutputStream out, Optional<ImageFormat> format) throws ImageOperationsException, InterruptedException, IOException, IM4JavaException {
+    public void applyConversion(List<ImageOperationDescription> parameters, InputStream image, OutputStream out, Optional<ImageFormat> format, String imMemoryLimit) throws ImageOperationsException, InterruptedException, IOException, IM4JavaException {
         IMOperation imOperation = imOperationFactory.create();
-        addDefaultImageToIMOperation(imOperation);
+        addDefaultImageToIMOperation(imOperation, imMemoryLimit);
         addOperations(imOperation, parameters);
         addImageToIMOperation(imOperation, getOutputFormatParameter(format));
 
@@ -55,7 +55,9 @@ public class DefaultImageOperationsService implements ImageOperationsService {
         }
     }
 
-    private void addDefaultImageToIMOperation(IMOperation imOperation) {
+    private void addDefaultImageToIMOperation(IMOperation imOperation, String imMemoryLimit) {
+        imOperation.addRawArgs("-limit", "memory", imMemoryLimit);
+        imOperation.addRawArgs("-limit", "map", imMemoryLimit);
         addImageToIMOperation(imOperation, DEF_IMAGE_ARG);
     }
 

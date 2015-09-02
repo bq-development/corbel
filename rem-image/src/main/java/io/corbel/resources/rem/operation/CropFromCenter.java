@@ -39,7 +39,7 @@ public class CropFromCenter implements ImageOperation {
         }
 
         IMOperation subOperation = new IMOperation();
-        subOperation.gravity("center").crop(xratio, yratio, 0,0);
+        subOperation.gravity("center").crop(xratio, yratio, 0, 0);
         return subOperation;
 
     }

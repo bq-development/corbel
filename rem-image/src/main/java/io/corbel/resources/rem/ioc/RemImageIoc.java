@@ -84,7 +84,7 @@ public class RemImageIoc {
 
     @Bean(name = RemImageIocNames.REM_GET)
     public Rem getImageGetRem(ImageOperationsService imageOperationsService, ImageCacheService imageCacheService) {
-        return new ImageGetRem(imageOperationsService, imageCacheService);
+        return new ImageGetRem(imageOperationsService, imageCacheService, env.getProperty("imagemagick.conver.memoryLimit", "200MiB"));
     }
 
     @Bean(name = RemImageIocNames.REM_PUT)
