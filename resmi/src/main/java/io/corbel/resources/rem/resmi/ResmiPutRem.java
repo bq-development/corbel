@@ -3,6 +3,7 @@ package io.corbel.resources.rem.resmi;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLDecoder;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,7 +34,23 @@ public class ResmiPutRem extends AbstractResmiRem {
 
     @Override
     public Response collection(String type, RequestParameters<CollectionParameters> parameters, URI uri, Optional<JsonObject> entity) {
-        return ErrorResponseFactory.getInstance().methodNotAllowed();
+        ResourceUri resourceUri = buildCollectionUri(type);
+        return entity.map(object -> {
+            try {
+                Optional<List<ResourceQuery>> conditions = Optional.ofNullable(parameters)
+                        .flatMap(RequestParameters::getOptionalApiParameters).map(CollectionParameters::getConditions)
+                        .orElse(Optional.empty());
+                if (conditions.isPresent()) {
+                        resmiService.updateCollection(resourceUri, object, conditions.get());
+                } else {
+                    resmiService.updateCollection(resourceUri, object, new ArrayList<>());
+                }
+            } catch (StartsWithUnderscoreException e) {
+                return ErrorResponseFactory.getInstance().invalidEntity("Invalid attribute name \"" + e.getMessage() + "\"");
+            }
+
+            return noContent();
+        }).orElse(ErrorResponseFactory.getInstance().badRequest());
     }
 
     @Override

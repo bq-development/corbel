@@ -74,6 +74,15 @@ import io.corbel.lib.ws.auth.AuthorizationInfo;
                 getBaseUriWithType(uriInfo, domain, type), HttpMethod.POST, null, inputStream, contentType);
     }
 
+    @PUT
+    @Path("/{type}")
+    public Response putCollection(@PathParam("domain") String domain, @PathParam("type") String type, @Context Request request, @Context UriInfo uriInfo,
+            @Auth AuthorizationInfo authorizationInfo, InputStream inputStream, @HeaderParam("Content-Type") MediaType contentType,
+            @Rest QueryParameters queryParameters) {
+        return resourcesService.collectionOperation(type, request, uriInfo, getTokenInfo(authorizationInfo),
+                getBaseUriWithType(uriInfo, domain, type), HttpMethod.PUT, queryParameters, inputStream, contentType);
+    }
+
     @DELETE
     @Path("/{type}")
     public Response deleteCollection(@PathParam("domain") String domain, @PathParam("type") String type, @Context Request request, @Context UriInfo uriInfo,
