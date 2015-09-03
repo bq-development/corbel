@@ -19,6 +19,5 @@ public class ImageRemUtil {
                 Optional.empty(), Optional.empty(), Optional.empty()), requestParameters.getTokenInfo(),
                 requestParameters.getAcceptedMediaTypes(), requestParameters.getContentLength(), newParameters,
                 requestParameters.getHeaders());
-
     }
 }

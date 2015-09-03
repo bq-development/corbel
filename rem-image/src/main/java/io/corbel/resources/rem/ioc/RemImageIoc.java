@@ -1,5 +1,6 @@
 package io.corbel.resources.rem.ioc;
 
+import io.corbel.lib.config.ConfigurationIoC;
 import io.corbel.resources.rem.ImageDeleteRem;
 import io.corbel.resources.rem.ImageGetRem;
 import io.corbel.resources.rem.ImagePutRem;
@@ -10,7 +11,6 @@ import io.corbel.resources.rem.service.DefaultImageOperationsService;
 import io.corbel.resources.rem.service.ImageCacheService;
 import io.corbel.resources.rem.service.ImageOperationsService;
 import io.corbel.resources.rem.util.ImageRemUtil;
-import io.corbel.lib.config.ConfigurationIoC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
