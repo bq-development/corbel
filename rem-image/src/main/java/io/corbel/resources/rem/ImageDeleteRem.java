@@ -1,16 +1,6 @@
 package io.corbel.resources.rem;
 
-import java.io.InputStream;
-import java.net.URI;
-import java.util.Collections;
-import java.util.Optional;
-
-import javax.ws.rs.core.Response;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpMethod;
-
+import io.corbel.lib.ws.api.error.ErrorResponseFactory;
 import io.corbel.resources.rem.plugin.RestorRemNames;
 import io.corbel.resources.rem.request.CollectionParameters;
 import io.corbel.resources.rem.request.RequestParameters;
@@ -18,7 +8,15 @@ import io.corbel.resources.rem.request.ResourceId;
 import io.corbel.resources.rem.request.ResourceParameters;
 import io.corbel.resources.rem.service.RemService;
 import io.corbel.resources.rem.util.ImageRemUtil;
-import io.corbel.lib.ws.api.error.ErrorResponseFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpMethod;
+
+import javax.ws.rs.core.Response;
+import java.io.InputStream;
+import java.net.URI;
+import java.util.Collections;
+import java.util.Optional;
 
 public class ImageDeleteRem extends BaseRem<InputStream> {
 
@@ -38,7 +36,7 @@ public class ImageDeleteRem extends BaseRem<InputStream> {
 
     @Override
     public Response collection(String collection, RequestParameters<CollectionParameters> requestParameters, URI uri,
-            Optional<InputStream> entity) {
+                               Optional<InputStream> entity) {
 
         @SuppressWarnings("unchecked")
         Rem<InputStream> restorDeleteRem = remService.getRem(RestorRemNames.RESTOR_DELETE);
@@ -55,7 +53,7 @@ public class ImageDeleteRem extends BaseRem<InputStream> {
 
     @Override
     public Response resource(String collection, ResourceId resourceId, RequestParameters<ResourceParameters> requestParameters,
-            Optional<InputStream> entity) {
+                             Optional<InputStream> entity) {
 
         @SuppressWarnings("unchecked")
         Rem<InputStream> restorDeleteRem = (Rem<InputStream>) remService.getRem(collection, requestParameters.getAcceptedMediaTypes(),
@@ -66,7 +64,7 @@ public class ImageDeleteRem extends BaseRem<InputStream> {
             return ErrorResponseFactory.getInstance().notFound();
         }
 
-        restorDeleteRem.collection(cacheCollection, imageRemUtil.getCollectionParametersWithPrefix(resourceId.getId(), requestParameters),
+        restorDeleteRem.collection(cacheCollection, imageRemUtil.getCollectionParametersWithPrefix(resourceId.getId(), requestParameters, cacheCollection),
                 null, Optional.empty());
         restorDeleteRem.resource(collection, resourceId, requestParameters, Optional.empty());
 
