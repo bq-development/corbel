@@ -7,6 +7,7 @@ import io.corbel.resources.rem.dao.RelationMoveOperation;
 import io.corbel.resources.rem.model.ResourceUri;
 import io.corbel.resources.rem.request.CollectionParameters;
 import io.corbel.resources.rem.request.RelationParameters;
+import io.corbel.resources.rem.resmi.exception.MongoAggregationException;
 import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
 
 import java.util.List;
@@ -56,5 +57,11 @@ public interface ResmiService {
     void ensureIndex(ResourceUri uri, Index index);
 
     void removeObjectId(JsonObject object);
+
+    JsonArray findCollectionDistinct(ResourceUri uri, Optional<CollectionParameters> apiParameters, List<String> fields, boolean first)
+            throws BadConfigurationException, MongoAggregationException;
+
+    JsonArray findRelationDistinct(ResourceUri uri, Optional<RelationParameters> apiParameters, List<String> fields, boolean first)
+            throws BadConfigurationException, MongoAggregationException;
 
 }

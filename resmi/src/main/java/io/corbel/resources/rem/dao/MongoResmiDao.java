@@ -9,14 +9,17 @@ import io.corbel.lib.queries.request.Pagination;
 import io.corbel.lib.queries.request.ResourceQuery;
 import io.corbel.lib.queries.request.Sort;
 import io.corbel.lib.queries.request.SumResult;
+import io.corbel.resources.rem.dao.builder.MongoAggregationBuilder;
 import io.corbel.resources.rem.model.GenericDocument;
 import io.corbel.resources.rem.model.ResourceUri;
+import io.corbel.resources.rem.resmi.exception.MongoAggregationException;
 import io.corbel.resources.rem.utils.JsonUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -102,6 +105,46 @@ public class MongoResmiDao implements ResmiDao {
         } else {
             return result;
         }
+    }
+
+    @Override
+    public JsonArray findCollectionWithGroup(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries,
+            Optional<Pagination> pagination, Optional<Sort> sort, List<String> groups, boolean first) throws MongoAggregationException {
+        Aggregation aggregation = buildAggregation(uri, resourceQueries, pagination, sort, groups, first);
+        List<JsonObject> result = mongoOperations.aggregate(aggregation, getMongoCollectionName(uri), JsonObject.class).getMappedResults();
+        return JsonUtils.convertToArray(first ? extcractDocs(result) : result);
+    }
+
+    @Override
+    public JsonArray findRelationWithGroup(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries, Optional<Pagination> pagination,
+            Optional<Sort> sort, List<String> groups, boolean first) throws MongoAggregationException {
+        Aggregation aggregation = buildAggregation(uri, resourceQueries, pagination, sort, groups, first);
+        List<JsonObject> result = mongoOperations.aggregate(aggregation, getMongoCollectionName(uri), JsonObject.class).getMappedResults();
+        return renameIds(JsonUtils.convertToArray(first ? extcractDocs(result) : result));
+    }
+
+    private List<JsonObject> extcractDocs(List<JsonObject> results) {
+        return results.stream().map(result -> result.get(MongoAggregationBuilder.REFERENCE).getAsJsonObject()).collect(Collectors.toList());
+    }
+
+    private Aggregation buildAggregation(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries, Optional<Pagination> pagination,
+            Optional<Sort> sort, List<String> fields, boolean first) throws MongoAggregationException {
+
+        MongoAggregationBuilder builder = new MongoAggregationBuilder();
+        builder.match(uri, resourceQueries);
+
+
+        if (sort.isPresent()) {
+            builder.sort(sort.get());
+        }
+
+        builder.group(fields, first);
+
+        if (pagination.isPresent()) {
+            builder.pagination(pagination.get());
+        }
+
+        return builder.build();
     }
 
     @Override

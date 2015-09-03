@@ -11,6 +11,7 @@ import io.corbel.resources.rem.dao.ResmiDao;
 import io.corbel.resources.rem.model.ResourceUri;
 import io.corbel.resources.rem.request.CollectionParameters;
 import io.corbel.resources.rem.request.RelationParameters;
+import io.corbel.resources.rem.resmi.exception.MongoAggregationException;
 import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
 
 import java.time.Clock;
@@ -77,6 +78,13 @@ public class DefaultResmiService implements ResmiService {
     }
 
     @Override
+    public JsonArray findCollectionDistinct(ResourceUri uri, Optional<CollectionParameters> apiParameters, List<String> fields,
+            boolean first) throws BadConfigurationException, MongoAggregationException {
+        return resmiDao.findCollectionWithGroup(uri, apiParameters.flatMap(params -> params.getQueries()),
+                apiParameters.map(params -> params.getPagination()), apiParameters.flatMap(params -> params.getSort()), fields, first);
+    }
+
+    @Override
     public JsonObject findResource(ResourceUri uri) {
         return resmiDao.findResource(uri);
     }
@@ -85,6 +93,13 @@ public class DefaultResmiService implements ResmiService {
     public JsonElement findRelation(ResourceUri uri, Optional<RelationParameters> apiParameters) throws BadConfigurationException {
         return resmiDao.findRelation(uri, apiParameters.flatMap(params -> params.getQueries()),
                 apiParameters.map(params -> params.getPagination()), apiParameters.flatMap(params -> params.getSort()));
+    }
+
+    @Override
+    public JsonArray findRelationDistinct(ResourceUri uri, Optional<RelationParameters> apiParameters, List<String> fields, boolean first)
+            throws BadConfigurationException, MongoAggregationException {
+        return resmiDao.findRelationWithGroup(uri, apiParameters.flatMap(params -> params.getQueries()),
+                apiParameters.map(params -> params.getPagination()), apiParameters.flatMap(params -> params.getSort()), fields, first);
     }
 
     @Override
