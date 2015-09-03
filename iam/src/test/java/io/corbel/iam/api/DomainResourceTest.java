@@ -67,7 +67,7 @@ public class DomainResourceTest {
     private static OAuthFactory oAuthFactory = new OAuthFactory<>(authenticator, "realm", AuthorizationInfo.class);
     private static CookieOAuthFactory<AuthorizationInfo> cookieOAuthProvider = new CookieOAuthFactory<AuthorizationInfo>(authenticator,
             "realm", AuthorizationInfo.class);
-    private static final AuthorizationRequestFilter filter = spy(new AuthorizationRequestFilter(oAuthFactory, cookieOAuthProvider, ""));
+    private static final AuthorizationRequestFilter filter = spy(new AuthorizationRequestFilter(oAuthFactory, cookieOAuthProvider, "", false));
 
     @ClassRule
     public static ResourceTestRule RULE = ResourceTestRule
@@ -90,7 +90,7 @@ public class DomainResourceTest {
 
         when(authenticator.authenticate(TEST_TOKEN)).thenReturn(com.google.common.base.Optional.of(authorizationInfoMock));
         doReturn(requestMock).when(filter).getRequest();
-        doNothing().when(filter).checkAccessRules(eq(authorizationInfoMock), any());
+        doNothing().when(filter).checkAccessRules(eq(authorizationInfoMock), any(), any());
     }
 
     @Before

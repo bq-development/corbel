@@ -34,7 +34,7 @@ public class EmailResourceTest extends UserResourceTestBase {
     private static final TokenInfo tokenMock = mock(TokenInfo.class);
 
     private static OAuthFactory oAuthFactory = new OAuthFactory<>(authenticatorMock, "realm", AuthorizationInfo.class);
-    private static final AuthorizationRequestFilter filter = spy(new AuthorizationRequestFilter(oAuthFactory, null, ""));
+    private static final AuthorizationRequestFilter filter = spy(new AuthorizationRequestFilter(oAuthFactory, null, "", false));
 
     @ClassRule
     public static ResourceTestRule RULE = ResourceTestRule.builder().addResource(new EmailResource(userServiceMock))
@@ -52,7 +52,7 @@ public class EmailResourceTest extends UserResourceTestBase {
         HttpServletRequest requestMock = mock(HttpServletRequest.class);
         when(requestMock.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + TEST_TOKEN);
         doReturn(requestMock).when(filter).getRequest();
-        doNothing().when(filter).checkAccessRules(eq(authorizationInfoMock), any());
+        doNothing().when(filter).checkAccessRules(eq(authorizationInfoMock), any(), any());
     }
 
     @Test

@@ -95,7 +95,7 @@ public class RemResourceTest {
     private static EventBus eventBusMock = mock(EventBus.class);
 
     private static OAuthFactory oAuthFactory = new OAuthFactory<>(authenticatorMock, "realm", AuthorizationInfo.class);
-    private static final AuthorizationRequestFilter filter = spy(new AuthorizationRequestFilter(oAuthFactory, null, ""));
+    private static final AuthorizationRequestFilter filter = spy(new AuthorizationRequestFilter(oAuthFactory, null, "", true));
 
     private static final RemResource remResource;
 
@@ -141,13 +141,13 @@ public class RemResourceTest {
         when(authorizationInfoMock.getTokenReader()).thenReturn(readerMock);
         when(authenticatorMock.authenticate(TEST_TOKEN)).thenReturn(com.google.common.base.Optional.of(authorizationInfoMock));
         when(authorizationInfoMock.getUserId()).thenReturn(TEST_USER_ID);
+        when(authorizationInfoMock.getDomainId()).thenReturn(DOMAIN);
         HttpServletRequest requestMock = mock(HttpServletRequest.class);
         when(requestMock.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + TEST_TOKEN);
         doReturn(requestMock).when(filter).getRequest();
-        doNothing().when(filter).checkAccessRules(eq(authorizationInfoMock), any());
-        when(tokenInfo.getDomainId()).thenReturn(DOMAIN);
+        doNothing().when(filter).checkAccessRules(eq(authorizationInfoMock), any(), eq(DOMAIN));
         when(tokenInfo.getUserId()).thenReturn(TEST_USER_ID);
-
+        when(tokenInfo.getDomainId()).thenReturn(DOMAIN);
     }
 
     private static JacksonQueryParser createQueryParser() {

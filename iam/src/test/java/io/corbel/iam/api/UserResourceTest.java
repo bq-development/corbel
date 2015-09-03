@@ -80,7 +80,7 @@ public class UserResourceTest extends UserResourceTestBase {
     private static OAuthFactory oAuthFactory = new OAuthFactory<>(authenticator, "realm", AuthorizationInfo.class);
 
     @SuppressWarnings("unchecked") private static final AuthorizationRequestFilter filter = spy(
-            new AuthorizationRequestFilter(oAuthFactory, null, ""));
+            new AuthorizationRequestFilter(oAuthFactory, null, "", false));
 
     @ClassRule public static ResourceTestRule RULE = ResourceTestRule
             .builder()
@@ -100,7 +100,7 @@ public class UserResourceTest extends UserResourceTestBase {
         when(requestMock.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + TEST_TOKEN);
         when(authenticator.authenticate(any())).thenReturn(com.google.common.base.Optional.of(authorizationInfoMock));
         doReturn(requestMock).when(filter).getRequest();
-        doNothing().when(filter).checkAccessRules(eq(authorizationInfoMock), any());
+        doNothing().when(filter).checkAccessRules(eq(authorizationInfoMock), any(), any());
     }
 
     @Override

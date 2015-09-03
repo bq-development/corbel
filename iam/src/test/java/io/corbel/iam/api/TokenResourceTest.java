@@ -83,7 +83,7 @@ public class TokenResourceTest {
     private static CookieOAuthFactory<AuthorizationInfo> cookieOAuthProvider = new CookieOAuthFactory<AuthorizationInfo>(authenticator,
             "realm", AuthorizationInfo.class);
     private static final AuthorizationRequestFilter filter = spy(new AuthorizationRequestFilter(oAuthFactory, cookieOAuthProvider,
-            "v.*/oauth/token"));
+            "v.*/oauth/token", false));
 
     @ClassRule public static ResourceTestRule RULE = ResourceTestRule.builder()
             .addResource(new TokenResource(authorizationServiceMock, upgradeTokenServiceMock, tokenCookieFactoryMock)).addProvider(filter)
@@ -102,7 +102,7 @@ public class TokenResourceTest {
         when(requestMock.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + TEST_TOKEN);
         when(authenticator.authenticate(any())).thenReturn(com.google.common.base.Optional.of(authorizationInfoMock));
         doReturn(requestMock).when(filter).getRequest();
-        doNothing().when(filter).checkAccessRules(eq(authorizationInfoMock), any());
+        doNothing().when(filter).checkAccessRules(eq(authorizationInfoMock), any(), any());
     }
 
     @Test

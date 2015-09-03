@@ -37,7 +37,7 @@ public class UsernameResourceTest extends UserResourceTestBase {
     private static final TokenInfo tokenMock = mock(TokenInfo.class);
 
     private static OAuthFactory oAuthFactory = new OAuthFactory<>(authenticatorMock, "realm", AuthorizationInfo.class);
-    private static final AuthorizationRequestFilter filter = spy(new AuthorizationRequestFilter(oAuthFactory, null, ""));
+    private static final AuthorizationRequestFilter filter = spy(new AuthorizationRequestFilter(oAuthFactory, null, "", false));
 
     private static final String URL_PREFIX = "/" + ApiVersion.CURRENT + "/username/";
 
@@ -56,7 +56,7 @@ public class UsernameResourceTest extends UserResourceTestBase {
         HttpServletRequest requestMock = mock(HttpServletRequest.class);
         when(requestMock.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + TEST_TOKEN);
         doReturn(requestMock).when(filter).getRequest();
-        doNothing().when(filter).checkAccessRules(eq(authorizationInfoMock), any());
+        doNothing().when(filter).checkAccessRules(eq(authorizationInfoMock), any(), any());
     }
 
     @Test

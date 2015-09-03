@@ -76,7 +76,7 @@ public class UserResourceDevicesTest extends UserResourceTestBase {
 
     private static final Authenticator<String, AuthorizationInfo> authenticator = mock(Authenticator.class);
     private static OAuthFactory oAuthFactory = new OAuthFactory<>(authenticator, "realm", AuthorizationInfo.class);
-    private static final AuthorizationRequestFilter filter = spy(new AuthorizationRequestFilter(oAuthFactory, null, ""));
+    private static final AuthorizationRequestFilter filter = spy(new AuthorizationRequestFilter(oAuthFactory, null, "",false));
 
     @ClassRule public static ResourceTestRule RULE = ResourceTestRule
             .builder()
@@ -97,7 +97,7 @@ public class UserResourceDevicesTest extends UserResourceTestBase {
         when(requestMock.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + TEST_TOKEN);
         when(authenticator.authenticate(any())).thenReturn(com.google.common.base.Optional.of(authorizationInfoMock));
         doReturn(requestMock).when(filter).getRequest();
-        doNothing().when(filter).checkAccessRules(eq(authorizationInfoMock), any());
+        doNothing().when(filter).checkAccessRules(eq(authorizationInfoMock), any(), any());
     }
 
     @Before

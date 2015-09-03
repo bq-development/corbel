@@ -60,7 +60,7 @@ public class GroupResourceTest {
     private static OAuthFactory oAuthFactory = new OAuthFactory<>(authenticatorMock, "realm", AuthorizationInfo.class);
     @SuppressWarnings("unchecked") private static CookieOAuthFactory<AuthorizationInfo> cookieOAuthFactory = mock(CookieOAuthFactory.class);
     @SuppressWarnings("unchecked") private static final AuthorizationRequestFilter filter = spy(
-            new AuthorizationRequestFilter(oAuthFactory, cookieOAuthFactory, ""));
+            new AuthorizationRequestFilter(oAuthFactory, cookieOAuthFactory, "", false));
 
     @ClassRule public static ResourceTestRule RULE = ResourceTestRule.builder().addResource(new GroupResource(groupService))
             .addProvider(filter).addProvider(new AuthorizationInfoProvider().getBinder()).addProvider(GenericExceptionMapper.class)
@@ -78,7 +78,7 @@ public class GroupResourceTest {
         HttpServletRequest requestMock = mock(HttpServletRequest.class);
         when(requestMock.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + TOKEN);
         doReturn(requestMock).when(filter).getRequest();
-        doNothing().when(filter).checkAccessRules(eq(authorizationInfoMock), any());
+        doNothing().when(filter).checkAccessRules(eq(authorizationInfoMock), any(), any());
     }
 
     @Test
