@@ -60,6 +60,7 @@
     <module>restor</module>
     <module>i18n</module>
     <module>webfs</module>
+    <module>oauth-server</module>
   </modules>
   <dependencies>
     <dependency>
