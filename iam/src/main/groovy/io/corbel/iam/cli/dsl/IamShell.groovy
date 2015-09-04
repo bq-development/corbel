@@ -92,7 +92,7 @@ class IamShell {
         def uri = element.asJsonObject.get("uri")?.getAsString()
         Pattern pattern = null
         try {
-            pattern = Pattern.compile(uri.replaceAll("\\{\\{.*\\}\\}", "0"))
+            pattern = Pattern.compile(uri.replaceAll("\\{\\{[\\w\\-:\\.]+\\}\\}", "0"))
         } catch (ignored) {
         }
         assert pattern: "uri with value '${uri}' is wrong"
