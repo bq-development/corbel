@@ -12,7 +12,7 @@ import org.springframework.dao.DataIntegrityViolationException
 /**
  * @author Alberto J. Rubio
  */
-@Shell("oauth-server")
+@Shell("oauth")
 class OauthShell {
 
     ClientRepository clientRepository
