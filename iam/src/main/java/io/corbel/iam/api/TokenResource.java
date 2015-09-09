@@ -1,5 +1,6 @@
 package io.corbel.iam.api;
 
+import com.google.common.base.Optional;
 import io.corbel.iam.auth.OauthParams;
 import io.corbel.iam.exception.*;
 import io.corbel.iam.model.GrantType;
@@ -7,7 +8,6 @@ import io.corbel.iam.model.TokenGrant;
 import io.corbel.iam.service.AuthorizationService;
 import io.corbel.iam.service.UpgradeTokenService;
 import io.corbel.iam.utils.TokenCookieFactory;
-import com.google.common.base.Optional;
 import io.corbel.lib.ws.api.error.ErrorResponseFactory;
 import io.corbel.lib.ws.auth.AuthorizationInfo;
 import io.corbel.lib.ws.model.Error;
@@ -23,16 +23,16 @@ import java.net.URLDecoder;
 
 /**
  * @author Alexander De Leon
- * 
  */
-@Path(ApiVersion.CURRENT + "/oauth/token") public class TokenResource {
+@Path(ApiVersion.CURRENT + "/oauth/token")
+public class TokenResource {
 
     private final AuthorizationService authorizationService;
     private final UpgradeTokenService upgradeTokenService;
     private final TokenCookieFactory tokenCookieFactory;
 
     public TokenResource(AuthorizationService authorizationService, UpgradeTokenService upgradeTokenService,
-            TokenCookieFactory tokenCookieFactory) {
+                         TokenCookieFactory tokenCookieFactory) {
         this.authorizationService = authorizationService;
         this.upgradeTokenService = upgradeTokenService;
         this.tokenCookieFactory = tokenCookieFactory;
@@ -40,7 +40,7 @@ import java.net.URLDecoder;
 
     @POST
     public Response getToken(@FormParam("grant_type") String grantType, @FormParam("assertion") String assertion,
-            @HeaderParam("RequestCookie") boolean cookie) {
+                             @HeaderParam("RequestCookie") boolean cookie) {
         if (grantType == null || grantType.isEmpty()) {
             return IamErrorResponseFactory.getInstance().missingGrantType();
         }
@@ -55,31 +55,25 @@ import java.net.URLDecoder;
 
     @Path("/upgrade")
     @GET
-    public Response upgradeToken(@Auth AuthorizationInfo authorizationInfo, @QueryParam("grant_type") String grantType,
-            @QueryParam("assertion") String assertion) {
+    public Response upgradeTokenGET(@Auth AuthorizationInfo authorizationInfo, @QueryParam("grant_type") String grantType,
+                                    @QueryParam("assertion") String assertion) {
 
-        if (assertion == null || assertion.isEmpty()) {
-            return IamErrorResponseFactory.getInstance().missingAssertion();
-        }
-        if (grantType == null || grantType.isEmpty()) {
-            return IamErrorResponseFactory.getInstance().missingGrantType();
-        }
-        if (grantType.equals(GrantType.JWT_BEARER)) {
-            try {
-                upgradeTokenService.upgradeToken(assertion, authorizationInfo.getTokenReader());
-                return Response.noContent().build();
-            } catch (UnauthorizedException e) {
-                return IamErrorResponseFactory.getInstance().unauthorized(e.getMessage());
-            }
-        }
-        return IamErrorResponseFactory.getInstance().notSupportedGrantType(grantType);
+        return upgradeToken(authorizationInfo, grantType, assertion);
+    }
+
+    @Path("/upgrade")
+    @POST
+    public Response upgradeTokenPOST(@Auth AuthorizationInfo authorizationInfo, @FormParam("grant_type") String grantType,
+                                     @FormParam("assertion") String assertion) {
+
+        return upgradeToken(authorizationInfo, grantType, assertion);
     }
 
     @GET
     public Response getTokenWithCode(@Context UriInfo uriInfo, @QueryParam("grant_type") String grantType,
-            @QueryParam("assertion") String assertion, @QueryParam("access_token") String accessToken, @QueryParam("code") String code,
-            @QueryParam("oauth_token") String token, @QueryParam("oauth_verifier") String verifier,
-            @QueryParam("redirect_uri") String redirectUri, @QueryParam("state") String state, @HeaderParam("RequestCookie") boolean cookie) {
+                                     @QueryParam("assertion") String assertion, @QueryParam("access_token") String accessToken, @QueryParam("code") String code,
+                                     @QueryParam("oauth_token") String token, @QueryParam("oauth_verifier") String verifier,
+                                     @QueryParam("redirect_uri") String redirectUri, @QueryParam("state") String state, @HeaderParam("RequestCookie") boolean cookie) {
 
         if (state != null) {
             try {
@@ -142,7 +136,26 @@ import java.net.URLDecoder;
         } catch (MissingBasicParamsException e) {
             return IamErrorResponseFactory.getInstance().missingBasicParms();
         }
+    }
 
+    private Response upgradeToken(@Auth AuthorizationInfo authorizationInfo, @QueryParam("grant_type") String grantType,
+                                  @QueryParam("assertion") String assertion) {
+
+        if (assertion == null || assertion.isEmpty()) {
+            return IamErrorResponseFactory.getInstance().missingAssertion();
+        }
+        if (grantType == null || grantType.isEmpty()) {
+            return IamErrorResponseFactory.getInstance().missingGrantType();
+        }
+        if (grantType.equals(GrantType.JWT_BEARER)) {
+            try {
+                upgradeTokenService.upgradeToken(assertion, authorizationInfo.getTokenReader());
+                return Response.noContent().build();
+            } catch (UnauthorizedException e) {
+                return IamErrorResponseFactory.getInstance().unauthorized(e.getMessage());
+            }
+        }
+        return IamErrorResponseFactory.getInstance().notSupportedGrantType(grantType);
     }
 
 }
