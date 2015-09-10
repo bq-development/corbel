@@ -2,8 +2,14 @@ package io.corbel.iam.ioc;
 
 import java.time.Clock;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
+import com.mongodb.CommandResult;
+import com.mongodb.DBCollection;
+import com.mongodb.DBObject;
+import com.mongodb.WriteResult;
 import net.oauth.jsontoken.Checker;
 import net.oauth.jsontoken.JsonTokenParser;
 import net.oauth.jsontoken.crypto.SignatureAlgorithm;
@@ -65,6 +71,20 @@ import io.corbel.lib.ws.digest.DigesterFactory;
 import io.corbel.lib.ws.dw.ioc.CommonFiltersIoc;
 import io.corbel.lib.ws.dw.ioc.DropwizardIoc;
 import io.corbel.lib.ws.ioc.QueriesIoc;
+import org.springframework.data.geo.GeoResults;
+import org.springframework.data.mongodb.core.*;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
+import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.mapreduce.GroupBy;
+import org.springframework.data.mongodb.core.mapreduce.GroupByResults;
+import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
+import org.springframework.data.mongodb.core.mapreduce.MapReduceResults;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.NearQuery;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 
 /**
  * @author Alexander De Leon
@@ -110,8 +130,8 @@ public class IamIoc {
     }
 
     @Bean
-    public EventHandler<ScopeUpdateEvent> scopeUpdateEventEventHandler(CacheManager cacheManager) {
-        return new ScopeModifiedEventHandler(cacheManager);
+    public EventHandler<ScopeUpdateEvent> scopeUpdateEventEventHandler(CacheManager cacheManager, GroupRepository groupRepository) {
+        return new ScopeModifiedEventHandler(cacheManager, groupRepository);
     }
 
 

@@ -13,4 +13,6 @@ public interface HasScopesRepository<ID> {
     void addScopes(ID id, String... scopes);
 
     void removeScopes(ID id, String... scopes);
+
+    void removeScopes(String... scopes);
 }

@@ -1,6 +1,7 @@
 package io.corbel.iam.repository;
 
 import java.util.Arrays;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoOperations;
@@ -50,6 +51,16 @@ public class HasScopesRepositoryBase<ENTITY, ID> implements HasScopesRepository<
         Update update = new Update();
         update.pullAll(FIELD_SCOPES, scopes);
         mongo.updateFirst(query, update, entityClass);
+    }
+
+    @Override
+    public void removeScopes(String... scopes){
+        List<String> scopesIds = Arrays.asList(scopes);
+        Criteria criteria = Criteria.where(FIELD_SCOPES).in(scopesIds);
+        Query query = Query.query(criteria);
+        Update update = new Update();
+        update.pullAll(FIELD_SCOPES, scopes);
+        mongo.updateMulti(query, update, entityClass);
     }
 
     protected MongoOperations getMongo() {

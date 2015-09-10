@@ -12,4 +12,6 @@ public interface GroupRepository extends PartialUpdateRepository<Group, String>,
 
     Long deleteByIdAndDomain(String id, String domain);
 
+    void deleteScopes(String... scopesId);
+
 }
