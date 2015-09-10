@@ -19,8 +19,12 @@ public class DefaultKeyNormalizerTest {
 	}
 
 	@Test
-	public void test() {
+	public void testRawResource() {
 		assertThat(normalizer.normalize(MediaType.IMAGE_PNG, "test", "imageId")).isEqualTo("test/imageId.image_png");
 	}
 
+	@Test
+	public void testNormalizedResource() {
+		assertThat(normalizer.normalize(MediaType.IMAGE_PNG, "test", "test/imageId.image_png")).isEqualTo("test/imageId.image_png");
+	}
 }

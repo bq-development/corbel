@@ -9,12 +9,11 @@ import org.springframework.http.MediaType;
 public class DefaultKeyNormalizer implements KeyNormalizer {
 
     public String normalize(MediaType mediaType, String collection, String resource) {
-        String normalicedMediaType = mediaType.toString().replace("/", "_");
-        if (resource.endsWith(normalicedMediaType)) {
+        String normalizedMediaType = mediaType.toString().replace("/", "_");
+        if (resource.endsWith(normalizedMediaType) && resource.startsWith(collection)) {
             return resource;
         } else {
-            return Joiner.on("/").join(collection, Joiner.on(".").join(resource, normalicedMediaType));
+            return Joiner.on("/").join(collection, Joiner.on(".").join(resource, normalizedMediaType));
         }
     }
-
 }
