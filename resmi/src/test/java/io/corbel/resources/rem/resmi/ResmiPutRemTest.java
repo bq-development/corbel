@@ -5,11 +5,14 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
+import java.net.URI;
+import java.security.URIParameter;
 import java.util.List;
 import java.util.Optional;
 
 import javax.ws.rs.core.Response;
 
+import io.corbel.resources.rem.request.CollectionParameters;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -39,6 +42,16 @@ public class ResmiPutRemTest extends ResmiRemTest {
         putRem = new ResmiPutRem(resmiServiceMock);
     }
 
+    private RequestParameters<CollectionParameters> getCollectionParametersMockWithCondition(Optional<List<ResourceQuery>> conditions) {
+        CollectionParameters collectionParametersMock = mock(CollectionParameters.class);
+        @SuppressWarnings("unchecked")
+        RequestParameters<CollectionParameters> requestParametersMock = mock(RequestParameters.class);
+        when(requestParametersMock.getOptionalApiParameters()).thenReturn(Optional.of(collectionParametersMock));
+        when(collectionParametersMock.getConditions()).thenReturn(conditions);
+        return requestParametersMock;
+
+    }
+
     private RequestParameters<ResourceParameters> getResourceParametersMockWithCondition(Optional<List<ResourceQuery>> conditions) {
         ResourceParameters resourceParametersMock = mock(ResourceParameters.class);
         @SuppressWarnings("unchecked")
@@ -47,6 +60,47 @@ public class ResmiPutRemTest extends ResmiRemTest {
         when(resourceParametersMock.getConditions()).thenReturn(conditions);
         return requestParametersMock;
 
+    }
+
+    @Test
+    public void updateCollectionTest() {
+        JsonObject json = new JsonObject();
+        json.add("a", new JsonPrimitive("1"));
+
+        RequestParameters<CollectionParameters> requestParametersMock = getCollectionParametersMockWithCondition(Optional.empty());
+        Response response = putRem.collection(TEST_TYPE, requestParametersMock, null, Optional.of(json));
+        assertThat(response.getStatus()).isEqualTo(204);
+
+    }
+
+    @Test
+    public void updateCollectionTestWithCondition() throws StartsWithUnderscoreException {
+        ResourceUri resourceUri = new ResourceUri(TEST_TYPE);
+        JsonObject json = new JsonObject();
+        json.add("a", new JsonPrimitive("1"));
+        @SuppressWarnings("unchecked")
+        List<ResourceQuery> resourceQueryListMock = mock(List.class);
+        RequestParameters<CollectionParameters> requestParametersMock = getCollectionParametersMockWithCondition(
+                Optional.of(resourceQueryListMock));
+
+        when(resmiServiceMock.updateCollection(resourceUri, json, resourceQueryListMock)).thenReturn(json);
+        Response response = putRem.collection(TEST_TYPE, requestParametersMock, null, Optional.of(json));
+        assertThat(response.getStatus()).isEqualTo(204);
+    }
+
+    @Test
+    public void updateCollectionTestWithFailCondition() throws StartsWithUnderscoreException {
+        ResourceUri resourceUri = new ResourceUri(TEST_TYPE);
+        JsonObject json = new JsonObject();
+        json.add("a", new JsonPrimitive("1"));
+        @SuppressWarnings("unchecked")
+        List<ResourceQuery> resourceQueryListMock = mock(List.class);
+        RequestParameters<CollectionParameters> requestParametersMock = getCollectionParametersMockWithCondition(
+                Optional.of(resourceQueryListMock));
+
+        when(resmiServiceMock.updateCollection(resourceUri, json, resourceQueryListMock)).thenReturn(null);
+        Response response = putRem.collection(TEST_TYPE, requestParametersMock, null, Optional.of(json));
+        assertThat(response.getStatus()).isEqualTo(204);
     }
 
     @Test
@@ -111,12 +165,6 @@ public class ResmiPutRemTest extends ResmiRemTest {
     public void updateMissingTest() {
         Response response = putRem.resource(TEST_TYPE, TEST_ID, null, Optional.empty());
         assertThat(response.getStatus()).isEqualTo(400);
-    }
-
-    @Test
-    public void testPutCollectionNotAllowed() {
-        Response response = putRem.collection(TEST_TYPE, null, null, Optional.empty());
-        assertThat(response.getStatus()).isEqualTo(405);
     }
 
     @Test

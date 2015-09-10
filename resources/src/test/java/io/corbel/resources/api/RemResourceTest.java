@@ -390,6 +390,25 @@ public class RemResourceTest {
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Test
+    public void testPutCollection() {
+        Mockito.reset(eventBusMock);
+        Response testResponse = Response.ok().entity(TEST_OK).build();
+        // TODO Complete Pagination, Query and Sort
+        ArgumentCaptor<RequestParameters> parametersCaptor = ArgumentCaptor.forClass(RequestParameters.class);
+        ArgumentCaptor<Optional> optionalJsonObjectCaptor = ArgumentCaptor.forClass(Optional.class);
+        when(
+                remMock.collection(Mockito.eq(TEST_TYPE), parametersCaptor.capture(), Mockito.any(URI.class),
+                        optionalJsonObjectCaptor.capture())).thenReturn(testResponse);
+        assertThat(
+                RULE.client().target(COLLECTION_URI).request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
+                        .put(Entity.json(jsonTest), String.class)).isEqualTo(TEST_OK);
+        assertThat(parametersCaptor.getValue().getTokenInfo().getUserId()).isSameAs(TEST_USER_ID);
+        verifyZeroInteractions(eventBusMock);
+    }
+
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    @Test
     public void testDeleteCollection() {
         Response testResponse = Response.ok().entity(TEST_OK).build();
         // TODO Complete Pagination and Sort

@@ -34,6 +34,8 @@ public interface ResmiDao {
     JsonElement findRelation(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries, Optional<Pagination> pagination,
             Optional<Sort> sort);
 
+    void updateCollection(ResourceUri uri, JsonObject jsonObject, List<ResourceQuery> resourceQueries);
+
     void updateResource(ResourceUri uri, JsonObject entity);
 
     boolean conditionalUpdateResource(ResourceUri uri, JsonObject jsonObject, List<ResourceQuery> resourceQueries);

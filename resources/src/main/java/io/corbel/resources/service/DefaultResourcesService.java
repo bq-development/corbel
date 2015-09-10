@@ -88,12 +88,12 @@ public class DefaultResourcesService implements ResourcesService {
             List<org.springframework.http.MediaType> acceptedMediaTypes = getRequestAcceptedMediaTypes(request);
             Rem rem = remService.getRem(type, acceptedMediaTypes, getRequestMethod(request));
 
-            queryParameters = (method.equals(HttpMethod.GET) || method.equals(HttpMethod.DELETE)) ? queryParameters
+            queryParameters = (method.equals(HttpMethod.GET) || method.equals(HttpMethod.DELETE) || method.equals(HttpMethod.PUT)) ? queryParameters
                     : getDefaultQueryParameters();
             RequestParameters<CollectionParameters> parameters = collectionParameters(queryParameters, tokenInfo, acceptedMediaTypes,
                     uriInfo.getQueryParameters(), request);
 
-            Optional<?> entity = method.equals(HttpMethod.POST) ? getEntity(Optional.ofNullable(inputStream), rem, contentType) : Optional
+            Optional<?> entity = method.equals(HttpMethod.POST) || method.equals(HttpMethod.PUT)? getEntity(Optional.ofNullable(inputStream), rem, contentType) : Optional
                     .empty();
 
             result = remService.collection(rem, type, parameters, typeUri, entity);

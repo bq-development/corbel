@@ -1,5 +1,6 @@
 package io.corbel.resources.rem.dao;
 
+import com.mongodb.WriteResult;
 import io.corbel.lib.mongo.JsonObjectMongoWriteConverter;
 import io.corbel.lib.mongo.utils.GsonUtil;
 import io.corbel.lib.queries.mongo.builder.CriteriaBuilder;
@@ -153,6 +154,11 @@ public class MongoResmiDao implements ResmiDao {
     }
 
     @Override
+    public void updateCollection(ResourceUri uri, JsonObject entity, List<ResourceQuery> resourceQueries) {
+        updateMulti(getMongoCollectionName(uri), entity, Optional.of(resourceQueries));
+    }
+
+    @Override
     public void updateResource(ResourceUri uri, JsonObject entity) {
         findAndModify(getMongoCollectionName(uri), Optional.of(uri.getTypeId()), entity, true, Optional.empty());
     }
@@ -164,19 +170,30 @@ public class MongoResmiDao implements ResmiDao {
         return saved != null;
     }
 
+    private void updateMulti(String collection, JsonObject entity, Optional<List<ResourceQuery>> resourceQueries) {
+
+        Update update = updateFromJsonObject(entity,Optional.empty());
+        Query query = getQueryFromResourceQuery(resourceQueries, Optional.empty());
+        mongoOperations.updateMulti(query, update, JsonObject.class, collection);
+    }
+
+    private Query getQueryFromResourceQuery(Optional<List<ResourceQuery>> resourceQueries, Optional<String> id) {
+
+        MongoResmiQueryBuilder builder = id.map(identifier ->  new MongoResmiQueryBuilder().id(identifier))
+                .orElse(new MongoResmiQueryBuilder());
+
+        if (resourceQueries.isPresent()) {
+            builder.query(resourceQueries.get());
+        }
+
+        return builder.build();
+    }
+
     private JsonObject findAndModify(String collection, Optional<String> id, JsonObject entity, boolean upsert,
             Optional<List<ResourceQuery>> resourceQueries) {
 
         Update update = updateFromJsonObject(entity, id);
-
-        Query query = Query.query(Criteria.where(_ID).exists(false));
-        if (id.isPresent()) {
-            MongoResmiQueryBuilder builder = new MongoResmiQueryBuilder().id(id.get());
-            if (resourceQueries.isPresent()) {
-                builder.query(resourceQueries.get());
-            }
-            query = builder.build();
-        }
+        Query query = (id.isPresent()) ? getQueryFromResourceQuery(resourceQueries, id) : Query.query(Criteria.where(_ID).exists(false));
 
         return mongoOperations.findAndModify(query, update, FindAndModifyOptions.options().upsert(upsert).returnNew(true),
                 JsonObject.class, collection);

@@ -37,6 +37,9 @@ public interface ResmiService {
 
     JsonObject saveResource(ResourceUri uri, JsonObject object, Optional<String> userId) throws StartsWithUnderscoreException;
 
+    JsonObject updateCollection(ResourceUri uri, JsonObject object, List<ResourceQuery> resourceQueries)
+            throws StartsWithUnderscoreException;
+
     JsonObject updateResource(ResourceUri uri, JsonObject jsonObject) throws StartsWithUnderscoreException;
 
     JsonObject conditionalUpdateResource(ResourceUri uri, JsonObject object, List<ResourceQuery> resourceQueries)
