@@ -1,6 +1,5 @@
 package io.corbel.resources.rem.dao;
 
-import com.mongodb.WriteResult;
 import io.corbel.lib.mongo.JsonObjectMongoWriteConverter;
 import io.corbel.lib.mongo.utils.GsonUtil;
 import io.corbel.lib.queries.mongo.builder.CriteriaBuilder;
@@ -134,12 +133,11 @@ public class MongoResmiDao implements ResmiDao {
         MongoAggregationBuilder builder = new MongoAggregationBuilder();
         builder.match(uri, resourceQueries);
 
+        builder.group(fields, first);
 
         if (sort.isPresent()) {
             builder.sort(sort.get());
         }
-
-        builder.group(fields, first);
 
         if (pagination.isPresent()) {
             builder.pagination(pagination.get());
@@ -172,15 +170,15 @@ public class MongoResmiDao implements ResmiDao {
 
     private void updateMulti(String collection, JsonObject entity, Optional<List<ResourceQuery>> resourceQueries) {
 
-        Update update = updateFromJsonObject(entity,Optional.empty());
+        Update update = updateFromJsonObject(entity, Optional.empty());
         Query query = getQueryFromResourceQuery(resourceQueries, Optional.empty());
         mongoOperations.updateMulti(query, update, JsonObject.class, collection);
     }
 
     private Query getQueryFromResourceQuery(Optional<List<ResourceQuery>> resourceQueries, Optional<String> id) {
 
-        MongoResmiQueryBuilder builder = id.map(identifier ->  new MongoResmiQueryBuilder().id(identifier))
-                .orElse(new MongoResmiQueryBuilder());
+        MongoResmiQueryBuilder builder = id.map(identifier -> new MongoResmiQueryBuilder().id(identifier)).orElse(
+                new MongoResmiQueryBuilder());
 
         if (resourceQueries.isPresent()) {
             builder.query(resourceQueries.get());
