@@ -8,15 +8,15 @@ import io.corbel.resources.rem.request.ResourceId;
 import io.corbel.resources.rem.request.ResourceParameters;
 import io.corbel.resources.rem.service.RemService;
 import io.corbel.resources.rem.util.ImageRemUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpMethod;
 
-import javax.ws.rs.core.Response;
 import java.io.InputStream;
 import java.net.URI;
-import java.util.Collections;
 import java.util.Optional;
+
+import javax.ws.rs.core.Response;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ImageDeleteRem extends BaseRem<InputStream> {
 
@@ -36,7 +36,7 @@ public class ImageDeleteRem extends BaseRem<InputStream> {
 
     @Override
     public Response collection(String collection, RequestParameters<CollectionParameters> requestParameters, URI uri,
-                               Optional<InputStream> entity) {
+            Optional<InputStream> entity) {
 
         @SuppressWarnings("unchecked")
         Rem<InputStream> restorDeleteRem = remService.getRem(RestorRemNames.RESTOR_DELETE);
@@ -53,19 +53,19 @@ public class ImageDeleteRem extends BaseRem<InputStream> {
 
     @Override
     public Response resource(String collection, ResourceId resourceId, RequestParameters<ResourceParameters> requestParameters,
-                             Optional<InputStream> entity) {
+            Optional<InputStream> entity) {
 
         @SuppressWarnings("unchecked")
-        Rem<InputStream> restorDeleteRem = (Rem<InputStream>) remService.getRem(collection, requestParameters.getAcceptedMediaTypes(),
-                HttpMethod.DELETE, Collections.singletonList(this));
+        Rem<InputStream> restorDeleteRem = remService.getRem(RestorRemNames.RESTOR_DELETE);
 
         if (restorDeleteRem == null) {
             LOG.warn("RESTOR not found. May  be is needed to install it?");
             return ErrorResponseFactory.getInstance().notFound();
         }
 
-        restorDeleteRem.collection(cacheCollection, imageRemUtil.getCollectionParametersWithPrefix(resourceId.getId(), requestParameters, cacheCollection),
-                null, Optional.empty());
+        restorDeleteRem.collection(cacheCollection,
+                imageRemUtil.getCollectionParametersWithPrefix(resourceId.getId(), requestParameters, cacheCollection), null,
+                Optional.empty());
         restorDeleteRem.resource(collection, resourceId, requestParameters, Optional.empty());
 
         return Response.noContent().build();
