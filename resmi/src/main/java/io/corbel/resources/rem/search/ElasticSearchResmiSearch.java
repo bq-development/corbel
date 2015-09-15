@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Scanner;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -27,9 +28,18 @@ public class ElasticSearchResmiSearch implements ResmiSearch {
     private final ElasticSearchService elasticeSerachService;
     private final NamespaceNormalizer namespaceNormalizer;
 
-    public ElasticSearchResmiSearch(ElasticSearchService elasticeSerachService, NamespaceNormalizer namespaceNormalizer) {
+    public ElasticSearchResmiSearch(ElasticSearchService elasticeSerachService, NamespaceNormalizer namespaceNormalizer,
+            String indexSettingsPath) {
         this.elasticeSerachService = elasticeSerachService;
         this.namespaceNormalizer = namespaceNormalizer;
+        createResourcesIndex(indexSettingsPath);
+    }
+
+    private void createResourcesIndex(String indexSettingsPath) {
+        if (!elasticeSerachService.indexExists(INDEX)) {
+            elasticeSerachService.createIndex(INDEX,
+                    new Scanner(getClass().getResourceAsStream(indexSettingsPath), "UTF-8").useDelimiter("\\A").next());
+        }
     }
 
     @Override

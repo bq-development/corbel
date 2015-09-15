@@ -19,23 +19,25 @@
         }
       },
       "analyzer": {
-        "nGram_analyzer": {
+        "default_index": {
           "type": "custom",
           "tokenizer": "whitespace",
           "filter": [
             "lowercase",
             "asciifolding",
             "spanish_stop_words",
-            "nGram_filter"
+            "nGram_filter", 
+            "icu_collation"
           ]
         },
-        "whitespace_analyzer": {
+        "default_search": {
           "type": "custom",
           "tokenizer": "whitespace",
           "filter": [
             "lowercase",
             "asciifolding",
-            "spanish_stop_words"
+            "spanish_stop_words", 
+            "icu_collation"
           ]
         }
       }
