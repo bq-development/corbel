@@ -1,25 +1,19 @@
 package io.corbel.iam.service;
 
-import static org.fest.assertions.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import io.corbel.iam.auth.AuthorizationRequestContext;
+import io.corbel.iam.auth.AuthorizationRequestContextFactory;
+import io.corbel.iam.auth.AuthorizationRule;
+import io.corbel.iam.auth.provider.AuthorizationProviderFactory;
+import io.corbel.iam.exception.*;
+import io.corbel.iam.model.*;
+import io.corbel.iam.repository.UserTokenRepository;
 import io.corbel.lib.token.TokenInfo;
 import io.corbel.lib.token.exception.TokenVerificationException;
 import io.corbel.lib.token.factory.TokenFactory;
 import io.corbel.lib.token.model.TokenType;
-
-import java.security.SignatureException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
 import net.oauth.jsontoken.JsonToken;
 import net.oauth.jsontoken.JsonTokenParser;
-
+import org.joda.time.Instant;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -27,25 +21,17 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import io.corbel.iam.auth.AuthorizationRequestContext;
-import io.corbel.iam.auth.AuthorizationRequestContextFactory;
-import io.corbel.iam.auth.AuthorizationRule;
-import io.corbel.iam.auth.provider.AuthorizationProviderFactory;
-import io.corbel.iam.exception.MissingBasicParamsException;
-import io.corbel.iam.exception.MissingOAuthParamsException;
-import io.corbel.iam.exception.OauthServerConnectionException;
-import io.corbel.iam.exception.UnauthorizedException;
-import io.corbel.iam.model.Client;
-import io.corbel.iam.model.Domain;
-import io.corbel.iam.model.Scope;
-import io.corbel.iam.model.TokenGrant;
-import io.corbel.iam.model.User;
-import io.corbel.iam.repository.UserTokenRepository;
+import java.security.SignatureException;
+import java.util.*;
+
+import static org.fest.assertions.api.Assertions.assertThat;
+import static org.mockito.Mockito.*;
 
 /**
  * @author Alexander De Leon
  */
-@RunWith(MockitoJUnitRunner.class) public class DefaultAuthorizationServiceTest {
+@RunWith(MockitoJUnitRunner.class)
+public class DefaultAuthorizationServiceTest {
 
     private static final String TEST_JWT = "1111.2222.3333";
 
@@ -78,7 +64,9 @@ import io.corbel.iam.repository.UserTokenRepository;
     private UserTokenRepository userTokenRepository;
     private EventsService eventsService;
 
-    @Mock private UserService userService;
+    @Mock
+    private UserService userService;
+    private net.oauth.jsontoken.JsonToken jsonTokenMock = mock(JsonToken.class);
 
     @Before
     public void setUp() {
@@ -106,7 +94,7 @@ import io.corbel.iam.repository.UserTokenRepository;
 
     @Test
     public void testAuthorized() throws SignatureException, UnauthorizedException, MissingOAuthParamsException,
-            OauthServerConnectionException, MissingBasicParamsException {
+            OauthServerConnectionException, MissingBasicParamsException, IllegalExpireTimeException {
         JsonToken validJsonToken = mock(JsonToken.class);
         when(jsonTokenParserMock.verifyAndDeserialize(TEST_JWT)).thenReturn(validJsonToken);
         initContext(false);
@@ -121,7 +109,7 @@ import io.corbel.iam.repository.UserTokenRepository;
 
     @Test
     public void testAuthorizedWithPrincipal() throws SignatureException, UnauthorizedException, MissingOAuthParamsException,
-            OauthServerConnectionException, MissingBasicParamsException {
+            OauthServerConnectionException, MissingBasicParamsException, IllegalExpireTimeException {
         Set<Scope> filledScopes = new HashSet();
 
         JsonToken validJsonToken = mock(JsonToken.class);
@@ -137,7 +125,7 @@ import io.corbel.iam.repository.UserTokenRepository;
 
     @Test
     public void testRefreshToken() throws SignatureException, UnauthorizedException, MissingOAuthParamsException,
-            TokenVerificationException, OauthServerConnectionException, MissingBasicParamsException {
+            TokenVerificationException, OauthServerConnectionException, MissingBasicParamsException, IllegalExpireTimeException {
         Set<Scope> filledScopes = new HashSet();
 
         User userMock = mock(User.class);
@@ -157,22 +145,35 @@ import io.corbel.iam.repository.UserTokenRepository;
 
     @Test(expected = UnauthorizedException.class)
     public void testInvalidSignature() throws SignatureException, UnauthorizedException, MissingOAuthParamsException,
-            OauthServerConnectionException, MissingBasicParamsException {
+            OauthServerConnectionException, MissingBasicParamsException, IllegalExpireTimeException {
         when(jsonTokenParserMock.verifyAndDeserialize(TEST_JWT)).thenThrow(new SignatureException());
+        authorizationService.authorize(TEST_JWT);
+    }
+
+    @Test(expected = IllegalExpireTimeException.class)
+    public void testBadSystemClockException() throws SignatureException, UnauthorizedException, MissingOAuthParamsException,
+            OauthServerConnectionException, MissingBasicParamsException, IllegalExpireTimeException {
+        when(jsonTokenParserMock.deserialize(any())).thenReturn(jsonTokenMock);
+        when(jsonTokenMock.getIssuedAt()).thenReturn(new Instant(2));
+        when(jsonTokenMock.getExpiration()).thenReturn(new Instant(1));
+        when(jsonTokenParserMock.verifyAndDeserialize(TEST_JWT)).thenThrow(
+                new IllegalStateException("Invalid iat and/or exp. iat: 1900/01/01 exp: 1900/01/01 now: 1900/01/01"));
         authorizationService.authorize(TEST_JWT);
     }
 
     @Test(expected = UnauthorizedException.class)
     public void testBadToken() throws SignatureException, UnauthorizedException, MissingOAuthParamsException,
-            OauthServerConnectionException, MissingBasicParamsException {
+            OauthServerConnectionException, MissingBasicParamsException, IllegalExpireTimeException {
         when(jsonTokenParserMock.verifyAndDeserialize(TEST_JWT)).thenThrow(new IllegalArgumentException());
         authorizationService.authorize(TEST_JWT);
     }
 
     @Test(expected = UnauthorizedException.class)
     public void testBadToken2() throws SignatureException, UnauthorizedException, MissingOAuthParamsException,
-            OauthServerConnectionException, MissingBasicParamsException {
+            OauthServerConnectionException, MissingBasicParamsException, IllegalExpireTimeException {
         when(jsonTokenParserMock.verifyAndDeserialize(TEST_JWT)).thenThrow(new IllegalStateException());
+        when(jsonTokenParserMock.issuedAtIsValid(any(),any())).thenReturn(true);
+        when(jsonTokenParserMock.expirationIsValid(any(),any())).thenReturn(true);
         authorizationService.authorize(TEST_JWT);
     }
 
