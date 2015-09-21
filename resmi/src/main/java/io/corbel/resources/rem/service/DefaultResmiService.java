@@ -114,12 +114,12 @@ public class DefaultResmiService implements ResmiService {
 
     @Override
     public JsonObject updateCollection(ResourceUri uri, JsonObject jsonObject, List<ResourceQuery> resourceQueries)
-        throws StartsWithUnderscoreException {
-            verifyNotUnderscore(jsonObject);
-            updateDates(jsonObject);
-            resmiDao.updateCollection(uri, jsonObject, resourceQueries);
+            throws StartsWithUnderscoreException {
+        verifyNotUnderscore(jsonObject);
+        updateDates(jsonObject);
+        resmiDao.updateCollection(uri, jsonObject, resourceQueries);
 
-            return jsonObject;
+        return jsonObject;
     }
 
     @Override
@@ -144,6 +144,9 @@ public class DefaultResmiService implements ResmiService {
 
     @Override
     public JsonObject createRelation(ResourceUri uri, JsonObject requestEntity) throws NotFoundException, StartsWithUnderscoreException {
+        if (requestEntity == null) {
+            requestEntity = new JsonObject();
+        }
         verifyNotUnderscore(requestEntity);
         createDates(requestEntity);
         resmiDao.createRelation(uri, requestEntity);
