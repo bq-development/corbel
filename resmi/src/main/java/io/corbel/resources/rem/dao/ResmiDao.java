@@ -2,6 +2,8 @@ package io.corbel.resources.rem.dao;
 
 import io.corbel.lib.queries.request.AverageResult;
 import io.corbel.lib.queries.request.CountResult;
+import io.corbel.lib.queries.request.MaxResult;
+import io.corbel.lib.queries.request.MinResult;
 import io.corbel.lib.queries.request.Pagination;
 import io.corbel.lib.queries.request.ResourceQuery;
 import io.corbel.lib.queries.request.Sort;
@@ -55,6 +57,10 @@ public interface ResmiDao {
     AverageResult average(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field);
 
     SumResult sum(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field);
+
+    MaxResult max(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field);
+
+    MinResult min(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field);
 
     void moveRelation(ResourceUri uri, RelationMoveOperation relationMoveOperation);
 

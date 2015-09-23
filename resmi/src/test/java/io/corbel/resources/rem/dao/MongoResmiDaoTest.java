@@ -5,7 +5,22 @@ import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import io.corbel.lib.mongo.JsonObjectMongoWriteConverter;
+import io.corbel.lib.queries.QueryNodeImpl;
+import io.corbel.lib.queries.StringQueryLiteral;
+import io.corbel.lib.queries.request.AverageResult;
+import io.corbel.lib.queries.request.MaxResult;
+import io.corbel.lib.queries.request.MinResult;
+import io.corbel.lib.queries.request.Pagination;
+import io.corbel.lib.queries.request.QueryOperator;
+import io.corbel.lib.queries.request.ResourceQuery;
+import io.corbel.lib.queries.request.SumResult;
+import io.corbel.resources.rem.model.ResourceUri;
+import io.corbel.resources.rem.request.ResourceId;
+import io.corbel.resources.rem.service.DefaultNamespaceNormalizer;
 
 import java.util.Collections;
 import java.util.List;
@@ -36,14 +51,6 @@ import com.google.gson.JsonPrimitive;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.WriteResult;
-
-import io.corbel.lib.mongo.JsonObjectMongoWriteConverter;
-import io.corbel.lib.queries.QueryNodeImpl;
-import io.corbel.lib.queries.StringQueryLiteral;
-import io.corbel.lib.queries.request.*;
-import io.corbel.resources.rem.model.ResourceUri;
-import io.corbel.resources.rem.request.ResourceId;
-import io.corbel.resources.rem.service.DefaultNamespaceNormalizer;
 
 @RunWith(MockitoJUnitRunner.class) public class MongoResmiDaoTest {
 
@@ -95,8 +102,8 @@ import io.corbel.resources.rem.service.DefaultNamespaceNormalizer;
         Pagination pagination = new Pagination(0, 10);
         String collectionName = RELATION_COLLECTION_NAME;
         ArgumentCaptor<Query> queryCaptor = ArgumentCaptor.forClass(Query.class);
-        when(mongoOperations.find(queryCaptor.capture(), Mockito.eq(JsonObject.class), Mockito.eq(collectionName)))
-                .thenReturn(jsonObjectList);
+        when(mongoOperations.find(queryCaptor.capture(), Mockito.eq(JsonObject.class), Mockito.eq(collectionName))).thenReturn(
+                jsonObjectList);
 
         ResourceUri resourceUri = new ResourceUri(TEST_COLLECTION, TEST_ID, TEST_REL);
         JsonElement result = mongoResmiDao.findRelation(resourceUri, Optional.empty(), Optional.of(pagination), Optional.empty());
@@ -133,8 +140,8 @@ import io.corbel.resources.rem.service.DefaultNamespaceNormalizer;
         ArgumentCaptor<Update> updateCaptor = ArgumentCaptor.forClass(Update.class);
         ArgumentCaptor<FindAndModifyOptions> optionsCaptor = ArgumentCaptor.forClass(FindAndModifyOptions.class);
 
-        when(mongoOperations.findAndModify(any(), any(), any(), eq(JsonObject.class), eq(RELATION_COLLECTION_NAME)))
-                .thenAnswer(answerWithId(jsonResult));
+        when(mongoOperations.findAndModify(any(), any(), any(), eq(JsonObject.class), eq(RELATION_COLLECTION_NAME))).thenAnswer(
+                answerWithId(jsonResult));
 
         ResourceUri resourceUri = new ResourceUri(TEST_COLLECTION, TEST_ID, TEST_REL, TEST_ID_RELATION_OBJECT);
         mongoResmiDao.createRelation(resourceUri, json);
@@ -248,13 +255,13 @@ import io.corbel.resources.rem.service.DefaultNamespaceNormalizer;
         ArgumentCaptor<Aggregation> argument = ArgumentCaptor.forClass(Aggregation.class);
         query.addQueryNode(new QueryNodeImpl(QueryOperator.$EQ, field, new StringQueryLiteral(value)));
 
-        Mockito.when(mongoOperations.aggregate(argument.capture(), eq(TEST_COLLECTION), eq(AverageResult.class)))
-                .thenReturn(new AggregationResults<>(Collections.singletonList(new AverageResult(10)), new BasicDBObject()));
+        Mockito.when(mongoOperations.aggregate(argument.capture(), eq(TEST_COLLECTION), eq(AverageResult.class))).thenReturn(
+                new AggregationResults<>(Collections.singletonList(new AverageResult(10)), new BasicDBObject()));
         AverageResult result = mongoResmiDao.average(resourceUri, Collections.singletonList(query), testField);
         assertThat(result.getAverage()).isEqualTo(10);
 
-        assertThat(argument.getValue().toString())
-                .isEqualTo("{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"" + field + "\" : \"" + value
+        assertThat(argument.getValue().toString()).isEqualTo(
+                "{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"" + field + "\" : \"" + value
                         + "\"}} , { \"$group\" : { \"_id\" :  null  , \"average\" : { \"$avg\" : \"$" + testField + "\"}}}]}");
     }
 
@@ -268,16 +275,16 @@ import io.corbel.resources.rem.service.DefaultNamespaceNormalizer;
         ResourceUri resourceUri = new ResourceUri(TEST_COLLECTION, TEST_RESOURCE_ID.toString(), TEST_REL);
 
         ArgumentCaptor<Aggregation> argument = ArgumentCaptor.forClass(Aggregation.class);
-        Mockito.when(mongoOperations.aggregate(argument.capture(), eq(RELATION_COLLECTION_NAME), eq(AverageResult.class)))
-                .thenReturn(new AggregationResults<>(Collections.singletonList(new AverageResult(10)), new BasicDBObject()));
+        Mockito.when(mongoOperations.aggregate(argument.capture(), eq(RELATION_COLLECTION_NAME), eq(AverageResult.class))).thenReturn(
+                new AggregationResults<>(Collections.singletonList(new AverageResult(10)), new BasicDBObject()));
 
         query.addQueryNode(new QueryNodeImpl(QueryOperator.$EQ, field, new StringQueryLiteral(value)));
 
         AverageResult result = mongoResmiDao.average(resourceUri, Collections.singletonList(query), testField);
         assertThat(result.getAverage()).isEqualTo(10);
 
-        assertThat(argument.getValue().toString())
-                .isEqualTo("{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"" + field + "\" : \"" + value
+        assertThat(argument.getValue().toString()).isEqualTo(
+                "{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"" + field + "\" : \"" + value
                         + "\"}} , { \"$group\" : { \"_id\" :  null  , \"average\" : { \"$avg\" : \"$" + testField + "\"}}}]}");
     }
 
@@ -293,13 +300,57 @@ import io.corbel.resources.rem.service.DefaultNamespaceNormalizer;
         ArgumentCaptor<Aggregation> argument = ArgumentCaptor.forClass(Aggregation.class);
         query.addQueryNode(new QueryNodeImpl(QueryOperator.$EQ, field, new StringQueryLiteral(value)));
 
-        Mockito.when(mongoOperations.aggregate(argument.capture(), eq(TEST_COLLECTION), eq(SumResult.class)))
-                .thenReturn(new AggregationResults<>(Collections.singletonList(new SumResult(10)), new BasicDBObject()));
+        Mockito.when(mongoOperations.aggregate(argument.capture(), eq(TEST_COLLECTION), eq(SumResult.class))).thenReturn(
+                new AggregationResults<>(Collections.singletonList(new SumResult(10)), new BasicDBObject()));
         SumResult result = mongoResmiDao.sum(resourceUri, Collections.singletonList(query), testField);
         assertThat(result.getSum()).isEqualTo(10);
 
-        assertThat(argument.getValue().toString())
-                .isEqualTo("{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"" + field + "\" : \"" + value
+        assertThat(argument.getValue().toString()).isEqualTo(
+                "{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"" + field + "\" : \"" + value
                         + "\"}} , { \"$group\" : { \"_id\" :  null  , \"sum\" : { \"$sum\" : \"$" + testField + "\"}}}]}");
+    }
+
+    @Test
+    public void maxTest() {
+        ResourceQuery query = new ResourceQuery();
+        String field = "field";
+        String value = "value";
+        String testField = "test";
+
+        ResourceUri resourceUri = new ResourceUri(TEST_COLLECTION);
+
+        ArgumentCaptor<Aggregation> argument = ArgumentCaptor.forClass(Aggregation.class);
+        query.addQueryNode(new QueryNodeImpl(QueryOperator.$EQ, field, new StringQueryLiteral(value)));
+
+        Mockito.when(mongoOperations.aggregate(argument.capture(), eq(TEST_COLLECTION), eq(MaxResult.class))).thenReturn(
+                new AggregationResults<>(Collections.singletonList(new MaxResult(10)), new BasicDBObject()));
+        MaxResult result = mongoResmiDao.max(resourceUri, Collections.singletonList(query), testField);
+        assertThat(result.getMax()).isEqualTo(10);
+
+        assertThat(argument.getValue().toString()).isEqualTo(
+                "{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"" + field + "\" : \"" + value
+                        + "\"}} , { \"$group\" : { \"_id\" :  null  , \"max\" : { \"$max\" : \"$" + testField + "\"}}}]}");
+    }
+
+    @Test
+    public void minTest() {
+        ResourceQuery query = new ResourceQuery();
+        String field = "field";
+        String value = "value";
+        String testField = "test";
+
+        ResourceUri resourceUri = new ResourceUri(TEST_COLLECTION);
+
+        ArgumentCaptor<Aggregation> argument = ArgumentCaptor.forClass(Aggregation.class);
+        query.addQueryNode(new QueryNodeImpl(QueryOperator.$EQ, field, new StringQueryLiteral(value)));
+
+        Mockito.when(mongoOperations.aggregate(argument.capture(), eq(TEST_COLLECTION), eq(MinResult.class))).thenReturn(
+                new AggregationResults<>(Collections.singletonList(new MinResult(10)), new BasicDBObject()));
+        MinResult result = mongoResmiDao.min(resourceUri, Collections.singletonList(query), testField);
+        assertThat(result.getMin()).isEqualTo(10);
+
+        assertThat(argument.getValue().toString()).isEqualTo(
+                "{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"" + field + "\" : \"" + value
+                        + "\"}} , { \"$group\" : { \"_id\" :  null  , \"min\" : { \"$min\" : \"$" + testField + "\"}}}]}");
     }
 }
