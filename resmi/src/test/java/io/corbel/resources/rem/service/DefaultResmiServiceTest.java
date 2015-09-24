@@ -11,6 +11,10 @@ import io.corbel.lib.queries.request.Average;
 import io.corbel.lib.queries.request.AverageResult;
 import io.corbel.lib.queries.request.Count;
 import io.corbel.lib.queries.request.CountResult;
+import io.corbel.lib.queries.request.Max;
+import io.corbel.lib.queries.request.MaxResult;
+import io.corbel.lib.queries.request.Min;
+import io.corbel.lib.queries.request.MinResult;
 import io.corbel.lib.queries.request.Pagination;
 import io.corbel.lib.queries.request.ResourceQuery;
 import io.corbel.lib.queries.request.Search;
@@ -270,6 +274,28 @@ import com.google.gson.JsonPrimitive;
         ResourceUri resourceUri = new ResourceUri(TYPE);
         when(resmiDao.average(eq(resourceUri), eq(resourceQueriesMock), eq("testField"))).thenReturn((AverageResult) fakeResult);
         when(collectionParametersMock.getAggregation()).thenReturn(Optional.of(new Average("testField")));
+        when(collectionParametersMock.getSearch()).thenReturn(Optional.empty());
+        AggregationResult result = defaultResmiService.aggregate(resourceUri, collectionParametersMock);
+        assertThat(result).isEqualTo(fakeResult);
+    }
+
+    @Test
+    public void maxTest() throws BadConfigurationException {
+        AggregationResult fakeResult = new MaxResult(12);
+        ResourceUri resourceUri = new ResourceUri(TYPE);
+        when(resmiDao.max(eq(resourceUri), eq(resourceQueriesMock), eq("testField"))).thenReturn((MaxResult) fakeResult);
+        when(collectionParametersMock.getAggregation()).thenReturn(Optional.of(new Max("testField")));
+        when(collectionParametersMock.getSearch()).thenReturn(Optional.empty());
+        AggregationResult result = defaultResmiService.aggregate(resourceUri, collectionParametersMock);
+        assertThat(result).isEqualTo(fakeResult);
+    }
+
+    @Test
+    public void minTest() throws BadConfigurationException {
+        AggregationResult fakeResult = new MinResult(12);
+        ResourceUri resourceUri = new ResourceUri(TYPE);
+        when(resmiDao.min(eq(resourceUri), eq(resourceQueriesMock), eq("testField"))).thenReturn((MinResult) fakeResult);
+        when(collectionParametersMock.getAggregation()).thenReturn(Optional.of(new Min("testField")));
         when(collectionParametersMock.getSearch()).thenReturn(Optional.empty());
         AggregationResult result = defaultResmiService.aggregate(resourceUri, collectionParametersMock);
         assertThat(result).isEqualTo(fakeResult);

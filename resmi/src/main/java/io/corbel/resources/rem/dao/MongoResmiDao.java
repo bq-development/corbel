@@ -3,8 +3,11 @@ package io.corbel.resources.rem.dao;
 import io.corbel.lib.mongo.JsonObjectMongoWriteConverter;
 import io.corbel.lib.mongo.utils.GsonUtil;
 import io.corbel.lib.queries.mongo.builder.CriteriaBuilder;
+import io.corbel.lib.queries.request.AggregationResult;
 import io.corbel.lib.queries.request.AverageResult;
 import io.corbel.lib.queries.request.CountResult;
+import io.corbel.lib.queries.request.MaxResult;
+import io.corbel.lib.queries.request.MinResult;
 import io.corbel.lib.queries.request.Pagination;
 import io.corbel.lib.queries.request.ResourceQuery;
 import io.corbel.lib.queries.request.Sort;
@@ -28,6 +31,7 @@ import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
+import org.springframework.data.mongodb.core.aggregation.GroupOperation;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -341,22 +345,30 @@ public class MongoResmiDao implements ResmiDao {
 
     @Override
     public AverageResult average(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field) {
-        List<AggregationOperation> aggregations = new ArrayList<>();
-        aggregations.add(Aggregation.match(CriteriaBuilder.buildFromResourceQueries(resourceQueries)));
-        aggregations.add(Aggregation.group().avg(field).as("average"));
-
-        return mongoOperations
-                .aggregate(Aggregation.newAggregation(aggregations), getMongoCollectionName(resourceUri), AverageResult.class)
-                .getUniqueMappedResult();
+        return (AverageResult) aggregate(resourceUri, resourceQueries, Aggregation.group().avg(field).as("average"), AverageResult.class);
     }
 
     @Override
     public SumResult sum(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field) {
+        return (SumResult) aggregate(resourceUri, resourceQueries, Aggregation.group().sum(field).as("sum"), SumResult.class);
+    }
+
+    @Override
+    public MaxResult max(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field) {
+        return (MaxResult) aggregate(resourceUri, resourceQueries, Aggregation.group().max(field).as("max"), MaxResult.class);
+    }
+
+    @Override
+    public MinResult min(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field) {
+        return (MinResult) aggregate(resourceUri, resourceQueries, Aggregation.group().min(field).as("min"), MinResult.class);
+    }
+
+    private <T extends AggregationResult> AggregationResult aggregate(ResourceUri resourceUri, List<ResourceQuery> resourceQueries,
+            GroupOperation groupOperation, Class<T> clazz) {
         List<AggregationOperation> aggregations = new ArrayList<>();
         aggregations.add(Aggregation.match(CriteriaBuilder.buildFromResourceQueries(resourceQueries)));
-        aggregations.add(Aggregation.group().sum(field).as("sum"));
-
-        return mongoOperations.aggregate(Aggregation.newAggregation(aggregations), getMongoCollectionName(resourceUri), SumResult.class)
+        aggregations.add(groupOperation);
+        return mongoOperations.aggregate(Aggregation.newAggregation(aggregations), getMongoCollectionName(resourceUri), clazz)
                 .getUniqueMappedResult();
     }
 
