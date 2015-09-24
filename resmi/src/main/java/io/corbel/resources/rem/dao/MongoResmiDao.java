@@ -345,25 +345,25 @@ public class MongoResmiDao implements ResmiDao {
 
     @Override
     public AverageResult average(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field) {
-        return (AverageResult) aggregate(resourceUri, resourceQueries, Aggregation.group().avg(field).as("average"), AverageResult.class);
+        return aggregate(resourceUri, resourceQueries, Aggregation.group().avg(field).as("average"), AverageResult.class);
     }
 
     @Override
     public SumResult sum(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field) {
-        return (SumResult) aggregate(resourceUri, resourceQueries, Aggregation.group().sum(field).as("sum"), SumResult.class);
+        return aggregate(resourceUri, resourceQueries, Aggregation.group().sum(field).as("sum"), SumResult.class);
     }
 
     @Override
     public MaxResult max(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field) {
-        return (MaxResult) aggregate(resourceUri, resourceQueries, Aggregation.group().max(field).as("max"), MaxResult.class);
+        return aggregate(resourceUri, resourceQueries, Aggregation.group().max(field).as("max"), MaxResult.class);
     }
 
     @Override
     public MinResult min(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field) {
-        return (MinResult) aggregate(resourceUri, resourceQueries, Aggregation.group().min(field).as("min"), MinResult.class);
+        return aggregate(resourceUri, resourceQueries, Aggregation.group().min(field).as("min"), MinResult.class);
     }
 
-    private <T extends AggregationResult> AggregationResult aggregate(ResourceUri resourceUri, List<ResourceQuery> resourceQueries,
+    private <T extends AggregationResult> T aggregate(ResourceUri resourceUri, List<ResourceQuery> resourceQueries,
             GroupOperation groupOperation, Class<T> clazz) {
         List<AggregationOperation> aggregations = new ArrayList<>();
         aggregations.add(Aggregation.match(CriteriaBuilder.buildFromResourceQueries(resourceQueries)));
