@@ -6,17 +6,6 @@ package io.corbel.oauth.api;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
-import java.util.Optional;
-
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.*;
-
-import org.glassfish.jersey.client.ClientProperties;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-
 import io.corbel.lib.token.TokenGrant;
 import io.corbel.lib.token.TokenInfo;
 import io.corbel.lib.token.exception.TokenVerificationException;
@@ -26,6 +15,7 @@ import io.corbel.lib.token.parser.TokenParser;
 import io.corbel.lib.token.provider.SessionProvider;
 import io.corbel.lib.token.reader.TokenReader;
 import io.corbel.lib.ws.api.error.GenericExceptionMapper;
+import io.corbel.oauth.filter.FilterRegistry;
 import io.corbel.oauth.model.Client;
 import io.corbel.oauth.model.User;
 import io.corbel.oauth.service.ClientService;
@@ -34,6 +24,20 @@ import io.corbel.oauth.session.SessionBuilder;
 import io.corbel.oauth.session.SessionCookieFactory;
 import io.corbel.oauth.token.TokenExpireTime;
 import io.dropwizard.testing.junit.ResourceTestRule;
+
+import java.util.Optional;
+
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.MultivaluedHashMap;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.NewCookie;
+import javax.ws.rs.core.Response;
+
+import org.glassfish.jersey.client.ClientProperties;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Test;
 
 /**
  * @author Alexander De Leon
@@ -63,14 +67,17 @@ public class CookieAuthorizeResourceTest {
     private static final SessionBuilder sessionBuilderMock = mock(SessionBuilder.class);
     private static final SessionCookieFactory sessionCookieFactoryMock = mock(SessionCookieFactory.class);
     private static final TokenExpireTime tokenExpireTimeMock = mock(TokenExpireTime.class);
+    private static final FilterRegistry filterRegistryMock = mock(FilterRegistry.class);
     private static final String TEST_DOMAIN = "TEST_DOMAIN";
 
     MultivaluedMap<String, String> formData;
 
-    @ClassRule public static ResourceTestRule RULE = ResourceTestRule.builder()
-            .addResource(new AuthorizeResource(userServiceMock, tokenFactoryMock, clientServiceMock, sessionCookieFactoryMock,
-                    tokenExpireTimeMock, sessionBuilderMock))
-            .addProvider(GenericExceptionMapper.class).addProvider(new SessionProvider(tokenParserMock).getBinder()).build();
+    @ClassRule public static ResourceTestRule RULE = ResourceTestRule
+            .builder()
+            .addResource(
+                    new AuthorizeResource(userServiceMock, tokenFactoryMock, clientServiceMock, sessionCookieFactoryMock,
+                            tokenExpireTimeMock, sessionBuilderMock, filterRegistryMock)).addProvider(GenericExceptionMapper.class)
+            .addProvider(new SessionProvider(tokenParserMock).getBinder()).build();
 
     public CookieAuthorizeResourceTest() throws Exception {
         formData = new MultivaluedHashMap();

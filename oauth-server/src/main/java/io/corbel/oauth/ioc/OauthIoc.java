@@ -1,13 +1,5 @@
 package io.corbel.oauth.ioc;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-import org.springframework.core.env.Environment;
-
-import com.google.gson.Gson;
-
 import io.corbel.eventbus.ioc.EventBusIoc;
 import io.corbel.eventbus.service.EventBus;
 import io.corbel.lib.config.ConfigurationIoC;
@@ -31,13 +23,27 @@ import io.corbel.oauth.api.UserResource;
 import io.corbel.oauth.api.auth.ClientCredentialsAuthenticator;
 import io.corbel.oauth.api.auth.TokenAuthenticator;
 import io.corbel.oauth.cli.dsl.OauthShell;
+import io.corbel.oauth.filter.AuthFilterRegistrar;
+import io.corbel.oauth.filter.FilterRegistry;
+import io.corbel.oauth.filter.InMemoryFilterRegistry;
 import io.corbel.oauth.mail.EmailValidationConfiguration;
 import io.corbel.oauth.mail.NotificationConfiguration;
 import io.corbel.oauth.model.Client;
 import io.corbel.oauth.repository.ClientRepository;
 import io.corbel.oauth.repository.UserRepository;
 import io.corbel.oauth.repository.decorator.LowerCaseDecorator;
-import io.corbel.oauth.service.*;
+import io.corbel.oauth.service.ClientService;
+import io.corbel.oauth.service.DefaultClientService;
+import io.corbel.oauth.service.DefaultMailChangePasswordService;
+import io.corbel.oauth.service.DefaultMailResetPasswordService;
+import io.corbel.oauth.service.DefaultMailValidationService;
+import io.corbel.oauth.service.DefaultSendNotificationService;
+import io.corbel.oauth.service.DefaultUserService;
+import io.corbel.oauth.service.MailChangePasswordService;
+import io.corbel.oauth.service.MailResetPasswordService;
+import io.corbel.oauth.service.MailValidationService;
+import io.corbel.oauth.service.SendNotificationService;
+import io.corbel.oauth.service.UserService;
 import io.corbel.oauth.session.DefaultSessionBuilder;
 import io.corbel.oauth.session.DefaultSessionCookieFactory;
 import io.corbel.oauth.session.SessionBuilder;
@@ -47,12 +53,21 @@ import io.dropwizard.auth.UnauthorizedHandler;
 import io.dropwizard.auth.basic.BasicAuthFactory;
 import io.dropwizard.auth.oauth.OAuthFactory;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+import org.springframework.core.env.Environment;
+
+import com.google.gson.Gson;
+
 /**
  * @author by Alberto J. Rubio
  */
-@Configuration
-@Import({ConfigurationIoC.class, OauthMongoIoc.class, TokenVerifiersIoc.class, OneTimeAccessTokenIoc.class, TokenIoc.class,
-        CommonFiltersIoc.class, DropwizardIoc.class, CorsIoc.class, EventBusIoc.class}) public class OauthIoc {
+@Configuration @Import({ConfigurationIoC.class, OauthMongoIoc.class, TokenVerifiersIoc.class, OneTimeAccessTokenIoc.class, TokenIoc.class,
+        CommonFiltersIoc.class, DropwizardIoc.class, CorsIoc.class, EventBusIoc.class}) @ComponentScan({"io.corbel.oauth.filter",
+        "com.bqreaders.silkroad.oauth.filter"}) public class OauthIoc {
 
     @Autowired private Environment env;
 
@@ -92,14 +107,15 @@ import io.dropwizard.auth.oauth.OAuthFactory;
     @Bean
     public SessionCookieFactory getSessionCookieFactory() {
         return new DefaultSessionCookieFactory(env.getProperty("session.cookie.path"), env.getProperty("session.cookie.domain"),
-                env.getProperty("session.cookie.comment"), env.getProperty("session.cookie.maxAge", Integer.class),
-                env.getProperty("session.cookie.secure", Boolean.class));
+                env.getProperty("session.cookie.comment"), env.getProperty("session.cookie.maxAge", Integer.class), env.getProperty(
+                        "session.cookie.secure", Boolean.class));
     }
 
     @Bean
     public AuthorizeResource getAuthorizeResource(TokenFactory tokenFactory, UserService userService, ClientService clientService,
             SessionBuilder sessionBuilder) {
-        return new AuthorizeResource(userService, tokenFactory, clientService, getSessionCookieFactory(), getExpireTime(), sessionBuilder);
+        return new AuthorizeResource(userService, tokenFactory, clientService, getSessionCookieFactory(), getExpireTime(), sessionBuilder,
+                getFilterRegistry());
     }
 
     @Bean
@@ -108,8 +124,8 @@ import io.dropwizard.auth.oauth.OAuthFactory;
     }
 
     public TokenExpireTime getExpireTime() {
-        return new TokenExpireTime(env.getProperty("oauth.token.codeDurationInSec", Long.class),
-                env.getProperty("oauth.token.accessTokenDurationInSec", Long.class));
+        return new TokenExpireTime(env.getProperty("oauth.token.codeDurationInSec", Long.class), env.getProperty(
+                "oauth.token.accessTokenDurationInSec", Long.class));
     }
 
     @Bean
@@ -130,8 +146,9 @@ import io.dropwizard.auth.oauth.OAuthFactory;
     @Bean
     public EmailValidationConfiguration mailValidationConfiguration() {
         return new EmailValidationConfiguration(env.getProperty("email.validation.notification"),
-                env.getProperty("email.validation.clientUrl"), env.getProperty("oauth.token.emailValidationTokenDurationInSec", Long.class),
-                env.getProperty("email.validation.enabled", Boolean.class));
+                env.getProperty("email.validation.clientUrl"),
+                env.getProperty("oauth.token.emailValidationTokenDurationInSec", Long.class), env.getProperty("email.validation.enabled",
+                        Boolean.class));
     }
 
     @Bean
@@ -184,6 +201,16 @@ import io.dropwizard.auth.oauth.OAuthFactory;
     @Bean
     public OauthShell getOauthShell() {
         return new OauthShell(clientRepository, getUserRepository());
+    }
+
+    @Bean
+    public FilterRegistry getFilterRegistry() {
+        return new InMemoryFilterRegistry();
+    }
+
+    @Bean
+    AuthFilterRegistrar getAuthFilterRegistrar() {
+        return new AuthFilterRegistrar(getFilterRegistry());
     }
 
     protected OneTimeAccessTokenRepository getOneTimeAccessTokenRepository() {

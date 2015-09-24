@@ -33,6 +33,10 @@
             <artifactId>events</artifactId>
         </dependency>
         <dependency>
+        	<groupId>io.corbel</groupId>
+        	<artifactId>oauth-filter-api</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.corbel.lib</groupId>
             <artifactId>mongodb</artifactId>
         </dependency>
