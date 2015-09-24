@@ -25,7 +25,7 @@ public class MongoResmiQueryBuilder extends MongoQueryBuilder {
     }
 
     public MongoResmiQueryBuilder relationSubjectId(ResourceUri resourceUri) {
-        if (resourceUri.isRelation()) {
+        if (resourceUri.isRelation() && !resourceUri.isTypeWildcard()) {
             relationSubjectId(new ResourceId(resourceUri.getTypeId()));
         }
         return this;

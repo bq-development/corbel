@@ -272,7 +272,7 @@ import com.mongodb.WriteResult;
         String field = "field";
         String value = "value";
 
-        ResourceUri resourceUri = new ResourceUri(TEST_COLLECTION, TEST_RESOURCE_ID.toString(), TEST_REL);
+        ResourceUri resourceUri = new ResourceUri(TEST_COLLECTION, TEST_ID, TEST_REL);
 
         ArgumentCaptor<Aggregation> argument = ArgumentCaptor.forClass(Aggregation.class);
         Mockito.when(mongoOperations.aggregate(argument.capture(), eq(RELATION_COLLECTION_NAME), eq(AverageResult.class))).thenReturn(
@@ -285,7 +285,8 @@ import com.mongodb.WriteResult;
 
         assertThat(argument.getValue().toString()).isEqualTo(
                 "{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"" + field + "\" : \"" + value
-                        + "\"}} , { \"$group\" : { \"_id\" :  null  , \"average\" : { \"$avg\" : \"$" + testField + "\"}}}]}");
+                        + "\" , \"_src_id\" : \"" + TEST_ID + "\"}} , { \"$group\" : { \"_id\" :  null  , \"average\" : { \"$avg\" : \"$"
+                        + testField + "\"}}}]}");
     }
 
     @Test
@@ -311,6 +312,30 @@ import com.mongodb.WriteResult;
     }
 
     @Test
+    public void sumRelationTest() {
+        ResourceQuery query = new ResourceQuery();
+        String field = "field";
+        String value = "value";
+        String testField = "test";
+
+        ResourceUri resourceUri = new ResourceUri(TEST_COLLECTION, TEST_ID, TEST_REL);
+
+        ArgumentCaptor<Aggregation> argument = ArgumentCaptor.forClass(Aggregation.class);
+        query.addQueryNode(new QueryNodeImpl(QueryOperator.$EQ, field, new StringQueryLiteral(value)));
+
+        Mockito.when(mongoOperations.aggregate(argument.capture(), eq(RELATION_COLLECTION_NAME), eq(SumResult.class))).thenReturn(
+                new AggregationResults<>(Collections.singletonList(new SumResult(10)), new BasicDBObject()));
+
+        SumResult result = mongoResmiDao.sum(resourceUri, Collections.singletonList(query), testField);
+        assertThat(result.getSum()).isEqualTo(10);
+
+        assertThat(argument.getValue().toString()).isEqualTo(
+                "{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"" + field + "\" : \"" + value
+                        + "\" , \"_src_id\" : \"" + TEST_ID + "\"}} , { \"$group\" : { \"_id\" :  null  , \"sum\" : { \"$sum\" : \"$"
+                        + testField + "\"}}}]}");
+    }
+
+    @Test
     public void maxTest() {
         ResourceQuery query = new ResourceQuery();
         String field = "field";
@@ -333,6 +358,30 @@ import com.mongodb.WriteResult;
     }
 
     @Test
+    public void maxRelationTest() {
+        ResourceQuery query = new ResourceQuery();
+        String field = "field";
+        String value = "value";
+        String testField = "test";
+
+        ResourceUri resourceUri = new ResourceUri(TEST_COLLECTION, TEST_ID, TEST_REL);
+
+        ArgumentCaptor<Aggregation> argument = ArgumentCaptor.forClass(Aggregation.class);
+        query.addQueryNode(new QueryNodeImpl(QueryOperator.$EQ, field, new StringQueryLiteral(value)));
+
+        Mockito.when(mongoOperations.aggregate(argument.capture(), eq(RELATION_COLLECTION_NAME), eq(MaxResult.class))).thenReturn(
+                new AggregationResults<>(Collections.singletonList(new MaxResult(10)), new BasicDBObject()));
+
+        MaxResult result = mongoResmiDao.max(resourceUri, Collections.singletonList(query), testField);
+        assertThat(result.getMax()).isEqualTo(10);
+
+        assertThat(argument.getValue().toString()).isEqualTo(
+                "{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"" + field + "\" : \"" + value
+                        + "\" , \"_src_id\" : \"" + TEST_ID + "\"}} , { \"$group\" : { \"_id\" :  null  , \"max\" : { \"$max\" : \"$"
+                        + testField + "\"}}}]}");
+    }
+
+    @Test
     public void minTest() {
         ResourceQuery query = new ResourceQuery();
         String field = "field";
@@ -352,5 +401,29 @@ import com.mongodb.WriteResult;
         assertThat(argument.getValue().toString()).isEqualTo(
                 "{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"" + field + "\" : \"" + value
                         + "\"}} , { \"$group\" : { \"_id\" :  null  , \"min\" : { \"$min\" : \"$" + testField + "\"}}}]}");
+    }
+
+    @Test
+    public void minRelationTest() {
+        ResourceQuery query = new ResourceQuery();
+        String field = "field";
+        String value = "value";
+        String testField = "test";
+
+        ResourceUri resourceUri = new ResourceUri(TEST_COLLECTION, TEST_ID, TEST_REL);
+
+        ArgumentCaptor<Aggregation> argument = ArgumentCaptor.forClass(Aggregation.class);
+        query.addQueryNode(new QueryNodeImpl(QueryOperator.$EQ, field, new StringQueryLiteral(value)));
+
+        Mockito.when(mongoOperations.aggregate(argument.capture(), eq(RELATION_COLLECTION_NAME), eq(MinResult.class))).thenReturn(
+                new AggregationResults<>(Collections.singletonList(new MinResult(10)), new BasicDBObject()));
+
+        MinResult result = mongoResmiDao.min(resourceUri, Collections.singletonList(query), testField);
+        assertThat(result.getMin()).isEqualTo(10);
+
+        assertThat(argument.getValue().toString()).isEqualTo(
+                "{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"" + field + "\" : \"" + value
+                        + "\" , \"_src_id\" : \"" + TEST_ID + "\"}} , { \"$group\" : { \"_id\" :  null  , \"min\" : { \"$min\" : \"$"
+                        + testField + "\"}}}]}");
     }
 }

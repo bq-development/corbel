@@ -365,8 +365,12 @@ public class MongoResmiDao implements ResmiDao {
 
     private <T extends AggregationResult> T aggregate(ResourceUri resourceUri, List<ResourceQuery> resourceQueries,
             GroupOperation groupOperation, Class<T> clazz) {
+        Criteria criterias = CriteriaBuilder.buildFromResourceQueries(resourceQueries);
+        if (resourceUri.isRelation() && !resourceUri.isTypeWildcard()) {
+            criterias = criterias.and(JsonRelation._SRC_ID).is(resourceUri.getTypeId());
+        }
         List<AggregationOperation> aggregations = new ArrayList<>();
-        aggregations.add(Aggregation.match(CriteriaBuilder.buildFromResourceQueries(resourceQueries)));
+        aggregations.add(Aggregation.match(criterias));
         aggregations.add(groupOperation);
         return mongoOperations.aggregate(Aggregation.newAggregation(aggregations), getMongoCollectionName(resourceUri), clazz)
                 .getUniqueMappedResult();
