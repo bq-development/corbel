@@ -61,6 +61,7 @@
     <module>i18n</module>
     <module>webfs</module>
     <module>oauth-server</module>
+    <module>oauth-filter-api</module>
   </modules>
   <dependencies>
     <dependency>
@@ -113,6 +114,11 @@
       <dependency>
         <groupId>io.corbel</groupId>
         <artifactId>eworker-api</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.corbel</groupId>
+        <artifactId>oauth-filter-api</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
@@ -454,9 +460,9 @@
               <configuration>
                 <target>
                   <exec executable="chmod" dir="${project.build.directory}/generated-resources/appassembler/jsw/${project.name}">
-                    <arg value="-R" />
-                    <arg value="a+x" />
-                    <arg value="bin" />
+                    <arg value="-R"/>
+                    <arg value="a+x"/>
+                    <arg value="bin"/>
                   </exec>
                 </target>
               </configuration>
@@ -470,7 +476,7 @@
               <configuration>
                 <target>
                   <exec executable="mkdir" dir="${project.build.directory}/generated-resources/appassembler/jsw/${project.name}">
-                    <arg value="plugins" />
+                    <arg value="plugins"/>
                   </exec>
                 </target>
               </configuration>

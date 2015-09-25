@@ -1,19 +1,5 @@
 package io.corbel.oauth.api;
 
-import java.net.URI;
-import java.util.Optional;
-
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.NewCookie;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
-
-import org.apache.commons.lang3.StringUtils;
-import org.glassfish.jersey.uri.internal.JerseyUriBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import io.corbel.lib.token.TokenGrant;
 import io.corbel.lib.token.TokenInfo;
 import io.corbel.lib.token.factory.TokenFactory;
@@ -22,6 +8,7 @@ import io.corbel.lib.token.reader.TokenReader;
 import io.corbel.lib.ws.api.error.ErrorMessage;
 import io.corbel.lib.ws.api.error.ErrorResponseFactory;
 import io.corbel.lib.ws.model.Error;
+import io.corbel.oauth.filter.FilterRegistry;
 import io.corbel.oauth.model.Client;
 import io.corbel.oauth.model.ResponseType;
 import io.corbel.oauth.model.User;
@@ -30,6 +17,27 @@ import io.corbel.oauth.service.UserService;
 import io.corbel.oauth.session.SessionBuilder;
 import io.corbel.oauth.session.SessionCookieFactory;
 import io.corbel.oauth.token.TokenExpireTime;
+
+import java.net.URI;
+import java.util.Optional;
+
+import javax.ws.rs.CookieParam;
+import javax.ws.rs.FormParam;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.NewCookie;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilder;
+
+import org.apache.commons.lang3.StringUtils;
+import org.glassfish.jersey.uri.internal.JerseyUriBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Francisco Sanchez
@@ -43,15 +51,18 @@ import io.corbel.oauth.token.TokenExpireTime;
     private final SessionCookieFactory sessionCookieFactory;
     private final TokenExpireTime tokenExpireTime;
     private final SessionBuilder sessionBuilder;
+    private final FilterRegistry filterRegistry;
 
     public AuthorizeResource(UserService userService, TokenFactory tokenFactory, ClientService clientService,
-            SessionCookieFactory sessionCookieFactory, TokenExpireTime tokenExpireTime, SessionBuilder sessionBuilder) {
+            SessionCookieFactory sessionCookieFactory, TokenExpireTime tokenExpireTime, SessionBuilder sessionBuilder,
+            FilterRegistry filterRegistry) {
         this.userService = userService;
         this.tokenFactory = tokenFactory;
         this.clientService = clientService;
         this.sessionCookieFactory = sessionCookieFactory;
         this.tokenExpireTime = tokenExpireTime;
         this.sessionBuilder = sessionBuilder;
+        this.filterRegistry = filterRegistry;
     }
 
     @GET
@@ -74,13 +85,16 @@ import io.corbel.oauth.token.TokenExpireTime;
     public Response login(@FormParam("username") String username, @FormParam("password") String password,
             @FormParam("response_type") String responseType, @FormParam("client_id") String clientId,
             @FormParam("redirect_uri") String redirectUri, @FormParam("state") String state,
-            @CookieParam(SessionCookieFactory.COOKIE_NAME) TokenReader session) {
+            @CookieParam(SessionCookieFactory.COOKIE_NAME) TokenReader session, MultivaluedMap<String, String> form) {
 
         ResponseType tokenType = ResponseType.fromString(responseType);
         Optional<String> stateOptional = Optional.ofNullable(state);
         assertRequiredParameter(clientId, "client_id");
 
         return clientService.findByName(clientId).map(client -> {
+            if (!filterRegistry.filter(username, password, clientId, client.getDomain(), form)) {
+                ErrorResponseFactory.getInstance().unauthorized();
+            }
             if (StringUtils.isBlank(username) && StringUtils.isBlank(password)) {
                 return tryLoginWithCookieSession(client, redirectUri, Optional.ofNullable(session), tokenType, stateOptional);
             } else {
@@ -93,8 +107,8 @@ import io.corbel.oauth.token.TokenExpireTime;
 
     private Response tryLoginWithCookieSession(Client client, String redirectUri, Optional<TokenReader> session, ResponseType tokenType,
             Optional<String> stateOptional) {
-        return getTokenResponseFromSession(session, tokenType, client, redirectUri, stateOptional)
-                .orElse(ErrorResponseFactory.getInstance().unauthorized());
+        return getTokenResponseFromSession(session, tokenType, client, redirectUri, stateOptional).orElse(
+                ErrorResponseFactory.getInstance().unauthorized());
     }
 
     private Response tryLoginWithUserCredentials(String user, String password, Client client, String redirectUri, ResponseType tokenType,
@@ -201,8 +215,8 @@ import io.corbel.oauth.token.TokenExpireTime;
 
     private void assertValidResponseType(ResponseType responseType) {
         if (responseType == ResponseType.INVALID) {
-            throw new WebApplicationException(ErrorResponseFactory.getInstance()
-                    .badRequest(new Error("invalid_response_type", ErrorMessage.BAD_REQUEST.getMessage())));
+            throw new WebApplicationException(ErrorResponseFactory.getInstance().badRequest(
+                    new Error("invalid_response_type", ErrorMessage.BAD_REQUEST.getMessage())));
         }
     }
 

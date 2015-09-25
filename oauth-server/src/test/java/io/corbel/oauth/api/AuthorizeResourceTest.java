@@ -4,8 +4,24 @@
 package io.corbel.oauth.api;
 
 import static org.fest.assertions.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import io.corbel.lib.token.TokenGrant;
+import io.corbel.lib.token.TokenInfo;
+import io.corbel.lib.token.factory.TokenFactory;
+import io.corbel.lib.token.model.TokenType;
+import io.corbel.lib.token.parser.TokenParser;
+import io.corbel.lib.token.provider.SessionProvider;
+import io.corbel.oauth.filter.FilterRegistry;
+import io.corbel.oauth.model.Client;
+import io.corbel.oauth.model.User;
+import io.corbel.oauth.service.ClientService;
+import io.corbel.oauth.service.UserService;
+import io.corbel.oauth.session.SessionBuilder;
+import io.corbel.oauth.session.SessionCookieFactory;
+import io.corbel.oauth.token.TokenExpireTime;
+import io.dropwizard.testing.junit.ResourceTestRule;
 
 import java.net.URI;
 import java.util.Optional;
@@ -19,21 +35,6 @@ import org.glassfish.jersey.client.ClientProperties;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
-
-import io.corbel.lib.token.TokenGrant;
-import io.corbel.lib.token.TokenInfo;
-import io.corbel.lib.token.factory.TokenFactory;
-import io.corbel.lib.token.model.TokenType;
-import io.corbel.lib.token.parser.TokenParser;
-import io.corbel.lib.token.provider.SessionProvider;
-import io.corbel.oauth.model.Client;
-import io.corbel.oauth.model.User;
-import io.corbel.oauth.service.ClientService;
-import io.corbel.oauth.service.UserService;
-import io.corbel.oauth.session.SessionBuilder;
-import io.corbel.oauth.session.SessionCookieFactory;
-import io.corbel.oauth.token.TokenExpireTime;
-import io.dropwizard.testing.junit.ResourceTestRule;
 
 /**
  * @author Alexander De Leon
@@ -61,15 +62,18 @@ public class AuthorizeResourceTest {
     private static final SessionCookieFactory sessionCookieFactoryMock = mock(SessionCookieFactory.class);
     private static final SessionBuilder sessionBuilderMock = mock(SessionBuilder.class);
     private static final TokenParser tokenParserMock = mock(TokenParser.class);
+    private static final FilterRegistry filterRegistryMock = mock(FilterRegistry.class);
     private static final TokenExpireTime tokenExpireTimeMock = mock(TokenExpireTime.class);
     private static final String TEST_DOMAIN = "TEST_DOMAIN";
     private static Client TEST_CLIENT = new Client();
 
     MultivaluedMap<String, String> formData;
 
-    @ClassRule public static ResourceTestRule RULE = ResourceTestRule.builder().addResource(new AuthorizeResource(userServiceMock,
-            tokenFactory, clientServiceMock, sessionCookieFactoryMock, tokenExpireTimeMock, sessionBuilderMock))
-            .addProvider(new SessionProvider(tokenParserMock).getBinder()).build();
+    @ClassRule public static ResourceTestRule RULE = ResourceTestRule
+            .builder()
+            .addResource(
+                    new AuthorizeResource(userServiceMock, tokenFactory, clientServiceMock, sessionCookieFactoryMock, tokenExpireTimeMock,
+                            sessionBuilderMock, filterRegistryMock)).addProvider(new SessionProvider(tokenParserMock).getBinder()).build();
 
     @Before
     public void before() {
@@ -98,8 +102,8 @@ public class AuthorizeResourceTest {
         when(userMock.checkPassword(TEST_PASSWORD)).thenReturn(true);
         when(userMock.getId()).thenReturn(TEST_USERNAME);
         when(tokenExpireTimeMock.getTokenExpireTimeFromResponseType(TokenType.CODE)).thenReturn(TEST_EXPIRES);
-        when(tokenFactory.createToken(TEST_TOKEN_INFO, tokenExpireTimeMock.getTokenExpireTimeFromResponseType(TokenType.CODE)))
-                .thenReturn(new TokenGrant(TEST_TOKEN, TEST_EXPIRES));
+        when(tokenFactory.createToken(TEST_TOKEN_INFO, tokenExpireTimeMock.getTokenExpireTimeFromResponseType(TokenType.CODE))).thenReturn(
+                new TokenGrant(TEST_TOKEN, TEST_EXPIRES));
 
         when(clientServiceMock.findByName(TEST_CLIENT_ID)).thenReturn(Optional.of(TEST_CLIENT));
         when(clientServiceMock.verifyRedirectUri(TEST_REDIRECT_URI, TEST_CLIENT)).thenReturn(true);
@@ -115,14 +119,23 @@ public class AuthorizeResourceTest {
     }
 
     @Test
+    public void testLoginWithFailedFilters() {
+        when(filterRegistryMock.filter(any(), any(), any(), any(), any())).thenReturn(false);
+        Response response = RULE.client().target("/" + ApiVersion.CURRENT + "/oauth/authorize")
+                .property(ClientProperties.FOLLOW_REDIRECTS, false).request().post(Entity.form(formData), Response.class);
+
+        assertThat(response.getStatus()).isEqualTo(401);
+    }
+
+    @Test
     public void testLoginWithEmail() {
         User userMock = mock(User.class);
         when(userServiceMock.getUserByEmailAndDomain(TEST_USERNAME, TEST_DOMAIN)).thenReturn(userMock);
         when(userMock.checkPassword(TEST_PASSWORD)).thenReturn(true);
         when(userMock.getId()).thenReturn(TEST_USERNAME);
         when(tokenExpireTimeMock.getTokenExpireTimeFromResponseType(TokenType.CODE)).thenReturn(TEST_EXPIRES);
-        when(tokenFactory.createToken(TEST_TOKEN_INFO, tokenExpireTimeMock.getTokenExpireTimeFromResponseType(TokenType.CODE)))
-                .thenReturn(new TokenGrant(TEST_TOKEN, TEST_EXPIRES));
+        when(tokenFactory.createToken(TEST_TOKEN_INFO, tokenExpireTimeMock.getTokenExpireTimeFromResponseType(TokenType.CODE))).thenReturn(
+                new TokenGrant(TEST_TOKEN, TEST_EXPIRES));
         when(clientServiceMock.verifyRedirectUri(TEST_REDIRECT_URI, TEST_CLIENT)).thenReturn(true);
         Response response = RULE.client().target("/" + ApiVersion.CURRENT + "/oauth/authorize")
                 .property(ClientProperties.FOLLOW_REDIRECTS, false).request().post(Entity.form(formData), Response.class);
@@ -152,8 +165,8 @@ public class AuthorizeResourceTest {
         formData.add("state", TEST_STATE);
         formData.add("response_type", "token");
 
-        Response response = RULE.client().target("/" + ApiVersion.CURRENT + "/oauth/authorize").request().post(Entity.form(formData),
-                Response.class);
+        Response response = RULE.client().target("/" + ApiVersion.CURRENT + "/oauth/authorize").request()
+                .post(Entity.form(formData), Response.class);
         assertThat(response.getStatus()).isEqualTo(200);
         assertThat(response.readEntity(TokenGrant.class)).isEqualTo(tokenGrant);
     }
