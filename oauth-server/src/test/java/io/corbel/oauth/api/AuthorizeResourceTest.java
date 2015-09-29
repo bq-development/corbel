@@ -81,6 +81,7 @@ public class AuthorizeResourceTest {
         TEST_CLIENT.setDomain(TEST_DOMAIN);
         TEST_CLIENT.setName(TEST_CLIENT_ID);
         when(clientServiceMock.findByName(TEST_CLIENT_ID)).thenReturn(Optional.of(TEST_CLIENT));
+        when(filterRegistryMock.filter(any(), any(), any(), any(), any())).thenReturn(true);
     }
 
     public AuthorizeResourceTest() throws Exception {

@@ -93,7 +93,7 @@ import org.slf4j.LoggerFactory;
 
         return clientService.findByName(clientId).map(client -> {
             if (!filterRegistry.filter(username, password, clientId, client.getDomain(), form)) {
-                ErrorResponseFactory.getInstance().unauthorized();
+                return ErrorResponseFactory.getInstance().unauthorized();
             }
             if (StringUtils.isBlank(username) && StringUtils.isBlank(password)) {
                 return tryLoginWithCookieSession(client, redirectUri, Optional.ofNullable(session), tokenType, stateOptional);
