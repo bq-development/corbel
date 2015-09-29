@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 import io.corbel.lib.queries.builder.ResourceQueryBuilder;
 import io.corbel.lib.queries.request.Pagination;
 import io.corbel.lib.queries.request.ResourceQuery;
-import io.corbel.lib.queries.request.Sort;
 import io.corbel.resources.rem.model.ResourceUri;
 import io.corbel.resources.rem.resmi.exception.MongoAggregationException;
 
@@ -38,13 +37,14 @@ public class MongoAggregationBuilderTest {
         List<ResourceQuery> resourceQueries = new ArrayList<>();
         resourceQueries.add(new ResourceQueryBuilder().add(FIELD_1, VALUE).build());
         Aggregation agg = builder.match(new ResourceUri("testType", "testRes", "testRel"), Optional.of(resourceQueries)).build();
-        assertEquals("{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"field_1\" : \"value\" , \"_src_id\" : \"testRes\"}}]}", agg.toString());
+        assertEquals(
+                "{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"field_1\" : \"value\" , \"_src_id\" : \"testRes\"}}]}",
+                agg.toString());
     }
 
     @Test
     public void testSort() throws MongoAggregationException {
-        Sort sort = new Sort(ASC, FIELD_1);
-        Aggregation agg = builder.sort(sort).build();
+        Aggregation agg = builder.sort(ASC, FIELD_1).build();
         assertEquals("{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$sort\" : { \"field_1\" : 1}}]}", agg.toString());
     }
 
@@ -68,10 +68,10 @@ public class MongoAggregationBuilderTest {
         Pagination pagination = new Pagination(0, 50);
         List<String> fields = new ArrayList<>();
         fields.add(FIELD_1);
-        Sort sort = new Sort(ASC, FIELD_1);
         List<ResourceQuery> resourceQueries = new ArrayList<>();
         resourceQueries.add(new ResourceQueryBuilder().add(FIELD_1, VALUE).build());
-        Aggregation agg = builder.match(new ResourceUri("testType", "testRes", "testRel"), Optional.of(resourceQueries)).sort(sort).group(fields).pagination(pagination).build();
+        Aggregation agg = builder.match(new ResourceUri("testType", "testRes", "testRel"), Optional.of(resourceQueries)).sort(ASC, FIELD_1)
+                .group(fields).pagination(pagination).build();
         assertEquals(
                 "{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"field_1\" : \"value\" , \"_src_id\" : \"testRes\"}} , { \"$sort\" : { \"field_1\" : 1}} , { \"$group\" : { \"_id\" : \"$field_1\"}} , { \"$skip\" : 0} , { \"$limit\" : 50}]}",
                 agg.toString());

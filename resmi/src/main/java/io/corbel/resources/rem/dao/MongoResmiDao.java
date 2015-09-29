@@ -140,7 +140,7 @@ public class MongoResmiDao implements ResmiDao {
         builder.group(fields, first);
 
         if (sort.isPresent()) {
-            builder.sort(sort.get());
+            builder.sort(sort.get().getDirection().toString(), (first ? "first." : "") + sort.get().getField());
         }
 
         if (pagination.isPresent()) {
