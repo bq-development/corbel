@@ -3,7 +3,6 @@ package io.corbel.resources.rem.dao.builder;
 import io.corbel.lib.queries.mongo.builder.CriteriaBuilder;
 import io.corbel.lib.queries.request.Pagination;
 import io.corbel.lib.queries.request.ResourceQuery;
-import io.corbel.lib.queries.request.Sort;
 import io.corbel.resources.rem.dao.JsonRelation;
 import io.corbel.resources.rem.model.ResourceUri;
 import io.corbel.resources.rem.resmi.exception.MongoAggregationException;
@@ -43,8 +42,8 @@ public class MongoAggregationBuilder {
         return this;
     }
 
-    public MongoAggregationBuilder sort(Sort sort) {
-        operations.add(Aggregation.sort(Direction.fromString(sort.getDirection().name()), sort.getField()));
+    public MongoAggregationBuilder sort(String direction, String field) {
+        operations.add(Aggregation.sort(Direction.fromString(direction), field));
         return this;
     }
 
