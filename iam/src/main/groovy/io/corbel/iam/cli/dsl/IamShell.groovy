@@ -52,6 +52,9 @@ class IamShell {
         if (domainFields.userProfileFields) {
             domain.userProfileFields = new HashSet<>(domainFields.userProfileFields)
         }
+        if(domainFields.capabilities) {
+            domain.capabilities = domainFields.capabilities
+        }
         addTrace(domain)
         domainRepository.save(domain)
     }

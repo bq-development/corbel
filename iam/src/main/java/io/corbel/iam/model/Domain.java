@@ -16,8 +16,9 @@ public class Domain extends TraceableEntity implements HasScopes {
     private String allowedDomains;
     private Set<String> scopes = new HashSet<>();
     private Set<String> defaultScopes = new HashSet<>();
-    private Map<String, Map<String, String>> authConfigurations = new HashMap<String, Map<String, String>>();
+    private Map<String, Map<String, String>> authConfigurations = new HashMap<>();
     private Set<String> userProfileFields = new HashSet<>();
+    private Map<String, Boolean> capabilities = new HashMap<>();
 
     public String getDescription() {
         return description;
@@ -59,6 +60,14 @@ public class Domain extends TraceableEntity implements HasScopes {
         this.userProfileFields = userProfileFields;
     }
 
+    public Map<String, Boolean> getCapabilities() {
+        return capabilities;
+    }
+
+    public void setCapabilities(Map<String, Boolean> capabilities) {
+        this.capabilities = capabilities;
+    }
+
     @Override
     public Set<String> getScopes() {
         return scopes;
@@ -86,16 +95,23 @@ public class Domain extends TraceableEntity implements HasScopes {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o)
-            return true;
-        if (o == null || getClass() != o.getClass())
-            return false;
-        if (!super.equals(o))
-            return false;
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+
         Domain domain = (Domain) o;
-        return Objects.equals(description, domain.description) && Objects.equals(allowedDomains, domain.allowedDomains)
-                && Objects.equals(scopes, domain.scopes) && Objects.equals(defaultScopes, domain.defaultScopes)
-                && Objects.equals(authConfigurations, domain.authConfigurations)
-                && Objects.equals(userProfileFields, domain.userProfileFields);
+
+        if (description != null ? !description.equals(domain.description) : domain.description != null) return false;
+        if (allowedDomains != null ? !allowedDomains.equals(domain.allowedDomains) : domain.allowedDomains != null)
+            return false;
+        if (scopes != null ? !scopes.equals(domain.scopes) : domain.scopes != null) return false;
+        if (defaultScopes != null ? !defaultScopes.equals(domain.defaultScopes) : domain.defaultScopes != null)
+            return false;
+        if (authConfigurations != null ? !authConfigurations.equals(domain.authConfigurations) : domain.authConfigurations != null)
+            return false;
+        if (userProfileFields != null ? !userProfileFields.equals(domain.userProfileFields) : domain.userProfileFields != null)
+            return false;
+        return !(capabilities != null ? !capabilities.equals(domain.capabilities) : domain.capabilities != null);
+
     }
 }

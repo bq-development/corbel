@@ -24,6 +24,7 @@ public enum Message {
     INVALID_VERSION("Version {0} is not supported. Versions supported: {1}"),
     MISSING_IDENTITY_PROOF("Missing identity proof"),
     CLIENT_SIDE_AUTHENTICATION_NOT_ALLOWED("The client side authentication is not allowed in the issuer client"),
+    AUTHENTICATION_TYPE_NOT_ALLOWED("The authentication type is not allowed in the requested domain"),
     REQUESTED_DOMAIN_NOT_ALLOWED("The requested domain is not allowed for the client root domain"),
     UNKNOWN_BASIC_USER_CREDENTIALS("Unknown basic user credentials."),
     MISSING_BASIC_PARAM("Missing basic parameters."),
