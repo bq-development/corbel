@@ -1,5 +1,6 @@
 package io.corbel.oauth;
 
+import io.corbel.oauth.api.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -9,10 +10,6 @@ import io.corbel.lib.ws.cli.GenericConsole;
 import io.corbel.lib.ws.cli.ServiceRunnerWithVersionResource;
 import io.corbel.lib.ws.health.BasicHealthCheck;
 import io.corbel.lib.ws.health.MongoHealthCheck;
-import io.corbel.oauth.api.AuthorizeResource;
-import io.corbel.oauth.api.SignoutResource;
-import io.corbel.oauth.api.TokenResource;
-import io.corbel.oauth.api.UserResource;
 import io.corbel.oauth.ioc.OauthIoc;
 import io.dropwizard.setup.Environment;
 
@@ -47,6 +44,7 @@ public class OauthRunner extends ServiceRunnerWithVersionResource<OauthIoc> {
         environment.jersey().register(context.getBean(AuthorizeResource.class));
         environment.jersey().register(context.getBean(TokenResource.class));
         environment.jersey().register(context.getBean(UserResource.class));
+        environment.jersey().register(context.getBean(UsernameResource.class));
         environment.jersey().register(context.getBean(SignoutResource.class));
         environment.healthChecks().register("basic", new BasicHealthCheck());
         environment.healthChecks().register("mongo", context.getBean(MongoHealthCheck.class));

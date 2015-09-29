@@ -143,6 +143,13 @@ public class User {
         return profile;
     }
 
+    @JsonIgnore
+    public User getUserWithOnlyId(){
+        User returnedUser = new User();
+        returnedUser.setId(this.getId());
+        return returnedUser;
+    }
+
     public Map<String, Object> getProperties() {
         return properties;
     }

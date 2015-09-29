@@ -1,16 +1,5 @@
 package io.corbel.oauth.api;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Optional;
-
-import javax.validation.Valid;
-import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-
 import io.corbel.lib.token.reader.TokenReader;
 import io.corbel.lib.ws.api.error.ErrorResponseFactory;
 import io.corbel.lib.ws.model.Error;
@@ -21,6 +10,16 @@ import io.corbel.oauth.repository.CreateUserException;
 import io.corbel.oauth.service.ClientService;
 import io.corbel.oauth.service.UserService;
 import io.dropwizard.auth.Auth;
+
+import javax.validation.Valid;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Optional;
 
 /**
  * @author Francisco Sanchez
@@ -77,7 +76,8 @@ import io.dropwizard.auth.Auth;
                 return null;
             }
         }).map(avatarUri -> Response.temporaryRedirect(avatarUri).build())
-                .orElseGet(() -> ErrorResponseFactory.getInstance().notfound(new Error("not_found", "User " + id + " has no avatar.")));
+                .orElseGet(() -> ErrorResponseFactory.getInstance()
+                        .notfound(new Error("not_found", "User " + id + " has no avatar.")));
     }
 
     @Path("/{id}")

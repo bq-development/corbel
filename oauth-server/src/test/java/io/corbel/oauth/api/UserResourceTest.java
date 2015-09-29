@@ -48,113 +48,14 @@ import io.dropwizard.testing.junit.ResourceTestRule;
 /**
  * @author Cristian del Cerro
  */
-public class UserResourceTest {
+public class UserResourceTest extends UserResourceTestBase{
 
-    private final static String BEARER = "Bearer ";
-    private final static String TEST_GOOD_TOKEN = "xxxxxxxxxx";
-    private final static String TEST_ADMIN_TOKEN = "zzzzzzzzzzz";
-    private final static String TEST_BAD_TOKEN = "yyyyyyyyyy";
-    private final static String USERNAME_TEST = "userProfileTest";
-
-    private final static String BASIC = "Basic ";
-    private final static String EMAIL = "email@email.com";
-    private static final String PASSWORD = "secret!";
-    private static final String TEST_CLIENT_ID = "client_id";
-    private static final String TEST_CLIENT_SECRET = "client_secret";
-    private static final String TEST_CLIENT_DOMAIN = "domain";
-    private static final String TEST_BASIC_CLIENT_CRED = BASIC
-            + Base64.encodeBase64URLSafeString((TEST_CLIENT_ID + ":" + TEST_CLIENT_SECRET).getBytes());
-    private static final String TEST_USER_ID = "test_user_id";
-    private static final String TEST_ADMIN_ID = "test_admin_id";
-    private static final String TEST_AVATAR_URI = "http://www.asjdflasjdfklasj.es/sdnajierniar.png";
-
-    private static final UserService userServiceMock = mock(UserService.class);
-    private static final ClientService clientServiceMock = mock(ClientService.class);
-    private static final TokenParser tokenParserMock = mock(TokenParser.class);
-    private static final ClientRepository clientRepositoryMock = mock(ClientRepository.class);
-
-    private static Client TEST_CLIENT;
-    private static ClientCredentialsAuthenticator basicAuthenticatorMock = mock(ClientCredentialsAuthenticator.class);
-    private static TokenAuthenticator oauthAuthenticatorMock = mock(TokenAuthenticator.class);
-
-    private static BasicAuthFactory basicAuthFactory = new BasicAuthFactory<>(basicAuthenticatorMock, "", Client.class);
-    private static OAuthFactory oAuthFactory = new OAuthFactory<>(oauthAuthenticatorMock, "", TokenReader.class);
-    private static HttpServletRequest requestMock = mock(HttpServletRequest.class);
-
-
-    public static class ContextInjectableProvider<T> extends AbstractBinder {
-        private final Class<T> clazz;
-        private final T instance;
-
-        public ContextInjectableProvider(Class<T> clazz, T instance) {
-            this.clazz = clazz;
-            this.instance = instance;
-        }
-
-        @Override
-        protected void configure() {
-            bind(instance).to(clazz);
-        }
-    }
-
-    @ClassRule public static ResourceTestRule RULE = ResourceTestRule.builder()
+    @ClassRule
+    public static ResourceTestRule RULE = ResourceTestRule.builder()
             .addResource(new UserResource(userServiceMock, clientServiceMock))
             .addProvider(new ContextInjectableProvider<>(HttpServletRequest.class, requestMock))
             .addProvider(new BasicAuthProvider(basicAuthFactory).getBinder()).addProvider(new OAuthProvider(oAuthFactory).getBinder())
             .build();
-
-    @Before
-    public void before() throws TokenVerificationException, AuthenticationException {
-
-        reset(userServiceMock, tokenParserMock, clientRepositoryMock);
-
-        when(tokenParserMock.parseAndVerify(TEST_BAD_TOKEN)).thenThrow(new TokenVerificationException("Invalid token"));
-
-
-        BasicCredentials basic = new BasicCredentials(TEST_CLIENT_ID, TEST_CLIENT_SECRET);
-        TEST_CLIENT = new Client();
-        TEST_CLIENT.setName(TEST_CLIENT_ID);
-        TEST_CLIENT.setKey(TEST_CLIENT_SECRET);
-        TEST_CLIENT.setDomain(TEST_CLIENT_DOMAIN);
-        when(basicAuthenticatorMock.authenticate(basic)).thenReturn(com.google.common.base.Optional.of(TEST_CLIENT));
-
-        TokenReader tokenReaderMock = mock(TokenReader.class);
-        TokenReader tokenAdminReaderMock = mock(TokenReader.class);
-
-        when(tokenReaderMock.getToken()).thenReturn(TEST_GOOD_TOKEN);
-        when(tokenParserMock.parseAndVerify(Mockito.eq(TEST_GOOD_TOKEN))).thenReturn(tokenReaderMock);
-
-        when(tokenAdminReaderMock.getToken()).thenReturn(TEST_ADMIN_TOKEN);
-        when(tokenParserMock.parseAndVerify(Mockito.eq(TEST_ADMIN_TOKEN))).thenReturn(tokenAdminReaderMock);
-
-        TokenInfo tokenInfoMock = mock(TokenInfo.class);
-        when(tokenReaderMock.getInfo()).thenReturn(tokenInfoMock);
-
-        TokenInfo tokenAdminInfoMock = mock(TokenInfo.class);
-        when(tokenAdminReaderMock.getInfo()).thenReturn(tokenAdminInfoMock);
-
-        when(tokenInfoMock.getUserId()).thenReturn(TEST_USER_ID);
-        when(tokenInfoMock.getClientId()).thenReturn(TEST_CLIENT_ID);
-        when(tokenInfoMock.getTokenType()).thenReturn(TokenType.TOKEN);
-
-        when(tokenAdminInfoMock.getUserId()).thenReturn(TEST_ADMIN_ID);
-        when(tokenAdminInfoMock.getClientId()).thenReturn(TEST_CLIENT_ID);
-        when(tokenAdminInfoMock.getTokenType()).thenReturn(TokenType.TOKEN);
-
-        when(userServiceMock.getUser(TEST_USER_ID)).thenReturn(TestUtils.createUserTest(Role.USER));
-        when(userServiceMock.getUser(TEST_ADMIN_ID)).thenReturn(TestUtils.createUserTest(Role.ADMIN));
-
-        when(oauthAuthenticatorMock.authenticate(TEST_GOOD_TOKEN)).thenReturn(com.google.common.base.Optional.of(tokenReaderMock));
-        when(oauthAuthenticatorMock.authenticate(TEST_ADMIN_TOKEN)).thenReturn(com.google.common.base.Optional.of(tokenAdminReaderMock));
-        when(oauthAuthenticatorMock.authenticate(TEST_BAD_TOKEN)).thenReturn(com.google.common.base.Optional.absent());
-
-        /*
-         * Client clientTest = new Client(); clientTest.setKey(TEST_CLIENT_SECRET); clientTest.setDomain(TEST_CLIENT_DOMAIN);
-         */
-        when(clientRepositoryMock.findByName(TEST_CLIENT_ID)).thenReturn(TEST_CLIENT);
-
-        when(requestMock.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn(BEARER + TEST_GOOD_TOKEN);
-    }
 
     @Test
     public void getUserGoodTokenTest() throws TokenVerificationException {
@@ -334,11 +235,7 @@ public class UserResourceTest {
 
     @Test
     public void createUser() throws CreateUserException.DuplicatedUser, TokenVerificationException {
-        User user = new User();
-        user.setId(TEST_USER_ID);
-        user.setEmail(EMAIL);
-        user.setPassword(PASSWORD);
-        user.setUsername(USERNAME_TEST);
+        User user = createTestUser();
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
 
         when(userServiceMock.createUser(userCaptor.capture(), Mockito.eq(TEST_CLIENT))).thenReturn(USERNAME_TEST);

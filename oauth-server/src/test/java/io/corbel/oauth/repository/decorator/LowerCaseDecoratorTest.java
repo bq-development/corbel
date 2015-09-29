@@ -19,6 +19,7 @@ public class LowerCaseDecoratorTest {
     public static final String UPPER_CASE_USER = "LoWeR_CaSe_uSeR";
     public static final String LOWER_CASE_MAIL = "lower_case_user@server.com";
     public static final String UPPER_CASE_MAIL = "LoWeR_CaSe_uSeR@SerVer.Com";
+    public static final String DOMAIN = "domain";
 
     public static final String PASSWORD = "passTest1";
     private LowerCaseDecorator lowerCaseDecorator;
@@ -64,6 +65,30 @@ public class LowerCaseDecoratorTest {
     public void findByUsernameUpperCaseTest() {
         lowerCaseDecorator.findByUsername(UPPER_CASE_USER);
         verify(userRepositoryMock, times(1)).findByUsername(LOWER_CASE_USER);
+    }
+
+    @Test
+    public void findByUsernameAndDomainTest() {
+        lowerCaseDecorator.findByUsernameAndDomain(LOWER_CASE_USER, DOMAIN);
+        verify(userRepositoryMock, times(1)).findByUsernameAndDomain(LOWER_CASE_USER, DOMAIN);
+    }
+
+    @Test
+    public void findByUsernameAndDomainUpperCaseTest() {
+        lowerCaseDecorator.findByUsernameAndDomain(UPPER_CASE_USER, DOMAIN);
+        verify(userRepositoryMock, times(1)).findByUsernameAndDomain(LOWER_CASE_USER, DOMAIN);
+    }
+
+    @Test
+    public void findByEmailAndDomainTest() {
+        lowerCaseDecorator.findByEmailAndDomain(LOWER_CASE_MAIL, DOMAIN);
+        verify(userRepositoryMock, times(1)).findByEmailAndDomain(LOWER_CASE_MAIL, DOMAIN);
+    }
+
+    @Test
+    public void findByEmailAndDomainUpperCaseTest() {
+        lowerCaseDecorator.findByEmailAndDomain(UPPER_CASE_MAIL, DOMAIN);
+        verify(userRepositoryMock, times(1)).findByEmailAndDomain(LOWER_CASE_MAIL, DOMAIN);
     }
 
     @Test

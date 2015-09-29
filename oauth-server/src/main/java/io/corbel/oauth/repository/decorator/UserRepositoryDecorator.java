@@ -101,6 +101,11 @@ public abstract class UserRepositoryDecorator implements UserRepository {
     }
 
     @Override
+    public boolean existsByUsernameAndDomain(String username, String domainId) {
+        return decoratedUserRepository.existsByUsernameAndDomain(username, domainId);
+    }
+
+    @Override
     public boolean patch(String id, User data, String... fieldsToDelete) {
         return decoratedUserRepository.patch(id, data, fieldsToDelete);
     }
