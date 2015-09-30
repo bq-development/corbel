@@ -1,5 +1,6 @@
 package io.corbel.resources.rem.dao;
 
+import io.corbel.resources.rem.model.RestorInputStream;
 import org.springframework.http.MediaType;
 
 import com.amazonaws.services.s3.AmazonS3;
@@ -33,7 +34,7 @@ public class S3RestorDao implements RestorDao {
         try {
             S3Object s3Object = amazonS3Client.getObject(objectRequest);
             MediaType objectType = MediaType.parseMediaType(s3Object.getObjectMetadata().getContentType());
-            return new RestorObject(objectType, s3Object.getObjectContent(), s3Object.getObjectMetadata().getContentLength());
+            return new RestorObject(objectType, new RestorInputStream(s3Object), s3Object.getObjectMetadata().getContentLength());
         } catch (AmazonS3Exception e) {
             switch (e.getStatusCode()) {
                 case 404:
