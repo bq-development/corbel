@@ -50,26 +50,9 @@ public class S3RestorDao implements RestorDao {
 
     @Override
     public void uploadObject(String collection, String resource, RestorObject object) {
-        uploadObject(collection, resource, object, 0);
-    }
-
-    private void uploadObject(String collection, String resource, RestorObject object, int retryNumber) {
-
         PutObjectRequest objectRequest = new PutObjectRequest(bucket, keyNormalizer.normalize(object.getMediaType(), collection, resource),
                 object.getInputStream(), createObjectMetadataForObject(object.getMediaType(), object.getContentLength()));
-        try {
-            amazonS3Client.putObject(objectRequest);
-        } catch (AmazonS3Exception e) {
-            switch (e.getStatusCode()) {
-                case 500:
-                    if (retryNumber > amazonS3Retries) {
-                        uploadObject(collection, resource, object, retryNumber + 1);
-                        break;
-                    }
-                default:
-                    throw e;
-            }
-        }
+        amazonS3Client.putObject(objectRequest);
     }
 
     @Override
