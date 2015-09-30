@@ -84,7 +84,7 @@ public class ResmiPutRem extends AbstractResmiRem {
                 parameters.getOptionalApiParameters().flatMap(RelationParameters::getPredicateResource));
 
         if (id.isWildcard()) {
-            ErrorResponseFactory.getInstance().methodNotAllowed();
+            return ErrorResponseFactory.getInstance().methodNotAllowed();
         }
 
         if (!parameters.getOptionalApiParameters().flatMap(RelationParameters::getPredicateResource).isPresent()) {
