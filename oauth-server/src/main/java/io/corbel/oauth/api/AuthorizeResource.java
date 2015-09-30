@@ -9,6 +9,7 @@ import io.corbel.lib.ws.api.error.ErrorMessage;
 import io.corbel.lib.ws.api.error.ErrorResponseFactory;
 import io.corbel.lib.ws.model.Error;
 import io.corbel.oauth.filter.FilterRegistry;
+import io.corbel.oauth.filter.exception.AuthFilterException;
 import io.corbel.oauth.model.Client;
 import io.corbel.oauth.model.ResponseType;
 import io.corbel.oauth.model.User;
@@ -92,8 +93,10 @@ import org.slf4j.LoggerFactory;
         assertRequiredParameter(clientId, "client_id");
 
         return clientService.findByName(clientId).map(client -> {
-            if (!filterRegistry.filter(username, password, clientId, client.getDomain(), form)) {
-                return ErrorResponseFactory.getInstance().unauthorized();
+            try {
+                filterRegistry.filter(username, password, clientId, client.getDomain(), form);
+            } catch (AuthFilterException e) {
+                return ErrorResponseFactory.getInstance().unauthorized(e.getMessage());
             }
             if (StringUtils.isBlank(username) && StringUtils.isBlank(password)) {
                 return tryLoginWithCookieSession(client, redirectUri, Optional.ofNullable(session), tokenType, stateOptional);

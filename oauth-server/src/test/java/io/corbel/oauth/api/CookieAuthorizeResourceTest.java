@@ -4,7 +4,6 @@
 package io.corbel.oauth.api;
 
 import static org.fest.assertions.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import io.corbel.lib.token.TokenGrant;
@@ -89,7 +88,6 @@ public class CookieAuthorizeResourceTest {
         formData.add("state", TEST_STATE);
         formData.add("response_type", "code");
         when(tokenReaderMock.getInfo()).thenReturn(TokenInfo.newBuilder().setUserId(TEST_USERNAME).setClientId(TEST_CLIENT_ID).build());
-        when(filterRegistryMock.filter(any(), any(), any(), any(), any())).thenReturn(true);
     }
 
     @Before

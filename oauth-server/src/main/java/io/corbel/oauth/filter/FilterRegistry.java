@@ -1,5 +1,7 @@
 package io.corbel.oauth.filter;
 
+import io.corbel.oauth.filter.exception.AuthFilterException;
+
 import javax.ws.rs.core.MultivaluedMap;
 
 
@@ -7,5 +9,6 @@ public interface FilterRegistry {
 
     void registerFilter(AuthFilter filter);
 
-    boolean filter(String username, String password, String clientId, String domain, MultivaluedMap<String, String> form);
+    void filter(String username, String password, String clientId, String domain, MultivaluedMap<String, String> form)
+            throws AuthFilterException;
 }

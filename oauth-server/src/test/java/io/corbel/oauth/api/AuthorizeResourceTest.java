@@ -5,7 +5,9 @@ package io.corbel.oauth.api;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 import io.corbel.lib.token.TokenGrant;
 import io.corbel.lib.token.TokenInfo;
@@ -14,6 +16,7 @@ import io.corbel.lib.token.model.TokenType;
 import io.corbel.lib.token.parser.TokenParser;
 import io.corbel.lib.token.provider.SessionProvider;
 import io.corbel.oauth.filter.FilterRegistry;
+import io.corbel.oauth.filter.exception.AuthFilterException;
 import io.corbel.oauth.model.Client;
 import io.corbel.oauth.model.User;
 import io.corbel.oauth.service.ClientService;
@@ -81,7 +84,7 @@ public class AuthorizeResourceTest {
         TEST_CLIENT.setDomain(TEST_DOMAIN);
         TEST_CLIENT.setName(TEST_CLIENT_ID);
         when(clientServiceMock.findByName(TEST_CLIENT_ID)).thenReturn(Optional.of(TEST_CLIENT));
-        when(filterRegistryMock.filter(any(), any(), any(), any(), any())).thenReturn(true);
+        reset(filterRegistryMock);
     }
 
     public AuthorizeResourceTest() throws Exception {
@@ -120,8 +123,8 @@ public class AuthorizeResourceTest {
     }
 
     @Test
-    public void testLoginWithFailedFilters() {
-        when(filterRegistryMock.filter(any(), any(), any(), any(), any())).thenReturn(false);
+    public void testLoginWithFailedFilters() throws AuthFilterException {
+        doThrow(AuthFilterException.class).when(filterRegistryMock).filter(any(), any(), any(), any(), any());
         Response response = RULE.client().target("/" + ApiVersion.CURRENT + "/oauth/authorize")
                 .property(ClientProperties.FOLLOW_REDIRECTS, false).request().post(Entity.form(formData), Response.class);
 

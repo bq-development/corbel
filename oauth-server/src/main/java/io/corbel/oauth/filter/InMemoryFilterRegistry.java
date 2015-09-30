@@ -1,5 +1,7 @@
 package io.corbel.oauth.filter;
 
+import io.corbel.oauth.filter.exception.AuthFilterException;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -19,10 +21,12 @@ public class InMemoryFilterRegistry implements FilterRegistry {
     }
 
     @Override
-    public boolean filter(String username, String password, String clientId, String domain, MultivaluedMap<String, String> form) {
-        return filters.stream().filter(filter -> filter.getDomain().equals(domain))
-                .allMatch(filter -> filter.filter(username, password, clientId, form));
-
+    public void filter(String username, String password, String clientId, String domain, MultivaluedMap<String, String> form)
+            throws AuthFilterException {
+        for (AuthFilter filter : filters) {
+            if (filter.getDomain().equals(domain)) {
+                filter.filter(username, password, clientId, form);
+            }
+        }
     }
-
 }
