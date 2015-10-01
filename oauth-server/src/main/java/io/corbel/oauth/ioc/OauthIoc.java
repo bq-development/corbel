@@ -66,8 +66,8 @@ import com.google.gson.Gson;
  * @author by Alberto J. Rubio
  */
 @Configuration @Import({ConfigurationIoC.class, OauthMongoIoc.class, TokenVerifiersIoc.class, OneTimeAccessTokenIoc.class, TokenIoc.class,
-        CommonFiltersIoc.class, DropwizardIoc.class, CorsIoc.class, EventBusIoc.class}) @ComponentScan({"io.corbel.oauth.filter",
-        "com.bqreaders.silkroad.oauth.filter"}) public class OauthIoc {
+        CommonFiltersIoc.class, DropwizardIoc.class, CorsIoc.class, EventBusIoc.class}) @ComponentScan({"io.corbel.oauth.filter.plugin",
+        "com.bqreaders.silkroad.oauth.filter.plugin"}) public class OauthIoc {
 
     @Autowired private Environment env;
 
