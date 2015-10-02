@@ -15,6 +15,8 @@ public interface UserService {
 
     void deleteUser(String userId);
 
+    boolean existsByUsernameAndDomain(String username, String domainId);
+
     User findByUserNameAndDomain(String username, String domain);
 
     void updateUser(User user, User userData, Client client) throws CreateUserException.DuplicatedUser;

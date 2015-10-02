@@ -16,10 +16,7 @@ import io.corbel.lib.ws.auth.OAuthProvider;
 import io.corbel.lib.ws.cors.ioc.CorsIoc;
 import io.corbel.lib.ws.dw.ioc.CommonFiltersIoc;
 import io.corbel.lib.ws.dw.ioc.DropwizardIoc;
-import io.corbel.oauth.api.AuthorizeResource;
-import io.corbel.oauth.api.SignoutResource;
-import io.corbel.oauth.api.TokenResource;
-import io.corbel.oauth.api.UserResource;
+import io.corbel.oauth.api.*;
 import io.corbel.oauth.api.auth.ClientCredentialsAuthenticator;
 import io.corbel.oauth.api.auth.TokenAuthenticator;
 import io.corbel.oauth.cli.dsl.OauthShell;
@@ -108,7 +105,7 @@ import com.google.gson.Gson;
     public SessionCookieFactory getSessionCookieFactory() {
         return new DefaultSessionCookieFactory(env.getProperty("session.cookie.path"), env.getProperty("session.cookie.domain"),
                 env.getProperty("session.cookie.comment"), env.getProperty("session.cookie.maxAge", Integer.class), env.getProperty(
-                        "session.cookie.secure", Boolean.class));
+                "session.cookie.secure", Boolean.class));
     }
 
     @Bean
@@ -131,6 +128,11 @@ import com.google.gson.Gson;
     @Bean
     public UserResource getUserResource(UserService userService, ClientService clientService) {
         return new UserResource(userService, clientService);
+    }
+
+    @Bean
+    public UsernameResource getUsernameResource(UserService userService) {
+        return new UsernameResource(userService);
     }
 
     @Bean

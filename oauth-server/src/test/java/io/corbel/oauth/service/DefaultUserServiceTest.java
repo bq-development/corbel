@@ -89,6 +89,18 @@ import io.corbel.oauth.repository.UserRepository;
     }
 
     @Test
+    public void testExistsByUsernameAndDomain() {
+        userService.existsByUsernameAndDomain(USER_TEST, TEST_DOMAIN);
+        verify(userRepositoryMock).existsByUsernameAndDomain(USER_TEST, TEST_DOMAIN);
+    }
+
+    @Test
+    public void testFindByUserNameAndDomain() {
+        userService.findByUserNameAndDomain(USER_TEST, TEST_DOMAIN);
+        verify(userRepositoryMock).findByUsernameAndDomain(USER_TEST, TEST_DOMAIN);
+    }
+
+    @Test
     public void testSendMailResetPassword() {
         String email = "email";
         User user = TestUtils.createUserTest(Role.USER);

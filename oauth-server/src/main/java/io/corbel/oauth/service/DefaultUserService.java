@@ -44,6 +44,11 @@ public class DefaultUserService implements UserService {
     }
 
     @Override
+    public boolean existsByUsernameAndDomain(String username, String domainId) {
+        return userRepository.existsByUsernameAndDomain(username, domainId);
+    }
+
+    @Override
     public User findByUserNameAndDomain(String username, String domain) {
         return userRepository.findByUsernameAndDomain(username, domain);
     }
