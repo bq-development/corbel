@@ -1,13 +1,13 @@
 package io.corbel.iam.auth.rule;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
+import io.corbel.iam.auth.AuthorizationRequestContext;
+import io.corbel.iam.exception.IllegalExpireTimeException;
+import io.corbel.iam.exception.UnauthorizedException;
 import org.junit.Before;
 import org.junit.Test;
 
-import io.corbel.iam.auth.AuthorizationRequestContext;
-import io.corbel.iam.exception.UnauthorizedException;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * @author Alexander De Leon
@@ -32,8 +32,8 @@ public class MaxExpireAuthorizationRuleTest {
         rule.process(contextMock);
     }
 
-    @Test(expected = UnauthorizedException.class)
-    public void testUnauthorized() throws UnauthorizedException {
+    @Test(expected = IllegalExpireTimeException.class)
+    public void testUnauthorized() throws UnauthorizedException, IllegalExpireTimeException {
         when(contextMock.getAuthorizationExpiration()).thenReturn(System.currentTimeMillis() + (TEST_MAX_EXPIRATION * 2));
         rule.process(contextMock);
     }

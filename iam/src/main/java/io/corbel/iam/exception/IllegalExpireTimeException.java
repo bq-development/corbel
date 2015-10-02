@@ -1,6 +1,6 @@
 package io.corbel.iam.exception;
 
-public class IllegalExpireTimeException extends Exception {
+public class IllegalExpireTimeException extends RuntimeException {
 
     private static final long serialVersionUID = -822589169427171311L;
 
