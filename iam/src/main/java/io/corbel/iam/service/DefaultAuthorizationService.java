@@ -56,7 +56,7 @@ public class DefaultAuthorizationService implements AuthorizationService {
 
     @Override
     public TokenGrant authorize(String assertion) throws UnauthorizedException, MissingOAuthParamsException,
-            OauthServerConnectionException, MissingBasicParamsException, IllegalExpireTimeException {
+            OauthServerConnectionException, MissingBasicParamsException {
         TokenGrant tokenGrant;
         try {
             AuthorizationRequestContext context = getContext(assertion);
@@ -85,7 +85,7 @@ public class DefaultAuthorizationService implements AuthorizationService {
 
     @Override
     public TokenGrant authorize(String assertion, OauthParams params) throws UnauthorizedException, MissingOAuthParamsException,
-            OauthServerConnectionException, IllegalExpireTimeException {
+            OauthServerConnectionException {
         try {
             AuthorizationRequestContext context = getContext(assertion);
             checkOauthParams(context, params);
@@ -184,13 +184,13 @@ public class DefaultAuthorizationService implements AuthorizationService {
         scopeService.publishAuthorizationRules(tokenGrant.getAccessToken(), tokenGrant.getExpiresAt(), filledScopes);
     }
 
-    private AuthorizationRequestContext getContext(String assertion) throws SignatureException, IllegalExpireTimeException {
+    private AuthorizationRequestContext getContext(String assertion) throws SignatureException, UnauthorizedTimeException {
         try {
             JsonToken jwt = jsonTokenParser.verifyAndDeserialize(assertion);
             return contextFactory.fromJsonToken(jwt);
         } catch (IllegalStateException e) {
             if (isAnExpiredException(assertion)) {
-                throw new IllegalExpireTimeException(e.getMessage());
+                throw new UnauthorizedTimeException(e.getMessage());
             } else {
                 throw e;
             }

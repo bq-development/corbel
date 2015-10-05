@@ -2,8 +2,8 @@ package io.corbel.iam.auth.rule;
 
 import io.corbel.iam.auth.AuthorizationRequestContext;
 import io.corbel.iam.auth.AuthorizationRule;
-import io.corbel.iam.exception.IllegalExpireTimeException;
 import io.corbel.iam.exception.UnauthorizedException;
+import io.corbel.iam.exception.UnauthorizedTimeException;
 
 /**
  * Ensures that the requested expiration time does not exceeds the maximum allowed expiration.
@@ -23,7 +23,7 @@ public class MaxExpireAuthorizationRule implements AuthorizationRule {
     public void process(AuthorizationRequestContext context) throws UnauthorizedException {
         long currentTime = System.currentTimeMillis();
         if (context.getAuthorizationExpiration() > currentTime + maxExpirationInMillis) {
-            throw new IllegalExpireTimeException("Authorization request exceds maximum expiration. Maximum is " + maxExpirationInMillis
+            throw new UnauthorizedTimeException("Authorization request exceds maximum expiration. Maximum is " + maxExpirationInMillis
                     + " milliseconds since its issued time");
         }
     }

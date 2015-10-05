@@ -1,7 +1,6 @@
 package io.corbel.iam.auth.rule;
 
 import io.corbel.iam.auth.AuthorizationRequestContext;
-import io.corbel.iam.exception.IllegalExpireTimeException;
 import io.corbel.iam.exception.UnauthorizedException;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,8 +31,8 @@ public class MaxExpireAuthorizationRuleTest {
         rule.process(contextMock);
     }
 
-    @Test(expected = IllegalExpireTimeException.class)
-    public void testUnauthorized() throws UnauthorizedException, IllegalExpireTimeException {
+    @Test(expected = UnauthorizedException.class)
+    public void testUnauthorized() throws UnauthorizedException {
         when(contextMock.getAuthorizationExpiration()).thenReturn(System.currentTimeMillis() + (TEST_MAX_EXPIRATION * 2));
         rule.process(contextMock);
     }

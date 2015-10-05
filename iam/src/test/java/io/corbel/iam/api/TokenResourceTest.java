@@ -97,7 +97,7 @@ public class TokenResourceTest {
 
     @Test
     public void testPostReturnTokenOk() throws SignatureException, UnauthorizedException, MissingOAuthParamsException,
-            OauthServerConnectionException, MissingBasicParamsException, IllegalExpireTimeException {
+            OauthServerConnectionException, MissingBasicParamsException {
         TokenGrant testTokenGrant = new TokenGrant(TEST_TOKEN, 1, REFRESH_TOKEN);
         when(authorizationServiceMock.authorize(TEST_ASSERTION)).thenReturn(testTokenGrant);
 
@@ -114,7 +114,7 @@ public class TokenResourceTest {
     @SuppressWarnings("unchecked")
     @Test
     public void testPostNotAuthorized() throws SignatureException, UnauthorizedException, MissingOAuthParamsException,
-            OauthServerConnectionException, MissingBasicParamsException, IllegalExpireTimeException {
+            OauthServerConnectionException, MissingBasicParamsException {
         when(authorizationServiceMock.authorize(TEST_ASSERTION)).thenThrow(new UnauthorizedException(UNAUTHORIZED_MESSAGE));
 
         MultivaluedMap<String, String> formData = new MultivaluedHashMap();
@@ -131,8 +131,8 @@ public class TokenResourceTest {
     @SuppressWarnings("unchecked")
     @Test
     public void testPostBadSystemClock() throws SignatureException, UnauthorizedException, MissingOAuthParamsException,
-            OauthServerConnectionException, MissingBasicParamsException, IllegalExpireTimeException {
-        when(authorizationServiceMock.authorize(TEST_ASSERTION)).thenThrow(new IllegalExpireTimeException("IllegalExpireTimeException"));
+            OauthServerConnectionException, MissingBasicParamsException {
+        when(authorizationServiceMock.authorize(TEST_ASSERTION)).thenThrow(new UnauthorizedTimeException("IllegalExpireTimeException"));
 
         MultivaluedMap<String, String> formData = new MultivaluedHashMap();
         formData.add(ASSERTION, TEST_ASSERTION);
@@ -171,7 +171,7 @@ public class TokenResourceTest {
     }
 
     @Test
-    public void testGetIsAuthenticated() throws UnauthorizedException, MissingOAuthParamsException, OauthServerConnectionException, IllegalExpireTimeException {
+    public void testGetIsAuthenticated() throws UnauthorizedException, MissingOAuthParamsException, OauthServerConnectionException {
         TokenGrant testTokenGrant = new TokenGrant(TEST_TOKEN, 1, REFRESH_TOKEN);
         when(authorizationServiceMock.authorize(Mockito.eq(TEST_ASSERTION), Mockito.any())).thenReturn(testTokenGrant);
 
@@ -182,7 +182,7 @@ public class TokenResourceTest {
     }
 
     @Test
-    public void testGetInvalidGrantType() throws UnauthorizedException, MissingOAuthParamsException, OauthServerConnectionException, IllegalExpireTimeException {
+    public void testGetInvalidGrantType() throws UnauthorizedException, MissingOAuthParamsException, OauthServerConnectionException {
         TokenGrant testTokenGrant = new TokenGrant(TEST_TOKEN, 1, REFRESH_TOKEN);
         when(authorizationServiceMock.authorize(Mockito.eq(TEST_ASSERTION), Mockito.any())).thenReturn(testTokenGrant);
 
@@ -193,7 +193,7 @@ public class TokenResourceTest {
     }
 
     @Test
-    public void testGetMissingGrantType() throws UnauthorizedException, MissingOAuthParamsException, OauthServerConnectionException, IllegalExpireTimeException {
+    public void testGetMissingGrantType() throws UnauthorizedException, MissingOAuthParamsException, OauthServerConnectionException {
         TokenGrant testTokenGrant = new TokenGrant(TEST_TOKEN, 1, REFRESH_TOKEN);
         when(authorizationServiceMock.authorize(Mockito.eq(TEST_ASSERTION), Mockito.any())).thenReturn(testTokenGrant);
 
@@ -204,7 +204,7 @@ public class TokenResourceTest {
     }
 
     @Test
-    public void testGetMissingAssertion() throws UnauthorizedException, MissingOAuthParamsException, OauthServerConnectionException, IllegalExpireTimeException {
+    public void testGetMissingAssertion() throws UnauthorizedException, MissingOAuthParamsException, OauthServerConnectionException {
         TokenGrant testTokenGrant = new TokenGrant(TEST_TOKEN, 1, REFRESH_TOKEN);
         when(authorizationServiceMock.authorize(Mockito.eq(TEST_ASSERTION), Mockito.any())).thenReturn(testTokenGrant);
 
@@ -216,7 +216,7 @@ public class TokenResourceTest {
 
     @Test
     public void testGetState() throws UnauthorizedException, MissingOAuthParamsException, UnsupportedEncodingException,
-            OauthServerConnectionException, IllegalExpireTimeException {
+            OauthServerConnectionException {
         TokenGrant testTokenGrant = new TokenGrant(TEST_TOKEN, 1, REFRESH_TOKEN);
         when(authorizationServiceMock.authorize(Mockito.eq(TEST_ASSERTION), Mockito.any())).thenReturn(testTokenGrant);
 
@@ -286,7 +286,7 @@ public class TokenResourceTest {
 
     @Test
     public void testPostWithCookieReturnTokenOk() throws SignatureException, UnauthorizedException, MissingOAuthParamsException,
-            OauthServerConnectionException, MissingBasicParamsException, IllegalExpireTimeException {
+            OauthServerConnectionException, MissingBasicParamsException {
         TokenGrant testTokenGrant = new TokenGrant(TEST_TOKEN, 1, REFRESH_TOKEN);
         when(authorizationServiceMock.authorize(TEST_ASSERTION)).thenReturn(testTokenGrant);
 
@@ -302,7 +302,7 @@ public class TokenResourceTest {
 
     @Test
     public void testGetWithCookieIsAuthenticated() throws UnauthorizedException, MissingOAuthParamsException,
-            OauthServerConnectionException, IllegalExpireTimeException {
+            OauthServerConnectionException {
         TokenGrant testTokenGrant = new TokenGrant(TEST_TOKEN, 1, REFRESH_TOKEN);
         when(authorizationServiceMock.authorize(Mockito.eq(TEST_ASSERTION), Mockito.any())).thenReturn(testTokenGrant);
 

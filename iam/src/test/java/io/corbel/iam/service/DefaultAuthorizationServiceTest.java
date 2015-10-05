@@ -94,7 +94,7 @@ public class DefaultAuthorizationServiceTest {
 
     @Test
     public void testAuthorized() throws SignatureException, UnauthorizedException, MissingOAuthParamsException,
-            OauthServerConnectionException, MissingBasicParamsException, IllegalExpireTimeException {
+            OauthServerConnectionException, MissingBasicParamsException {
         JsonToken validJsonToken = mock(JsonToken.class);
         when(jsonTokenParserMock.verifyAndDeserialize(TEST_JWT)).thenReturn(validJsonToken);
         initContext(false);
@@ -109,7 +109,7 @@ public class DefaultAuthorizationServiceTest {
 
     @Test
     public void testAuthorizedWithPrincipal() throws SignatureException, UnauthorizedException, MissingOAuthParamsException,
-            OauthServerConnectionException, MissingBasicParamsException, IllegalExpireTimeException {
+            OauthServerConnectionException, MissingBasicParamsException {
         Set<Scope> filledScopes = new HashSet();
 
         JsonToken validJsonToken = mock(JsonToken.class);
@@ -125,7 +125,7 @@ public class DefaultAuthorizationServiceTest {
 
     @Test
     public void testRefreshToken() throws SignatureException, UnauthorizedException, MissingOAuthParamsException,
-            TokenVerificationException, OauthServerConnectionException, MissingBasicParamsException, IllegalExpireTimeException {
+            TokenVerificationException, OauthServerConnectionException, MissingBasicParamsException {
         Set<Scope> filledScopes = new HashSet();
 
         User userMock = mock(User.class);
@@ -145,14 +145,14 @@ public class DefaultAuthorizationServiceTest {
 
     @Test(expected = UnauthorizedException.class)
     public void testInvalidSignature() throws SignatureException, UnauthorizedException, MissingOAuthParamsException,
-            OauthServerConnectionException, MissingBasicParamsException, IllegalExpireTimeException {
+            OauthServerConnectionException, MissingBasicParamsException {
         when(jsonTokenParserMock.verifyAndDeserialize(TEST_JWT)).thenThrow(new SignatureException());
         authorizationService.authorize(TEST_JWT);
     }
 
-    @Test(expected = IllegalExpireTimeException.class)
+    @Test(expected = UnauthorizedTimeException.class)
     public void testBadSystemClockException() throws SignatureException, UnauthorizedException, MissingOAuthParamsException,
-            OauthServerConnectionException, MissingBasicParamsException, IllegalExpireTimeException {
+            OauthServerConnectionException, MissingBasicParamsException {
         when(jsonTokenParserMock.deserialize(any())).thenReturn(jsonTokenMock);
         when(jsonTokenMock.getIssuedAt()).thenReturn(new Instant(2));
         when(jsonTokenMock.getExpiration()).thenReturn(new Instant(1));
@@ -163,14 +163,14 @@ public class DefaultAuthorizationServiceTest {
 
     @Test(expected = UnauthorizedException.class)
     public void testBadToken() throws SignatureException, UnauthorizedException, MissingOAuthParamsException,
-            OauthServerConnectionException, MissingBasicParamsException, IllegalExpireTimeException {
+            OauthServerConnectionException, MissingBasicParamsException {
         when(jsonTokenParserMock.verifyAndDeserialize(TEST_JWT)).thenThrow(new IllegalArgumentException());
         authorizationService.authorize(TEST_JWT);
     }
 
     @Test(expected = UnauthorizedException.class)
     public void testBadToken2() throws SignatureException, UnauthorizedException, MissingOAuthParamsException,
-            OauthServerConnectionException, MissingBasicParamsException, IllegalExpireTimeException {
+            OauthServerConnectionException, MissingBasicParamsException {
         when(jsonTokenParserMock.verifyAndDeserialize(TEST_JWT)).thenThrow(new IllegalStateException());
         when(jsonTokenParserMock.issuedAtIsValid(any(),any())).thenReturn(true);
         when(jsonTokenParserMock.expirationIsValid(any(),any())).thenReturn(true);

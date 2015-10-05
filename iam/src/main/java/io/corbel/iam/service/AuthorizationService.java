@@ -10,9 +10,9 @@ import io.corbel.iam.model.TokenGrant;
 public interface AuthorizationService {
 
     TokenGrant authorize(String assertion) throws UnauthorizedException, MissingOAuthParamsException, OauthServerConnectionException,
-            MissingBasicParamsException, IllegalExpireTimeException;
+            MissingBasicParamsException;
 
     TokenGrant authorize(String assertion, OauthParams params) throws UnauthorizedException, MissingOAuthParamsException,
-            OauthServerConnectionException, IllegalExpireTimeException;
+            OauthServerConnectionException;
 
 }
