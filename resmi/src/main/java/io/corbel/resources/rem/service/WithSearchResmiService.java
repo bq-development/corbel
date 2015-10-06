@@ -1,5 +1,6 @@
 package io.corbel.resources.rem.service;
 
+import io.corbel.lib.queries.StringQueryLiteral;
 import io.corbel.lib.queries.builder.ResourceQueryBuilder;
 import io.corbel.lib.queries.request.Aggregation;
 import io.corbel.lib.queries.request.AggregationResult;
@@ -105,9 +106,9 @@ public class WithSearchResmiService extends DefaultResmiService implements Searc
     }
 
     private CollectionParameters buildParametersForBinding(CollectionParameters apiParameters, JsonArray searchResult) {
-        List<String> ids = new ArrayList<>();
+        List<StringQueryLiteral> ids = new ArrayList<>();
         for (JsonElement element : searchResult) {
-            ids.add(((JsonObject) element).get(ID).getAsString());
+            ids.add(new StringQueryLiteral(((JsonObject) element).get(ID).getAsString()));
         }
         ResourceQueryBuilder builder = new ResourceQueryBuilder().add(ID, ids, QueryOperator.$IN);
         return new CollectionParametersImpl(apiParameters.getPagination(), apiParameters.getSort(), Optional.of(Arrays.asList(builder
