@@ -25,11 +25,9 @@ public class RequestParametersBuilder<E> {
     private Long contentLength;
     private MultivaluedMap<String, String> headers;
 
-    public RequestParameters<E> build() {
-        return new RequestParametersImpl<E>(apiParameters, tokenInfo, acceptedMediaTypes, contentLength, params, headers);
-    }
+    public RequestParametersBuilder() {}
 
-    public RequestParametersBuilder<E> requestParameters(RequestParameters<E> parameters) {
+    public RequestParametersBuilder(RequestParameters<E> parameters) {
         this.apiParameters = parameters.getOptionalApiParameters().get();
         this.apiParameters = parameters.getOptionalApiParameters().get();
         this.tokenInfo = parameters.getTokenInfo();
@@ -37,7 +35,10 @@ public class RequestParametersBuilder<E> {
         this.params = parameters.getParams();
         this.contentLength = parameters.getContentLength();
         this.headers = parameters.getHeaders();
-        return this;
+    }
+
+    public RequestParameters<E> build() {
+        return new RequestParametersImpl<E>(apiParameters, tokenInfo, acceptedMediaTypes, contentLength, params, headers);
     }
 
     public RequestParametersBuilder<E> apiParameters(E apiParameters) {

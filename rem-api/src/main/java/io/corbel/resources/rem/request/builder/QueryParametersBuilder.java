@@ -25,6 +25,17 @@ public class QueryParametersBuilder {
     private Aggregation aggregation;
     private Search search;
 
+    public QueryParametersBuilder() {}
+
+    public QueryParametersBuilder(QueryParameters queryParameters) {
+        this.pagination = queryParameters.getPagination();
+        this.sort = queryParameters.getSort().get();
+        this.queries = queryParameters.getQueries().get();
+        this.conditions = queryParameters.getConditions().get();
+        this.aggregation = queryParameters.getAggregation().get();
+        this.search = queryParameters.getSearch().get();
+    }
+
     public QueryParameters build() {
         return new QueryParameters(pagination, Optional.ofNullable(sort), Optional.ofNullable(queries), Optional.ofNullable(conditions),
                 Optional.ofNullable(aggregation), Optional.ofNullable(search));
