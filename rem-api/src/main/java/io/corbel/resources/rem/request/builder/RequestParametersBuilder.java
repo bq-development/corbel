@@ -4,8 +4,10 @@ import io.corbel.lib.token.TokenInfo;
 import io.corbel.resources.rem.request.RequestParameters;
 import io.corbel.resources.rem.request.RequestParametersImpl;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 
 import org.springframework.http.MediaType;
@@ -53,8 +55,24 @@ public class RequestParametersBuilder<E> {
         return this;
     }
 
+    public RequestParametersBuilder<E> acceptedMediaType(MediaType mediaType) {
+        if (acceptedMediaTypes == null) {
+            acceptedMediaTypes = new ArrayList<>();
+        }
+        acceptedMediaTypes.add(mediaType);
+        return this;
+    }
+
     public RequestParametersBuilder<E> params(MultivaluedMap<String, String> params) {
         this.params = params;
+        return this;
+    }
+
+    public RequestParametersBuilder<E> param(String key, String value) {
+        if (params == null) {
+            params = new MultivaluedHashMap<>();
+        }
+        params.add(key, value);
         return this;
     }
 
@@ -65,6 +83,14 @@ public class RequestParametersBuilder<E> {
 
     public RequestParametersBuilder<E> headers(MultivaluedMap<String, String> headers) {
         this.headers = headers;
+        return this;
+    }
+
+    public RequestParametersBuilder<E> header(String key, String value) {
+        if (headers == null) {
+            headers = new MultivaluedHashMap<>();
+        }
+        headers.add(key, value);
         return this;
     }
 }

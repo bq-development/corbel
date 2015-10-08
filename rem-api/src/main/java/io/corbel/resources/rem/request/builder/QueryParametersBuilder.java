@@ -7,6 +7,7 @@ import io.corbel.lib.queries.request.ResourceQuery;
 import io.corbel.lib.queries.request.Search;
 import io.corbel.lib.queries.request.Sort;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -18,14 +19,15 @@ import java.util.Optional;
 public class QueryParametersBuilder {
 
     private Pagination pagination;
-    private Optional<Sort> sort = Optional.empty();
-    private Optional<List<ResourceQuery>> queries = Optional.empty();
-    private Optional<List<ResourceQuery>> conditions = Optional.empty();
-    private Optional<Aggregation> aggregation = Optional.empty();
-    private Optional<Search> search = Optional.empty();
+    private Sort sort;
+    private List<ResourceQuery> queries;
+    private List<ResourceQuery> conditions;
+    private Aggregation aggregation;
+    private Search search;
 
     public QueryParameters build() {
-        return new QueryParameters(pagination, sort, queries, conditions, aggregation, search);
+        return new QueryParameters(pagination, Optional.ofNullable(sort), Optional.ofNullable(queries), Optional.ofNullable(conditions),
+                Optional.ofNullable(aggregation), Optional.ofNullable(search));
     }
 
     public QueryParametersBuilder pagination(Pagination pagination) {
@@ -34,37 +36,53 @@ public class QueryParametersBuilder {
     }
 
     public QueryParametersBuilder sort(Sort sort) {
-        this.sort = Optional.ofNullable(sort);
+        this.sort = sort;
         return this;
     }
 
     public QueryParametersBuilder queries(List<ResourceQuery> queries) {
-        this.queries = Optional.ofNullable(queries);
+        this.queries = queries;
         return this;
     }
 
     public QueryParametersBuilder queries(ResourceQuery... queries) {
-        this.queries = Optional.ofNullable(Arrays.asList(queries));
+        this.queries = Arrays.asList(queries);
+        return this;
+    }
+
+    public QueryParametersBuilder query(ResourceQuery query) {
+        if (queries == null) {
+            queries = new ArrayList<>();
+        }
+        queries.add(query);
         return this;
     }
 
     public QueryParametersBuilder conditions(List<ResourceQuery> conditions) {
-        this.conditions = Optional.ofNullable(conditions);
+        this.conditions = conditions;
         return this;
     }
 
     public QueryParametersBuilder conditions(ResourceQuery... conditions) {
-        this.conditions = Optional.ofNullable(Arrays.asList(conditions));
+        this.conditions = Arrays.asList(conditions);
+        return this;
+    }
+
+    public QueryParametersBuilder condition(ResourceQuery condition) {
+        if (conditions == null) {
+            conditions = new ArrayList<>();
+        }
+        conditions.add(condition);
         return this;
     }
 
     public QueryParametersBuilder aggregation(Aggregation aggregation) {
-        this.aggregation = Optional.ofNullable(aggregation);
+        this.aggregation = aggregation;
         return this;
     }
 
     public QueryParametersBuilder search(Search search) {
-        this.search = Optional.ofNullable(search);
+        this.search = search;
         return this;
     }
 }
