@@ -1,19 +1,20 @@
 package io.corbel.event;
 
+import static org.fest.assertions.api.Assertions.assertThat;
 import io.corbel.eventbus.Event;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JSR310Module;
+
+import java.util.Collections;
+import java.util.Date;
+
 import org.fest.util.Sets;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 
-import java.util.Collections;
-import java.util.Date;
-
-import static org.fest.assertions.api.Assertions.assertThat;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JSR310Module;
 
 
 /**
@@ -44,8 +45,8 @@ public class EventSerializationTest {
 
     @Test
     public void testAssetsEvent() {
-        assertThanCanBeSendAndRetriveInEventBus(new AssetsEvent("DOMAIN", "USERID", Collections.singletonList(new AssetsEvent.EventAsset(Sets
-                .newLinkedHashSet("a", "b"), new Date(), "ASSET_NAME", "PRODUCT_ID"))));
+        assertThanCanBeSendAndRetriveInEventBus(new AssetsEvent("DOMAIN", "USERID", Collections.singletonList(new AssetsEvent.EventAsset(
+                Sets.newLinkedHashSet("a", "b"), new Date(), "ASSET_NAME", "PRODUCT_ID"))));
     }
 
     @Test
@@ -82,7 +83,7 @@ public class EventSerializationTest {
 
     @Test
     public void testUserCreatedEvent() {
-        assertThanCanBeSendAndRetriveInEventBus(new UserCreatedEvent("USER", "DOMAIN", "EMAIL", "COUNTRY"));
+        assertThanCanBeSendAndRetriveInEventBus(new UserCreatedEvent("USER", "DOMAIN", "EMAIL", "COUNTRY", "USERNAME"));
     }
 
     @Test

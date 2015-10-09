@@ -1,10 +1,5 @@
 package io.corbel.iam.service;
 
-import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import io.corbel.event.AuthorizationEvent;
 import io.corbel.event.DomainDeletedEvent;
 import io.corbel.event.NotificationEvent;
@@ -13,6 +8,11 @@ import io.corbel.event.UserCreatedEvent;
 import io.corbel.event.UserDeletedEvent;
 import io.corbel.eventbus.service.EventBus;
 import io.corbel.iam.model.User;
+
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created by Alberto J. Rubio
@@ -28,7 +28,8 @@ public class DefaultEventsService implements EventsService {
 
     @Override
     public void sendUserCreatedEvent(User user) {
-        UserCreatedEvent userCreatedEvent = new UserCreatedEvent(user.getId(), user.getDomain(), user.getEmail(), user.getCountry());
+        UserCreatedEvent userCreatedEvent = new UserCreatedEvent(user.getId(), user.getDomain(), user.getEmail(), user.getCountry(),
+                user.getUsername());
         eventBus.dispatch(userCreatedEvent);
     }
 
