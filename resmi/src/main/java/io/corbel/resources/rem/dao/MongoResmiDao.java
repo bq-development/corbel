@@ -104,11 +104,15 @@ public class MongoResmiDao implements ResmiDao {
         LOG.debug("findRelation Query executed : " + query.getQueryObject().toString());
         JsonArray result = renameIds(JsonUtils.convertToArray(mongoOperations.find(query, JsonObject.class, getMongoCollectionName(uri))));
 
-        if (uri.getRelationId() != null && result.size() == 1) {
-            return result.get(0);
-        } else {
-            return result;
+        if (uri.getRelationId() != null) {
+            if (result.size() == 1) {
+                return result.get(0);
+            } else if (result.size() == 0) {
+                return null;
+            }
         }
+
+        return result;
     }
 
     @Override

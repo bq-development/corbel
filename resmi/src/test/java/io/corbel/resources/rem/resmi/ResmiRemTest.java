@@ -2,16 +2,16 @@ package io.corbel.resources.rem.resmi;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import io.corbel.resources.rem.request.RelationParameters;
+import io.corbel.resources.rem.request.RequestParameters;
+import io.corbel.resources.rem.request.ResourceId;
+import io.corbel.resources.rem.service.ResmiService;
 
 import java.util.Optional;
 
 import org.junit.Before;
 import org.mockito.Mockito;
 
-import io.corbel.resources.rem.request.RelationParameters;
-import io.corbel.resources.rem.request.RequestParameters;
-import io.corbel.resources.rem.request.ResourceId;
-import io.corbel.resources.rem.service.ResmiService;
 import com.google.gson.JsonObject;
 
 /**
@@ -23,6 +23,7 @@ public abstract class ResmiRemTest {
     protected static final String TEST_TYPE = "testType";
     protected static final String TEST_TYPE_RELATION = "testTypeRelation";
     protected static final String ID = "testId";
+    protected static final String DST_ID = "resourceDstId";
     protected static final ResourceId TEST_ID = new ResourceId(ID);
     protected static final ResourceId TEST_WILDCARD_ID = new ResourceId("_");
     protected ResmiService resmiServiceMock;

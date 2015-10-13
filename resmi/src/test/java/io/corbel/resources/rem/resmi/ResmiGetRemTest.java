@@ -2,6 +2,19 @@ package io.corbel.resources.rem.resmi;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
+import io.corbel.lib.queries.request.Aggregation;
+import io.corbel.lib.queries.request.AggregationOperator;
+import io.corbel.lib.queries.request.AverageResult;
+import io.corbel.lib.queries.request.CountResult;
+import io.corbel.lib.queries.request.Pagination;
+import io.corbel.lib.queries.request.ResourceQuery;
+import io.corbel.lib.queries.request.Sort;
+import io.corbel.resources.rem.model.ResourceUri;
+import io.corbel.resources.rem.request.CollectionParameters;
+import io.corbel.resources.rem.request.RelationParameters;
+import io.corbel.resources.rem.request.RequestParameters;
+import io.corbel.resources.rem.request.ResourceId;
+import io.corbel.resources.rem.service.BadConfigurationException;
 
 import java.util.Arrays;
 import java.util.Optional;
@@ -13,19 +26,6 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import io.corbel.resources.rem.model.ResourceUri;
-import io.corbel.resources.rem.request.CollectionParameters;
-import io.corbel.resources.rem.request.RelationParameters;
-import io.corbel.resources.rem.request.RequestParameters;
-import io.corbel.resources.rem.request.ResourceId;
-import io.corbel.resources.rem.service.BadConfigurationException;
-import io.corbel.lib.queries.request.Aggregation;
-import io.corbel.lib.queries.request.AggregationOperator;
-import io.corbel.lib.queries.request.AverageResult;
-import io.corbel.lib.queries.request.CountResult;
-import io.corbel.lib.queries.request.Pagination;
-import io.corbel.lib.queries.request.ResourceQuery;
-import io.corbel.lib.queries.request.Sort;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
@@ -147,8 +147,7 @@ public class ResmiGetRemTest extends ResmiRemTest {
     @Test
     public void testGetRelationResource() throws BadConfigurationException {
         JsonArray jsonArray = new JsonArray();
-        String dstId = "resourceDstId";
-        ResourceUri resourceUri = new ResourceUri(TEST_TYPE, ID, TEST_TYPE_RELATION, dstId);
+        ResourceUri resourceUri = new ResourceUri(TEST_TYPE, ID, TEST_TYPE_RELATION, DST_ID);
         ResourceId resourceId = new ResourceId(ID);
 
 
@@ -160,13 +159,35 @@ public class ResmiGetRemTest extends ResmiRemTest {
         when(relationParametersMock.getQueries()).thenReturn(Optional.ofNullable(Arrays.asList(resourceQueryMock)));
         when(relationParametersMock.getPagination()).thenReturn(paginationMock);
         when(relationParametersMock.getSort()).thenReturn(Optional.ofNullable(sortMock));
-        when(relationParametersMock.getPredicateResource()).thenReturn(Optional.of(dstId));
+        when(relationParametersMock.getPredicateResource()).thenReturn(Optional.of(DST_ID));
 
         Response response = getRem.relation(TEST_TYPE, resourceId, TEST_TYPE_RELATION, requestParametersRelationParametersMock,
                 Optional.empty());
 
         assertThat(response.getStatus()).isEqualTo(200);
         assertThat(response.getEntity()).isEqualTo(jsonArray);
+    }
+
+    @Test
+    public void testGetRelationResourceNotFound() throws BadConfigurationException {
+        ResourceUri resourceUri = new ResourceUri(TEST_TYPE, ID, TEST_TYPE_RELATION, DST_ID);
+        ResourceId resourceId = new ResourceId(ID);
+
+
+        when(resmiServiceMock.findRelation(resourceUri, Optional.of(relationParametersMock))).thenReturn(null);
+
+        when(requestParametersRelationParametersMock.getOptionalApiParameters()).thenReturn(Optional.of(relationParametersMock));
+        when(relationParametersMock.getAggregation()).thenReturn(Optional.empty());
+
+        when(relationParametersMock.getQueries()).thenReturn(Optional.ofNullable(Arrays.asList(resourceQueryMock)));
+        when(relationParametersMock.getPagination()).thenReturn(paginationMock);
+        when(relationParametersMock.getSort()).thenReturn(Optional.ofNullable(sortMock));
+        when(relationParametersMock.getPredicateResource()).thenReturn(Optional.of(DST_ID));
+
+        Response response = getRem.relation(TEST_TYPE, resourceId, TEST_TYPE_RELATION, requestParametersRelationParametersMock,
+                Optional.empty());
+
+        assertThat(response.getStatus()).isEqualTo(404);
     }
 
     @Test
