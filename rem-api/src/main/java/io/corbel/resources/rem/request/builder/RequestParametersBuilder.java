@@ -28,8 +28,7 @@ public class RequestParametersBuilder<E> {
     public RequestParametersBuilder() {}
 
     public RequestParametersBuilder(RequestParameters<E> parameters) {
-        this.apiParameters = parameters.getOptionalApiParameters().get();
-        this.apiParameters = parameters.getOptionalApiParameters().get();
+        this.apiParameters = parameters.getOptionalApiParameters().map(apiParameters -> apiParameters).orElse(null);
         this.tokenInfo = parameters.getTokenInfo();
         this.acceptedMediaTypes = parameters.getAcceptedMediaTypes();
         this.params = parameters.getParams();
