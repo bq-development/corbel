@@ -90,4 +90,10 @@ public class EventSerializationTest {
     public void testUserDeletedEvent() {
         assertThanCanBeSendAndRetriveInEventBus(new UserDeletedEvent("USER_ID", "DOMAIN"));
     }
+
+    @Test
+    public void testDeviceEvent() {
+        assertThanCanBeSendAndRetriveInEventBus(new DeviceEvent(DeviceEvent.Type.CREATED, "DOMAIN", "DEVICEID", "USERID", "DEVICETYPE", "DEVICENAME"));
+    }
+
 }

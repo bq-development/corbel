@@ -18,7 +18,7 @@ public interface DeviceService {
 
     Device update(Device deviceId);
 
-    void deleteByIdAndUserId(String deviceId, String userId);
+    void deleteByIdAndUserId(String deviceId, String userId, String domainId);
 
     List<Device> deleteByUserId(User user);
 }

@@ -214,7 +214,7 @@ import java.util.stream.Collectors;
     public Response deleteDevice(@PathParam("userId") String userId, @PathParam("deviceId") final String deviceId,
             @Auth AuthorizationInfo authorizationInfo) {
         User user = getUserResolvingMeAndUserDomainVerifying(userId, authorizationInfo);
-        deviceService.deleteByIdAndUserId(deviceId, user.getId());
+        deviceService.deleteByIdAndUserId(deviceId, user.getId(), authorizationInfo.getDomainId());
         return Response.status(Status.NO_CONTENT).build();
     }
 

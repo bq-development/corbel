@@ -252,7 +252,7 @@ public class UserResourceDevicesTest extends UserResourceTestBase {
         Response response = apiCall("Bearer " + TEST_TOKEN, "/v1.0/user/me/devices/" + TEST_DEVICE_ID).delete(Response.class);
         // VERIFY
         assertThat(response.getStatus()).isEqualTo(204);
-        verify(devicesServiceMock, only()).deleteByIdAndUserId(TEST_DEVICE_ID, TEST_USER_ID);
+        verify(devicesServiceMock, only()).deleteByIdAndUserId(TEST_DEVICE_ID, TEST_USER_ID, TEST_DOMAIN_ID);
     }
 
     @Test

@@ -116,6 +116,11 @@ public abstract class UserRepositoryDecorator implements UserRepository {
     }
 
     @Override
+    public boolean upsert(String id, User data) {
+        return decoratedUserRepository.upsert(id, data);
+    }
+
+    @Override
     public Page<User> findAll(Pageable pageable) {
         return decoratedUserRepository.findAll(pageable);
     }

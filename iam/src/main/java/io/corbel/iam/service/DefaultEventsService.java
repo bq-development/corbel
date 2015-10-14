@@ -1,12 +1,8 @@
 package io.corbel.iam.service;
 
-import io.corbel.event.AuthorizationEvent;
-import io.corbel.event.DomainDeletedEvent;
-import io.corbel.event.NotificationEvent;
-import io.corbel.event.ScopeUpdateEvent;
-import io.corbel.event.UserCreatedEvent;
-import io.corbel.event.UserDeletedEvent;
+import io.corbel.event.*;
 import io.corbel.eventbus.service.EventBus;
+import io.corbel.iam.model.Device;
 import io.corbel.iam.model.User;
 
 import java.util.Map;
@@ -71,4 +67,21 @@ public class DefaultEventsService implements EventsService {
     public void sendClientAuthenticationEvent(String domainId, String id) {
         eventBus.dispatch(AuthorizationEvent.clientAuthenticationEvent(domainId, id));
     }
+
+    @Override
+    public void sendDeviceCreateEvent(Device device) {
+        eventBus.dispatch(new DeviceEvent(DeviceEvent.Type.CREATED, device.getDomain(), device.getId(), device.getUserId(), device.getType().name(), device.getName()));
+    }
+
+    @Override
+    public void sendDeviceUpdateEvent(Device device) {
+        eventBus.dispatch(new DeviceEvent(DeviceEvent.Type.UPDATED, device.getDomain(), device.getId(), device.getUserId(), device.getType().name(), device.getName()));
+
+    }
+
+    @Override
+    public void sendDeviceDeleteEvent(String deviceId, String userId, String domainId) {
+        eventBus.dispatch(new DeviceEvent(DeviceEvent.Type.DELETED, domainId, deviceId, userId));
+    }
+
 }

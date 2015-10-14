@@ -187,8 +187,8 @@ public class IamIoc {
     }
 
     @Bean
-    DeviceService getDeviceService(DeviceRepository deviceRepository) {
-        return new DefaultDeviceService(deviceRepository, getDeviceIdGenerator());
+    DeviceService getDeviceService(DeviceRepository deviceRepository, EventsService eventsService) {
+        return new DefaultDeviceService(deviceRepository, getDeviceIdGenerator(), eventsService);
     }
 
     @Bean

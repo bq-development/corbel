@@ -2,6 +2,7 @@ package io.corbel.iam.service;
 
 import java.util.Map;
 
+import io.corbel.iam.model.Device;
 import io.corbel.iam.model.User;
 
 /**
@@ -24,4 +25,11 @@ public interface EventsService {
     void sendUserAuthenticationEvent(String domainId, String id);
 
     void sendClientAuthenticationEvent(String domainId, String id);
+
+    void sendDeviceCreateEvent(Device device);
+
+    void sendDeviceUpdateEvent(Device device);
+
+    void sendDeviceDeleteEvent(String deviceId, String userId, String domainId);
+
 }

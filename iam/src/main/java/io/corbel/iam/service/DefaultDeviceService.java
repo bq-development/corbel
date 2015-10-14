@@ -14,10 +14,12 @@ public class DefaultDeviceService implements DeviceService {
 
     private final DeviceRepository deviceRepository;
     private final IdGenerator<Device> deviceIdGenerator;
+    private final EventsService eventsService;
 
-    public DefaultDeviceService(DeviceRepository deviceRepository, IdGenerator<Device> deviceIdGenerator) {
+    public DefaultDeviceService(DeviceRepository deviceRepository, IdGenerator<Device> deviceIdGenerator, EventsService eventsService) {
         this.deviceRepository = deviceRepository;
         this.deviceIdGenerator = deviceIdGenerator;
+        this.eventsService = eventsService;
     }
 
     @Override
@@ -37,12 +39,22 @@ public class DefaultDeviceService implements DeviceService {
 
     @Override
     public Device update(Device device) {
-        return deviceRepository.save(device);
+        device.setId(deviceIdGenerator.generateId(device));
+        boolean isPartialUpdate = deviceRepository.upsert(device.getId(), device);
+        if (isPartialUpdate) {
+            eventsService.sendDeviceUpdateEvent(device);
+        } else {
+            eventsService.sendDeviceCreateEvent(device);
+        }
+        return device;
     }
 
     @Override
-    public void deleteByIdAndUserId(String deviceId, String userId) {
-        deviceRepository.deleteByIdAndUserId(deviceId, userId);
+    public void deleteByIdAndUserId(String deviceId, String userId, String domainId) {
+        long result = deviceRepository.deleteByIdAndUserId(deviceId, userId);
+        if ( result > 0 ) {
+            eventsService.sendDeviceDeleteEvent(deviceId, userId, domainId);
+        }
     }
 
     @Override

@@ -15,10 +15,8 @@ public class LowerCaseDecorator extends UserRepositoryDecorator {
     }
 
     @Override
-    public User save(User s) {
-        s.setUsername(s.getUsername().toLowerCase());
-        s.setEmail(s.getEmail().toLowerCase());
-        return super.save(s);
+    public User save(User data) {
+        return super.save(userToLowerCase(data));
     }
 
     @Override
@@ -72,10 +70,8 @@ public class LowerCaseDecorator extends UserRepositoryDecorator {
     }
 
     @Override
-    public void delete(User user) {
-        user.setUsername(user.getUsername().toLowerCase());
-        user.setEmail(user.getEmail().toLowerCase());
-        super.delete(user);
+    public void delete(User data) {
+        super.delete(userToLowerCase(data));
     }
 
     @Override
@@ -85,24 +81,27 @@ public class LowerCaseDecorator extends UserRepositoryDecorator {
 
     @Override
     public boolean patch(String id, User data, String... fieldsToDelete) {
-        if (data.getUsername() != null) {
-            data.setUsername(data.getUsername().toLowerCase());
-        }
-        if (data.getEmail() != null) {
-            data.setEmail(data.getEmail().toLowerCase());
-        }
-        return super.patch(id, data, fieldsToDelete);
+        return super.patch(id, userToLowerCase(data), fieldsToDelete);
     }
 
     @Override
     public boolean patch(User data, String... fieldsToDelete) {
+        return super.patch(userToLowerCase(data), fieldsToDelete);
+    }
+
+    @Override
+    public boolean upsert(String id, User data) {
+        return super.upsert(id, userToLowerCase(data));
+    }
+
+    private User userToLowerCase(User data) {
         if (data.getUsername() != null) {
             data.setUsername(data.getUsername().toLowerCase());
         }
         if (data.getEmail() != null) {
             data.setEmail(data.getEmail().toLowerCase());
         }
-        return super.patch(data, fieldsToDelete);
+        return data;
     }
 
 }
