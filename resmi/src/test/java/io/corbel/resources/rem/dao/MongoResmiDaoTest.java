@@ -5,9 +5,8 @@ import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
+
 import io.corbel.lib.mongo.JsonObjectMongoWriteConverter;
 import io.corbel.lib.queries.QueryNodeImpl;
 import io.corbel.lib.queries.StringQueryLiteral;
@@ -129,16 +128,24 @@ import com.mongodb.WriteResult;
         when(mongoOperations.findAndModify(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.eq(JsonObject.class), Mockito.any()))
                 .thenReturn(jsonCounter);
 
+
         JsonObject jsonResult = new JsonObject();
         jsonResult.addProperty("_src_id", TEST_ID);
         jsonResult.addProperty("_dst_id", TEST_ID_RELATION_OBJECT);
         jsonResult.addProperty("_order", TEST_ORDER);
         jsonResult.addProperty("data1", true);
         jsonResult.addProperty("data2", "data2");
+        jsonResult.addProperty("id", "123");
+
+
+
 
         ArgumentCaptor<Query> queryCaptor = ArgumentCaptor.forClass(Query.class);
         ArgumentCaptor<Update> updateCaptor = ArgumentCaptor.forClass(Update.class);
         ArgumentCaptor<FindAndModifyOptions> optionsCaptor = ArgumentCaptor.forClass(FindAndModifyOptions.class);
+
+
+
 
         when(mongoOperations.findAndModify(any(), any(), any(), eq(JsonObject.class), eq(RELATION_COLLECTION_NAME))).thenAnswer(
                 answerWithId(jsonResult));
@@ -146,7 +153,7 @@ import com.mongodb.WriteResult;
         ResourceUri resourceUri = new ResourceUri(TEST_COLLECTION, TEST_ID, TEST_REL, TEST_ID_RELATION_OBJECT);
         mongoResmiDao.createRelation(resourceUri, json);
 
-        verify(mongoOperations).findAndModify(queryCaptor.capture(), updateCaptor.capture(), optionsCaptor.capture(), eq(JsonObject.class),
+        verify(mongoOperations, times(1)).findAndModify(queryCaptor.capture(), updateCaptor.capture(), optionsCaptor.capture(), eq(JsonObject.class),
                 eq(RELATION_COLLECTION_NAME));
 
         assertThat(optionsCaptor.getValue().isUpsert()).isTrue();

@@ -1,23 +1,5 @@
 package io.corbel.resources.rem.dao;
 
-import io.corbel.lib.mongo.JsonObjectMongoWriteConverter;
-import io.corbel.lib.mongo.utils.GsonUtil;
-import io.corbel.lib.queries.mongo.builder.CriteriaBuilder;
-import io.corbel.lib.queries.request.AggregationResult;
-import io.corbel.lib.queries.request.AverageResult;
-import io.corbel.lib.queries.request.CountResult;
-import io.corbel.lib.queries.request.MaxResult;
-import io.corbel.lib.queries.request.MinResult;
-import io.corbel.lib.queries.request.Pagination;
-import io.corbel.lib.queries.request.ResourceQuery;
-import io.corbel.lib.queries.request.Sort;
-import io.corbel.lib.queries.request.SumResult;
-import io.corbel.resources.rem.dao.builder.MongoAggregationBuilder;
-import io.corbel.resources.rem.model.GenericDocument;
-import io.corbel.resources.rem.model.ResourceUri;
-import io.corbel.resources.rem.resmi.exception.MongoAggregationException;
-import io.corbel.resources.rem.utils.JsonUtils;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -41,6 +23,16 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+
+import io.corbel.lib.mongo.JsonObjectMongoWriteConverter;
+import io.corbel.lib.mongo.utils.GsonUtil;
+import io.corbel.lib.queries.mongo.builder.CriteriaBuilder;
+import io.corbel.lib.queries.request.*;
+import io.corbel.resources.rem.dao.builder.MongoAggregationBuilder;
+import io.corbel.resources.rem.model.GenericDocument;
+import io.corbel.resources.rem.model.ResourceUri;
+import io.corbel.resources.rem.resmi.exception.MongoAggregationException;
+import io.corbel.resources.rem.utils.JsonUtils;
 
 /**
  * @author Alberto J. Rubio
@@ -239,26 +231,28 @@ public class MongoResmiDao implements ResmiDao {
             throw new NotFoundException("The resource does not exist");
         }
 
-        JsonObject storedRelation = findRelation(uri);
-        String id = null;
-
         JsonObject relationJson = JsonRelation.create(uri.getTypeId(), uri.getRelationId(), entity);
-        if (storedRelation != null) {
-            id = storedRelation.get(ID).getAsString();
-            relationJson = updateRelation(storedRelation, relationJson);
-        } else {
-            resmiOrder.addNextOrderInRelation(uri.getType(), uri.getTypeId(), uri.getRelation(), relationJson);
-        }
+        JsonObject storedRelation = findModifyOrCreateRelation(uri, relationJson);
 
-        findAndModify(getMongoCollectionName(uri), Optional.ofNullable(id), relationJson, true, Optional.empty());
+        if (!storedRelation.has("_order")) {
+            JsonObject order = new JsonObject();
+            resmiOrder.addNextOrderInRelation(uri.getType(), uri.getTypeId(), uri.getRelation(), order);
+            findAndModify(getMongoCollectionName(uri), Optional.ofNullable(storedRelation.get("id").getAsString()), order, false, Optional.empty());
+        }
     }
 
-    private JsonObject findRelation(ResourceUri uri) {
+    private JsonObject findModifyOrCreateRelation(ResourceUri uri, JsonObject entity) {
         if (uri.getRelationId() != null) {
             Criteria criteria = Criteria.where(JsonRelation._SRC_ID).is(uri.getTypeId()).and(JsonRelation._DST_ID).is(uri.getRelationId());
-            return mongoOperations.findOne(new Query(criteria), JsonObject.class, getMongoCollectionName(uri));
+            Update update = updateFromJsonObject(entity, Optional.<String>empty());
+            update.set(JsonRelation._SRC_ID, uri.getTypeId());
+            update.set(JsonRelation._DST_ID, uri.getRelationId());
+            return mongoOperations.findAndModify(new Query(criteria), update, FindAndModifyOptions.options().upsert(true).returnNew(true),
+                    JsonObject.class, getMongoCollectionName(uri));
+        } else {
+            mongoOperations.save(entity, getMongoCollectionName(uri));
+            return entity;
         }
-        return null;
     }
 
     @Override
