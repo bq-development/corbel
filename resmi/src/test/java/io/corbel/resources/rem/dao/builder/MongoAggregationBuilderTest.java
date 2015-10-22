@@ -90,13 +90,29 @@ public class MongoAggregationBuilderTest {
     }
 
     @Test
-    public void testGroupWithfirst() throws MongoAggregationException {
+    public void testGroupWithFirst() throws MongoAggregationException {
         List<String> fields = new ArrayList<>();
         fields.add(FIELD_1);
 
         Aggregation agg = builder.group(fields, true).build();
         assertEquals(
                 "{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$group\" : { \"_id\" : \"$field_1\" , \"first\" : { \"$first\" : \"$$ROOT\"}}}]}",
+                agg.toString());
+    }
+
+    @Test
+    public void testMultiplyProjection() throws MongoAggregationException {
+        Aggregation agg = builder.projection("multiply", "field2 * field3").build();
+        assertEquals(
+                "{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$project\" : { \"document\" : \"$$ROOT\" , \"multiply\" : { \"$multiply\" : [ \"$field2\" , \"$field3\"]}}}]}",
+                agg.toString());
+    }
+
+    @Test
+    public void testSumProjection() throws MongoAggregationException {
+        Aggregation agg = builder.projection("sum", "field2 + field3").build();
+        assertEquals(
+                "{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$project\" : { \"document\" : \"$$ROOT\" , \"sum\" : { \"$add\" : [ \"$field2\" , \"$field3\"]}}}]}",
                 agg.toString());
     }
 

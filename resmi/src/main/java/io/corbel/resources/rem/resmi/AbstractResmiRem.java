@@ -6,14 +6,13 @@ import java.util.Optional;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import io.corbel.resources.rem.Rem;
-import io.corbel.resources.rem.model.ResourceUri;
-import io.corbel.resources.rem.request.RelationParameters;
-import io.corbel.resources.rem.service.ResmiService;
-import io.corbel.lib.queries.request.AggregationResult;
-import io.corbel.lib.ws.api.error.ErrorResponseFactory;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+
+import io.corbel.lib.ws.api.error.ErrorResponseFactory;
+import io.corbel.resources.rem.Rem;
+import io.corbel.resources.rem.model.ResourceUri;
+import io.corbel.resources.rem.service.ResmiService;
 
 /**
  * @author Francisco Sánchez - Rubén Carrasco
@@ -27,14 +26,6 @@ public abstract class AbstractResmiRem implements Rem<JsonObject> {
     }
 
     protected Response buildResponse(JsonElement response) {
-        if (response == null) {
-            return ErrorResponseFactory.getInstance().notFound();
-        } else {
-            return Response.ok().type(javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE).entity(response).build();
-        }
-    }
-
-    protected Response buildResponse(AggregationResult response) {
         if (response == null) {
             return ErrorResponseFactory.getInstance().notFound();
         } else {

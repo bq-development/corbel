@@ -1,5 +1,8 @@
 package io.corbel.resources.rem.resmi;
 
+import io.corbel.lib.queries.request.Aggregation;
+import io.corbel.lib.queries.request.AggregationOperator;
+import io.corbel.lib.queries.request.Combine;
 import io.corbel.lib.ws.api.error.ErrorResponseFactory;
 import io.corbel.lib.ws.model.Error;
 import io.corbel.resources.rem.model.ResourceUri;
@@ -79,14 +82,12 @@ public class ResmiGetRem extends AbstractResmiRem {
             }
         } catch (Exception e) {
             LOG.error("Failed to get relation data", e);
-            // TODO: This should not be a Bad Request... probably a 500 since most like it is a bug
+            // TODO: This should not be a bad request... probably a 500 since most like it is a bug
             return ErrorResponseFactory.getInstance().badRequest();
         }
     }
 
     private List<String> getDistinctFields(String serializedParameter) {
-        List<String> fields = Arrays.asList(serializedParameter.split(","));
-        return fields.stream().map(val -> val.trim()).collect(Collectors.toList());
+        return Arrays.asList(serializedParameter.split(",")).stream().map(String::trim).collect(Collectors.toList());
     }
-
 }

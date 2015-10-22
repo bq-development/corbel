@@ -2,30 +2,7 @@ package io.corbel.resources.rem.service;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import io.corbel.lib.queries.request.AggregationResult;
-import io.corbel.lib.queries.request.Average;
-import io.corbel.lib.queries.request.AverageResult;
-import io.corbel.lib.queries.request.Count;
-import io.corbel.lib.queries.request.CountResult;
-import io.corbel.lib.queries.request.Max;
-import io.corbel.lib.queries.request.MaxResult;
-import io.corbel.lib.queries.request.Min;
-import io.corbel.lib.queries.request.MinResult;
-import io.corbel.lib.queries.request.Pagination;
-import io.corbel.lib.queries.request.ResourceQuery;
-import io.corbel.lib.queries.request.Search;
-import io.corbel.lib.queries.request.Sort;
-import io.corbel.resources.rem.dao.NotFoundException;
-import io.corbel.resources.rem.dao.RelationMoveOperation;
-import io.corbel.resources.rem.dao.ResmiDao;
-import io.corbel.resources.rem.model.ResourceUri;
-import io.corbel.resources.rem.request.CollectionParameters;
-import io.corbel.resources.rem.request.RelationParameters;
-import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
+import static org.mockito.Mockito.*;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -46,6 +23,16 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
+import io.corbel.lib.queries.request.*;
+import io.corbel.resources.rem.dao.NotFoundException;
+import io.corbel.resources.rem.dao.RelationMoveOperation;
+import io.corbel.resources.rem.dao.ResmiDao;
+import io.corbel.resources.rem.model.ResourceUri;
+import io.corbel.resources.rem.request.CollectionParameters;
+import io.corbel.resources.rem.request.RelationParameters;
+import io.corbel.resources.rem.resmi.exception.MongoAggregationException;
+import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
+
 /**
  * @author Francisco Sanchez
  */
@@ -59,10 +46,7 @@ import com.google.gson.JsonPrimitive;
 
     String TYPE = "resource:TYPE";
     String RELATION_TYPE = "relation:TYPE";
-    ResourceUri RESOURCE_URI = new ResourceUri(TYPE);
     String ID = "test";
-    int PAGE = 2;
-    int SIZE = 4;
     String USER_ID = "123";
 
     String RELATION_URI = "RELATION_URI";
@@ -130,23 +114,23 @@ import com.google.gson.JsonPrimitive;
     }
 
     @Test
-    public void countCollectionTest() throws BadConfigurationException {
-        AggregationResult fakeResult = new CountResult();
-        when(resmiDao.count(eq(new ResourceUri(TYPE)), eq(resourceQueriesMock))).thenReturn((CountResult) fakeResult);
+    public void countCollectionTest() throws BadConfigurationException, MongoAggregationException {
+        JsonElement fakeResult = new JsonObject();
+        when(resmiDao.count(eq(new ResourceUri(TYPE)), eq(resourceQueriesMock))).thenReturn(fakeResult);
         when(collectionParametersMock.getAggregation()).thenReturn(Optional.of(new Count("*")));
         when(collectionParametersMock.getSearch()).thenReturn(Optional.empty());
-        AggregationResult result = defaultResmiService.aggregate(new ResourceUri(TYPE), collectionParametersMock);
+        JsonElement result = defaultResmiService.aggregate(new ResourceUri(TYPE), collectionParametersMock);
         assertThat(fakeResult).isEqualTo(result);
     }
 
     @Test
-    public void countRelationTest() throws BadConfigurationException {
-        AggregationResult fakeResult = new CountResult();
+    public void countRelationTest() throws BadConfigurationException, MongoAggregationException {
+        JsonElement fakeResult = new JsonObject();
         ResourceUri resourceUri = new ResourceUri(TYPE, ID, RELATION_TYPE);
-        when(resmiDao.count(eq(resourceUri), eq(resourceQueriesMock))).thenReturn((CountResult) fakeResult);
+        when(resmiDao.count(eq(resourceUri), eq(resourceQueriesMock))).thenReturn(fakeResult);
         when(collectionParametersMock.getAggregation()).thenReturn(Optional.of(new Count("*")));
         when(collectionParametersMock.getSearch()).thenReturn(Optional.empty());
-        AggregationResult result = defaultResmiService.aggregate(resourceUri, relationParametersMock);
+        JsonElement result = defaultResmiService.aggregate(resourceUri, relationParametersMock);
         assertThat(fakeResult).isEqualTo(result);
     }
 
@@ -269,35 +253,35 @@ import com.google.gson.JsonPrimitive;
     }
 
     @Test
-    public void averageTest() throws BadConfigurationException {
-        AggregationResult fakeResult = new AverageResult();
+    public void averageTest() throws BadConfigurationException, MongoAggregationException {
+        JsonElement fakeResult = new JsonObject();
         ResourceUri resourceUri = new ResourceUri(TYPE);
-        when(resmiDao.average(eq(resourceUri), eq(resourceQueriesMock), eq("testField"))).thenReturn((AverageResult) fakeResult);
+        when(resmiDao.average(eq(resourceUri), eq(resourceQueriesMock), eq("testField"))).thenReturn(fakeResult);
         when(collectionParametersMock.getAggregation()).thenReturn(Optional.of(new Average("testField")));
         when(collectionParametersMock.getSearch()).thenReturn(Optional.empty());
-        AggregationResult result = defaultResmiService.aggregate(resourceUri, collectionParametersMock);
+        JsonElement result = defaultResmiService.aggregate(resourceUri, collectionParametersMock);
         assertThat(result).isEqualTo(fakeResult);
     }
 
     @Test
-    public void maxTest() throws BadConfigurationException {
-        AggregationResult fakeResult = new MaxResult(12);
+    public void maxTest() throws BadConfigurationException, MongoAggregationException {
+        JsonElement fakeResult = new JsonObject();
         ResourceUri resourceUri = new ResourceUri(TYPE);
-        when(resmiDao.max(eq(resourceUri), eq(resourceQueriesMock), eq("testField"))).thenReturn((MaxResult) fakeResult);
+        when(resmiDao.max(eq(resourceUri), eq(resourceQueriesMock), eq("testField"))).thenReturn(fakeResult);
         when(collectionParametersMock.getAggregation()).thenReturn(Optional.of(new Max("testField")));
         when(collectionParametersMock.getSearch()).thenReturn(Optional.empty());
-        AggregationResult result = defaultResmiService.aggregate(resourceUri, collectionParametersMock);
+        JsonElement result = defaultResmiService.aggregate(resourceUri, collectionParametersMock);
         assertThat(result).isEqualTo(fakeResult);
     }
 
     @Test
-    public void minTest() throws BadConfigurationException {
-        AggregationResult fakeResult = new MinResult(12);
+    public void minTest() throws BadConfigurationException, MongoAggregationException {
+        JsonElement fakeResult = new JsonObject();
         ResourceUri resourceUri = new ResourceUri(TYPE);
-        when(resmiDao.min(eq(resourceUri), eq(resourceQueriesMock), eq("testField"))).thenReturn((MinResult) fakeResult);
+        when(resmiDao.min(eq(resourceUri), eq(resourceQueriesMock), eq("testField"))).thenReturn(fakeResult);
         when(collectionParametersMock.getAggregation()).thenReturn(Optional.of(new Min("testField")));
         when(collectionParametersMock.getSearch()).thenReturn(Optional.empty());
-        AggregationResult result = defaultResmiService.aggregate(resourceUri, collectionParametersMock);
+        JsonElement result = defaultResmiService.aggregate(resourceUri, collectionParametersMock);
         assertThat(result).isEqualTo(fakeResult);
     }
 }

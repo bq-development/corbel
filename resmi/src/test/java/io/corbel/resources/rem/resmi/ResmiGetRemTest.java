@@ -2,6 +2,8 @@ package io.corbel.resources.rem.resmi;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
+
+import com.google.gson.JsonElement;
 import io.corbel.lib.queries.request.Aggregation;
 import io.corbel.lib.queries.request.AggregationOperator;
 import io.corbel.lib.queries.request.AverageResult;
@@ -14,6 +16,7 @@ import io.corbel.resources.rem.request.CollectionParameters;
 import io.corbel.resources.rem.request.RelationParameters;
 import io.corbel.resources.rem.request.RequestParameters;
 import io.corbel.resources.rem.request.ResourceId;
+import io.corbel.resources.rem.resmi.exception.MongoAggregationException;
 import io.corbel.resources.rem.service.BadConfigurationException;
 
 import java.util.Arrays;
@@ -45,8 +48,8 @@ public class ResmiGetRemTest extends ResmiRemTest {
     @Mock ResourceQuery resourceQueryMock;
     @Mock Pagination paginationMock;
     @Mock Sort sortMock;
-    @Mock CountResult countResultMock;
-    @Mock AverageResult averageResultMock;
+    @Mock JsonElement countResultMock;
+    @Mock JsonElement averageResultMock;
     @Mock Aggregation aggregationOperationMock;
     @Mock ResourceId resourceIdMock;
 
@@ -89,7 +92,7 @@ public class ResmiGetRemTest extends ResmiRemTest {
     }
 
     @Test
-    public void testGetCollectionCount() throws BadConfigurationException {
+    public void testGetCollectionCount() throws BadConfigurationException, MongoAggregationException {
         when(resmiServiceMock.aggregate(new ResourceUri(TEST_TYPE), collectionParametersMock)).thenReturn(countResultMock);
 
         when(requestParametersCollectionParametersMock.getOptionalApiParameters()).thenReturn(Optional.of(collectionParametersMock));
@@ -106,7 +109,7 @@ public class ResmiGetRemTest extends ResmiRemTest {
     }
 
     @Test
-    public void testGetCollectionAverage() throws BadConfigurationException {
+    public void testGetCollectionAverage() throws BadConfigurationException, MongoAggregationException {
         when(resmiServiceMock.aggregate(new ResourceUri(TEST_TYPE), collectionParametersMock)).thenReturn(averageResultMock);
 
         when(requestParametersCollectionParametersMock.getOptionalApiParameters()).thenReturn(Optional.of(collectionParametersMock));
@@ -191,7 +194,7 @@ public class ResmiGetRemTest extends ResmiRemTest {
     }
 
     @Test
-    public void testGetRelationCount() throws BadConfigurationException {
+    public void testGetRelationCount() throws BadConfigurationException, MongoAggregationException {
         when(resmiServiceMock.aggregate(new ResourceUri(TEST_TYPE, resourceIdMock.getId(), TEST_TYPE_RELATION), relationParametersMock))
                 .thenReturn(countResultMock);
 

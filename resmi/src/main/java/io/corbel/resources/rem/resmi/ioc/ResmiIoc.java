@@ -63,7 +63,7 @@ import com.google.gson.Gson;
 
     @Bean
     public ResmiDao getMongoResmiDao() throws Exception {
-        return new MongoResmiDao(mongoTemplate(), getJsonObjectMongoWriteConverter(), getNamespaceNormilizer(), getMongoResmiOrder());
+        return new MongoResmiDao(mongoTemplate(), getJsonObjectMongoWriteConverter(), getNamespaceNormilizer(), getMongoResmiOrder(), getGson());
     }
 
     @Bean
@@ -119,7 +119,7 @@ import com.google.gson.Gson;
     @Bean
     public ResmiService getResmiService() throws Exception {
         if (elasticSearchEnabled) {
-            return new WithSearchResmiService(getMongoResmiDao(), getResmiSearch(), getSearchableFieldsRegistry(), getClock());
+            return new WithSearchResmiService(getMongoResmiDao(), getResmiSearch(), getSearchableFieldsRegistry(), getGson(), getClock());
         } else {
             return new DefaultResmiService(getMongoResmiDao(), getClock());
         }
@@ -139,12 +139,12 @@ import com.google.gson.Gson;
     @Bean
     @Lazy
     public ResmiSearch getResmiSearch() {
-        return new ElasticSearchResmiSearch(getElasticeSerachService(), getNamespaceNormilizer(), elasticSearchIndexSettings);
+        return new ElasticSearchResmiSearch(getElasticeSearchService(), getNamespaceNormilizer(), elasticSearchIndexSettings);
     }
 
     @Bean
     @Lazy
-    public ElasticSearchService getElasticeSerachService() {
+    public ElasticSearchService getElasticeSearchService() {
         return new ElasticSearchService(applicationContext.getBean(Client.class), getGson());
     }
 

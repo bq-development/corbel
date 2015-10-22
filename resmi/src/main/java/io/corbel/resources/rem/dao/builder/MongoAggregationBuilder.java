@@ -7,14 +7,10 @@ import io.corbel.resources.rem.dao.JsonRelation;
 import io.corbel.resources.rem.model.ResourceUri;
 import io.corbel.resources.rem.resmi.exception.MongoAggregationException;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.mongodb.core.aggregation.Aggregation;
-import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
-import org.springframework.data.mongodb.core.aggregation.GroupOperation;
+import org.springframework.data.mongodb.core.aggregation.*;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 /**
@@ -24,10 +20,22 @@ import org.springframework.data.mongodb.core.query.Criteria;
 public class MongoAggregationBuilder {
 
     public static final String REFERENCE = "first";
+    public static final String DOCUMENT = "document";
     private final List<AggregationOperation> operations;
 
     public MongoAggregationBuilder() {
         operations = new ArrayList<>();
+    }
+
+    public MongoAggregationBuilder sort(String direction, String field) {
+        operations.add(Aggregation.sort(Direction.fromString(direction), field));
+        return this;
+    }
+
+    public MongoAggregationBuilder pagination(Pagination pagination) {
+        operations.add(Aggregation.skip(pagination.getPage() * pagination.getPageSize()));
+        operations.add(Aggregation.limit(pagination.getPageSize()));
+        return this;
     }
 
     public MongoAggregationBuilder match(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries) {
@@ -39,11 +47,6 @@ public class MongoAggregationBuilder {
             criteria = criteria.and(JsonRelation._SRC_ID).is(uri.getTypeId());
         }
         operations.add(Aggregation.match(criteria));
-        return this;
-    }
-
-    public MongoAggregationBuilder sort(String direction, String field) {
-        operations.add(Aggregation.sort(Direction.fromString(direction), field));
         return this;
     }
 
@@ -62,9 +65,9 @@ public class MongoAggregationBuilder {
         return this;
     }
 
-    public MongoAggregationBuilder pagination(Pagination pagination) {
-        operations.add(Aggregation.skip(pagination.getPage() * pagination.getPageSize()));
-        operations.add(Aggregation.limit(pagination.getPageSize()));
+    public MongoAggregationBuilder projection(String field, String expression) {
+        Fields fields = Fields.from(Fields.field(DOCUMENT, Aggregation.ROOT));
+        operations.add(Aggregation.project(fields).andExpression(expression).as(field));
         return this;
     }
 

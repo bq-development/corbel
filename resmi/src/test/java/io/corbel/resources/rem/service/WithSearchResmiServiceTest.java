@@ -7,6 +7,8 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import com.google.gson.Gson;
 import io.corbel.lib.queries.request.Pagination;
 import io.corbel.lib.queries.request.ResourceQuery;
 import io.corbel.lib.queries.request.Search;
@@ -18,12 +20,10 @@ import io.corbel.resources.rem.request.CollectionParameters;
 import io.corbel.resources.rem.request.RelationParameters;
 import io.corbel.resources.rem.search.ResmiSearch;
 
-import java.text.SimpleDateFormat;
 import java.time.Clock;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 
 import org.junit.Before;
@@ -39,17 +39,13 @@ import com.google.gson.JsonArray;
  */
 @RunWith(MockitoJUnitRunner.class) public class WithSearchResmiServiceTest {
 
-    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.forLanguageTag("ES"));
-
     String TYPE = "resource:TYPE";
-    String RELATION_TYPE = "relation:TYPE";
     ResourceUri RESOURCE_URI = new ResourceUri(TYPE);
     String ID = "test";
     int PAGE = 2;
     int SIZE = 4;
-    String USER_ID = "123";
 
-    String RELATION_URI = "RELATION_URI";
+    Gson gson = new Gson();
 
     @Mock ResmiDao resmiDao;
     @Mock ResmiSearch resmiSearch;
@@ -65,7 +61,7 @@ import com.google.gson.JsonArray;
 
     @Before
     public void setup() {
-        defaultResmiService = new WithSearchResmiService(resmiDao, resmiSearch, searchableFieldRegistry, Clock.systemUTC());
+        defaultResmiService = new WithSearchResmiService(resmiDao, resmiSearch, searchableFieldRegistry, gson, Clock.systemUTC());
         when(relationParametersMock.getAggregation()).thenReturn(Optional.empty());
         when(relationParametersMock.getQueries()).thenReturn(Optional.ofNullable(resourceQueriesMock));
         when(relationParametersMock.getQueries()).thenReturn(Optional.ofNullable(resourceQueriesMock));
