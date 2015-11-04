@@ -3,8 +3,7 @@ package io.corbel.resources.cli.dsl
 import io.corbel.lib.cli.console.Description
 import io.corbel.lib.cli.console.Shell
 import io.corbel.resources.rem.model.ResourceUri
-import io.corbel.resources.rem.model.SearchResource
-import io.corbel.resources.rem.search.ElasticSearchService;
+import io.corbel.resources.rem.search.ElasticSearchService
 import io.corbel.resources.rem.service.ResmiService
 
 import org.springframework.data.mongodb.core.index.Index
@@ -41,21 +40,6 @@ class ResmiShell {
     @Description("Construct a json object from string. Example: resmi.json('{\"a\", \"b\"}')")
     def json(String json) {
         new JsonParser().parse(json)
-    }
-
-    @Description("Full text search fields in a type.")
-    def searchableFields(String type, String... fields) {
-        assert type: "type is required"
-        assert fields: "fields is required"
-        resmiService.addSearchableFields(new SearchResource(type, fields.collect().toSet()))
-    }
-
-    @Description("Full text search fields in a type.")
-    def searchableRelationFields(String type, String relation, String... fields) {
-        assert type: "type is required"
-        assert relation: "relation is required"
-        assert fields: "fields is required"
-        resmiService.addSearchableFields(new SearchResource(type, relation, fields.collect().toSet()))
     }
 
     @Description("Defines an index settings.")
