@@ -8,14 +8,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import io.corbel.lib.token.TokenInfo;
-import io.corbel.lib.ws.model.Error;
-import io.corbel.resources.rem.request.RequestParameters;
-import io.corbel.resources.rem.request.ResourceId;
-import io.corbel.resources.rem.request.ResourceParameters;
-import io.corbel.resources.rem.service.AclResourcesService;
-import io.corbel.resources.rem.service.DefaultAclResourcesService;
-import io.corbel.resources.rem.service.RemService;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -36,12 +28,23 @@ import org.springframework.http.MediaType;
 
 import com.google.gson.JsonObject;
 
+import io.corbel.lib.token.TokenInfo;
+import io.corbel.lib.ws.model.Error;
+import io.corbel.resources.rem.acl.exception.AclFieldNotPresentException;
+import io.corbel.resources.rem.request.RequestParameters;
+import io.corbel.resources.rem.request.ResourceId;
+import io.corbel.resources.rem.request.ResourceParameters;
+import io.corbel.resources.rem.service.AclResourcesService;
+import io.corbel.resources.rem.service.DefaultAclResourcesService;
+import io.corbel.resources.rem.service.RemService;
+
 /**
  * @author Cristian del Cerro
  */
 @RunWith(MockitoJUnitRunner.class) public class SetUpAclPutRemTest {
 
     private static final String USER_ID = "userId";
+    private static final Optional<String> OPT_USER_ID = Optional.of(USER_ID);
     private static final String GROUP_ID = "groupId";
     private static final List<String> GROUPS = Collections.singletonList(GROUP_ID);
     private static final String ALL = "ALL";
@@ -69,14 +72,6 @@ import com.google.gson.JsonObject;
         when(tokenInfo.getUserId()).thenReturn(USER_ID);
         when(tokenInfo.getGroups()).thenReturn(GROUPS);
         when(parameters.getTokenInfo()).thenReturn(tokenInfo);
-    }
-
-    @Test
-    public void testNoUserId() {
-        when(tokenInfo.getUserId()).thenReturn(null);
-        when(parameters.getTokenInfo()).thenReturn(tokenInfo);
-        Response response = rem.resource(TYPE, RESOURCE_ID, parameters, Optional.empty());
-        assertThat(response.getStatus()).isEqualTo(405);
     }
 
     @Test
@@ -118,12 +113,11 @@ import com.google.gson.JsonObject;
     }
 
     @Test
-    public void testUpdateAclPermission() {
+    public void testUpdateAclPermission() throws AclFieldNotPresentException {
         List<String> ids = Arrays.asList("user:" + USER_ID, "group:" + GROUP_ID, ALL);
 
         for (String id : ids) {
-            when(aclResourcesService.isAuthorized(eq(USER_ID), eq(GROUPS), eq(TYPE), eq(RESOURCE_ID), eq(AclPermission.ADMIN))).thenReturn(
-                    true);
+            when(aclResourcesService.isAuthorized(eq(tokenInfo), eq(TYPE), eq(RESOURCE_ID), eq(AclPermission.ADMIN))).thenReturn(true);
 
             Response beforeResponse = mock(Response.class);
             when(beforeResponse.getStatus()).thenReturn(200);
@@ -148,9 +142,8 @@ import com.google.gson.JsonObject;
     }
 
     @Test
-    public void testUpdateAclPermissionOverALLUsersAsNotAdmin() {
-        when(aclResourcesService.isAuthorized(eq(USER_ID), eq(GROUPS), eq(TYPE), eq(RESOURCE_ID), eq(AclPermission.ADMIN)))
-                .thenReturn(true);
+    public void testUpdateAclPermissionOverALLUsersAsNotAdmin() throws AclFieldNotPresentException {
+        when(aclResourcesService.isAuthorized(eq(tokenInfo), eq(TYPE), eq(RESOURCE_ID), eq(AclPermission.ADMIN))).thenReturn(true);
 
         Response response = mock(Response.class);
         when(response.getStatus()).thenReturn(400);
@@ -165,32 +158,37 @@ import com.google.gson.JsonObject;
         JsonObject acl = new JsonObject();
         acl.add(DefaultAclResourcesService._ACL, objectToSave);
 
-        when(response.getStatus()).thenReturn(400);
-        when(aclResourcesService.updateResource(any(), eq(TYPE), eq(RESOURCE_ID), eq(parameters), eq(acl))).thenReturn(response);
+        when(response.getStatus()).thenReturn(200);
+        when(aclResourcesService.updateResource(any(), eq(TYPE), eq(RESOURCE_ID), eq(parameters), any())).thenReturn(response);
 
         response = rem.resource(TYPE, RESOURCE_ID, parameters, Optional.of(new ByteArrayInputStream(objectToSave.toString().getBytes())));
-        assertThat(response.getStatus()).isEqualTo(400);
+        assertThat(response.getStatus()).isEqualTo(200);
     }
 
     @Test
-    public void testUpdateBadAclPermission() {
+    public void testUpdateBadAclPermission() throws AclFieldNotPresentException {
         List<String> ids = Arrays.asList("user:" + USER_ID, "group:" + GROUP_ID);
 
         for (String id : ids) {
-            when(aclResourcesService.isAuthorized(eq(USER_ID), eq(GROUPS), eq(TYPE), eq(RESOURCE_ID), eq(AclPermission.ADMIN))).thenReturn(
-                    true);
-
-            JsonObject aclValue = new JsonObject();
-            aclValue.addProperty(DefaultAclResourcesService.PERMISSION, AclPermission.READ.toString());
-            aclValue.add(DefaultAclResourcesService.PROPERTIES, new JsonObject());
+            when(aclResourcesService.isAuthorized(eq(tokenInfo), eq(TYPE), eq(RESOURCE_ID), eq(AclPermission.ADMIN))).thenReturn(true);
 
             JsonObject objectToSave = new JsonObject();
             objectToSave.addProperty(id, AclPermission.READ.toString());
 
+            Response expectedResponse = mock(Response.class);
+            when(expectedResponse.getStatus()).thenReturn(200);
+            when(aclResourcesService.updateResource(any(), eq(TYPE), eq(RESOURCE_ID), eq(parameters), any())).thenReturn(expectedResponse);
+
             Response response = rem.resource(TYPE, RESOURCE_ID, parameters,
                     Optional.of(new ByteArrayInputStream(objectToSave.toString().getBytes())));
-            assertThat(response.getStatus()).isEqualTo(400);
+            assertThat(response.getStatus()).isEqualTo(200);
         }
+    }
+
+    @Test
+    public void testUpdateMalformedAclPermission() {
+        assertThat(rem.resource(TYPE, RESOURCE_ID, parameters, Optional.of(new ByteArrayInputStream("blablabla".getBytes()))).getStatus())
+                .isEqualTo(422);
     }
 
     private io.corbel.lib.ws.model.Error getError(Response response) {

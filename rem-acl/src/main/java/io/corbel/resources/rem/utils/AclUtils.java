@@ -1,9 +1,10 @@
 package io.corbel.resources.rem.utils;
 
-import io.corbel.resources.rem.acl.AclPermission;
-
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Optional;
+
+import io.corbel.resources.rem.acl.AclPermission;
 
 /**
  * @author Cristian del Cerro
@@ -12,6 +13,10 @@ public class AclUtils {
 
     public static String buildMessage(AclPermission permission) {
         return permission + " permission is required to perform the operation";
+    }
+
+    public static boolean entityIsEmpty(Optional<InputStream> entity) {
+        return !entity.filter(e -> !entityIsEmpty(e)).isPresent();
     }
 
     public static boolean entityIsEmpty(InputStream entity) {

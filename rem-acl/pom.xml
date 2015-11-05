@@ -21,6 +21,10 @@
             <artifactId>ws</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>io.corbel</groupId>
+            <artifactId>events</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

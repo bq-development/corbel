@@ -41,7 +41,10 @@ public interface RemRegistry {
      */
     Rem getRem(String uri, List<MediaType> acceptableMediaTypes, HttpMethod method, List<Rem> remsExcluded);
 
+    void unregisterRem(Class<?> remClass, String uriPattern, MediaType mediaType);
+
     Rem getRem(String name);
 
     List<RemDescription> getRegistryDescription();
+
 }

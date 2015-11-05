@@ -9,12 +9,12 @@ import javax.ws.rs.core.Response;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 
+import io.corbel.lib.ws.api.error.ErrorResponseFactory;
 import io.corbel.resources.rem.Rem;
 import io.corbel.resources.rem.RemRegistry;
 import io.corbel.resources.rem.model.RemDescription;
 import io.corbel.resources.rem.request.*;
 import io.corbel.resources.rem.service.RemService;
-import io.corbel.lib.ws.api.error.ErrorResponseFactory;
 
 /**
  * @author Alberto J. Rubio
@@ -68,6 +68,16 @@ public class DefaultRemService implements RemService {
                 remsExcludedForUri.put(uri, excludedRems);
             }
         }
+    }
+
+    @Override
+    public void registerRem(Rem rem, String uriPattern, HttpMethod httpMethod) {
+        registry.registerRem(rem, uriPattern, httpMethod);
+    }
+
+    @Override
+    public void unregisterRem(Class<?> remClass, String uriPattern) {
+        registry.unregisterRem(remClass, uriPattern, MediaType.ALL);
     }
 
     @Override

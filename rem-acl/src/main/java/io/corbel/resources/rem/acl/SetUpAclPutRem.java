@@ -11,14 +11,13 @@ import javax.ws.rs.core.Response;
 
 import org.springframework.http.HttpMethod;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.JsonPrimitive;
+import com.google.gson.*;
 import com.google.gson.stream.JsonReader;
 
+import io.corbel.lib.token.TokenInfo;
 import io.corbel.lib.ws.api.error.ErrorResponseFactory;
 import io.corbel.resources.rem.Rem;
+import io.corbel.resources.rem.acl.exception.AclFieldNotPresentException;
 import io.corbel.resources.rem.request.RequestParameters;
 import io.corbel.resources.rem.request.ResourceId;
 import io.corbel.resources.rem.request.ResourceParameters;
@@ -41,29 +40,40 @@ public class SetUpAclPutRem extends AclBaseRem {
     @Override
     public Response resource(String type, ResourceId id, RequestParameters<ResourceParameters> parameters, Optional<InputStream> entity) {
 
-        String userId = parameters.getTokenInfo().getUserId();
-        if (userId == null) {
+        TokenInfo tokenInfo = parameters.getTokenInfo();
+
+        if (tokenInfo.getUserId() == null) {
             return ErrorResponseFactory.getInstance().methodNotAllowed();
         }
 
-        Collection<String> groupIds = parameters.getTokenInfo().getGroups();
-
-        InputStream requestBody = entity.get();
-        if (AclUtils.entityIsEmpty(requestBody)) {
+        if (AclUtils.entityIsEmpty(entity)) {
             return ErrorResponseFactory.getInstance().badRequest();
         }
 
-        JsonReader reader = new JsonReader(new InputStreamReader(requestBody));
-        JsonObject jsonObject = new JsonParser().parse(reader).getAsJsonObject();
+        JsonReader reader = new JsonReader(new InputStreamReader(entity.get()));
+        JsonObject jsonObject;
 
-        if (!aclResourcesService.isAuthorized(userId, groupIds, type, id, AclPermission.ADMIN)) {
+        try {
+            jsonObject = new JsonParser().parse(reader).getAsJsonObject();
+        } catch (JsonIOException | JsonSyntaxException | IllegalStateException e) {
+            return ErrorResponseFactory.getInstance().invalidEntity("Malformed acl object");
+        }
+
+        boolean isAuthorized = false;
+
+        try {
+            isAuthorized = aclResourcesService.isAuthorized(tokenInfo, type, id, AclPermission.ADMIN);
+        } catch (AclFieldNotPresentException ignored) {}
+
+        if (!isAuthorized) {
             return ErrorResponseFactory.getInstance().unauthorized(AclUtils.buildMessage(AclPermission.ADMIN));
         }
 
         JsonObject filteredAclObject = getFilteredAclObject(jsonObject);
 
-        if (filteredAclObject.entrySet().isEmpty() || !hasAdminPermission(userId, groupIds, filteredAclObject)) {
-            return ErrorResponseFactory.getInstance().badRequest();
+        if (!hasAdminPermission(tokenInfo, filteredAclObject)) {
+            Optional.ofNullable(tokenInfo.getUserId()).ifPresent(userId -> filteredAclObject
+                    .addProperty(DefaultAclResourcesService.USER_PREFIX + userId, AclPermission.ADMIN.toString()));
         }
 
         JsonObject objectToSave = new JsonObject();
@@ -123,9 +133,14 @@ public class SetUpAclPutRem extends AclBaseRem {
                 .filter(permissionValue -> permissionValue.equals(AclPermission.ADMIN.toString())).isPresent();
     }
 
-    private boolean hasAdminPermission(String userId, Collection<String> groupIds, JsonObject acl) {
-        Stream<String> userAndAllStream = Arrays.asList(DefaultAclResourcesService.ALL, DefaultAclResourcesService.USER_PREFIX + userId)
-                .stream();
+    private boolean hasAdminPermission(TokenInfo tokenInfo, JsonObject acl) {
+        return hasAdminPermission(Optional.ofNullable(tokenInfo.getUserId()), tokenInfo.getGroups(), acl);
+    }
+
+    private boolean hasAdminPermission(Optional<String> userId, Collection<String> groupIds, JsonObject acl) {
+        Stream<String> userAndAllStream = userId
+                .map(id -> Arrays.asList(DefaultAclResourcesService.ALL, DefaultAclResourcesService.USER_PREFIX + id))
+                .orElseGet(() -> Collections.singletonList(DefaultAclResourcesService.ALL)).stream();
         Stream<String> groupsStream = groupIds.stream().map(id -> DefaultAclResourcesService.GROUP_PREFIX + id);
 
         return Stream.concat(userAndAllStream, groupsStream).anyMatch(id -> idHasAdminPermission(id, acl));

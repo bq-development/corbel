@@ -7,8 +7,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import javax.swing.text.html.Option;
 import javax.ws.rs.core.Response;
 
+import io.corbel.lib.token.TokenInfo;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 
@@ -35,19 +37,18 @@ public class AclPostRem extends AclBaseRem {
     @Override
     public Response collection(String type, RequestParameters<CollectionParameters> parameters, URI uri, Optional<InputStream> entity) {
 
-        String userId = parameters.getTokenInfo().getUserId();
+        Optional<String> userId = Optional.ofNullable(parameters.getTokenInfo().getUserId());
 
-        if (userId == null) {
+        if (!userId.isPresent()) {
             return ErrorResponseFactory.getInstance().methodNotAllowed();
         }
 
-        InputStream requestBody = entity.get();
-
-        if (AclUtils.entityIsEmpty(requestBody)) {
+        if (AclUtils.entityIsEmpty(entity)) {
             return ErrorResponseFactory.getInstance().badRequest();
         }
 
         boolean jsonMediaTypeAccepted = parameters.getAcceptedMediaTypes().contains(MediaType.APPLICATION_JSON);
+        InputStream requestBody = entity.get();
 
         JsonObject jsonObject = new JsonObject();
 
@@ -57,12 +58,13 @@ public class AclPostRem extends AclBaseRem {
             jsonObject.remove(DefaultAclResourcesService._ACL);
         }
 
+        JsonObject acl = new JsonObject();
+
         JsonObject userAcl = new JsonObject();
         userAcl.addProperty(DefaultAclResourcesService.PERMISSION, AclPermission.ADMIN.toString());
         userAcl.add(DefaultAclResourcesService.PROPERTIES, new JsonObject());
 
-        JsonObject acl = new JsonObject();
-        acl.add(DefaultAclResourcesService.USER_PREFIX + userId, userAcl);
+        acl.add(DefaultAclResourcesService.USER_PREFIX + userId.get(), userAcl);
 
         jsonObject.add(DefaultAclResourcesService._ACL, acl);
 
@@ -82,6 +84,7 @@ public class AclPostRem extends AclBaseRem {
                 return responsePutNotJsonResource;
             }
         }
+
         return response;
 
     }

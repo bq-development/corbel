@@ -4,18 +4,7 @@ import static io.corbel.resources.rem.acl.AclTestUtils.getEntityWithoutAcl;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import io.corbel.lib.token.TokenInfo;
-import io.corbel.resources.rem.Rem;
-import io.corbel.resources.rem.request.CollectionParameters;
-import io.corbel.resources.rem.request.RequestParameters;
-import io.corbel.resources.rem.request.ResourceId;
-import io.corbel.resources.rem.service.AclResourcesService;
-import io.corbel.resources.rem.service.DefaultAclResourcesService;
-import io.corbel.resources.rem.service.RemService;
+import static org.mockito.Mockito.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -37,6 +26,15 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import com.google.gson.JsonObject;
 
+import io.corbel.lib.token.TokenInfo;
+import io.corbel.resources.rem.Rem;
+import io.corbel.resources.rem.request.CollectionParameters;
+import io.corbel.resources.rem.request.RequestParameters;
+import io.corbel.resources.rem.request.ResourceId;
+import io.corbel.resources.rem.service.AclResourcesService;
+import io.corbel.resources.rem.service.DefaultAclResourcesService;
+import io.corbel.resources.rem.service.RemService;
+
 /**
  * @author Cristian del Cerro
  */
@@ -48,6 +46,7 @@ import com.google.gson.JsonObject;
     private static final String ID = "resourceId";
     private static final ResourceId RESOURCE_ID = new ResourceId("resourceId");
     private static final MultivaluedMap<String, Object> POST_METADATA = new StringKeyIgnoreCaseMultivaluedMap<>();
+    private static final String ACL_CONFIGURATION_COLLECTION = "acl:Configuration";
 
     private AclPostRem rem;
 
