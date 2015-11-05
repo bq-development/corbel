@@ -1,0 +1,71 @@
+package io.corbel.evci.converter;
+
+import java.io.IOException;
+import java.lang.reflect.Type;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.core.MessageProperties;
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.amqp.support.converter.MessageConversionException;
+
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+public class DomainObjectJsonMessageConverter extends Jackson2JsonMessageConverter {
+
+	private static final Logger LOG = LoggerFactory.getLogger(DomainObjectJsonMessageConverter.class);
+
+	private final Type domainObjectClass;
+	private final ObjectMapper objectMapper;
+
+	public DomainObjectJsonMessageConverter(Type domainObjectClass, ObjectMapper objectMapper) {
+		this.domainObjectClass = domainObjectClass;
+		this.objectMapper = objectMapper;
+		setJsonObjectMapper(objectMapper);
+	}
+
+	@Override
+	public Object fromMessage(Message message) throws MessageConversionException {
+		Object content = null;
+		// Not convert if message required
+		if (message.getClass().equals(domainObjectClass)) {
+			return message;
+		}
+		MessageProperties properties = message.getMessageProperties();
+		if (properties != null) {
+			String contentType = properties.getContentType();
+			if (contentType != null && contentType.contains("json")) {
+				String encoding = properties.getContentEncoding();
+				if (encoding == null) {
+					encoding = getDefaultCharset();
+				}
+				try {
+					JavaType targetJavaType = objectMapper.getTypeFactory().constructType(domainObjectClass);
+					content = convertBytesToObject(message.getBody(), encoding, targetJavaType);
+
+				} catch (IOException e) {
+					throw new MessageConversionException("Failed to convert Message content", e);
+				}
+			} else {
+				LOG.warn("Could not convert incoming message with content-type [" + contentType + "]");
+				throw new MessageConversionException("Failed to convert Message content. Unknown content-type: ["
+						+ contentType + "]");
+			}
+		}
+		if (content == null) {
+			content = message.getBody();
+		}
+		return content;
+	}
+
+	private Object convertBytesToObject(byte[] body, String encoding, JavaType targetJavaType)
+			throws JsonParseException, JsonMappingException, IOException {
+		String contentAsString = new String(body, encoding);
+		return objectMapper.readValue(contentAsString, targetJavaType);
+	}
+
+}

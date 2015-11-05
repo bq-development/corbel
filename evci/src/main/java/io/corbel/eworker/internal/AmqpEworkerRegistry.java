@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.function.UnaryOperator;
 
+import io.corbel.evci.converter.DomainObjectJsonMessageConverterFactory;
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
 import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter;
 
@@ -14,7 +15,6 @@ import io.corbel.evci.eworker.EworkerRegistry;
 import io.corbel.evci.service.EvciMQ;
 import io.corbel.lib.rabbitmq.config.AmqpConfigurer;
 import io.corbel.lib.rabbitmq.config.BackoffOptions;
-import io.corbel.lib.rabbitmq.converter.DomainObjectJsonMessageConverterFactory;
 
 /**
  * Created by Alberto J. Rubio

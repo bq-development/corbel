@@ -5,6 +5,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import io.corbel.evci.converter.DomainObjectJsonMessageConverterFactory;
 import org.junit.Before;
 import org.mockito.ArgumentCaptor;
 import org.springframework.amqp.core.Binding;
@@ -15,7 +16,6 @@ import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import io.corbel.evci.eworker.Eworker;
 import io.corbel.lib.rabbitmq.config.AmqpConfigurer;
 import io.corbel.lib.rabbitmq.config.RabbitMQConfigurer;
-import io.corbel.lib.rabbitmq.converter.DomainObjectJsonMessageConverterFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
