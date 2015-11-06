@@ -48,12 +48,12 @@ public class RequestParametersImpl<E> implements RequestParameters<E> {
 
     @Override
     public String getCustomParameterValue(String parameterName) {
-        return params.getFirst(parameterName);
+        return params != null ? params.getFirst(parameterName) : null;
     }
 
     @Override
     public List<String> getCustomParameterValues(String parameterName) {
-        return params.get(parameterName);
+        return params != null ? params.get(parameterName) : null;
     }
 
     @Override
