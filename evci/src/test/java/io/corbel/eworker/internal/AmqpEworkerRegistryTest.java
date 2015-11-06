@@ -6,6 +6,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import io.corbel.evci.converter.DomainObjectJsonMessageConverterFactory;
+import io.corbel.evci.model.EworkerMessage;
 import org.junit.Before;
 import org.mockito.ArgumentCaptor;
 import org.springframework.amqp.core.Binding;
@@ -49,7 +50,7 @@ public class AmqpEworkerRegistryTest {
         ArgumentCaptor<Queue> evciQueueCaptor = ArgumentCaptor.forClass(Queue.class);
         ArgumentCaptor<Binding> bindingCaptor = ArgumentCaptor.forClass(Binding.class);
 
-        registry.registerEworker(eworker, ROUTING_PATTERN_TEST, QUEUE_TEST, Object.class);
+        registry.registerEworker(eworker, ROUTING_PATTERN_TEST, QUEUE_TEST);
         verify(rabbitAdminMock, times(2)).declareQueue(evciQueueCaptor.capture());
         verify(rabbitAdminMock, times(2)).declareBinding(bindingCaptor.capture());
 

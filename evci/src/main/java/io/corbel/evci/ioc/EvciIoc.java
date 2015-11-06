@@ -8,6 +8,7 @@ import io.corbel.evci.converter.DomainObjectJsonMessageConverterFactory;
 import io.corbel.evci.eventbus.EvciEventHandler;
 import io.corbel.evci.eworker.EworkerArtifactIdRegistry;
 import io.corbel.evci.eworker.EworkerRegistry;
+import io.corbel.evci.model.EworkerMessage;
 import io.corbel.evci.service.DefaultEventService;
 import io.corbel.evci.service.EvciMQ;
 import io.corbel.evci.service.EventsService;

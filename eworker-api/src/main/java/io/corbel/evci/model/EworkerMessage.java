@@ -5,20 +5,30 @@ package io.corbel.evci.model;
  */
 public class EworkerMessage<E> {
 
-    private final Header header;
-    private final E content;
+    private Header header;
+    private E content;
 
     public EworkerMessage(Header header, E content) {
         this.header = header;
         this.content = content;
     }
 
+    public EworkerMessage() {}
+
     public Header getHeader() {
         return header;
     }
 
+    public void setHeader(Header header) {
+        this.header = header;
+    }
+
     public E getContent() {
         return content;
+    }
+
+    public void setContent(E content) {
+        this.content = content;
     }
 
     @Override

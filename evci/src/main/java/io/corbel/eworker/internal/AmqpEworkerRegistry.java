@@ -1,15 +1,14 @@
 package io.corbel.eworker.internal;
 
-import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.function.UnaryOperator;
 
-import io.corbel.evci.converter.DomainObjectJsonMessageConverterFactory;
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
 import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter;
 
+import io.corbel.evci.converter.DomainObjectJsonMessageConverterFactory;
 import io.corbel.evci.eworker.Eworker;
 import io.corbel.evci.eworker.EworkerRegistry;
 import io.corbel.evci.service.EvciMQ;
@@ -39,25 +38,20 @@ public class AmqpEworkerRegistry implements EworkerRegistry {
     }
 
     @Override
-    public <E> void registerEworker(Eworker<E> eworker, String routingPattern, String queue, Class<E> messageType, boolean handleFailures,
-            int threadsNumber) {
-        registerEworker(eworker, routingPattern, queue, (Type) messageType, handleFailures, threadsNumber);
-    }
+    public <E> void registerEworker(Eworker<E> eworker, String routingPattern, String queue, boolean handleFailures, int threadsNumber) {
 
-    @Override
-    public void registerEworker(Eworker<?> eworker, String routingPattern, String queue, Type messageType, boolean handleFailures,
-            int threadsNumber) {
         String queueName = "evci.eworker." + queue + ".queue";
         String deadLetterQueueName = "evci.eworker." + queue + ".dlq";
         configurer.bind(EvciMQ.EVENTS_EXCHANGE,
                 configurer.queue(queueName, configurer.setDeadLetterExchange(EvciMQ.EVENTS_DEAD_LETTER_EXCHANGE)),
                 Optional.of(routingPatternFunction.apply(routingPattern)), Optional.<Map<String, Object>>empty());
 
-        // configure dead letter queue
+        // Configure dead letter queue
         configurer.bind(EvciMQ.EVENTS_DEAD_LETTER_EXCHANGE, configurer.queue(deadLetterQueueName),
                 Optional.of(routingPatternFunction.apply(routingPattern)), Optional.<Map<String, Object>>empty());
 
-        MessageListenerAdapter messageListener = new MessageListenerAdapter(eworker, converterFactory.createConverter(messageType));
+        MessageListenerAdapter messageListener = new MessageListenerAdapter(eworker,
+                converterFactory.createConverter(eworker.getMessageType()));
 
         SimpleMessageListenerContainer container = configurer.listenerContainer(Executors.newFixedThreadPool(threadsNumber),
                 configurer.setRetryOpertations(Optional.of(maxAttempts), Optional.ofNullable(backoffOptions)), queueName);
@@ -66,16 +60,14 @@ public class AmqpEworkerRegistry implements EworkerRegistry {
 
         if (handleFailures) {
             MessageListenerAdapter failedMessageListener = new MessageListenerAdapter(eworker,
-                    converterFactory.createConverter(messageType));
+                    converterFactory.createConverter(eworker.getMessageType()));
             failedMessageListener.setDefaultListenerMethod("handleFailedMessage");
-
-            SimpleMessageListenerContainer faildMessageContainer = configurer.listenerContainer(
-                    Executors.newFixedThreadPool(threadsNumber), deadLetterQueueName);
-
+            SimpleMessageListenerContainer faildMessageContainer =
+                    configurer.listenerContainer(Executors.newFixedThreadPool(threadsNumber), deadLetterQueueName);
             faildMessageContainer.setMessageListener(failedMessageListener);
-            faildMessageContainer.start(); // start listening for failures
+            faildMessageContainer.start(); // Start listening for failures
         }
 
-        container.start(); // start listening for messages
+        container.start(); // Start listening for messages
     }
 }

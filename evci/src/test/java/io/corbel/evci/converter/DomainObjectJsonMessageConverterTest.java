@@ -1,5 +1,7 @@
 package io.corbel.evci.converter;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import io.corbel.evci.model.EworkerMessage;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -13,16 +15,15 @@ public class DomainObjectJsonMessageConverterTest {
 
 	private static final String TEST_ID = "_id";
 	private static final String TEST_MESSAGE = "_message";
-	private DomainObjectJsonMessageConverter converter;
-
-	@Before
-	public void setup() {
-		converter = new DomainObjectJsonMessageConverter(TestDomainObject.class, new ObjectMapper());
-	}
+    private static final String TEST_DOMAIN = "_domain";
+    private static final String TEST_USER = "_user";
 
 	@Test
 	public void testConvertToObject() {
-		String json = "{\"id\":\"" + TEST_ID + "\", \"message\":\"" + TEST_MESSAGE + "\"}";
+		DomainObjectJsonMessageConverter converter = new DomainObjectJsonMessageConverter(TestDomainObject.class, new ObjectMapper());
+
+        String json = "{\"header\": {\"domainId\":\"" + TEST_DOMAIN + "\", \"userId\":\"" + TEST_USER + "\"}, " +
+                "\"content\": {\"id\":\"" + TEST_ID + "\", \"message\":\"" + TEST_MESSAGE + "\"}}";
 
 		MessageProperties properties = new MessageProperties();
 		properties.setContentType("application/json");
@@ -33,9 +34,30 @@ public class DomainObjectJsonMessageConverterTest {
 		Assert.assertEquals(TEST_MESSAGE, object.message);
 	}
 
+    @Test
+    public void testEworkerMessageConvertToObject() {
+        DomainObjectJsonMessageConverter converter = new DomainObjectJsonMessageConverter(new TypeReference<EworkerMessage<TestDomainObject>>(){}.getType(), new ObjectMapper());
+
+        String json = "{\"header\": {\"domainId\":\"" + TEST_DOMAIN + "\", \"userId\":\"" + TEST_USER + "\"}, " +
+                "\"content\": {\"id\":\"" + TEST_ID + "\", \"message\":\"" + TEST_MESSAGE + "\"}}";
+
+        MessageProperties properties = new MessageProperties();
+        properties.setContentType("application/json");
+        Message message = new Message(json.getBytes(), properties);
+        EworkerMessage<TestDomainObject> object = (EworkerMessage<TestDomainObject>) converter.fromMessage(message);
+
+        Assert.assertEquals(TEST_DOMAIN, object.getHeader().getDomainId());
+        Assert.assertEquals(TEST_USER, object.getHeader().getUserId());
+        Assert.assertEquals(TEST_ID, object.getContent().getId());
+        Assert.assertEquals(TEST_MESSAGE, object.getContent().getMessage());
+    }
+
 	@Test(expected = MessageConversionException.class)
 	public void testConvertNoJsonHeader() {
-		String json = "{\"id\":\"" + TEST_ID + "\", \"message\":\"" + TEST_MESSAGE + "\"}";
+        DomainObjectJsonMessageConverter converter = new DomainObjectJsonMessageConverter(TestDomainObject.class, new ObjectMapper());
+
+        String json = "{\"header\": {\"domainId\":\"" + TEST_DOMAIN + "\", \"userId\":\"" + TEST_USER + "\"}, " +
+                "\"content\": {\"id\":\"" + TEST_ID + "\", \"message\":\"" + TEST_MESSAGE + "\"}}";
 
 		MessageProperties properties = new MessageProperties();
 		Message message = new Message(json.getBytes(), properties);

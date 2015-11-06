@@ -1,6 +1,9 @@
 package io.corbel.evci.eworker;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import io.corbel.evci.eworker.plugin.EworkerPlugin;
+
+import java.lang.reflect.Type;
 
 /**
  * Eworker: Events workers module
@@ -20,5 +23,9 @@ public interface Eworker<E> {
 	default void handleFailedMessage(E message) {
 		//by default failed messages are ignored
 	}
+
+	default Type getMessageType() {
+        return new TypeReference<E>(){}.getType();
+    }
 
 }
