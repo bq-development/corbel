@@ -1,19 +1,17 @@
 package io.corbel.resources.rem.dao;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.aggregation.*;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
-import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
-import org.springframework.data.mongodb.core.aggregation.GroupOperation;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -33,6 +31,7 @@ import io.corbel.resources.rem.model.GenericDocument;
 import io.corbel.resources.rem.model.ResourceUri;
 import io.corbel.resources.rem.resmi.exception.MongoAggregationException;
 import io.corbel.resources.rem.utils.JsonUtils;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
 /**
  * @author Alberto J. Rubio
@@ -343,35 +342,43 @@ public class MongoResmiDao implements ResmiDao {
 
     @Override
     public AverageResult average(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field) {
-        return aggregate(resourceUri, resourceQueries, Aggregation.group().avg(field).as("average"), AverageResult.class);
+        return aggregate(resourceUri, resourceQueries, AverageResult.class, group().avg(field).as("average")).get(0);
     }
 
     @Override
     public SumResult sum(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field) {
-        return aggregate(resourceUri, resourceQueries, Aggregation.group().sum(field).as("sum"), SumResult.class);
+        return aggregate(resourceUri, resourceQueries, SumResult.class, group().sum(field).as("sum")).get(0);
     }
 
     @Override
     public MaxResult max(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field) {
-        return aggregate(resourceUri, resourceQueries, Aggregation.group().max(field).as("max"), MaxResult.class);
+        return aggregate(resourceUri, resourceQueries, MaxResult.class, group().max(field).as("max")).get(0);
     }
 
     @Override
     public MinResult min(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field) {
-        return aggregate(resourceUri, resourceQueries, Aggregation.group().min(field).as("min"), MinResult.class);
+        return aggregate(resourceUri, resourceQueries, MinResult.class, group().min(field).as("min")).get(0);
     }
 
-    private <T extends AggregationResult> T aggregate(ResourceUri resourceUri, List<ResourceQuery> resourceQueries,
-            GroupOperation groupOperation, Class<T> clazz) {
+    @Override
+    public HistogramResult histogram(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field) {
+        AggregationOperation[] aggregations = {
+                group(field).push("$_id").as("ids"),
+                new CustomAggregationOperation(new BasicDBObject("$project", new BasicDBObject("count", new BasicDBObject("$size", "$ids"))))
+        };
+
+        return new HistogramResult(aggregate(resourceUri, resourceQueries, HistogramResult.HistogramValue.class, aggregations));
+    }
+
+    private <T> List<T> aggregate(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, Class<T> clazz, AggregationOperation... operations) {
         Criteria criterias = CriteriaBuilder.buildFromResourceQueries(resourceQueries);
         if (resourceUri.isRelation() && !resourceUri.isTypeWildcard()) {
             criterias = criterias.and(JsonRelation._SRC_ID).is(resourceUri.getTypeId());
         }
-        List<AggregationOperation> aggregations = new ArrayList<>();
+        List<AggregationOperation> aggregations = new ArrayList<>(operations.length + 1);
         aggregations.add(Aggregation.match(criterias));
-        aggregations.add(groupOperation);
-        return mongoOperations.aggregate(Aggregation.newAggregation(aggregations), getMongoCollectionName(resourceUri), clazz)
-                .getUniqueMappedResult();
+        aggregations.addAll(Arrays.asList(operations));
+        return mongoOperations.aggregate(newAggregation(aggregations), getMongoCollectionName(resourceUri), clazz).getMappedResults();
     }
 
     private String getMongoCollectionName(ResourceUri resourceUri) {
@@ -382,4 +389,19 @@ public class MongoResmiDao implements ResmiDao {
                                 .map(relation -> RELATION_CONCATENATOR + namespaceNormalizer.normalize(relation)).orElse(EMPTY_STRING))
                 .orElse(EMPTY_STRING);
     }
+
+    private class CustomAggregationOperation implements AggregationOperation {
+        private DBObject operation;
+
+        public CustomAggregationOperation (DBObject operation) {
+            this.operation = operation;
+        }
+
+        @Override
+        public DBObject toDBObject(AggregationOperationContext context) {
+            return context.getMappedObject(operation);
+        }
+    }
 }
+
+

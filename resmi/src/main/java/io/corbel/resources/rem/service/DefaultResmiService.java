@@ -1,12 +1,6 @@
 package io.corbel.resources.rem.service;
 
-import io.corbel.lib.queries.request.Aggregation;
-import io.corbel.lib.queries.request.AggregationResult;
-import io.corbel.lib.queries.request.Average;
-import io.corbel.lib.queries.request.Max;
-import io.corbel.lib.queries.request.Min;
-import io.corbel.lib.queries.request.ResourceQuery;
-import io.corbel.lib.queries.request.Sum;
+import io.corbel.lib.queries.request.*;
 import io.corbel.resources.rem.dao.NotFoundException;
 import io.corbel.resources.rem.dao.RelationMoveOperation;
 import io.corbel.resources.rem.dao.ResmiDao;
@@ -72,6 +66,8 @@ public class DefaultResmiService implements ResmiService {
                 return resmiDao.max(resourceUri, operation.operate(apiParameters.getQueries().orElse(null)), ((Max) operation).getField());
             case $MIN:
                 return resmiDao.min(resourceUri, operation.operate(apiParameters.getQueries().orElse(null)), ((Min) operation).getField());
+            case $HISTOGRAM:
+                return resmiDao.histogram(resourceUri, operation.operate(apiParameters.getQueries().orElse(null)), ((Histogram)operation).getField());
             default:
                 throw new RuntimeException("Aggregation operation not supported: " + operation.getOperator());
         }

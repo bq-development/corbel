@@ -7,20 +7,19 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
+import com.fasterxml.jackson.core.TreeNode;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import io.corbel.lib.mongo.JsonObjectMongoWriteConverter;
 import io.corbel.lib.queries.QueryNodeImpl;
 import io.corbel.lib.queries.StringQueryLiteral;
-import io.corbel.lib.queries.request.AverageResult;
-import io.corbel.lib.queries.request.MaxResult;
-import io.corbel.lib.queries.request.MinResult;
-import io.corbel.lib.queries.request.Pagination;
-import io.corbel.lib.queries.request.QueryOperator;
-import io.corbel.lib.queries.request.ResourceQuery;
-import io.corbel.lib.queries.request.SumResult;
+import io.corbel.lib.queries.request.*;
 import io.corbel.resources.rem.model.ResourceUri;
 import io.corbel.resources.rem.request.ResourceId;
 import io.corbel.resources.rem.service.DefaultNamespaceNormalizer;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -432,5 +431,36 @@ import com.mongodb.WriteResult;
                 "{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"" + field + "\" : \"" + value
                         + "\" , \"_src_id\" : \"" + TEST_ID + "\"}} , { \"$group\" : { \"_id\" :  null  , \"min\" : { \"$min\" : \"$"
                         + testField + "\"}}}]}");
+    }
+
+    @Test
+    public void histogramTest() throws IOException {
+        String testField = "test";
+        ObjectMapper mapper = new ObjectMapper(); //needed for parsing json
+
+        ArgumentCaptor<Aggregation> argument = ArgumentCaptor.forClass(Aggregation.class);
+        Mockito.when(mongoOperations.aggregate(argument.capture(), eq(TEST_COLLECTION), eq(HistogramResult.HistogramValue.class))).thenReturn(
+                new AggregationResults<>(Collections.singletonList(new HistogramResult.HistogramValue("t", 1)), new BasicDBObject()));
+
+        mongoResmiDao.histogram(new ResourceUri(TEST_COLLECTION), Collections.emptyList(), testField);
+
+        JsonNode actualAggregation = mapper.readTree(argument.getValue().toString());
+        JsonNode actualPipeline = actualAggregation.get("pipeline");
+        JsonNode actualGroup = null;
+        JsonNode actualProject = null;
+
+        for(JsonNode node : actualPipeline) {
+            if(node.has("$group")){
+                actualGroup = node.get("$group");
+            }
+            if(node.has("$project")){
+                actualProject = node.get("$project");
+            }
+        }
+
+        assertThat(actualGroup.get("_id").asText()).isEqualTo("$"+testField);
+        assertThat(actualGroup.get("ids").toString()).isEqualTo("{\"$push\":\"$_id\"}");
+
+        assertThat(actualProject.get("count").toString()).isEqualTo("{\"$size\":\"$ids\"}");
     }
 }

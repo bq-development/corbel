@@ -1,13 +1,6 @@
 package io.corbel.resources.rem.dao;
 
-import io.corbel.lib.queries.request.AverageResult;
-import io.corbel.lib.queries.request.CountResult;
-import io.corbel.lib.queries.request.MaxResult;
-import io.corbel.lib.queries.request.MinResult;
-import io.corbel.lib.queries.request.Pagination;
-import io.corbel.lib.queries.request.ResourceQuery;
-import io.corbel.lib.queries.request.Sort;
-import io.corbel.lib.queries.request.SumResult;
+import io.corbel.lib.queries.request.*;
 import io.corbel.resources.rem.model.GenericDocument;
 import io.corbel.resources.rem.model.ResourceUri;
 import io.corbel.resources.rem.resmi.exception.MongoAggregationException;
@@ -61,6 +54,8 @@ public interface ResmiDao {
     MaxResult max(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field);
 
     MinResult min(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field);
+
+    HistogramResult histogram(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field);
 
     void moveRelation(ResourceUri uri, RelationMoveOperation relationMoveOperation);
 
