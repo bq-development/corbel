@@ -55,7 +55,7 @@ public interface ResmiDao {
 
     MinResult min(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field);
 
-    HistogramResult histogram(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field);
+    HistogramResult histogram(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, Optional<Pagination> pagination, Optional<Sort> sort, String field);
 
     void moveRelation(ResourceUri uri, RelationMoveOperation relationMoveOperation);
 

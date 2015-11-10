@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Sort.Direction;
@@ -361,11 +362,30 @@ public class MongoResmiDao implements ResmiDao {
     }
 
     @Override
-    public HistogramResult histogram(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field) {
+    public HistogramResult histogram(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, Optional<Pagination> pagination, Optional<Sort> sortParam, String field) {
         AggregationOperation[] aggregations = {
                 group(field).push("$_id").as("ids"),
-                new CustomAggregationOperation(new BasicDBObject("$project", new BasicDBObject("count", new BasicDBObject("$size", "$ids"))))
+                new ExposingFieldsCustomAggregationOperation(new BasicDBObject("$project", new BasicDBObject("count", new BasicDBObject("$size", "$ids")))){
+                    @Override
+                    public ExposedFields getFields() {
+                        return ExposedFields.synthetic(Fields.fields("count"));
+                    }
+                },
         };
+
+        if(sortParam.isPresent()){
+            Direction direction = Direction.ASC;
+            if(sortParam.get().getDirection() == Sort.Direction.DESC){
+                direction = Direction.DESC;
+            }
+            aggregations = ArrayUtils.add(aggregations, sort(direction, sortParam.get().getField()));
+        }
+
+        if(pagination.isPresent()){
+            aggregations = ArrayUtils.addAll(aggregations,
+                    skip(pagination.get().getPage() * pagination.get().getPageSize()),
+                    limit(pagination.get().getPageSize()));
+        }
 
         return new HistogramResult(aggregate(resourceUri, resourceQueries, HistogramResult.HistogramValue.class, aggregations));
     }
@@ -400,6 +420,18 @@ public class MongoResmiDao implements ResmiDao {
         @Override
         public DBObject toDBObject(AggregationOperationContext context) {
             return context.getMappedObject(operation);
+        }
+    }
+
+    private class ExposingFieldsCustomAggregationOperation extends CustomAggregationOperation implements FieldsExposingAggregationOperation {
+
+        public ExposingFieldsCustomAggregationOperation(DBObject operation) {
+            super(operation);
+        }
+
+        @Override
+        public ExposedFields getFields() {
+            return null;
         }
     }
 }

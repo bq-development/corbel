@@ -67,7 +67,8 @@ public class DefaultResmiService implements ResmiService {
             case $MIN:
                 return resmiDao.min(resourceUri, operation.operate(apiParameters.getQueries().orElse(null)), ((Min) operation).getField());
             case $HISTOGRAM:
-                return resmiDao.histogram(resourceUri, operation.operate(apiParameters.getQueries().orElse(null)), ((Histogram)operation).getField());
+                return resmiDao.histogram(resourceUri, operation.operate(apiParameters.getQueries().orElse(null)),
+                        Optional.ofNullable(apiParameters.getPagination()), apiParameters.getSort(), ((Histogram)operation).getField());
             default:
                 throw new RuntimeException("Aggregation operation not supported: " + operation.getOperator());
         }

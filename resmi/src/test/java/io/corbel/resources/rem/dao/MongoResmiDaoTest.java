@@ -7,10 +7,8 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
-import com.fasterxml.jackson.core.TreeNode;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import io.corbel.lib.mongo.JsonObjectMongoWriteConverter;
 import io.corbel.lib.queries.QueryNodeImpl;
 import io.corbel.lib.queries.StringQueryLiteral;
@@ -442,7 +440,7 @@ import com.mongodb.WriteResult;
         Mockito.when(mongoOperations.aggregate(argument.capture(), eq(TEST_COLLECTION), eq(HistogramResult.HistogramValue.class))).thenReturn(
                 new AggregationResults<>(Collections.singletonList(new HistogramResult.HistogramValue("t", 1)), new BasicDBObject()));
 
-        mongoResmiDao.histogram(new ResourceUri(TEST_COLLECTION), Collections.emptyList(), testField);
+        mongoResmiDao.histogram(new ResourceUri(TEST_COLLECTION), Collections.emptyList(), Optional.<Pagination>empty(), Optional.<Sort>empty(), testField);
 
         JsonNode actualAggregation = mapper.readTree(argument.getValue().toString());
         JsonNode actualPipeline = actualAggregation.get("pipeline");
@@ -462,5 +460,53 @@ import com.mongodb.WriteResult;
         assertThat(actualGroup.get("ids").toString()).isEqualTo("{\"$push\":\"$_id\"}");
 
         assertThat(actualProject.get("count").toString()).isEqualTo("{\"$size\":\"$ids\"}");
+    }
+
+    @Test
+    public void histogramTopNTest() throws IOException {
+        String testField = "test";
+        int n = 10;
+        ObjectMapper mapper = new ObjectMapper(); //needed for parsing json
+
+        ArgumentCaptor<Aggregation> argument = ArgumentCaptor.forClass(Aggregation.class);
+        Mockito.when(mongoOperations.aggregate(argument.capture(), eq(TEST_COLLECTION), eq(HistogramResult.HistogramValue.class))).thenReturn(
+                new AggregationResults<>(Collections.singletonList(new HistogramResult.HistogramValue("t", 1)), new BasicDBObject()));
+
+        mongoResmiDao.histogram(new ResourceUri(TEST_COLLECTION), Collections.emptyList(), Optional.of(new Pagination(0, n)), Optional.of(new Sort("desc", "count")), testField);
+
+        JsonNode actualAggregation = mapper.readTree(argument.getValue().toString());
+        JsonNode actualPipeline = actualAggregation.get("pipeline");
+        JsonNode actualGroup = null;
+        JsonNode actualProject = null;
+        JsonNode actualSort = null;
+        JsonNode actualOffset = null;
+        JsonNode actualLimit = null;
+
+        for(JsonNode node : actualPipeline) {
+            if(node.has("$group")){
+                actualGroup = node.get("$group");
+            }
+            if(node.has("$project")){
+                actualProject = node.get("$project");
+            }
+            if(node.has("$sort")){
+                actualSort = node.get("$sort");
+            }
+            if(node.has("$skip")){
+                actualOffset = node.get("$skip");
+            }
+            if(node.has("$limit")){
+                actualLimit = node.get("$limit");
+            }
+        }
+
+        assertThat(actualGroup.get("_id").asText()).isEqualTo("$"+testField);
+        assertThat(actualGroup.get("ids").toString()).isEqualTo("{\"$push\":\"$_id\"}");
+
+        assertThat(actualProject.get("count").toString()).isEqualTo("{\"$size\":\"$ids\"}");
+
+        assertThat(actualSort.get("count").asInt()).isEqualTo(-1);
+        assertThat(actualOffset.asInt()).isEqualTo(0);
+        assertThat(actualLimit.asInt()).isEqualTo(n);
     }
 }
