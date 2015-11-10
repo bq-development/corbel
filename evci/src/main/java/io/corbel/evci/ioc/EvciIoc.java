@@ -62,7 +62,7 @@ public class EvciIoc extends AbstractRabbitMQConfiguration {
 
     @Bean
     public EventResource eventResource() {
-        return new EventResource(eventService());
+        return new EventResource(eventService(), getObjectMapper());
     }
 
     @Bean(name = "evciAmqpTemplate")

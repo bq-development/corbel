@@ -16,25 +16,31 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import com.google.common.collect.ImmutableMap;
+import io.corbel.evci.model.Header;
 import io.corbel.evci.service.EventsService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.corbel.lib.ws.auth.AuthorizationInfo;
+import io.dropwizard.auth.Auth;
 
 @Path(ApiVersion.CURRENT + "/event") public class EventResource {
 
     private final EventsService eventsService;
+    private final ObjectMapper objectMapper;
 
-    public EventResource(EventsService eventsService) {
+    public EventResource(EventsService eventsService, ObjectMapper objectMapper) {
         this.eventsService = eventsService;
+        this.objectMapper = objectMapper;
     }
 
     @POST
     @Path("/{type}")
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response registerJsonEvent(@PathParam("type") String type, JsonNode event) {
+    public Response registerJsonEvent(@Auth AuthorizationInfo authorizationInfo, @PathParam("type") String type, JsonNode event) {
         if (event != null) {
-            eventsService.registerEvent(type.replaceAll(":", "."), event);
+            eventsService.registerEvent(type.replaceAll(":", "."), createEworkerMessage(authorizationInfo, event));
             return Response.status(Status.ACCEPTED).build();
         }
         throw new ConstraintViolationException("Empty event", Collections.emptySet());
@@ -43,10 +49,15 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
     @POST
     @Path("/{type}")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public Response registerFormParamsEvent(@PathParam("type") String type, Form params, @Context Request request) {
-        Response response = Response.fromResponse(registerJsonEvent(type, getNodeParams(params))).type(MediaType.TEXT_PLAIN_TYPE)
-                .entity("[accepted]").build();
-        return response;
+    public Response registerFormParamsEvent(@Auth AuthorizationInfo authorizationInfo, @PathParam("type") String type, Form params, @Context Request request) {
+        return Response.fromResponse(registerJsonEvent(authorizationInfo, type, getNodeParams(params))).type(MediaType.TEXT_PLAIN_TYPE).entity("[accepted]").build();
+    }
+
+    private JsonNode createEworkerMessage(AuthorizationInfo authorizationInfo, JsonNode event) {
+        Header header = authorizationInfo != null ? new Header(authorizationInfo.getDomainId(), authorizationInfo.getClientId(),
+                authorizationInfo.getUserId(), authorizationInfo.getTokenReader().getInfo().getDeviceId()) : new Header();
+        JsonNode jsonHeader = objectMapper.convertValue(header, JsonNode.class);
+        return objectMapper.createObjectNode().setAll(ImmutableMap.of("header", jsonHeader, "content", event));
     }
 
     private ObjectNode getNodeParams(Form params) {
