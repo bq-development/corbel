@@ -1,5 +1,7 @@
 package io.corbel.eworker.internal;
 
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Executors;
@@ -39,7 +41,7 @@ public class AmqpEworkerRegistry implements EworkerRegistry {
 
     @Override
     public <E> void registerEworker(Eworker<E> eworker, String routingPattern, String queue, boolean handleFailures, int threadsNumber) {
-
+        Type eworkerType = ((ParameterizedType) eworker.getClass().getGenericInterfaces()[0]).getActualTypeArguments()[0];
         String queueName = "evci.eworker." + queue + ".queue";
         String deadLetterQueueName = "evci.eworker." + queue + ".dlq";
         configurer.bind(EvciMQ.EVENTS_EXCHANGE,
@@ -50,8 +52,7 @@ public class AmqpEworkerRegistry implements EworkerRegistry {
         configurer.bind(EvciMQ.EVENTS_DEAD_LETTER_EXCHANGE, configurer.queue(deadLetterQueueName),
                 Optional.of(routingPatternFunction.apply(routingPattern)), Optional.<Map<String, Object>>empty());
 
-        MessageListenerAdapter messageListener = new MessageListenerAdapter(eworker,
-                converterFactory.createConverter(eworker.getMessageType()));
+        MessageListenerAdapter messageListener = new MessageListenerAdapter(eworker, converterFactory.createConverter(eworkerType));
 
         SimpleMessageListenerContainer container = configurer.listenerContainer(Executors.newFixedThreadPool(threadsNumber),
                 configurer.setRetryOpertations(Optional.of(maxAttempts), Optional.ofNullable(backoffOptions)), queueName);
@@ -60,10 +61,10 @@ public class AmqpEworkerRegistry implements EworkerRegistry {
 
         if (handleFailures) {
             MessageListenerAdapter failedMessageListener = new MessageListenerAdapter(eworker,
-                    converterFactory.createConverter(eworker.getMessageType()));
+                    converterFactory.createConverter(eworkerType));
             failedMessageListener.setDefaultListenerMethod("handleFailedMessage");
-            SimpleMessageListenerContainer faildMessageContainer =
-                    configurer.listenerContainer(Executors.newFixedThreadPool(threadsNumber), deadLetterQueueName);
+            SimpleMessageListenerContainer faildMessageContainer = configurer.listenerContainer(Executors.newFixedThreadPool(threadsNumber),
+                    deadLetterQueueName);
             faildMessageContainer.setMessageListener(failedMessageListener);
             faildMessageContainer.start(); // Start listening for failures
         }
