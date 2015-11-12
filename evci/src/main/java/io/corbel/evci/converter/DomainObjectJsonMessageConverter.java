@@ -47,9 +47,13 @@ public class DomainObjectJsonMessageConverter extends Jackson2JsonMessageConvert
                         content = convertBytesToObject(message.getBody(), encoding, targetJavaType);
                     } else {
                         JavaType eworkerMsgJavaType = objectMapper.getTypeFactory().constructType(EworkerMessage.class);
-                        EworkerMessage eworkerMessage = (EworkerMessage) convertBytesToObject(message.getBody(), encoding,
-                                eworkerMsgJavaType);
-                        content = objectMapper.convertValue(eworkerMessage.getContent(), targetJavaType);
+                        try {
+                            EworkerMessage eworkerMessage = (EworkerMessage) convertBytesToObject(message.getBody(), encoding,
+                                    eworkerMsgJavaType);
+                            content = objectMapper.convertValue(eworkerMessage.getContent(), targetJavaType);
+                        } catch (IOException ignored) {
+                            content = convertBytesToObject(message.getBody(), encoding, targetJavaType);
+                        }
                     }
                 } catch (IOException e) {
                     throw new MessageConversionException("Failed to convert message content", e);
