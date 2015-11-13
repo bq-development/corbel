@@ -1,6 +1,5 @@
 package io.corbel.resources.rem.service;
 
-import io.corbel.lib.queries.request.AggregationResult;
 import io.corbel.lib.queries.request.ResourceQuery;
 import io.corbel.resources.rem.dao.NotFoundException;
 import io.corbel.resources.rem.dao.RelationMoveOperation;
@@ -29,11 +28,17 @@ public interface ResmiService {
 
     JsonArray findCollection(ResourceUri uri, Optional<CollectionParameters> apiParameters) throws BadConfigurationException;
 
+    JsonArray findCollectionDistinct(ResourceUri uri, Optional<CollectionParameters> apiParameters, List<String> fields, boolean first)
+            throws BadConfigurationException, MongoAggregationException;
+
     JsonObject findResource(ResourceUri uri);
 
     JsonElement findRelation(ResourceUri uri, Optional<RelationParameters> apiParameters) throws BadConfigurationException;
 
-    AggregationResult aggregate(ResourceUri uri, CollectionParameters apiParameters) throws BadConfigurationException;
+    JsonElement aggregate(ResourceUri uri, CollectionParameters apiParameters) throws BadConfigurationException, MongoAggregationException;
+
+    JsonArray findRelationDistinct(ResourceUri uri, Optional<RelationParameters> apiParameters, List<String> fields, boolean first)
+    throws BadConfigurationException, MongoAggregationException;
 
     JsonObject saveResource(ResourceUri uri, JsonObject object, Optional<String> userId) throws StartsWithUnderscoreException;
 
@@ -60,11 +65,5 @@ public interface ResmiService {
     void ensureIndex(ResourceUri uri, Index index);
 
     void removeObjectId(JsonObject object);
-
-    JsonArray findCollectionDistinct(ResourceUri uri, Optional<CollectionParameters> apiParameters, List<String> fields, boolean first)
-            throws BadConfigurationException, MongoAggregationException;
-
-    JsonArray findRelationDistinct(ResourceUri uri, Optional<RelationParameters> apiParameters, List<String> fields, boolean first)
-            throws BadConfigurationException, MongoAggregationException;
 
 }

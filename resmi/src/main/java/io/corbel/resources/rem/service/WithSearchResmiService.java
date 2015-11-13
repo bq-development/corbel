@@ -1,5 +1,6 @@
 package io.corbel.resources.rem.service;
 
+import com.google.gson.Gson;
 import io.corbel.lib.queries.StringQueryLiteral;
 import io.corbel.lib.queries.builder.ResourceQueryBuilder;
 import io.corbel.lib.queries.request.Aggregation;
@@ -15,15 +16,12 @@ import io.corbel.resources.rem.model.SearchResource;
 import io.corbel.resources.rem.request.CollectionParameters;
 import io.corbel.resources.rem.request.CollectionParametersImpl;
 import io.corbel.resources.rem.request.RelationParameters;
+import io.corbel.resources.rem.resmi.exception.MongoAggregationException;
 import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
 import io.corbel.resources.rem.search.ResmiSearch;
 
 import java.time.Clock;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -39,12 +37,13 @@ public class WithSearchResmiService extends DefaultResmiService implements Searc
 
     private final ResmiSearch search;
     private final SearchableFieldsRegistry searchableFieldsRegistry;
+    private final Gson gson;
 
-    public WithSearchResmiService(ResmiDao resmiDao, ResmiSearch search, SearchableFieldsRegistry searchableFieldsRegistry, Clock clock) {
+    public WithSearchResmiService(ResmiDao resmiDao, ResmiSearch search, SearchableFieldsRegistry searchableFieldsRegistry, Gson gson, Clock clock) {
         super(resmiDao, clock);
         this.search = search;
         this.searchableFieldsRegistry = searchableFieldsRegistry;
-
+        this.gson = gson;
         initSearchableFieldsRegistry();
     }
 
@@ -53,12 +52,12 @@ public class WithSearchResmiService extends DefaultResmiService implements Searc
     }
 
     @Override
-    public AggregationResult aggregate(ResourceUri resourceUri, CollectionParameters apiParameters) throws BadConfigurationException {
+    public JsonElement aggregate(ResourceUri resourceUri, CollectionParameters apiParameters) throws BadConfigurationException, MongoAggregationException {
         Aggregation operation = apiParameters.getAggregation().get();
         switch (operation.getOperator()) {
             case $COUNT:
                 if (apiParameters.getSearch().isPresent()) {
-                    return countWithSearchService(resourceUri, apiParameters);
+                    return gson.toJsonTree(countWithSearchService(resourceUri, apiParameters));
                 }
             case $AVG:
             case $SUM:
@@ -79,7 +78,7 @@ public class WithSearchResmiService extends DefaultResmiService implements Searc
 
     @Override
     public JsonArray findCollection(ResourceUri uri, Optional<CollectionParameters> apiParameters) throws BadConfigurationException {
-        if (apiParameters.flatMap(params -> params.getSearch()).isPresent()) {
+        if (apiParameters.flatMap(CollectionParameters::getSearch).isPresent()) {
             return findInSearchService(uri, apiParameters.get());
         } else {
             return super.findCollection(uri, apiParameters);
@@ -111,13 +110,13 @@ public class WithSearchResmiService extends DefaultResmiService implements Searc
             ids.add(new StringQueryLiteral(((JsonObject) element).get(ID).getAsString()));
         }
         ResourceQueryBuilder builder = new ResourceQueryBuilder().add(ID, ids, QueryOperator.$IN);
-        return new CollectionParametersImpl(apiParameters.getPagination(), apiParameters.getSort(), Optional.of(Arrays.asList(builder
-                .build())), Optional.empty(), Optional.empty(), Optional.empty());
+        return new CollectionParametersImpl(apiParameters.getPagination(), apiParameters.getSort(),
+                Optional.of(Collections.singletonList(builder.build())), Optional.empty(), Optional.empty(), Optional.empty());
     }
 
     @Override
     public JsonElement findRelation(ResourceUri uri, Optional<RelationParameters> apiParameters) throws BadConfigurationException {
-        if (apiParameters.flatMap(params -> params.getSearch()).isPresent()) {
+        if (apiParameters.flatMap(RelationParameters::getSearch).isPresent()) {
             return findInSearchService(uri, apiParameters.get());
         } else {
             return super.findRelation(uri, apiParameters);

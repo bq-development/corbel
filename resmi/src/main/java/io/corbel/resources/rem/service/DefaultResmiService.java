@@ -38,10 +38,8 @@ public class DefaultResmiService implements ResmiService {
     protected static final String _CREATED_AT = "_createdAt";
     protected static final String _UPDATED_AT = "_updatedAt";
     protected static final String _ACL = "_acl";
-    protected final static Set<String> ignorableReservedAttributeNames = Sets.newHashSet(_ID, _EXPIRE_AT, _ORDER, _SRC_ID, _DST_ID,
-            _CREATED_AT, _UPDATED_AT, _ACL);
-
-    public final static String SEARCHABLE_FIELDS = "searchable";
+    protected final static Set<String> ATTRIBUTE_NAMES_RESERVED = Sets.newHashSet(_ID, _EXPIRE_AT, _ORDER, _SRC_ID, _DST_ID, _CREATED_AT,
+            _UPDATED_AT, _ACL);
 
     protected final ResmiDao resmiDao;
     protected final Clock clock;
@@ -52,7 +50,8 @@ public class DefaultResmiService implements ResmiService {
     }
 
     @Override
-    public AggregationResult aggregate(ResourceUri resourceUri, CollectionParameters apiParameters) throws BadConfigurationException {
+    public JsonElement aggregate(ResourceUri resourceUri, CollectionParameters apiParameters)
+            throws BadConfigurationException, MongoAggregationException {
         Aggregation operation = apiParameters.getAggregation().get();
         switch (operation.getOperator()) {
             case $COUNT:
@@ -68,7 +67,10 @@ public class DefaultResmiService implements ResmiService {
                 return resmiDao.min(resourceUri, operation.operate(apiParameters.getQueries().orElse(null)), ((Min) operation).getField());
             case $HISTOGRAM:
                 return resmiDao.histogram(resourceUri, operation.operate(apiParameters.getQueries().orElse(null)),
-                        Optional.ofNullable(apiParameters.getPagination()), apiParameters.getSort(), ((Histogram)operation).getField());
+                        Optional.ofNullable(apiParameters.getPagination()), apiParameters.getSort(), ((Histogram) operation).getField());
+            case $COMBINE:
+                return resmiDao.combine(resourceUri, apiParameters.getQueries(), Optional.ofNullable(apiParameters.getPagination()),
+                        apiParameters.getSort(), ((Combine) operation).getField(), ((Combine) operation).getExpression());
             default:
                 throw new RuntimeException("Aggregation operation not supported: " + operation.getOperator());
         }
@@ -76,15 +78,16 @@ public class DefaultResmiService implements ResmiService {
 
     @Override
     public JsonArray findCollection(ResourceUri uri, Optional<CollectionParameters> apiParameters) throws BadConfigurationException {
-        return resmiDao.findCollection(uri, apiParameters.flatMap(params -> params.getQueries()),
-                apiParameters.map(params -> params.getPagination()), apiParameters.flatMap(params -> params.getSort()));
+        return resmiDao.findCollection(uri, apiParameters.flatMap(CollectionParameters::getQueries),
+                apiParameters.map(CollectionParameters::getPagination), apiParameters.flatMap(CollectionParameters::getSort));
     }
 
     @Override
     public JsonArray findCollectionDistinct(ResourceUri uri, Optional<CollectionParameters> apiParameters, List<String> fields,
             boolean first) throws BadConfigurationException, MongoAggregationException {
-        return resmiDao.findCollectionWithGroup(uri, apiParameters.flatMap(params -> params.getQueries()),
-                apiParameters.map(params -> params.getPagination()), apiParameters.flatMap(params -> params.getSort()), fields, first);
+        return resmiDao.findCollectionWithGroup(uri, apiParameters.flatMap(CollectionParameters::getQueries),
+                apiParameters.map(CollectionParameters::getPagination), apiParameters.flatMap(CollectionParameters::getSort), fields,
+                first);
     }
 
     @Override
@@ -94,15 +97,15 @@ public class DefaultResmiService implements ResmiService {
 
     @Override
     public JsonElement findRelation(ResourceUri uri, Optional<RelationParameters> apiParameters) throws BadConfigurationException {
-        return resmiDao.findRelation(uri, apiParameters.flatMap(params -> params.getQueries()),
-                apiParameters.map(params -> params.getPagination()), apiParameters.flatMap(params -> params.getSort()));
+        return resmiDao.findRelation(uri, apiParameters.flatMap(RelationParameters::getQueries),
+                apiParameters.map(RelationParameters::getPagination), apiParameters.flatMap(RelationParameters::getSort));
     }
 
     @Override
     public JsonArray findRelationDistinct(ResourceUri uri, Optional<RelationParameters> apiParameters, List<String> fields, boolean first)
             throws BadConfigurationException, MongoAggregationException {
-        return resmiDao.findRelationWithGroup(uri, apiParameters.flatMap(params -> params.getQueries()),
-                apiParameters.map(params -> params.getPagination()), apiParameters.flatMap(params -> params.getSort()), fields, first);
+        return resmiDao.findRelationWithGroup(uri, apiParameters.flatMap(RelationParameters::getQueries),
+                apiParameters.map(RelationParameters::getPagination), apiParameters.flatMap(RelationParameters::getSort), fields, first);
     }
 
     @Override
@@ -213,13 +216,10 @@ public class DefaultResmiService implements ResmiService {
         if (entity == null) {
             return;
         }
-
         Date date = Date.from(clock.instant());
-        String formatedDate = formatDate(date);
-
         entity.remove(_CREATED_AT);
         entity.remove(_UPDATED_AT);
-        entity.addProperty(_UPDATED_AT, formatedDate);
+        entity.addProperty(_UPDATED_AT, formatDate(date));
     }
 
     private void createDates(JsonObject entity) {
@@ -246,7 +246,7 @@ public class DefaultResmiService implements ResmiService {
             for (Map.Entry<String, JsonElement> entry : entity.entrySet()) {
                 String key = entry.getKey();
 
-                if (key.startsWith("_") && !ignorableReservedAttributeNames.contains(key)) {
+                if (key.startsWith("_") && !ATTRIBUTE_NAMES_RESERVED.contains(key)) {
                     throw new StartsWithUnderscoreException(entry.getKey());
                 }
             }

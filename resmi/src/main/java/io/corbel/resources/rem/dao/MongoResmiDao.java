@@ -1,10 +1,11 @@
 package io.corbel.resources.rem.dao;
 
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
+import com.google.gson.*;
 import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,10 +19,8 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 
 import io.corbel.lib.mongo.JsonObjectMongoWriteConverter;
 import io.corbel.lib.mongo.utils.GsonUtil;
@@ -32,7 +31,6 @@ import io.corbel.resources.rem.model.GenericDocument;
 import io.corbel.resources.rem.model.ResourceUri;
 import io.corbel.resources.rem.resmi.exception.MongoAggregationException;
 import io.corbel.resources.rem.utils.JsonUtils;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
 /**
  * @author Alberto J. Rubio
@@ -40,11 +38,12 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
  */
 public class MongoResmiDao implements ResmiDao {
 
+    private static final Logger LOG = LoggerFactory.getLogger(MongoResmiDao.class);
+
     private static final String ID = "id";
     private static final String _ID = "_id";
 
-    private static final String RELATION_CONCATENATOR = ".";
-    private static final Logger LOG = LoggerFactory.getLogger(MongoResmiDao.class);
+    private static final String RELATION_CONCATENATION = ".";
     private static final String EMPTY_STRING = "";
     private static final String EXPIRE_AT = "_expireAt";
     private static final String CREATED_AT = "_createdAt";
@@ -53,13 +52,15 @@ public class MongoResmiDao implements ResmiDao {
     private final JsonObjectMongoWriteConverter jsonObjectMongoWriteConverter;
     private final NamespaceNormalizer namespaceNormalizer;
     private final ResmiOrder resmiOrder;
+    private final Gson gson;
 
     public MongoResmiDao(MongoOperations mongoOperations, JsonObjectMongoWriteConverter jsonObjectMongoWriteConverter,
-            NamespaceNormalizer namespaceNormalizer, ResmiOrder resmiOrder) {
+                         NamespaceNormalizer namespaceNormalizer, ResmiOrder resmiOrder, Gson gson) {
         this.mongoOperations = mongoOperations;
         this.jsonObjectMongoWriteConverter = jsonObjectMongoWriteConverter;
         this.namespaceNormalizer = namespaceNormalizer;
         this.resmiOrder = resmiOrder;
+        this.gson = gson;
     }
 
     @Override
@@ -110,25 +111,21 @@ public class MongoResmiDao implements ResmiDao {
     @Override
     public JsonArray findCollectionWithGroup(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries,
             Optional<Pagination> pagination, Optional<Sort> sort, List<String> groups, boolean first) throws MongoAggregationException {
-        Aggregation aggregation = buildAggregation(uri, resourceQueries, pagination, sort, groups, first);
+        Aggregation aggregation = buildGroupAggregation(uri, resourceQueries, pagination, sort, groups, first);
         List<JsonObject> result = mongoOperations.aggregate(aggregation, getMongoCollectionName(uri), JsonObject.class).getMappedResults();
-        return JsonUtils.convertToArray(first ? extcractDocs(result) : result);
+        return JsonUtils.convertToArray(first ? extractDocuments(result) : result);
     }
 
     @Override
     public JsonArray findRelationWithGroup(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries, Optional<Pagination> pagination,
             Optional<Sort> sort, List<String> groups, boolean first) throws MongoAggregationException {
-        Aggregation aggregation = buildAggregation(uri, resourceQueries, pagination, sort, groups, first);
+        Aggregation aggregation = buildGroupAggregation(uri, resourceQueries, pagination, sort, groups, first);
         List<JsonObject> result = mongoOperations.aggregate(aggregation, getMongoCollectionName(uri), JsonObject.class).getMappedResults();
-        return renameIds(JsonUtils.convertToArray(first ? extcractDocs(result) : result));
+        return renameIds(JsonUtils.convertToArray(first ? extractDocuments(result) : result));
     }
 
-    private List<JsonObject> extcractDocs(List<JsonObject> results) {
-        return results.stream().map(result -> result.get(MongoAggregationBuilder.REFERENCE).getAsJsonObject()).collect(Collectors.toList());
-    }
-
-    private Aggregation buildAggregation(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries, Optional<Pagination> pagination,
-            Optional<Sort> sort, List<String> fields, boolean first) throws MongoAggregationException {
+    private Aggregation buildGroupAggregation(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries,
+            Optional<Pagination> pagination, Optional<Sort> sort, List<String> fields, boolean first) throws MongoAggregationException {
 
         MongoAggregationBuilder builder = new MongoAggregationBuilder();
         builder.match(uri, resourceQueries);
@@ -144,6 +141,10 @@ public class MongoResmiDao implements ResmiDao {
         }
 
         return builder.build();
+    }
+
+    private List<JsonObject> extractDocuments(List<JsonObject> results) {
+        return results.stream().map(result -> result.get(MongoAggregationBuilder.REFERENCE).getAsJsonObject()).collect(Collectors.toList());
     }
 
     @Override
@@ -169,7 +170,6 @@ public class MongoResmiDao implements ResmiDao {
     }
 
     private void updateMulti(String collection, JsonObject entity, Optional<List<ResourceQuery>> resourceQueries) {
-
         Update update = updateFromJsonObject(entity, Optional.empty());
         Query query = getQueryFromResourceQuery(resourceQueries, Optional.empty());
         mongoOperations.updateMulti(query, update, JsonObject.class, collection);
@@ -177,8 +177,8 @@ public class MongoResmiDao implements ResmiDao {
 
     private Query getQueryFromResourceQuery(Optional<List<ResourceQuery>> resourceQueries, Optional<String> id) {
 
-        MongoResmiQueryBuilder builder = id.map(identifier -> new MongoResmiQueryBuilder().id(identifier)).orElse(
-                new MongoResmiQueryBuilder());
+        MongoResmiQueryBuilder builder = id.map(identifier -> new MongoResmiQueryBuilder().id(identifier))
+                .orElse(new MongoResmiQueryBuilder());
 
         if (resourceQueries.isPresent()) {
             builder.query(resourceQueries.get());
@@ -193,8 +193,8 @@ public class MongoResmiDao implements ResmiDao {
         Update update = updateFromJsonObject(entity, id);
         Query query = (id.isPresent()) ? getQueryFromResourceQuery(resourceQueries, id) : Query.query(Criteria.where(_ID).exists(false));
 
-        return mongoOperations.findAndModify(query, update, FindAndModifyOptions.options().upsert(upsert).returnNew(true),
-                JsonObject.class, collection);
+        return mongoOperations.findAndModify(query, update, FindAndModifyOptions.options().upsert(upsert).returnNew(true), JsonObject.class,
+                collection);
     }
 
     @Override
@@ -237,7 +237,8 @@ public class MongoResmiDao implements ResmiDao {
         if (!storedRelation.has("_order")) {
             JsonObject order = new JsonObject();
             resmiOrder.addNextOrderInRelation(uri.getType(), uri.getTypeId(), uri.getRelation(), order);
-            findAndModify(getMongoCollectionName(uri), Optional.ofNullable(storedRelation.get("id").getAsString()), order, false, Optional.empty());
+            findAndModify(getMongoCollectionName(uri), Optional.ofNullable(storedRelation.get("id").getAsString()), order, false,
+                    Optional.empty());
         }
     }
 
@@ -263,12 +264,6 @@ public class MongoResmiDao implements ResmiDao {
     @Override
     public void ensureIndex(ResourceUri uri, Index index) {
         mongoOperations.indexOps(getMongoCollectionName(uri)).ensureIndex(index);
-    }
-
-    private JsonObject updateRelation(JsonObject storedRelation, JsonObject relationJson) {
-        relationJson.add("id", storedRelation.get("id"));
-        relationJson.add("_order", storedRelation.get("_order"));
-        return relationJson;
     }
 
     /*
@@ -332,65 +327,97 @@ public class MongoResmiDao implements ResmiDao {
 
 
     @Override
-    public CountResult count(ResourceUri resourceUri, List<ResourceQuery> resourceQueries) {
+    public JsonElement count(ResourceUri resourceUri, List<ResourceQuery> resourceQueries) {
         Query query = new MongoResmiQueryBuilder().relationSubjectId(resourceUri).query(resourceQueries).build();
         if (resourceUri.isRelation()) {
             query.fields().exclude(_ID).exclude(JsonRelation._SRC_ID);
         }
         LOG.debug("Query executed : " + query.getQueryObject().toString());
-        return new CountResult(mongoOperations.count(query, getMongoCollectionName(resourceUri)));
+        return convertToJson(new CountResult(mongoOperations.count(query, getMongoCollectionName(resourceUri))));
     }
 
     @Override
-    public AverageResult average(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field) {
-        return aggregate(resourceUri, resourceQueries, AverageResult.class, group().avg(field).as("average")).get(0);
+    public JsonElement average(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field) {
+        return convertToJson(aggregate(resourceUri, resourceQueries, AverageResult.class, group().avg(field).as("average")).get(0));
     }
 
     @Override
-    public SumResult sum(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field) {
-        return aggregate(resourceUri, resourceQueries, SumResult.class, group().sum(field).as("sum")).get(0);
+    public JsonElement sum(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field) {
+        return convertToJson(aggregate(resourceUri, resourceQueries, SumResult.class, group().sum(field).as("sum")).get(0));
     }
 
     @Override
-    public MaxResult max(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field) {
-        return aggregate(resourceUri, resourceQueries, MaxResult.class, group().max(field).as("max")).get(0);
+    public JsonElement max(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field) {
+        return convertToJson(aggregate(resourceUri, resourceQueries, MaxResult.class, group().max(field).as("max")).get(0));
     }
 
     @Override
-    public MinResult min(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field) {
-        return aggregate(resourceUri, resourceQueries, MinResult.class, group().min(field).as("min")).get(0);
+    public JsonElement min(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field) {
+        return convertToJson(aggregate(resourceUri, resourceQueries, MinResult.class, group().min(field).as("min")).get(0));
     }
 
     @Override
-    public HistogramResult histogram(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, Optional<Pagination> pagination, Optional<Sort> sortParam, String field) {
-        AggregationOperation[] aggregations = {
-                group(field).push("$_id").as("ids"),
-                new ExposingFieldsCustomAggregationOperation(new BasicDBObject("$project", new BasicDBObject("count", new BasicDBObject("$size", "$ids")))){
-                    @Override
-                    public ExposedFields getFields() {
-                        return ExposedFields.synthetic(Fields.fields("count"));
-                    }
-                },
-        };
+    public JsonArray combine(ResourceUri resourceUri, Optional<List<ResourceQuery>> resourceQueries, Optional<Pagination> pagination,
+            Optional<Sort> sort, String field, String expression) throws MongoAggregationException {
 
-        if(sortParam.isPresent()){
+        MongoAggregationBuilder builder = new MongoAggregationBuilder();
+        builder.match(resourceUri, resourceQueries);
+
+        builder.projection(field, expression);
+
+        if (sort.isPresent()) {
+            builder.sort(sort.get().getDirection().toString(), sort.get().getField());
+        }
+
+        if (pagination.isPresent()) {
+            builder.pagination(pagination.get());
+        }
+
+        Aggregation aggregation = builder.build();
+
+        List<JsonObject> results = mongoOperations.aggregate(aggregation, getMongoCollectionName(resourceUri), JsonObject.class)
+                .getMappedResults();
+
+        return JsonUtils.convertToArray(results.stream().map(result -> {
+            JsonObject document = result.get(MongoAggregationBuilder.DOCUMENT).getAsJsonObject();
+            document.addProperty(field, result.get(field).getAsString());
+            return document;
+        }).collect(Collectors.toList()));
+    }
+
+    @Override
+    public JsonElement histogram(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, Optional<Pagination> pagination,
+            Optional<Sort> sortParam, String field) {
+        AggregationOperation[] aggregations = {group(field).push("$_id").as("ids"), new ExposingFieldsCustomAggregationOperation(
+                new BasicDBObject("$project", new BasicDBObject("count", new BasicDBObject("$size", "$ids")))) {
+            @Override
+            public ExposedFields getFields() {
+                return ExposedFields.synthetic(Fields.fields("count"));
+            }
+        },};
+
+        if (sortParam.isPresent()) {
             Direction direction = Direction.ASC;
-            if(sortParam.get().getDirection() == Sort.Direction.DESC){
+            if (sortParam.get().getDirection() == Sort.Direction.DESC) {
                 direction = Direction.DESC;
             }
             aggregations = ArrayUtils.add(aggregations, sort(direction, sortParam.get().getField()));
         }
 
-        if(pagination.isPresent()){
-            aggregations = ArrayUtils.addAll(aggregations,
-                    skip(pagination.get().getPage() * pagination.get().getPageSize()),
+        if (pagination.isPresent()) {
+            aggregations = ArrayUtils.addAll(aggregations, skip(pagination.get().getPage() * pagination.get().getPageSize()),
                     limit(pagination.get().getPageSize()));
         }
 
-        return new HistogramResult(aggregate(resourceUri, resourceQueries, HistogramResult.HistogramValue.class, aggregations));
+        return convertToJson(new HistogramResult(aggregate(resourceUri, resourceQueries, HistogramResult.HistogramValue.class, aggregations)));
     }
 
-    private <T> List<T> aggregate(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, Class<T> clazz, AggregationOperation... operations) {
+    private JsonElement convertToJson(AggregationResult result) {
+        return gson.toJsonTree(result);
+    }
+
+    private <T> List<T> aggregate(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, Class<T> clazz,
+            AggregationOperation... operations) {
         Criteria criterias = CriteriaBuilder.buildFromResourceQueries(resourceQueries);
         if (resourceUri.isRelation() && !resourceUri.isTypeWildcard()) {
             criterias = criterias.and(JsonRelation._SRC_ID).is(resourceUri.getTypeId());
@@ -402,18 +429,16 @@ public class MongoResmiDao implements ResmiDao {
     }
 
     private String getMongoCollectionName(ResourceUri resourceUri) {
-        return Optional
-                .ofNullable(namespaceNormalizer.normalize(resourceUri.getType()))
-                .map(type -> type
-                        + Optional.ofNullable(resourceUri.getRelation())
-                                .map(relation -> RELATION_CONCATENATOR + namespaceNormalizer.normalize(relation)).orElse(EMPTY_STRING))
+        return Optional.ofNullable(namespaceNormalizer.normalize(resourceUri.getType()))
+                .map(type -> type + Optional.ofNullable(resourceUri.getRelation())
+                        .map(relation -> RELATION_CONCATENATION + namespaceNormalizer.normalize(relation)).orElse(EMPTY_STRING))
                 .orElse(EMPTY_STRING);
     }
 
     private class CustomAggregationOperation implements AggregationOperation {
         private DBObject operation;
 
-        public CustomAggregationOperation (DBObject operation) {
+        public CustomAggregationOperation(DBObject operation) {
             this.operation = operation;
         }
 
@@ -423,7 +448,8 @@ public class MongoResmiDao implements ResmiDao {
         }
     }
 
-    private class ExposingFieldsCustomAggregationOperation extends CustomAggregationOperation implements FieldsExposingAggregationOperation {
+    private class ExposingFieldsCustomAggregationOperation extends CustomAggregationOperation
+            implements FieldsExposingAggregationOperation {
 
         public ExposingFieldsCustomAggregationOperation(DBObject operation) {
             super(operation);

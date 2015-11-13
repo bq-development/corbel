@@ -9,6 +9,7 @@ import static org.mockito.Mockito.*;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 import io.corbel.lib.mongo.JsonObjectMongoWriteConverter;
 import io.corbel.lib.queries.QueryNodeImpl;
 import io.corbel.lib.queries.StringQueryLiteral;
@@ -67,12 +68,14 @@ import com.mongodb.WriteResult;
 
     @Mock ResmiOrder resmiOrderMock;
 
+    Gson gson = new Gson();
+
     private MongoResmiDao mongoResmiDao;
 
     @Before
     public void setup() {
         when(defaultNameNormalizer.normalize(anyString())).then(returnsFirstArg());
-        mongoResmiDao = new MongoResmiDao(mongoOperations, jsonObjectMongoWriteConverter, defaultNameNormalizer, resmiOrderMock);
+        mongoResmiDao = new MongoResmiDao(mongoOperations, jsonObjectMongoWriteConverter, defaultNameNormalizer, resmiOrderMock, gson);
     }
 
     @Test
@@ -125,7 +128,6 @@ import com.mongodb.WriteResult;
         when(mongoOperations.findAndModify(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.eq(JsonObject.class), Mockito.any()))
                 .thenReturn(jsonCounter);
 
-
         JsonObject jsonResult = new JsonObject();
         jsonResult.addProperty("_src_id", TEST_ID);
         jsonResult.addProperty("_dst_id", TEST_ID_RELATION_OBJECT);
@@ -134,15 +136,9 @@ import com.mongodb.WriteResult;
         jsonResult.addProperty("data2", "data2");
         jsonResult.addProperty("id", "123");
 
-
-
-
         ArgumentCaptor<Query> queryCaptor = ArgumentCaptor.forClass(Query.class);
         ArgumentCaptor<Update> updateCaptor = ArgumentCaptor.forClass(Update.class);
         ArgumentCaptor<FindAndModifyOptions> optionsCaptor = ArgumentCaptor.forClass(FindAndModifyOptions.class);
-
-
-
 
         when(mongoOperations.findAndModify(any(), any(), any(), eq(JsonObject.class), eq(RELATION_COLLECTION_NAME))).thenAnswer(
                 answerWithId(jsonResult));
@@ -261,8 +257,8 @@ import com.mongodb.WriteResult;
 
         Mockito.when(mongoOperations.aggregate(argument.capture(), eq(TEST_COLLECTION), eq(AverageResult.class))).thenReturn(
                 new AggregationResults<>(Collections.singletonList(new AverageResult(10)), new BasicDBObject()));
-        AverageResult result = mongoResmiDao.average(resourceUri, Collections.singletonList(query), testField);
-        assertThat(result.getAverage()).isEqualTo(10);
+        JsonElement result = mongoResmiDao.average(resourceUri, Collections.singletonList(query), testField);
+        assertThat(result.getAsJsonObject().get("average").getAsInt()).isEqualTo(10);
 
         assertThat(argument.getValue().toString()).isEqualTo(
                 "{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"" + field + "\" : \"" + value
@@ -284,8 +280,8 @@ import com.mongodb.WriteResult;
 
         query.addQueryNode(new QueryNodeImpl(QueryOperator.$EQ, field, new StringQueryLiteral(value)));
 
-        AverageResult result = mongoResmiDao.average(resourceUri, Collections.singletonList(query), testField);
-        assertThat(result.getAverage()).isEqualTo(10);
+        JsonElement result = mongoResmiDao.average(resourceUri, Collections.singletonList(query), testField);
+        assertThat(result.getAsJsonObject().get("average").getAsInt()).isEqualTo(10);
 
         assertThat(argument.getValue().toString()).isEqualTo(
                 "{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"" + field + "\" : \"" + value
@@ -307,8 +303,8 @@ import com.mongodb.WriteResult;
 
         Mockito.when(mongoOperations.aggregate(argument.capture(), eq(TEST_COLLECTION), eq(SumResult.class))).thenReturn(
                 new AggregationResults<>(Collections.singletonList(new SumResult(10)), new BasicDBObject()));
-        SumResult result = mongoResmiDao.sum(resourceUri, Collections.singletonList(query), testField);
-        assertThat(result.getSum()).isEqualTo(10);
+        JsonElement result = mongoResmiDao.sum(resourceUri, Collections.singletonList(query), testField);
+        assertThat(result.getAsJsonObject().get("sum").getAsInt()).isEqualTo(10);
 
         assertThat(argument.getValue().toString()).isEqualTo(
                 "{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"" + field + "\" : \"" + value
@@ -330,8 +326,8 @@ import com.mongodb.WriteResult;
         Mockito.when(mongoOperations.aggregate(argument.capture(), eq(RELATION_COLLECTION_NAME), eq(SumResult.class))).thenReturn(
                 new AggregationResults<>(Collections.singletonList(new SumResult(10)), new BasicDBObject()));
 
-        SumResult result = mongoResmiDao.sum(resourceUri, Collections.singletonList(query), testField);
-        assertThat(result.getSum()).isEqualTo(10);
+        JsonElement result = mongoResmiDao.sum(resourceUri, Collections.singletonList(query), testField);
+        assertThat(result.getAsJsonObject().get("sum").getAsInt()).isEqualTo(10);
 
         assertThat(argument.getValue().toString()).isEqualTo(
                 "{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"" + field + "\" : \"" + value
@@ -353,8 +349,8 @@ import com.mongodb.WriteResult;
 
         Mockito.when(mongoOperations.aggregate(argument.capture(), eq(TEST_COLLECTION), eq(MaxResult.class))).thenReturn(
                 new AggregationResults<>(Collections.singletonList(new MaxResult(10)), new BasicDBObject()));
-        MaxResult result = mongoResmiDao.max(resourceUri, Collections.singletonList(query), testField);
-        assertThat(result.getMax()).isEqualTo(10);
+        JsonElement result = mongoResmiDao.max(resourceUri, Collections.singletonList(query), testField);
+        assertThat(result.getAsJsonObject().get("max").getAsInt()).isEqualTo(10);
 
         assertThat(argument.getValue().toString()).isEqualTo(
                 "{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"" + field + "\" : \"" + value
@@ -376,8 +372,8 @@ import com.mongodb.WriteResult;
         Mockito.when(mongoOperations.aggregate(argument.capture(), eq(RELATION_COLLECTION_NAME), eq(MaxResult.class))).thenReturn(
                 new AggregationResults<>(Collections.singletonList(new MaxResult(10)), new BasicDBObject()));
 
-        MaxResult result = mongoResmiDao.max(resourceUri, Collections.singletonList(query), testField);
-        assertThat(result.getMax()).isEqualTo(10);
+        JsonElement result = mongoResmiDao.max(resourceUri, Collections.singletonList(query), testField);
+        assertThat(result.getAsJsonObject().get("max").getAsInt()).isEqualTo(10);
 
         assertThat(argument.getValue().toString()).isEqualTo(
                 "{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"" + field + "\" : \"" + value
@@ -399,8 +395,8 @@ import com.mongodb.WriteResult;
 
         Mockito.when(mongoOperations.aggregate(argument.capture(), eq(TEST_COLLECTION), eq(MinResult.class))).thenReturn(
                 new AggregationResults<>(Collections.singletonList(new MinResult(10)), new BasicDBObject()));
-        MinResult result = mongoResmiDao.min(resourceUri, Collections.singletonList(query), testField);
-        assertThat(result.getMin()).isEqualTo(10);
+        JsonElement result = mongoResmiDao.min(resourceUri, Collections.singletonList(query), testField);
+        assertThat(result.getAsJsonObject().get("min").getAsInt()).isEqualTo(10);
 
         assertThat(argument.getValue().toString()).isEqualTo(
                 "{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"" + field + "\" : \"" + value
@@ -422,8 +418,8 @@ import com.mongodb.WriteResult;
         Mockito.when(mongoOperations.aggregate(argument.capture(), eq(RELATION_COLLECTION_NAME), eq(MinResult.class))).thenReturn(
                 new AggregationResults<>(Collections.singletonList(new MinResult(10)), new BasicDBObject()));
 
-        MinResult result = mongoResmiDao.min(resourceUri, Collections.singletonList(query), testField);
-        assertThat(result.getMin()).isEqualTo(10);
+        JsonElement result = mongoResmiDao.min(resourceUri, Collections.singletonList(query), testField);
+        assertThat(result.getAsJsonObject().get("min").getAsInt()).isEqualTo(10);
 
         assertThat(argument.getValue().toString()).isEqualTo(
                 "{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"" + field + "\" : \"" + value
