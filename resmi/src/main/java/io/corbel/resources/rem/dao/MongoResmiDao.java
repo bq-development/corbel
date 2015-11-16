@@ -380,7 +380,7 @@ public class MongoResmiDao implements ResmiDao {
 
         return JsonUtils.convertToArray(results.stream().map(result -> {
             JsonObject document = result.get(MongoAggregationBuilder.DOCUMENT).getAsJsonObject();
-            document.addProperty(field, result.get(field).getAsString());
+            document.add(field, result.get(field));
             return document;
         }).collect(Collectors.toList()));
     }
