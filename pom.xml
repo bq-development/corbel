@@ -50,8 +50,6 @@
   <modules>
     <module>eworker-api</module>
     <module>evci</module>
-    <module>event-bus</module>
-    <module>events</module>
     <module>iam</module>
     <module>rem-api</module>
     <module>resources</module>
