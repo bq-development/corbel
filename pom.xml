@@ -43,6 +43,7 @@
     <lib-queries.version>0.11.1</lib-queries.version>
     <lib-ws.version>0.13.0</lib-ws.version>
     <lib-rabbitmq.version>0.8.0</lib-rabbitmq.version>
+    <events.version>1.25.0</events.version>
     <spring.version>4.1.7.RELEASE</spring.version>
     <dropwizard.version>0.8.1</dropwizard.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -103,7 +104,7 @@
       <dependency>
         <groupId>io.corbel</groupId>
         <artifactId>events</artifactId>
-        <version>${project.version}</version>
+        <version>${events.version}</version>
       </dependency>
       <dependency>
         <groupId>io.corbel</groupId>
