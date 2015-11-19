@@ -1,10 +1,24 @@
 package io.corbel.iam.service;
 
-import io.corbel.iam.auth.*;
+import io.corbel.iam.auth.AuthorizationRequestContext;
+import io.corbel.iam.auth.AuthorizationRequestContextFactory;
+import io.corbel.iam.auth.AuthorizationRule;
+import io.corbel.iam.auth.BasicParams;
+import io.corbel.iam.auth.OauthParams;
 import io.corbel.iam.auth.provider.AuthorizationProviderFactory;
 import io.corbel.iam.auth.provider.Provider;
-import io.corbel.iam.exception.*;
-import io.corbel.iam.model.*;
+import io.corbel.iam.exception.MissingBasicParamsException;
+import io.corbel.iam.exception.MissingOAuthParamsException;
+import io.corbel.iam.exception.NoSuchPrincipalException;
+import io.corbel.iam.exception.OauthServerConnectionException;
+import io.corbel.iam.exception.UnauthorizedException;
+import io.corbel.iam.exception.UnauthorizedTimeException;
+import io.corbel.iam.model.Domain;
+import io.corbel.iam.model.Identity;
+import io.corbel.iam.model.Scope;
+import io.corbel.iam.model.TokenGrant;
+import io.corbel.iam.model.User;
+import io.corbel.iam.model.UserToken;
 import io.corbel.iam.repository.UserTokenRepository;
 import io.corbel.iam.utils.Message;
 import io.corbel.lib.token.TokenInfo;
@@ -12,14 +26,20 @@ import io.corbel.lib.token.TokenInfo.Builder;
 import io.corbel.lib.token.exception.TokenVerificationException;
 import io.corbel.lib.token.factory.TokenFactory;
 import io.corbel.lib.token.model.TokenType;
+
+import java.security.SignatureException;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
 import net.oauth.jsontoken.JsonToken;
 import net.oauth.jsontoken.JsonTokenParser;
+
 import org.joda.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.security.SignatureException;
-import java.util.*;
 
 /**
  * @author Alexander De Leon
@@ -39,9 +59,9 @@ public class DefaultAuthorizationService implements AuthorizationService {
     private final EventsService eventsService;
 
     public DefaultAuthorizationService(JsonTokenParser jsonTokenParser, List<AuthorizationRule> rules, TokenFactory accessTokenFactory,
-                                       AuthorizationRequestContextFactory contextFactory, ScopeService scopeService,
-                                       AuthorizationProviderFactory authorizationProviderFactory, RefreshTokenService refreshTokenService,
-                                       UserTokenRepository userTokenRepository, UserService userService, EventsService eventsService) {
+            AuthorizationRequestContextFactory contextFactory, ScopeService scopeService,
+            AuthorizationProviderFactory authorizationProviderFactory, RefreshTokenService refreshTokenService,
+            UserTokenRepository userTokenRepository, UserService userService, EventsService eventsService) {
         this.jsonTokenParser = jsonTokenParser;
         this.eventsService = eventsService;
         this.rules = Collections.unmodifiableList(rules);
@@ -166,7 +186,7 @@ public class DefaultAuthorizationService implements AuthorizationService {
 
         if (context.hasPrincipal()) {
             storeUserToken(tokenGrant, context);
-            eventsService.sendClientAuthenticationEvent(context.getIssuerClientDomain().getId(), context.getPrincipal().getId());
+            eventsService.sendUserAuthenticationEvent(context.getIssuerClientDomain().getId(), context.getPrincipal().getId());
         } else {
             eventsService.sendClientAuthenticationEvent(context.getIssuerClientDomain().getId(), context.getIssuerClientId());
         }
@@ -200,8 +220,8 @@ public class DefaultAuthorizationService implements AuthorizationService {
     private boolean isAnExpiredException(String assertion) {
         JsonToken unverifiedToken = jsonTokenParser.deserialize(assertion);
         Instant instantNow = Instant.now();
-        return !(jsonTokenParser.issuedAtIsValid(unverifiedToken, instantNow)
-                && jsonTokenParser.expirationIsValid(unverifiedToken, instantNow) );
+        return !(jsonTokenParser.issuedAtIsValid(unverifiedToken, instantNow) && jsonTokenParser.expirationIsValid(unverifiedToken,
+                instantNow));
     }
 
     private String getAccessToken(AuthorizationRequestContext context) {

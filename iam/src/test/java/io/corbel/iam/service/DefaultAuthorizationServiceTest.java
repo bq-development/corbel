@@ -1,18 +1,41 @@
 package io.corbel.iam.service;
 
+import static org.fest.assertions.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import io.corbel.iam.auth.AuthorizationRequestContext;
 import io.corbel.iam.auth.AuthorizationRequestContextFactory;
 import io.corbel.iam.auth.AuthorizationRule;
 import io.corbel.iam.auth.provider.AuthorizationProviderFactory;
-import io.corbel.iam.exception.*;
-import io.corbel.iam.model.*;
+import io.corbel.iam.exception.MissingBasicParamsException;
+import io.corbel.iam.exception.MissingOAuthParamsException;
+import io.corbel.iam.exception.OauthServerConnectionException;
+import io.corbel.iam.exception.UnauthorizedException;
+import io.corbel.iam.exception.UnauthorizedTimeException;
+import io.corbel.iam.model.Client;
+import io.corbel.iam.model.Domain;
+import io.corbel.iam.model.Scope;
+import io.corbel.iam.model.TokenGrant;
+import io.corbel.iam.model.User;
 import io.corbel.iam.repository.UserTokenRepository;
 import io.corbel.lib.token.TokenInfo;
 import io.corbel.lib.token.exception.TokenVerificationException;
 import io.corbel.lib.token.factory.TokenFactory;
 import io.corbel.lib.token.model.TokenType;
+
+import java.security.SignatureException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
 import net.oauth.jsontoken.JsonToken;
 import net.oauth.jsontoken.JsonTokenParser;
+
 import org.joda.time.Instant;
 import org.junit.Before;
 import org.junit.Test;
@@ -21,17 +44,10 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import java.security.SignatureException;
-import java.util.*;
-
-import static org.fest.assertions.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
-
 /**
  * @author Alexander De Leon
  */
-@RunWith(MockitoJUnitRunner.class)
-public class DefaultAuthorizationServiceTest {
+@RunWith(MockitoJUnitRunner.class) public class DefaultAuthorizationServiceTest {
 
     private static final String TEST_JWT = "1111.2222.3333";
 
@@ -64,9 +80,8 @@ public class DefaultAuthorizationServiceTest {
     private UserTokenRepository userTokenRepository;
     private EventsService eventsService;
 
-    @Mock
-    private UserService userService;
-    private net.oauth.jsontoken.JsonToken jsonTokenMock = mock(JsonToken.class);
+    @Mock private UserService userService;
+    private final net.oauth.jsontoken.JsonToken jsonTokenMock = mock(JsonToken.class);
 
     @Before
     public void setUp() {
@@ -120,7 +135,7 @@ public class DefaultAuthorizationServiceTest {
         TokenGrant grant = authorizationService.authorize(TEST_JWT);
         verify(scopeServiceMock).publishAuthorizationRules(TEST_TOKEN, TEST_EXPIRATION, filledScopes);
         assertThat(grant).isNotNull();
-        verify(eventsService).sendClientAuthenticationEvent(TEST_DOMAIN_ID, TEST_USER_ID);
+        verify(eventsService).sendUserAuthenticationEvent(TEST_DOMAIN_ID, TEST_USER_ID);
     }
 
     @Test
@@ -140,7 +155,7 @@ public class DefaultAuthorizationServiceTest {
         TokenGrant grant = authorizationService.authorize(TEST_JWT);
         verify(scopeServiceMock).publishAuthorizationRules(TEST_TOKEN, TEST_EXPIRATION, filledScopes);
         assertThat(grant).isNotNull();
-        verify(eventsService).sendClientAuthenticationEvent(TEST_DOMAIN_ID, TEST_USER_ID);
+        verify(eventsService).sendUserAuthenticationEvent(TEST_DOMAIN_ID, TEST_USER_ID);
     }
 
     @Test(expected = UnauthorizedException.class)
@@ -172,8 +187,8 @@ public class DefaultAuthorizationServiceTest {
     public void testBadToken2() throws SignatureException, UnauthorizedException, MissingOAuthParamsException,
             OauthServerConnectionException, MissingBasicParamsException {
         when(jsonTokenParserMock.verifyAndDeserialize(TEST_JWT)).thenThrow(new IllegalStateException());
-        when(jsonTokenParserMock.issuedAtIsValid(any(),any())).thenReturn(true);
-        when(jsonTokenParserMock.expirationIsValid(any(),any())).thenReturn(true);
+        when(jsonTokenParserMock.issuedAtIsValid(any(), any())).thenReturn(true);
+        when(jsonTokenParserMock.expirationIsValid(any(), any())).thenReturn(true);
         authorizationService.authorize(TEST_JWT);
     }
 
