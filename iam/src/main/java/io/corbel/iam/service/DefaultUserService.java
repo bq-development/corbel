@@ -13,16 +13,18 @@ import io.corbel.lib.queries.request.Pagination;
 import io.corbel.lib.queries.request.ResourceQuery;
 import io.corbel.lib.queries.request.Sort;
 import io.corbel.lib.ws.auth.repository.AuthorizationRulesRepository;
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import org.apache.commons.beanutils.PropertyUtils;
-import org.springframework.dao.DataIntegrityViolationException;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+
+import org.apache.commons.beanutils.PropertyUtils;
+import org.springframework.dao.DataIntegrityViolationException;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 
 /**
  * @author Rubén Carrasco
@@ -39,8 +41,8 @@ public class DefaultUserService implements UserService {
     private final Gson gson;
 
     public DefaultUserService(UserRepository userRepository, EventsService eventsService, UserTokenRepository userTokenRepository,
-                              AuthorizationRulesRepository authorizationRulesRepository, RefreshTokenService refreshTokenService,
-                              MailResetPasswordService mailResetPasswordService, Gson gson) {
+            AuthorizationRulesRepository authorizationRulesRepository, RefreshTokenService refreshTokenService,
+            MailResetPasswordService mailResetPasswordService, Gson gson) {
 
         this.userRepository = userRepository;
         this.eventsService = eventsService;
@@ -80,7 +82,7 @@ public class DefaultUserService implements UserService {
     @Override
     public User create(User user) throws CreateUserException {
         try {
-            User createdUser = update(user);
+            User createdUser = userRepository.save(user);
             eventsService.sendUserCreatedEvent(createdUser);
             return createdUser;
         } catch (DataIntegrityViolationException exception) {
@@ -96,7 +98,9 @@ public class DefaultUserService implements UserService {
 
     @Override
     public User update(User user) {
-        return userRepository.save(user);
+        User updated = userRepository.save(user);
+        eventsService.sendUserModifiedEvent(updated);
+        return updated;
     }
 
     @Override
