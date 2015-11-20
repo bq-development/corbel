@@ -1,5 +1,7 @@
 package io.corbel.resources;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.module.scala.DefaultScalaModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -47,6 +49,13 @@ public class ResourcesRunner extends ServiceRunnerWithVersionResource<ResourcesI
 
         HealthCheckRegistry healthCheckRegistry = context.getBean(HealthCheckRegistry.class);
         healthCheckRegistry.getHealthChecks().forEach((k, v) -> environment.healthChecks().register(k, v));
+    }
+
+    @Override
+    protected void configureObjectMapper(ObjectMapper objectMapperFactory) {
+        objectMapperFactory.registerModule(new DefaultScalaModule());
+        super.configureObjectMapper(objectMapperFactory);
+
     }
 
     private static CommandLineI createConsoleCommandLine(ResourcesRunner resourcesRunner) {
