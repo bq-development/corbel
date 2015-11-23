@@ -31,9 +31,9 @@ public class RequestParametersBuilder<E> {
         this.apiParameters = parameters.getOptionalApiParameters().map(apiParameters -> apiParameters).orElse(null);
         this.tokenInfo = parameters.getTokenInfo();
         this.acceptedMediaTypes = parameters.getAcceptedMediaTypes();
-        this.params = parameters.getParams();
+        params(parameters.getParams());
         this.contentLength = parameters.getContentLength();
-        this.headers = parameters.getHeaders();
+        headers(parameters.getHeaders());
     }
 
     public RequestParameters<E> build() {
@@ -64,7 +64,8 @@ public class RequestParametersBuilder<E> {
     }
 
     public RequestParametersBuilder<E> params(MultivaluedMap<String, String> params) {
-        this.params = params;
+        this.params = new MultivaluedHashMap<>();
+        params.forEach((k, v) -> this.params.addAll(k, v));
         return this;
     }
 
@@ -82,7 +83,8 @@ public class RequestParametersBuilder<E> {
     }
 
     public RequestParametersBuilder<E> headers(MultivaluedMap<String, String> headers) {
-        this.headers = headers;
+        this.headers = new MultivaluedHashMap<>();
+        headers.forEach((k, v) -> this.headers.addAll(k, v));
         return this;
     }
 

@@ -79,9 +79,11 @@ import org.mockito.runners.MockitoJUnitRunner;
     private io.corbel.lib.token.TokenGrant tokenGrant;
     private UserTokenRepository userTokenRepository;
     private EventsService eventsService;
+    private final User userMock = mock(User.class);
 
     @Mock private UserService userService;
     private final net.oauth.jsontoken.JsonToken jsonTokenMock = mock(JsonToken.class);
+
 
     @Before
     public void setUp() {
@@ -133,9 +135,9 @@ import org.mockito.runners.MockitoJUnitRunner;
         when(accessTokenFactoryMock.createToken(tokenInfo, TEST_EXPIRATION)).thenReturn(tokenGrant);
 
         TokenGrant grant = authorizationService.authorize(TEST_JWT);
+        verify(eventsService).sendUserAuthenticationEvent(userMock);
         verify(scopeServiceMock).publishAuthorizationRules(TEST_TOKEN, TEST_EXPIRATION, filledScopes);
         assertThat(grant).isNotNull();
-        verify(eventsService).sendUserAuthenticationEvent(TEST_DOMAIN_ID, TEST_USER_ID);
     }
 
     @Test
@@ -143,7 +145,6 @@ import org.mockito.runners.MockitoJUnitRunner;
             TokenVerificationException, OauthServerConnectionException, MissingBasicParamsException {
         Set<Scope> filledScopes = new HashSet();
 
-        User userMock = mock(User.class);
         when(userMock.getUsername()).thenReturn(TEST_USER_ID);
         JsonToken validJsonToken = mock(JsonToken.class);
         when(jsonTokenParserMock.verifyAndDeserialize(TEST_JWT)).thenReturn(validJsonToken);
@@ -155,7 +156,7 @@ import org.mockito.runners.MockitoJUnitRunner;
         TokenGrant grant = authorizationService.authorize(TEST_JWT);
         verify(scopeServiceMock).publishAuthorizationRules(TEST_TOKEN, TEST_EXPIRATION, filledScopes);
         assertThat(grant).isNotNull();
-        verify(eventsService).sendUserAuthenticationEvent(TEST_DOMAIN_ID, TEST_USER_ID);
+        verify(eventsService).sendUserAuthenticationEvent(userMock);
     }
 
     @Test(expected = UnauthorizedException.class)
@@ -197,9 +198,9 @@ import org.mockito.runners.MockitoJUnitRunner;
         when(clientMock.getId()).thenReturn(TEST_CLIENT_ID);
         when(contextMock.getIssuerClientId()).thenReturn(TEST_CLIENT_ID);
         if (withPrincipal) {
-            User userMock = mock(User.class);
             when(userMock.getId()).thenReturn(TEST_USER_ID);
             when(userMock.getGroups()).thenReturn(TEST_USER_GROUPS);
+            when(userMock.getUserProfile()).thenReturn(userMock);
             when(contextMock.hasPrincipal()).thenReturn(true);
             when(contextMock.getPrincipal()).thenReturn(userMock);
             when(contextMock.getPrincipal(TEST_USER_ID)).thenReturn(userMock);

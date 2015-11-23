@@ -1,7 +1,22 @@
 package io.corbel.iam.service;
 
 import static org.fest.assertions.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.only;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+import io.corbel.iam.exception.UserProfileConfigurationException;
+import io.corbel.iam.model.User;
+import io.corbel.iam.model.UserToken;
+import io.corbel.iam.repository.CreateUserException;
+import io.corbel.iam.repository.UserRepository;
+import io.corbel.iam.repository.UserTokenRepository;
+import io.corbel.lib.queries.builder.ResourceQueryBuilder;
+import io.corbel.lib.queries.request.ResourceQuery;
+import io.corbel.lib.ws.auth.repository.AuthorizationRulesRepository;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -14,14 +29,6 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import io.corbel.iam.exception.UserProfileConfigurationException;
-import io.corbel.iam.model.User;
-import io.corbel.iam.model.UserToken;
-import io.corbel.iam.repository.UserRepository;
-import io.corbel.iam.repository.UserTokenRepository;
-import io.corbel.lib.queries.builder.ResourceQueryBuilder;
-import io.corbel.lib.queries.request.ResourceQuery;
-import io.corbel.lib.ws.auth.repository.AuthorizationRulesRepository;
 import com.google.gson.Gson;
 
 /**
@@ -50,6 +57,8 @@ import com.google.gson.Gson;
     @Mock private RefreshTokenService refreshTokenServiceMock;
 
     @Mock private MailResetPasswordService mailResetPasswordServiceMock;
+
+    @Mock User user;
 
     @Before
     public void setup() {
@@ -179,5 +188,21 @@ import com.google.gson.Gson;
 
         service.countUsersByDomain(TEST_DOMAIN, null);
         verify(userRepositoryMock, only()).count(eq(builded));
+    }
+
+    @Test
+    public void createUser() throws CreateUserException {
+        when(userRepositoryMock.save(user)).thenReturn(user);
+        service.create(user);
+        verify(userRepositoryMock).save(user);
+        verify(eventServiceMock).sendUserCreatedEvent(user);
+    }
+
+    @Test
+    public void updateUser() throws CreateUserException {
+        when(userRepositoryMock.save(user)).thenReturn(user);
+        service.update(user);
+        verify(userRepositoryMock).save(user);
+        verify(eventServiceMock).sendUserModifiedEvent(user);
     }
 }

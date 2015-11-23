@@ -1,6 +1,14 @@
 package io.corbel.iam.service;
 
-import io.corbel.event.*;
+import io.corbel.event.AuthorizationEvent;
+import io.corbel.event.DeviceEvent;
+import io.corbel.event.DomainDeletedEvent;
+import io.corbel.event.NotificationEvent;
+import io.corbel.event.ScopeUpdateEvent;
+import io.corbel.event.UserAuthenticationEvent;
+import io.corbel.event.UserCreatedEvent;
+import io.corbel.event.UserDeletedEvent;
+import io.corbel.event.UserModifiedEvent;
 import io.corbel.eventbus.service.EventBus;
 import io.corbel.iam.model.Device;
 import io.corbel.iam.model.User;
@@ -24,8 +32,9 @@ public class DefaultEventsService implements EventsService {
 
     @Override
     public void sendUserCreatedEvent(User user) {
-        UserCreatedEvent userCreatedEvent = new UserCreatedEvent(user.getId(), user.getDomain(), user.getEmail(), user.getCountry(),
-                user.getUsername());
+        UserCreatedEvent userCreatedEvent = new UserCreatedEvent(user.getDomain(), user.getId(), user.getEmail(), user.getUsername(),
+                user.getFirstName(), user.getLastName(), user.getProfileUrl(), user.getPhoneNumber(), user.getCountry(),
+                user.getProperties(), user.getScopes(), user.getGroups());
         eventBus.dispatch(userCreatedEvent);
     }
 
@@ -33,6 +42,22 @@ public class DefaultEventsService implements EventsService {
     public void sendUserDeletedEvent(String id, String domain) {
         UserDeletedEvent userDeletedEvent = new UserDeletedEvent(id, domain);
         eventBus.dispatch(userDeletedEvent);
+    }
+
+    @Override
+    public void sendUserModifiedEvent(User user) {
+        UserModifiedEvent event = new UserModifiedEvent(user.getDomain(), user.getId(), user.getEmail(), user.getUsername(),
+                user.getFirstName(), user.getLastName(), user.getProfileUrl(), user.getPhoneNumber(), user.getCountry(),
+                user.getProperties(), user.getScopes(), user.getGroups());
+        eventBus.dispatch(event);
+    }
+
+    @Override
+    public void sendUserAuthenticationEvent(User user) {
+        UserAuthenticationEvent event = new UserAuthenticationEvent(user.getDomain(), user.getId(), user.getEmail(), user.getUsername(),
+                user.getFirstName(), user.getLastName(), user.getProfileUrl(), user.getPhoneNumber(), user.getCountry(),
+                user.getProperties(), user.getScopes(), user.getGroups());
+        eventBus.dispatch(event);
     }
 
     @Override
@@ -59,23 +84,20 @@ public class DefaultEventsService implements EventsService {
     }
 
     @Override
-    public void sendUserAuthenticationEvent(String domainId, String id) {
-        eventBus.dispatch(AuthorizationEvent.userAuthenticationEvent(domainId, id));
-    }
-
-    @Override
     public void sendClientAuthenticationEvent(String domainId, String id) {
         eventBus.dispatch(AuthorizationEvent.clientAuthenticationEvent(domainId, id));
     }
 
     @Override
     public void sendDeviceCreateEvent(Device device) {
-        eventBus.dispatch(new DeviceEvent(DeviceEvent.Type.CREATED, device.getDomain(), device.getId(), device.getUserId(), device.getType().name(), device.getName()));
+        eventBus.dispatch(new DeviceEvent(DeviceEvent.Type.CREATED, device.getDomain(), device.getId(), device.getUserId(), device
+                .getType().name(), device.getName()));
     }
 
     @Override
     public void sendDeviceUpdateEvent(Device device) {
-        eventBus.dispatch(new DeviceEvent(DeviceEvent.Type.UPDATED, device.getDomain(), device.getId(), device.getUserId(), device.getType().name(), device.getName()));
+        eventBus.dispatch(new DeviceEvent(DeviceEvent.Type.UPDATED, device.getDomain(), device.getId(), device.getUserId(), device
+                .getType().name(), device.getName()));
 
     }
 
