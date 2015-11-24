@@ -185,7 +185,7 @@ public class DefaultAuthorizationService implements AuthorizationService {
                 context, accessToken));
 
         if (user.isPresent()) {
-            storeUserToken(tokenGrant, context);
+            storeUserToken(tokenGrant, user.get());
             eventsService.sendUserAuthenticationEvent(user.get().getUserProfile());
         } else {
             eventsService.sendClientAuthenticationEvent(context.getIssuerClientDomain().getId(), context.getIssuerClientId());
@@ -238,12 +238,12 @@ public class DefaultAuthorizationService implements AuthorizationService {
         if (user == null) {
             throw new UnauthorizedException(Message.PRINCIPAL_EXISTS_UNAUTHORIZED.getMessage(context.getPrincipalId()));
         }
+        context.setPrincipalId(user.getUsername());
         return grantAccess(context, Optional.of(user));
     }
 
-    private void storeUserToken(TokenGrant tokenGrant, AuthorizationRequestContext context) {
-        UserToken userToken = new UserToken(tokenGrant.getAccessToken(), context.getPrincipal().getId(),
-                new Date(tokenGrant.getExpiresAt()));
+    private void storeUserToken(TokenGrant tokenGrant, User user) {
+        UserToken userToken = new UserToken(tokenGrant.getAccessToken(), user.getUsername(), new Date(tokenGrant.getExpiresAt()));
         userTokenRepository.save(userToken);
     }
 
