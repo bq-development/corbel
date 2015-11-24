@@ -243,7 +243,7 @@ public class DefaultAuthorizationService implements AuthorizationService {
     }
 
     private void storeUserToken(TokenGrant tokenGrant, User user) {
-        UserToken userToken = new UserToken(tokenGrant.getAccessToken(), user.getUsername(), new Date(tokenGrant.getExpiresAt()));
+        UserToken userToken = new UserToken(tokenGrant.getAccessToken(), user.getId(), new Date(tokenGrant.getExpiresAt()));
         userTokenRepository.save(userToken);
     }
 
