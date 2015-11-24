@@ -48,6 +48,11 @@ public class RemImageIoc {
     }
 
     @Bean
+    public Blur getBlurOperation() {
+        return new Blur();
+    }
+
+    @Bean
     public CropFromCenter getCropFromCenterOperation() {
         return new CropFromCenter();
     }

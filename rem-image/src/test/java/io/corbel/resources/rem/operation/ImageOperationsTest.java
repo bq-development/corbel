@@ -36,6 +36,22 @@ public class ImageOperationsTest {
     }
 
     @Test
+    public void blurTest() throws ImageOperationsException {
+        List<String> inputParameters = Collections.singletonList("(0, 8)");
+        List<String> expectedOutputs = Collections.singletonList("[-blur, 0.0x8.0]");
+
+        operationTest(inputParameters, expectedOutputs, new Blur());
+    }
+
+    @Test
+    public void blurTestDecimals() throws ImageOperationsException {
+        List<String> inputParameters = Collections.singletonList("(0.5, 8.4)");
+        List<String> expectedOutputs = Collections.singletonList("[-blur, 0.5x8.4]");
+
+        operationTest(inputParameters, expectedOutputs, new Blur());
+    }
+
+    @Test
     public void resizeAndFillTest() throws ImageOperationsException {
         List<String> inputParameters = Collections.singletonList("(10, FF7300)");
         List<String> expectedOutputs = Collections.singletonList("[-resize, 10x10, -background, #FF7300, -gravity, center, -extent, 10x10]");
