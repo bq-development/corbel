@@ -26,6 +26,8 @@ public interface ScopeService {
 
     void addAuthorizationRules(String token, Set<Scope> filledScopes);
 
+    void addAuthorizationRulesWithoutExpireTime(String token, Set<Scope> filledScopes);
+
     Set<Scope> expandScopes(Collection<String> scopes);
 
     void publishAuthorizationRules(String token, long tokenExpirationTime, Set<Scope> filledScopes);
