@@ -35,7 +35,6 @@ import io.corbel.iam.service.DeviceService;
 import io.corbel.iam.service.DomainService;
 import io.corbel.iam.service.IdentityService;
 import io.corbel.iam.service.UserService;
-import io.corbel.lib.queries.builder.QueryParametersBuilder;
 import io.corbel.lib.queries.builder.ResourceQueryBuilder;
 import io.corbel.lib.queries.exception.MalformedJsonQueryException;
 import io.corbel.lib.queries.parser.*;
@@ -47,6 +46,7 @@ import io.corbel.lib.ws.auth.AuthorizationInfoProvider;
 import io.corbel.lib.ws.auth.AuthorizationRequestFilter;
 import io.corbel.lib.ws.model.Error;
 import io.corbel.lib.ws.queries.QueryParametersProvider;
+
 import com.google.common.collect.Sets;
 
 import io.dropwizard.auth.Authenticator;
@@ -88,7 +88,7 @@ public class UserResourceTest extends UserResourceTestBase {
             .addProvider(filter)
             .addProvider(new AuthorizationInfoProvider().getBinder())
             .addProvider(
-                    new QueryParametersProvider(DEFAULT_LIMIT, MAX_DEFAULT_LIMIT, new QueryParametersBuilder(queryParserMock,
+                    new QueryParametersProvider(DEFAULT_LIMIT, MAX_DEFAULT_LIMIT, new QueryParametersParser(queryParserMock,
                             aggregationParserMock, sortParserMock, paginationParserMock, searchParserMock)).getBinder())
             .addProvider(GenericExceptionMapper.class).addProvider(JsonValidationExceptionMapper.class).build();
 

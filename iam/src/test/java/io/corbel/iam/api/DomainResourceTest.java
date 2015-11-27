@@ -6,7 +6,6 @@ import io.corbel.iam.model.Client;
 import io.corbel.iam.model.Domain;
 import io.corbel.iam.service.ClientService;
 import io.corbel.iam.service.DomainService;
-import io.corbel.lib.queries.builder.QueryParametersBuilder;
 import io.corbel.lib.queries.parser.*;
 import io.corbel.lib.queries.request.Pagination;
 import io.corbel.lib.queries.request.ResourceQuery;
@@ -18,10 +17,13 @@ import io.corbel.lib.ws.auth.AuthorizationInfoProvider;
 import io.corbel.lib.ws.auth.AuthorizationRequestFilter;
 import io.corbel.lib.ws.auth.CookieOAuthFactory;
 import io.corbel.lib.ws.queries.QueryParametersProvider;
+
 import com.google.gson.JsonObject;
+
 import io.dropwizard.auth.Authenticator;
 import io.dropwizard.auth.oauth.OAuthFactory;
 import io.dropwizard.testing.junit.ResourceTestRule;
+
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -34,6 +36,7 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -76,7 +79,7 @@ public class DomainResourceTest {
             .addProvider(filter)
             .addProvider(new AuthorizationInfoProvider().getBinder())
             .addProvider(
-                    new QueryParametersProvider(DEFAULT_LIMIT, MAX_DEFAULT_LIMIT, new QueryParametersBuilder(queryParserMock,
+                    new QueryParametersProvider(DEFAULT_LIMIT, MAX_DEFAULT_LIMIT, new QueryParametersParser(queryParserMock,
                             aggregationParserMock, sortParserMock, paginationParserMock, searchParserMock)).getBinder())
             .addProvider(GenericExceptionMapper.class).addProvider(JsonValidationExceptionMapper.class).build();
 

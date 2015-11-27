@@ -2,8 +2,8 @@ package io.corbel.resources.service;
 
 import io.corbel.event.ResourceEvent;
 import io.corbel.eventbus.service.EventBus;
-import io.corbel.lib.queries.builder.QueryParametersBuilder;
 import io.corbel.lib.queries.jaxrs.QueryParameters;
+import io.corbel.lib.queries.parser.QueryParametersParser;
 import io.corbel.lib.token.TokenInfo;
 import io.corbel.lib.ws.api.error.ApiRequestException;
 import io.corbel.lib.ws.api.error.ErrorResponseFactory;
@@ -60,18 +60,18 @@ public class DefaultResourcesService implements ResourcesService {
     private final int maxPageSize;
 
     private final EventBus eventBus;
-    private final QueryParametersBuilder queryParametersBuilder;
+    private final QueryParametersParser queryParametersParser;
 
 
     private Providers providers;
 
     public DefaultResourcesService(RemService remService, RemEntityTypeResolver remEntityTypeResolver, int defaultPageSize,
-            int maxPageSize, QueryParametersBuilder queryParametersBuilder, EventBus eventBus) {
+            int maxPageSize, QueryParametersParser queryParametersBuilder, EventBus eventBus) {
         this.remService = remService;
         this.remEntityTypeResolver = remEntityTypeResolver;
         this.defaultPageSize = defaultPageSize;
         this.maxPageSize = maxPageSize;
-        this.queryParametersBuilder = queryParametersBuilder;
+        this.queryParametersParser = queryParametersBuilder;
         this.eventBus = eventBus;
     }
 
@@ -203,7 +203,7 @@ public class DefaultResourcesService implements ResourcesService {
     }
 
     private QueryParameters getDefaultQueryParameters() {
-        return queryParametersBuilder.createQueryParameters(0, defaultPageSize, maxPageSize, Optional.empty(), Optional.empty(),
+        return queryParametersParser.createQueryParameters(0, defaultPageSize, maxPageSize, Optional.empty(), Optional.empty(),
                 Optional.empty(), Optional.empty(), Optional.empty());
     }
 

@@ -45,7 +45,6 @@ import io.corbel.resources.service.RelationSchemaService;
 import io.corbel.resources.service.ResourcesService;
 import io.corbel.lib.config.ConfigurationIoC;
 import io.corbel.lib.mongo.config.DefaultMongoConfiguration;
-import io.corbel.lib.queries.builder.QueryParametersBuilder;
 import io.corbel.lib.queries.mongo.repository.QueriesRepositoryFactoryBean;
 import io.corbel.lib.queries.parser.AggregationParser;
 import io.corbel.lib.queries.parser.CustomJsonParser;
@@ -55,6 +54,7 @@ import io.corbel.lib.queries.parser.JacksonAggregationParser;
 import io.corbel.lib.queries.parser.JacksonQueryParser;
 import io.corbel.lib.queries.parser.JacksonSortParser;
 import io.corbel.lib.queries.parser.PaginationParser;
+import io.corbel.lib.queries.parser.QueryParametersParser;
 import io.corbel.lib.queries.parser.QueryParser;
 import io.corbel.lib.queries.parser.SearchParser;
 import io.corbel.lib.queries.parser.SortParser;
@@ -66,6 +66,7 @@ import io.corbel.lib.ws.dw.ioc.DropwizardIoc;
 import io.corbel.lib.ws.dw.ioc.MongoHealthCheckIoc;
 import io.corbel.lib.ws.encoding.MatrixEncodingRequestFilter;
 import io.corbel.lib.ws.ioc.QueriesIoc;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.cache.CacheBuilder;
 
@@ -99,9 +100,9 @@ import com.google.common.cache.CacheBuilder;
 
     @Bean
     public ResourcesService getResourcesService(RemService remService, RemEntityTypeResolver remEntityTypeResolver,
-            QueryParametersBuilder queryParametersBuilder, EventBus eventBus) {
+            QueryParametersParser queryParametersParser, EventBus eventBus) {
         return new DefaultResourcesService(remService, remEntityTypeResolver, getPageSizeDefault(), getMaxPageSizeDefault(),
-                queryParametersBuilder, eventBus);
+                queryParametersParser, eventBus);
     }
 
     @Bean
@@ -131,9 +132,9 @@ import com.google.common.cache.CacheBuilder;
     }
 
     @Bean
-    public QueryParametersBuilder getQueryParametersBuilder(QueryParser queryParser, AggregationParser aggregationParser,
+    public QueryParametersParser getQueryParametersParser(QueryParser queryParser, AggregationParser aggregationParser,
             SortParser sortParser, PaginationParser paginationParser, SearchParser searchParser) {
-        return new QueryParametersBuilder(queryParser, aggregationParser, sortParser, paginationParser, searchParser);
+        return new QueryParametersParser(queryParser, aggregationParser, sortParser, paginationParser, searchParser);
     }
 
     @Bean

@@ -15,7 +15,6 @@ import io.corbel.resources.rem.request.ResourceId;
 import io.corbel.resources.rem.service.RemService;
 import io.corbel.resources.service.DefaultRemService;
 import io.corbel.resources.service.DefaultResourcesService;
-import io.corbel.lib.queries.builder.QueryParametersBuilder;
 import io.corbel.lib.queries.exception.MalformedJsonQueryException;
 import io.corbel.lib.queries.parser.*;
 import io.corbel.lib.queries.request.*;
@@ -28,11 +27,14 @@ import io.corbel.lib.ws.auth.BearerTokenAuthenticator;
 import io.corbel.lib.ws.encoding.MatrixEncodingRequestFilter;
 import io.corbel.lib.ws.json.serialization.EmptyEntitiesAllowedJacksonMessageBodyProvider;
 import io.corbel.lib.ws.queries.QueryParametersProvider;
+
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.JsonObject;
+
 import io.dropwizard.auth.oauth.OAuthFactory;
 import io.dropwizard.testing.junit.ResourceTestRule;
+
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -45,6 +47,7 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
@@ -103,7 +106,7 @@ public class RemResourceTest {
         ResourceTestRule.Builder ruleBuilder = ResourceTestRule.builder();
 
 
-        QueryParametersBuilder queryParametersBuilder = new QueryParametersBuilder(createQueryParser(), createAggregationParser(),
+        QueryParametersParser queryParametersBuilder = new QueryParametersParser(createQueryParser(), createAggregationParser(),
                 createSortParser(), createPaginationParser(), createSearchParser());
 
         DefaultResourcesService defaultResourcesService = new DefaultResourcesService(remService, remEntityTypeResolverMock, DEFAULT_LIMIT,

@@ -22,7 +22,6 @@ import io.corbel.iam.exception.GroupAlreadyExistsException;
 import io.corbel.iam.exception.NotExistentScopeException;
 import io.corbel.iam.model.Group;
 import io.corbel.iam.service.GroupService;
-import io.corbel.lib.queries.builder.QueryParametersBuilder;
 import io.corbel.lib.queries.parser.*;
 import io.corbel.lib.ws.api.error.GenericExceptionMapper;
 import io.corbel.lib.ws.api.error.JsonValidationExceptionMapper;
@@ -51,7 +50,7 @@ public class GroupResourceTest {
     public static final SearchParser searchParserMock = mock(SearchParser.class);
     public static final PaginationParser paginationParserMock = mock(PaginationParser.class);
 
-    public static final QueryParametersBuilder queryParametersBuilder = new QueryParametersBuilder(queryParserMock, aggregationParserMock,
+    public static final QueryParametersParser queryParametersParser = new QueryParametersParser(queryParserMock, aggregationParserMock,
             sortParserMock, paginationParserMock, searchParserMock);
 
     private static final BearerTokenAuthenticator authenticatorMock = mock(BearerTokenAuthenticator.class);
@@ -65,7 +64,7 @@ public class GroupResourceTest {
     @ClassRule public static ResourceTestRule RULE = ResourceTestRule.builder().addResource(new GroupResource(groupService))
             .addProvider(filter).addProvider(new AuthorizationInfoProvider().getBinder()).addProvider(GenericExceptionMapper.class)
             .addProvider(JsonValidationExceptionMapper.class)
-            .addProvider(new QueryParametersProvider(DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, queryParametersBuilder).getBinder()).build();
+            .addProvider(new QueryParametersProvider(DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, queryParametersParser).getBinder()).build();
 
     @Before
     public void setUp() throws AuthenticationException {

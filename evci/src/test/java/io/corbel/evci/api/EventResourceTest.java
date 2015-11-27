@@ -3,22 +3,20 @@ package io.corbel.evci.api;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
-
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.JsonObject;
-import io.corbel.lib.queries.builder.QueryParametersBuilder;
+import io.corbel.evci.service.EventsService;
 import io.corbel.lib.token.TokenInfo;
 import io.corbel.lib.token.reader.TokenReader;
 import io.corbel.lib.ws.auth.AuthorizationInfo;
 import io.corbel.lib.ws.auth.AuthorizationInfoProvider;
 import io.corbel.lib.ws.auth.AuthorizationRequestFilter;
 import io.corbel.lib.ws.auth.BearerTokenAuthenticator;
-import io.corbel.lib.ws.encoding.MatrixEncodingRequestFilter;
-import io.corbel.lib.ws.json.serialization.EmptyEntitiesAllowedJacksonMessageBodyProvider;
-import io.corbel.lib.ws.queries.QueryParametersProvider;
+import io.corbel.lib.ws.gson.GsonMessageReaderWriterProvider;
 import io.dropwizard.auth.AuthenticationException;
 import io.dropwizard.auth.oauth.OAuthFactory;
 import io.dropwizard.testing.junit.ResourceTestRule;
@@ -41,11 +39,10 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
-import io.corbel.evci.service.EventsService;
-import io.corbel.lib.ws.gson.GsonMessageReaderWriterProvider;
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
-import org.springframework.http.HttpMethod;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class EventResourceTest {
 
@@ -150,8 +147,8 @@ public class EventResourceTest {
     public void testRegisterEmptyFormParamsEvent() throws Throwable {
         String type = "type";
         try {
-            RULE.client().target("/" + ApiVersion.CURRENT + "/event/" + type).request()
-                    .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).post(Entity.json(""), Response.class);
+            RULE.client().target("/" + ApiVersion.CURRENT + "/event/" + type).request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
+                    .post(Entity.json(""), Response.class);
         } catch (ProcessingException e) {
             throw e.getCause();
         }
@@ -183,8 +180,8 @@ public class EventResourceTest {
         String type = "type";
         String event = "sdfsdf";
         try {
-            RULE.client().target("/" + ApiVersion.CURRENT + "/event/" + type).request()
-                    .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).post(Entity.json(event), Response.class);
+            RULE.client().target("/" + ApiVersion.CURRENT + "/event/" + type).request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
+                    .post(Entity.json(event), Response.class);
         } catch (ProcessingException e) {
             throw e.getCause();
         }
@@ -194,8 +191,8 @@ public class EventResourceTest {
     public void testRegisterEmptyEvent() throws Throwable {
         String type = "type";
         try {
-            RULE.client().target("/" + ApiVersion.CURRENT + "/event/" + type).request()
-                    .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).post(Entity.json(""), Response.class);
+            RULE.client().target("/" + ApiVersion.CURRENT + "/event/" + type).request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
+                    .post(Entity.json(""), Response.class);
         } catch (ProcessingException e) {
             throw e.getCause();
         }

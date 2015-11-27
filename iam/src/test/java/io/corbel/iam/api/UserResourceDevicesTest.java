@@ -36,9 +36,9 @@ import io.corbel.iam.service.DeviceService;
 import io.corbel.iam.service.DomainService;
 import io.corbel.iam.service.IdentityService;
 import io.corbel.iam.service.UserService;
-import io.corbel.lib.queries.builder.QueryParametersBuilder;
 import io.corbel.lib.queries.parser.AggregationParser;
 import io.corbel.lib.queries.parser.PaginationParser;
+import io.corbel.lib.queries.parser.QueryParametersParser;
 import io.corbel.lib.queries.parser.QueryParser;
 import io.corbel.lib.queries.parser.SearchParser;
 import io.corbel.lib.queries.parser.SortParser;
@@ -84,7 +84,7 @@ public class UserResourceDevicesTest extends UserResourceTestBase {
             .addProvider(filter)
             .addProvider(authorizationInfoProvider.getBinder())
             .addProvider(
-                    new QueryParametersProvider(DEFAULT_LIMIT, MAX_DEFAULT_LIMIT, new QueryParametersBuilder(queryParserMock,
+                    new QueryParametersProvider(DEFAULT_LIMIT, MAX_DEFAULT_LIMIT, new QueryParametersParser(queryParserMock,
                             aggregationParserMock, sortParserMock, paginationParserMock, searchParserMock)).getBinder())
             .addProvider(GenericExceptionMapper.class).build();
 
