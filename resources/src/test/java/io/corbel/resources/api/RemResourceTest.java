@@ -148,7 +148,7 @@ public class RemResourceTest {
         HttpServletRequest requestMock = mock(HttpServletRequest.class);
         when(requestMock.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + TEST_TOKEN);
         doReturn(requestMock).when(filter).getRequest();
-        doNothing().when(filter).checkAccessRules(eq(authorizationInfoMock), any(), eq(DOMAIN));
+        doNothing().when(filter).checkTokenAccessRules(eq(authorizationInfoMock), any(), eq(DOMAIN));
         when(tokenInfo.getUserId()).thenReturn(TEST_USER_ID);
         when(tokenInfo.getDomainId()).thenReturn(DOMAIN);
     }
