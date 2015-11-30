@@ -1,3 +1,1 @@
-FROM maven
-
-COPY . /usr/src/app
+FROM maven:3-jdk-8
