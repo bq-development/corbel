@@ -52,7 +52,7 @@ public class EmailResourceTest extends UserResourceTestBase {
         HttpServletRequest requestMock = mock(HttpServletRequest.class);
         when(requestMock.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + TEST_TOKEN);
         doReturn(requestMock).when(filter).getRequest();
-        doNothing().when(filter).checkAccessRules(eq(authorizationInfoMock), any(), any());
+        doNothing().when(filter).checkTokenAccessRules(eq(authorizationInfoMock), any(), any());
     }
 
     @Test

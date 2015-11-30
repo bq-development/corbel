@@ -93,7 +93,7 @@ public class DomainResourceTest {
 
         when(authenticator.authenticate(TEST_TOKEN)).thenReturn(com.google.common.base.Optional.of(authorizationInfoMock));
         doReturn(requestMock).when(filter).getRequest();
-        doNothing().when(filter).checkAccessRules(eq(authorizationInfoMock), any(), any());
+        doNothing().when(filter).checkTokenAccessRules(eq(authorizationInfoMock), any(), any());
     }
 
     @Before
