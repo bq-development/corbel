@@ -1,0 +1,3 @@
+- service: maven
+  command: mvn clean deploy -DdockerBuild=true
+  encrypted_dockercfg_path: dockercfg.encrypted

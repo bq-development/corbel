@@ -8,3 +8,4 @@ target-eclipse
 .DS_Store
 
 /bin
+codeship.key
