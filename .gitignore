@@ -9,3 +9,5 @@ target-eclipse
 
 /bin
 codeship.key
+
+codeship.aes
