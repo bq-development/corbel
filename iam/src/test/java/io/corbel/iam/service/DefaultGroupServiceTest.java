@@ -139,6 +139,25 @@ import io.corbel.lib.queries.request.ResourceQuery;
         verifyNoMoreInteractions(groupRepositoryMock, scopeRepositoryMock);
     }
 
+    @Test
+    public void createGroupWithoutScopesTest() throws GroupAlreadyExistsException, NotExistentScopeException {
+        Group group = getGroup();
+        group.setScopes(null);
+        groupService.create(group);
+
+        ArgumentCaptor<Group> capturedGroup = ArgumentCaptor.forClass(Group.class);
+        verify(groupRepositoryMock).insert(capturedGroup.capture());
+
+        Group savedGroup = capturedGroup.getValue();
+
+        assertThat(savedGroup.getId()).isNull();
+        assertThat(savedGroup.getName()).isEqualTo(group.getName());
+        assertThat(savedGroup.getDomain()).isEqualTo(group.getDomain());
+        assertThat(savedGroup.getScopes()).isEqualTo(group.getScopes());
+
+        verifyNoMoreInteractions(groupRepositoryMock, scopeRepositoryMock);
+    }
+
     @Test(expected = GroupAlreadyExistsException.class)
     public void createAlreadyExistentGroupTest() throws GroupAlreadyExistsException, NotExistentScopeException {
         Group group = getGroup();
