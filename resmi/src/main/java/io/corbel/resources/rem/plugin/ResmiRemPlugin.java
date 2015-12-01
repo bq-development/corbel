@@ -7,6 +7,7 @@ import io.corbel.resources.rem.RemRegistry;
 import io.corbel.resources.rem.resmi.ioc.ResmiIoc;
 import io.corbel.resources.rem.resmi.ioc.ResmiRemNames;
 import io.corbel.resources.rem.search.ElasticSearchService;
+import io.corbel.resources.rem.search.ResmiSearch;
 import io.corbel.resources.rem.service.ResmiService;
 
 import org.slf4j.Logger;
@@ -37,6 +38,7 @@ import org.springframework.stereotype.Component;
         init();
         shell.setResmiService(context.getBean(ResmiService.class));
         shell.setElasticSearchService(context.getBean(ElasticSearchService.class));
+        shell.setResmiSearch(context.getBean(ResmiSearch.class));
     }
 
     @Override
