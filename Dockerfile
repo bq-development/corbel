@@ -1,1 +1,7 @@
-FROM maven:3-jdk-8-onbuild
+FROM corbot/corbel-maven-build
+
+ADD . /usr/src/app
+
+WORKDIR /usr/src/app
+
+RUN mvn dependency:resolve
