@@ -13,6 +13,7 @@ import io.corbel.iam.repository.ScopeRepository;
 import io.corbel.lib.queries.request.Pagination;
 import io.corbel.lib.queries.request.ResourceQuery;
 import io.corbel.lib.queries.request.Sort;
+import org.springframework.util.CollectionUtils;
 
 public class DefaultGroupService implements GroupService {
 
@@ -77,8 +78,13 @@ public class DefaultGroupService implements GroupService {
     }
 
     private void checkScopes(Collection<String> scopes) throws NotExistentScopeException {
+        if (CollectionUtils.isEmpty(scopes)) {
+            return;
+        }
+
         String notExistentScopes = scopes.stream().filter(scope -> scopeRepository.findOne(scope) == null)
                 .collect(Collectors.joining(", "));
+
         if (!notExistentScopes.isEmpty()) {
             throw new NotExistentScopeException(notExistentScopes);
         }
