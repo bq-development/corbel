@@ -96,8 +96,9 @@ import org.mockito.runners.MockitoJUnitRunner;
 
     @Test
     public void testSendUserDeletedEvent() {
-        service.sendUserDeletedEvent(ID, DOMAIN);
-        verify(eventBus).dispatch(new UserDeletedEvent(ID, DOMAIN));
+        User user = new User();
+        service.sendUserDeletedEvent(user, DOMAIN);
+        verify(eventBus).dispatch(new UserDeletedEvent(null,null,null,null, DOMAIN));
     }
 
     @Test
