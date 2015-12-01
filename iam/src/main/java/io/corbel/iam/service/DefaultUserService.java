@@ -107,7 +107,7 @@ public class DefaultUserService implements UserService {
     public void delete(User user) {
         userRepository.delete(user);
         signOut(user.getId());
-        eventsService.sendUserDeletedEvent(user.getId(), user.getDomain());
+        eventsService.sendUserDeletedEvent(user, user.getDomain());
     }
 
     @Override
