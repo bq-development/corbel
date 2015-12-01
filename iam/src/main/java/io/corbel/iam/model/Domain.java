@@ -15,6 +15,7 @@ public class Domain extends TraceableEntity implements HasScopes {
     private String description;
     private String allowedDomains;
     private Set<String> scopes = new HashSet<>();
+    private Set<String> publicScopes = new HashSet<>();
     private Set<String> defaultScopes = new HashSet<>();
     private Map<String, Map<String, String>> authConfigurations = new HashMap<>();
     private Set<String> userProfileFields = new HashSet<>();
@@ -88,9 +89,20 @@ public class Domain extends TraceableEntity implements HasScopes {
         return scopes.remove(scope);
     }
 
-    @Override
-    public int hashCode() {
-        return super.hashCode();
+    public Set<String> getPublicScopes() {
+        return publicScopes;
+    }
+
+    public void setPublicScopes(Set<String> publicScopes) {
+        this.publicScopes = publicScopes;
+    }
+
+    public void addPublicScope(String scope) {
+        publicScopes.add(scope);
+    }
+
+    public void removePublicScope(String scope) {
+        publicScopes.remove(scope);
     }
 
     @Override
@@ -105,6 +117,8 @@ public class Domain extends TraceableEntity implements HasScopes {
         if (allowedDomains != null ? !allowedDomains.equals(domain.allowedDomains) : domain.allowedDomains != null)
             return false;
         if (scopes != null ? !scopes.equals(domain.scopes) : domain.scopes != null) return false;
+        if (publicScopes != null ? !publicScopes.equals(domain.publicScopes) : domain.publicScopes != null)
+            return false;
         if (defaultScopes != null ? !defaultScopes.equals(domain.defaultScopes) : domain.defaultScopes != null)
             return false;
         if (authConfigurations != null ? !authConfigurations.equals(domain.authConfigurations) : domain.authConfigurations != null)
@@ -113,5 +127,19 @@ public class Domain extends TraceableEntity implements HasScopes {
             return false;
         return !(capabilities != null ? !capabilities.equals(domain.capabilities) : domain.capabilities != null);
 
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (description != null ? description.hashCode() : 0);
+        result = 31 * result + (allowedDomains != null ? allowedDomains.hashCode() : 0);
+        result = 31 * result + (scopes != null ? scopes.hashCode() : 0);
+        result = 31 * result + (publicScopes != null ? publicScopes.hashCode() : 0);
+        result = 31 * result + (defaultScopes != null ? defaultScopes.hashCode() : 0);
+        result = 31 * result + (authConfigurations != null ? authConfigurations.hashCode() : 0);
+        result = 31 * result + (userProfileFields != null ? userProfileFields.hashCode() : 0);
+        result = 31 * result + (capabilities != null ? capabilities.hashCode() : 0);
+        return result;
     }
 }

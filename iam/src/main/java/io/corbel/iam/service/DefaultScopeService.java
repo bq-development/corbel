@@ -170,6 +170,15 @@ public class DefaultScopeService implements ScopeService {
 
     @Override
     public void addAuthorizationRules(String token, Set<Scope> filledScopes) {
+        addAuthorizationRules(token, filledScopes, true);
+    }
+
+    @Override
+    public void addAuthorizationRulesWithoutExpireTime(String token, Set<Scope> filledScopes) {
+        addAuthorizationRules(token, filledScopes, false);
+    }
+
+    private void addAuthorizationRules(String token, Set<Scope> filledScopes, boolean expire) {
         Map<String, Set<JsonObject>> rules = prepareRules(filledScopes.toArray(new Scope[filledScopes.size()]));
         for (Map.Entry<String, Set<JsonObject>> entry : rules.entrySet()) {
             Set<JsonObject> audienceRules = entry.getValue();
@@ -181,14 +190,20 @@ public class DefaultScopeService implements ScopeService {
             } else {
                 // If is a new audience, we use the iam rules expire time because always iam has scopes for a token.
                 String iamKey = authorizationRulesRepository.getKeyForAuthorizationRules(token, iamAudience);
-                // Redis returns time to expire in seconds
-                authorizationRulesRepository.save(keyForAuthorizationRules,
-                        TimeUnit.SECONDS.toMillis(authorizationRulesRepository.getTimeToExpire(iamKey)),
-                        audienceRules.toArray(new JsonObject[audienceRules.size()]));
+
+                if(expire) {
+                    // Redis returns time to expire in seconds
+                    authorizationRulesRepository.save(keyForAuthorizationRules,
+                            TimeUnit.SECONDS.toMillis(authorizationRulesRepository.getTimeToExpire(iamKey)),
+                            audienceRules.toArray(new JsonObject[audienceRules.size()]));
+                }
+                else {
+                    authorizationRulesRepository.addRules(keyForAuthorizationRules, audienceRules.toArray(new JsonObject[audienceRules.size()]));
+                }
             }
         }
     }
-
+    
     @Override
     public Set<Scope> expandScopes(Collection<String> scopes) {
         if (CollectionUtils.isEmpty(scopes)) {

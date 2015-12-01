@@ -50,7 +50,7 @@ import io.corbel.lib.ws.queries.QueryParametersProvider;
 
 /**
  * @author Alexander De Leon
- * 
+ *
  */
 public class UserResourceDevicesTest extends UserResourceTestBase {
 
