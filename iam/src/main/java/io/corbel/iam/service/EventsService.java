@@ -16,7 +16,7 @@ public interface EventsService {
 
     void sendUserAuthenticationEvent(User user);
 
-    void sendUserDeletedEvent(String id, String domain);
+    void sendUserDeletedEvent(User user, String domain);
 
     void sendNotificationEvent(String notificationId, String recipient, Map<String, String> properties);
 
