@@ -4,6 +4,8 @@ import java.time.Clock;
 import java.util.Arrays;
 import java.util.List;
 
+import io.corbel.event.DomainPublicScopesNotPublishedEvent;
+import io.corbel.iam.eventbus.DomainPublicScopesNotPublishedEventHandler;
 import net.oauth.jsontoken.Checker;
 import net.oauth.jsontoken.JsonTokenParser;
 import net.oauth.jsontoken.crypto.SignatureAlgorithm;
@@ -110,10 +112,14 @@ public class IamIoc {
     }
 
     @Bean
-    public EventHandler<ScopeUpdateEvent> scopeUpdateEventEventHandler(CacheManager cacheManager, GroupRepository groupRepository) {
+    public EventHandler<ScopeUpdateEvent> scopeUpdateEventHandler(CacheManager cacheManager, GroupRepository groupRepository) {
         return new ScopeModifiedEventHandler(cacheManager, groupRepository);
     }
 
+    @Bean
+    public EventHandler<DomainPublicScopesNotPublishedEvent> domainPublicScopesNotPublishedEventHandler(ScopeService scopeService, DomainRepository domainRepository) {
+        return new DomainPublicScopesNotPublishedEventHandler(scopeService, domainRepository);
+    }
 
     @Bean
     public AuthorizationService getAuthorizationService(RefreshTokenService refreshTokenService, TokenFactory tokenFactory,
