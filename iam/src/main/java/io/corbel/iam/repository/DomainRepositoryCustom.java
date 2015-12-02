@@ -11,5 +11,9 @@ public interface DomainRepositoryCustom {
 
     void removeDefaultScopes(String id, String... scopes);
 
+    void addPublicScopes(String id, String... scopes);
+
+    void removePublicScopes(String id, String... scopes);
+
     void insert(Domain domain);
 }

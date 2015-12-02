@@ -4,12 +4,12 @@ import io.corbel.lib.queries.request.AggregationResult;
 import io.corbel.lib.queries.request.Pagination;
 import io.corbel.lib.queries.request.ResourceQuery;
 import io.corbel.lib.queries.request.Sort;
+import io.corbel.resources.rem.model.ResourceUri;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import io.corbel.resources.rem.model.ResourceUri;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
@@ -30,4 +30,8 @@ public interface ResmiSearch {
     void indexDocument(ResourceUri uri, JsonObject fields);
 
     void deleteDocument(ResourceUri uri);
+
+    boolean upsertResmiIndex(String name);
+
+    boolean upsertResmiIndex(String name, String settings);
 }

@@ -63,7 +63,8 @@ import com.google.gson.Gson;
 
     @Bean
     public ResmiDao getMongoResmiDao() throws Exception {
-        return new MongoResmiDao(mongoTemplate(), getJsonObjectMongoWriteConverter(), getNamespaceNormilizer(), getMongoResmiOrder(), getGson());
+        return new MongoResmiDao(mongoTemplate(), getJsonObjectMongoWriteConverter(), getNamespaceNormilizer(), getMongoResmiOrder(),
+                getGson());
     }
 
     @Bean
@@ -139,7 +140,7 @@ import com.google.gson.Gson;
     @Bean
     @Lazy
     public ResmiSearch getResmiSearch() {
-        return new ElasticSearchResmiSearch(getElasticeSearchService(), getNamespaceNormilizer(), elasticSearchIndexSettings);
+        return new ElasticSearchResmiSearch(getElasticeSearchService(), getNamespaceNormilizer(), elasticSearchIndexSettings, getClock());
     }
 
     @Bean

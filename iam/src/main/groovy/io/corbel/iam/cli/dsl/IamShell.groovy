@@ -45,6 +45,7 @@ class IamShell {
         Domain domain = new Domain()
         domain.id = domainFields.id
         domain.scopes = domainFields.scopes
+        domain.publicScopes = domainFields.publicScopes
         domain.defaultScopes = domainFields.defaultScopes
         domain.description = domainFields.description
         domain.authConfigurations = domainFields.authConfigurations
@@ -188,6 +189,16 @@ class IamShell {
     @Description('Remove the specified default scopes to the specified domain')
     def removeDefaultScopesFromDomain(String domain, String... scopes) {
         domainRepository.removeDefaultScopes(domain, scopes)
+    }
+
+    @Description('Adds the specified public scopes to the specified domain')
+    def addPublicScopesToDomain(String domain, String... scopes) {
+        domainRepository.addPublicScopes(domain, scopes)
+    }
+
+    @Description('Remove the specified public scopes to the specified domain')
+    def removePublicScopesFromDomain(String domain, String... scopes) {
+        domainRepository.removePublicScopes(domain, scopes)
     }
 
     @Description("Generate a JWT for the specified client. Optionally a userId can be specified if the client intention is to act on behalf of a user.")

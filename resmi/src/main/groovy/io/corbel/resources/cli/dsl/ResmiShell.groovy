@@ -4,7 +4,9 @@ import io.corbel.lib.cli.console.Description
 import io.corbel.lib.cli.console.Shell
 import io.corbel.resources.rem.model.ResourceUri
 import io.corbel.resources.rem.model.SearchResource
-import io.corbel.resources.rem.search.ElasticSearchService;
+import io.corbel.resources.rem.search.ElasticSearchResmiSearch
+import io.corbel.resources.rem.search.ElasticSearchService
+import io.corbel.resources.rem.search.ResmiSearch
 import io.corbel.resources.rem.service.ResmiService
 
 import org.springframework.data.mongodb.core.index.Index
@@ -17,6 +19,7 @@ class ResmiShell {
 
     ResmiService resmiService
     ElasticSearchService elasticSearchService
+    ResmiSearch resmiSearch
 
     @Description("Creates a mongo expiration index named \"_expireAt\" on the specified collection .")
     def ensureExpireIndex(String collection) {
@@ -58,19 +61,26 @@ class ResmiShell {
         resmiService.addSearchableFields(new SearchResource(type, relation, fields.collect().toSet()))
     }
 
-    @Description("Defines an index settings.")
+    @Description("Raw creation of an index with settings.")
     def createIndex(String name, String settings) {
         assert name: "name is required"
         assert settings: "settings is required"
         elasticSearchService.createIndex(name, settings)
     }
 
-    @Description("Defines a full text search mapping for a type.")
-    def setMapping(String index, String type, String mapping) {
-        assert index: "index is required"
+    @Description("Defines an resmi index with settings if not exists.")
+    def upsertIndex(String name, String settings) {
+        assert name: "name is required"
+        assert settings: "settings is required"
+        resmiSearch.upsertResmiIndex(name, settings)
+    }
+
+    @Description("Defines a full text search mapping for a type, creating its resmi index if not exists.")
+    def setMapping(String type, String mapping) {
         assert type: "type is required"
         assert mapping: "mapping is required"
-        elasticSearchService.setupMapping(index, type, mapping)
+        resmiSearch.upsertResmiIndex(type)
+        elasticSearchService.setupMapping(ElasticSearchResmiSearch.RESMI_INDEX_PREFIX + type, type, mapping)
     }
 
     @Description("Adds a full text search template")
@@ -93,6 +103,7 @@ class ResmiShell {
         assert alias: "alias is required"
         elasticSearchService.removeAlias(index, alias)
     }
+
 
     def index = IndexBuilder.index
 }
