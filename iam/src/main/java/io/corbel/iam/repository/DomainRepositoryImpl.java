@@ -29,6 +29,25 @@ import com.mongodb.BasicDBObject;
 
     @Override
     public void addDefaultScopes(String id, String... scopes) {
+        addScopes(DomainRepository.FIELD_DEFAULT_SCOPES, id, scopes);
+    }
+
+    @Override
+    public void removeDefaultScopes(String id, String... scopes) {
+        removeScopes(DomainRepository.FIELD_DEFAULT_SCOPES, id, scopes);
+    }
+
+    @Override
+    public void addPublicScopes(String id, String... scopes) {
+        addScopes(DomainRepository.FIELD_PUBLIC_SCOPES, id, scopes);
+    }
+
+    @Override
+    public void removePublicScopes(String id, String... scopes) {
+        removeScopes(DomainRepository.FIELD_PUBLIC_SCOPES, id, scopes);
+    }
+
+    private void addScopes(String scopesType, String id, String... scopes) {
         if (scopes == null || scopes.length == 0) {
             return;
         }
@@ -36,18 +55,17 @@ import com.mongodb.BasicDBObject;
         Update update = new Update();
         BasicDBList list = new BasicDBList();
         list.addAll(Arrays.asList(scopes));
-        update.addToSet(DomainRepository.FIELD_DEFAULT_SCOPES, new BasicDBObject("$each", list));
+        update.addToSet(scopesType, new BasicDBObject("$each", list));
         mongo.updateFirst(query, update, Domain.class);
     }
 
-    @Override
-    public void removeDefaultScopes(String id, String... scopes) {
+    private void removeScopes(String scopesType, String id, String... scopes) {
         if (scopes == null || scopes.length == 0) {
             return;
         }
         Query query = Query.query(Criteria.where(FIELD_ID).is(id));
         Update update = new Update();
-        update.pullAll(DomainRepository.FIELD_DEFAULT_SCOPES, scopes);
+        update.pullAll(scopesType, scopes);
         mongo.updateFirst(query, update, Domain.class);
     }
 

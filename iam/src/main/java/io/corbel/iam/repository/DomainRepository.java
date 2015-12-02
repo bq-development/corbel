@@ -12,4 +12,6 @@ public interface DomainRepository extends PartialUpdateRepository<Domain, String
 
     String FIELD_DEFAULT_SCOPES = "defaultScopes";
 
+    String FIELD_PUBLIC_SCOPES = "publicScopes";
+
 }
