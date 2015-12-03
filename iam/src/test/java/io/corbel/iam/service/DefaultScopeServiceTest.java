@@ -68,7 +68,7 @@ import io.corbel.lib.ws.auth.repository.AuthorizationRulesRepository;
 
     @Before
     public void setup() {
-        defaultScopeService = new DefaultScopeService(scopeRepositoryMock, authorizationRulesRepositoryMock, fillStrategyMock,
+        defaultScopeService = new DefaultScopeService(scopeRepositoryMock, authorizationRulesRepositoryMock, 1000L, fillStrategyMock,
                 IAM_AUDIENCE, Clock.fixed(now, ZoneId.systemDefault()), eventsServiceMock);
     }
 

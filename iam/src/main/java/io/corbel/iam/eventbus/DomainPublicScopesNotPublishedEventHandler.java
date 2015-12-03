@@ -9,7 +9,6 @@ import io.corbel.iam.service.ScopeService;
 import io.corbel.lib.ws.auth.DefaultPublicAccessService;
 
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 
 public class DomainPublicScopesNotPublishedEventHandler implements EventHandler<DomainPublicScopesNotPublishedEvent> {
@@ -28,7 +27,7 @@ public class DomainPublicScopesNotPublishedEventHandler implements EventHandler<
         String key = domainPublicScopesNotPublishedEvent.getDomain() + DefaultPublicAccessService.PUBLIC_SCOPES_SUFFIX;
 
         Set<Scope> publicScopes = domain != null ? scopeService.getScopes(domain.getPublicScopes()) : Collections.<Scope>emptySet();
-        scopeService.addAuthorizationRulesWithoutExpireTime(key, publicScopes);
+        scopeService.addAuthorizationRulesForPublicAccess(key, publicScopes);
     }
 
     @Override

@@ -286,7 +286,8 @@ public class IamIoc {
 
     @Bean
     public ScopeService getScopeService(EventsService eventsService) {
-        return new DefaultScopeService(scopeRepository, authorizationRulesRepository, getScopeFillStrategy(), env.getProperty("iam.uri"),
+        return new DefaultScopeService(scopeRepository, authorizationRulesRepository, env.getProperty(
+                "iam.auth.publicToken.maxExpirationInMillis", Long.class), getScopeFillStrategy(), env.getProperty("iam.uri"),
                 Clock.systemDefaultZone(), eventsService);
     }
 

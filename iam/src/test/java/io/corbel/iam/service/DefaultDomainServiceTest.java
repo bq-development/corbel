@@ -216,7 +216,7 @@ import com.google.common.collect.Sets;
         domainService.delete(TEST_DOMAIN.getId());
         verify(domainRepositoryMock).delete(TEST_DOMAIN.getId());
         verify(eventsServiceMock).sendDomainDeletedEvent(TEST_DOMAIN.getId());
-
+        verify(eventsServiceMock).sendUpdateDomainPublicScopesEvent(TEST_DOMAIN.getId());
         verifyNoMoreInteractions(domainRepositoryMock, eventsServiceMock);
     }
 }

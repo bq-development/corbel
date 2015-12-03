@@ -44,7 +44,6 @@ public class DefaultDomainService implements DomainService {
         if (domain.getScopes() == null || domain.getScopes().isEmpty()) {
             return false;
         }
-
         try {
             Set<String> expandedRequestedScopes = scopeService.expandScopes(scopes).stream().map(Scope::getIdWithParameters)
                     .collect(Collectors.toSet());
@@ -69,6 +68,7 @@ public class DefaultDomainService implements DomainService {
     public void insert(Domain domain) throws DomainAlreadyExists {
         try {
             domainRepository.insert(domain);
+            sendUpdateDomainPublicScopesEvent(domain.getId());
         } catch (DataIntegrityViolationException e) {
             throw new DomainAlreadyExists(domain.getId());
         }
@@ -77,12 +77,14 @@ public class DefaultDomainService implements DomainService {
     @Override
     public void update(Domain domain) {
         domainRepository.patch(domain);
+        sendUpdateDomainPublicScopesEvent(domain.getId());
     }
 
 
     @Override
     public void delete(String domain) {
         domainRepository.delete(domain);
+        sendUpdateDomainPublicScopesEvent(domain);
         eventsService.sendDomainDeletedEvent(domain);
     }
 
@@ -98,6 +100,10 @@ public class DefaultDomainService implements DomainService {
             throw new InvalidAggregationException();
         }
         return domainRepository.count(query);
+    }
+
+    private void sendUpdateDomainPublicScopesEvent(String domainId) {
+        eventsService.sendUpdateDomainPublicScopesEvent(domainId);
     }
 
 }

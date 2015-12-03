@@ -35,17 +35,19 @@ public class DefaultScopeService implements ScopeService {
 
     private final ScopeRepository scopeRepository;
     private final AuthorizationRulesRepository authorizationRulesRepository;
+    private final long publicTokenExpireTimeInMillis;
     private final ScopeFillStrategy fillStrategy;
     private final String iamAudience;
     private final Clock clock;
 
     private final EventsService eventsService;
 
-    public DefaultScopeService(ScopeRepository scopeRepository,
-            AuthorizationRulesRepository authorizationRulesRepository, ScopeFillStrategy fillStrategy, String iamAudience, Clock clock,
+    public DefaultScopeService(ScopeRepository scopeRepository, AuthorizationRulesRepository authorizationRulesRepository,
+                               long publicTokenExpireTimeInMillis, ScopeFillStrategy fillStrategy, String iamAudience, Clock clock,
             EventsService eventsService) {
         this.scopeRepository = scopeRepository;
         this.authorizationRulesRepository = authorizationRulesRepository;
+        this.publicTokenExpireTimeInMillis = publicTokenExpireTimeInMillis;
         this.fillStrategy = fillStrategy;
         this.iamAudience = iamAudience;
         this.clock = clock;
@@ -94,7 +96,7 @@ public class DefaultScopeService implements ScopeService {
      * Return a NEW scope with filled params.
      * 
      * @param scope Original scope
-     * @param scopeIdAndParams
+     * @param scopeIdAndParams Scope ids and scope parameters
      * @return New scope with filled params.
      */
     private Scope fillScopeCustomParameters(Scope scope, String[] scopeIdAndParams) {
@@ -170,15 +172,15 @@ public class DefaultScopeService implements ScopeService {
 
     @Override
     public void addAuthorizationRules(String token, Set<Scope> filledScopes) {
-        addAuthorizationRules(token, filledScopes, true);
-    }
-
-    @Override
-    public void addAuthorizationRulesWithoutExpireTime(String token, Set<Scope> filledScopes) {
         addAuthorizationRules(token, filledScopes, false);
     }
 
-    private void addAuthorizationRules(String token, Set<Scope> filledScopes, boolean expire) {
+    @Override
+    public void addAuthorizationRulesForPublicAccess(String token, Set<Scope> filledScopes) {
+        addAuthorizationRules(token, filledScopes, true);
+    }
+
+    private void addAuthorizationRules(String token, Set<Scope> filledScopes, boolean publicToken) {
         Map<String, Set<JsonObject>> rules = prepareRules(filledScopes.toArray(new Scope[filledScopes.size()]));
         for (Map.Entry<String, Set<JsonObject>> entry : rules.entrySet()) {
             Set<JsonObject> audienceRules = entry.getValue();
@@ -188,20 +190,16 @@ public class DefaultScopeService implements ScopeService {
                 authorizationRulesRepository
                         .addRules(keyForAuthorizationRules, audienceRules.toArray(new JsonObject[audienceRules.size()]));
             } else {
-                // If is a new audience, we use the iam rules expire time because always iam has scopes for a token.
-                String iamKey = authorizationRulesRepository.getKeyForAuthorizationRules(token, iamAudience);
-
-                if(expire) {
-                    // Redis returns time to expire in seconds
-                    authorizationRulesRepository.save(keyForAuthorizationRules,
-                            TimeUnit.SECONDS.toMillis(authorizationRulesRepository.getTimeToExpire(iamKey)),
-                            audienceRules.toArray(new JsonObject[audienceRules.size()]));
-                }
-                else {
-                    authorizationRulesRepository.addRules(keyForAuthorizationRules, audienceRules.toArray(new JsonObject[audienceRules.size()]));
-                }
+                long timeToExpire = publicToken ? publicTokenExpireTimeInMillis : getRulesExpireTime(token);
+                authorizationRulesRepository.save(keyForAuthorizationRules, timeToExpire, audienceRules.toArray(new JsonObject[audienceRules.size()]));
             }
         }
+    }
+
+    private long getRulesExpireTime(String token) {
+        // If is a new audience, we use the iam rules expire time because always iam has scopes for a token.
+        String iamKey = authorizationRulesRepository.getKeyForAuthorizationRules(token, iamAudience);
+        return TimeUnit.SECONDS.toMillis(authorizationRulesRepository.getTimeToExpire(iamKey));
     }
     
     @Override

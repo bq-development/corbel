@@ -34,4 +34,5 @@ public interface EventsService {
 
     void sendDeviceDeleteEvent(String deviceId, String userId, String domainId);
 
+    void sendUpdateDomainPublicScopesEvent(String domainId);
 }
