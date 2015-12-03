@@ -76,7 +76,7 @@ public class UserResourceTest extends UserResourceTestBase {
     private static final AuthorizationInfo authorizationInfoMock = mock(AuthorizationInfo.class);
     private static final QueryParser queryParserMock = mock(QueryParser.class);
     private static final DeviceService devicesServiceMock = mock(DeviceService.class);
-    private static AggregationResultsFactory aggregationResultsFactory = new AggregationResultsFactory();
+    private static AggregationResultsFactory<JsonElement> aggregationResultsFactory = new JsonAggregationResultsFactory();
 
     @SuppressWarnings("unchecked")
     private static final Authenticator<String, AuthorizationInfo> authenticator = mock(Authenticator.class);

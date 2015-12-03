@@ -45,10 +45,10 @@ import java.util.stream.Collectors;
     private final DomainService domainService;
     private final Clock clock;
     private final DeviceService deviceService;
-    private final AggregationResultsFactory aggregationResultsFactory;
+    private final AggregationResultsFactory<JsonElement> aggregationResultsFactory;
 
     public UserResource(UserService userService, DomainService domainService, IdentityService identityService, DeviceService deviceService,
-                        AggregationResultsFactory aggregationResultsFactory, Clock clock) {
+                        AggregationResultsFactory<JsonElement> aggregationResultsFactory, Clock clock) {
         this.userService = userService;
         this.domainService = domainService;
         this.identityService = identityService;

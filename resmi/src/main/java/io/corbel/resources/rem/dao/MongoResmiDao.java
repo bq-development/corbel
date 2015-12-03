@@ -53,11 +53,11 @@ public class MongoResmiDao implements ResmiDao {
     private final NamespaceNormalizer namespaceNormalizer;
     private final ResmiOrder resmiOrder;
     private final Gson gson;
-    private final AggregationResultsFactory aggregationResultsFactory;
+    private final AggregationResultsFactory<JsonElement> aggregationResultsFactory;
 
     public MongoResmiDao(MongoOperations mongoOperations, JsonObjectMongoWriteConverter jsonObjectMongoWriteConverter,
                          NamespaceNormalizer namespaceNormalizer, ResmiOrder resmiOrder, Gson gson,
-                         AggregationResultsFactory aggregationResultsFactory) {
+                         AggregationResultsFactory<JsonElement> aggregationResultsFactory) {
         this.mongoOperations = mongoOperations;
         this.jsonObjectMongoWriteConverter = jsonObjectMongoWriteConverter;
         this.namespaceNormalizer = namespaceNormalizer;

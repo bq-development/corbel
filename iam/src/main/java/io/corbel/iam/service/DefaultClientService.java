@@ -16,7 +16,7 @@ import io.corbel.lib.queries.request.*;
 
 public class DefaultClientService implements ClientService {
     private ClientRepository clientRepository;
-    private AggregationResultsFactory aggregationResultsFactory;
+    private AggregationResultsFactory<JsonElement> aggregationResultsFactory;
 
     public DefaultClientService(ClientRepository clientRepository, AggregationResultsFactory aggregationResultsFactory) {
         this.clientRepository = clientRepository;

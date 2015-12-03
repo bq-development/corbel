@@ -25,9 +25,9 @@ public class DefaultDomainService implements DomainService {
     private final DomainRepository domainRepository;
     private final ScopeService scopeService;
     private final EventsService eventsService;
-    private final AggregationResultsFactory aggregationResultsFactory;
+    private final AggregationResultsFactory<JsonElement> aggregationResultsFactory;
 
-    public DefaultDomainService(DomainRepository domainRepository, ScopeService scopeService, EventsService eventsService, AggregationResultsFactory aggregationResultsFactory) {
+    public DefaultDomainService(DomainRepository domainRepository, ScopeService scopeService, EventsService eventsService, AggregationResultsFactory<JsonElement> aggregationResultsFactory) {
         this.domainRepository = domainRepository;
         this.scopeService = scopeService;
         this.eventsService = eventsService;

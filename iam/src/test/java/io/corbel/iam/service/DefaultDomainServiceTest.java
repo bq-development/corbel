@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 import io.corbel.lib.queries.request.AggregationResultsFactory;
+import io.corbel.lib.queries.request.JsonAggregationResultsFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -58,7 +59,7 @@ import com.google.common.collect.Sets;
         when(scopeC.getId()).thenReturn(SCOPE_C);
 
 
-        domainService = new DefaultDomainService(domainRepositoryMock, defaultScopeServiceMock, eventsServiceMock, new AggregationResultsFactory());
+        domainService = new DefaultDomainService(domainRepositoryMock, defaultScopeServiceMock, eventsServiceMock, new JsonAggregationResultsFactory());
     }
 
     @Test

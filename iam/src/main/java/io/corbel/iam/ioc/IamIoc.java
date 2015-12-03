@@ -4,9 +4,11 @@ import java.time.Clock;
 import java.util.Arrays;
 import java.util.List;
 
+import com.google.gson.JsonElement;
 import io.corbel.event.DomainPublicScopesNotPublishedEvent;
 import io.corbel.iam.eventbus.DomainPublicScopesNotPublishedEventHandler;
 import io.corbel.lib.queries.request.AggregationResultsFactory;
+import io.corbel.lib.queries.request.JsonAggregationResultsFactory;
 import net.oauth.jsontoken.Checker;
 import net.oauth.jsontoken.JsonTokenParser;
 import net.oauth.jsontoken.crypto.SignatureAlgorithm;
@@ -312,7 +314,7 @@ public class IamIoc {
     }
 
     @Bean
-    public DomainService getDomainService(ScopeService scopeService, EventsService eventsService, AggregationResultsFactory aggregationResultsFactory) {
+    public DomainService getDomainService(ScopeService scopeService, EventsService eventsService, AggregationResultsFactory<JsonElement> aggregationResultsFactory) {
         return new DefaultDomainService(domainRepository, scopeService, eventsService, aggregationResultsFactory);
     }
 
@@ -351,8 +353,8 @@ public class IamIoc {
     }
 
     @Bean
-    public AggregationResultsFactory aggregationResultsFactory(Gson gson){
-        return new AggregationResultsFactory(gson);
+    public AggregationResultsFactory<JsonElement> aggregationResultsFactory(Gson gson){
+        return new JsonAggregationResultsFactory(gson);
     }
 
     private IdGenerator<Client> getClientIdGenerator() {

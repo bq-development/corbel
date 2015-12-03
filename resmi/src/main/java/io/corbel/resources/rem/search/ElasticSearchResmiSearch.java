@@ -30,7 +30,7 @@ public class ElasticSearchResmiSearch implements ResmiSearch {
     private final NamespaceNormalizer namespaceNormalizer;
     private final String indexSettingsPath;
     private final Clock clock;
-    private final AggregationResultsFactory aggregationResultsFactory;
+    private final AggregationResultsFactory<JsonElement> aggregationResultsFactory;
 
     public ElasticSearchResmiSearch(ElasticSearchService elasticeSerachService, NamespaceNormalizer namespaceNormalizer,
             String indexSettingsPath, AggregationResultsFactory aggregationResultsFactory, Clock clock) {

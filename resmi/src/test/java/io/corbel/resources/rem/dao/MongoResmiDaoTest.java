@@ -76,7 +76,7 @@ import com.mongodb.WriteResult;
     @Before
     public void setup() {
         when(defaultNameNormalizer.normalize(anyString())).then(returnsFirstArg());
-        mongoResmiDao = new MongoResmiDao(mongoOperations, jsonObjectMongoWriteConverter, defaultNameNormalizer, resmiOrderMock, gson, new AggregationResultsFactory(gson));
+        mongoResmiDao = new MongoResmiDao(mongoOperations, jsonObjectMongoWriteConverter, defaultNameNormalizer, resmiOrderMock, gson, new JsonAggregationResultsFactory(gson));
     }
 
     @Test
