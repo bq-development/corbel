@@ -1,7 +1,5 @@
 package io.corbel.resources.rem.search;
 
-import io.corbel.lib.queries.request.AggregationResult;
-import io.corbel.lib.queries.request.CountResult;
 import io.corbel.lib.queries.request.Pagination;
 import io.corbel.lib.queries.request.ResourceQuery;
 import io.corbel.lib.queries.request.Sort;
@@ -99,9 +97,9 @@ public class ElasticSearchService {
         return extractResponse(search(index, type, templateName, templateParams, Optional.of(page), Optional.of(size)));
     }
 
-    public AggregationResult count(String index, String type, String templateName, Map<String, Object> templateParams) {
+    public long count(String index, String type, String templateName, Map<String, Object> templateParams) {
         SearchResponse response = search(index, type, templateName, templateParams, Optional.empty(), Optional.empty());
-        return new CountResult(response.getHits().getTotalHits());
+        return response.getHits().getTotalHits();
     }
 
     private SearchResponse search(String index, String type, String templateName, Map<String, Object> templateParams,

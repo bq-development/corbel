@@ -5,6 +5,7 @@ import static org.mockito.Mockito.*;
 
 import java.util.Optional;
 
+import io.corbel.lib.queries.request.AggregationResultsFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -23,6 +24,7 @@ import io.corbel.iam.repository.ClientRepository;
     private static final String TEST_NAME = "testName";
     @Mock private ClientRepository clientRepository;
     private ClientService clientService;
+    private AggregationResultsFactory aggregationResultsFactory = new AggregationResultsFactory();
 
     private static Client getClient() {
         Client client = new Client();
@@ -33,7 +35,7 @@ import io.corbel.iam.repository.ClientRepository;
 
     @Before
     public void setUp() {
-        clientService = new DefaultClientService(clientRepository);
+        clientService = new DefaultClientService(clientRepository, aggregationResultsFactory);
     }
 
     @Test

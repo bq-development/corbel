@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.gson.JsonElement;
 import org.springframework.dao.DataIntegrityViolationException;
 
 import io.corbel.iam.exception.DomainAlreadyExists;
@@ -24,11 +25,13 @@ public class DefaultDomainService implements DomainService {
     private final DomainRepository domainRepository;
     private final ScopeService scopeService;
     private final EventsService eventsService;
+    private final AggregationResultsFactory aggregationResultsFactory;
 
-    public DefaultDomainService(DomainRepository domainRepository, ScopeService scopeService, EventsService eventsService) {
+    public DefaultDomainService(DomainRepository domainRepository, ScopeService scopeService, EventsService eventsService, AggregationResultsFactory aggregationResultsFactory) {
         this.domainRepository = domainRepository;
         this.scopeService = scopeService;
         this.eventsService = eventsService;
+        this.aggregationResultsFactory = aggregationResultsFactory;
     }
 
     @Override
@@ -92,12 +95,12 @@ public class DefaultDomainService implements DomainService {
     }
 
     @Override
-    public AggregationResult getDomainsAggregation(ResourceQuery query, Aggregation aggregation) throws InvalidAggregationException {
+    public JsonElement getDomainsAggregation(ResourceQuery query, Aggregation aggregation) throws InvalidAggregationException {
 
         if (!AggregationOperator.$COUNT.equals(aggregation.getOperator())) {
             throw new InvalidAggregationException();
         }
-        return domainRepository.count(query);
+        return aggregationResultsFactory.countResult(domainRepository.count(query));
     }
 
 }

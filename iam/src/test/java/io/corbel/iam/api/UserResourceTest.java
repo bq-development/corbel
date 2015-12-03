@@ -17,6 +17,9 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.JsonElement;
+import io.corbel.lib.ws.gson.GsonMessageReaderWriterProvider;
 import org.glassfish.jersey.client.ClientProperties;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -73,6 +76,7 @@ public class UserResourceTest extends UserResourceTestBase {
     private static final AuthorizationInfo authorizationInfoMock = mock(AuthorizationInfo.class);
     private static final QueryParser queryParserMock = mock(QueryParser.class);
     private static final DeviceService devicesServiceMock = mock(DeviceService.class);
+    private static AggregationResultsFactory aggregationResultsFactory = new AggregationResultsFactory();
 
     @SuppressWarnings("unchecked")
     private static final Authenticator<String, AuthorizationInfo> authenticator = mock(Authenticator.class);
@@ -82,9 +86,13 @@ public class UserResourceTest extends UserResourceTestBase {
     @SuppressWarnings("unchecked") private static final AuthorizationRequestFilter filter = spy(
             new AuthorizationRequestFilter(oAuthFactory, null, "", false));
 
+
+
+
     @ClassRule public static ResourceTestRule RULE = ResourceTestRule
             .builder()
-            .addResource(new UserResource(userServiceMock, domainServiceMock, identityServiceMock, devicesServiceMock, Clock.systemUTC()))
+            .addProvider(new GsonMessageReaderWriterProvider())
+            .addResource(new UserResource(userServiceMock, domainServiceMock, identityServiceMock, devicesServiceMock, aggregationResultsFactory, Clock.systemUTC()))
             .addProvider(filter)
             .addProvider(new AuthorizationInfoProvider().getBinder())
             .addProvider(
@@ -207,11 +215,10 @@ public class UserResourceTest extends UserResourceTestBase {
         when(queryParserMock.parse(queryString)).thenReturn(targetQuery);
         when(userServiceMock.findUserDomain(TEST_USER_ID)).thenReturn(TEST_DOMAIN_ID);
 
-        CountResult expectedResult = new CountResult();
-        expectedResult.setCount(4);
+        JsonElement expectedResult = aggregationResultsFactory.countResult(4);
         when(aggregationParserMock.parse(aggRequest)).thenReturn(operation);
 
-        when(userServiceMock.countUsersByDomain(eq(TEST_DOMAIN_ID), eq(targetQuery))).thenReturn(expectedResult);
+        when(userServiceMock.countUsersByDomain(eq(TEST_DOMAIN_ID), eq(targetQuery))).thenReturn(4l);
 
         Response response = getTestRule().client().target("/v1.0/user/")
                 .queryParam("api:aggregation", URLEncoder.encode(aggRequest, "UTF-8"))
@@ -219,7 +226,7 @@ public class UserResourceTest extends UserResourceTestBase {
                 .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(Response.class);
 
         assertThat(response.getStatus()).isEqualTo(200);
-        assertThat(response.readEntity(CountResult.class)).isEqualsToByComparingFields(expectedResult);
+        assertThat(response.readEntity(String.class)).isEqualTo(expectedResult.toString());
     }
 
     @Test
@@ -967,11 +974,10 @@ public class UserResourceTest extends UserResourceTestBase {
         when(queryParserMock.parse(queryString)).thenReturn(targetQuery);
         when(userServiceMock.findUserDomain(TEST_USER_ID)).thenReturn(TEST_DOMAIN_ID);
 
-        CountResult expectedResult = new CountResult();
-        expectedResult.setCount(4);
+        JsonElement expectedResult = aggregationResultsFactory.countResult(4l);
         when(aggregationParserMock.parse(aggRequest)).thenReturn(operation);
 
-        when(userServiceMock.countUsersByDomain(eq(TEST_DOMAIN_ID), eq(targetQuery))).thenReturn(expectedResult);
+        when(userServiceMock.countUsersByDomain(eq(TEST_DOMAIN_ID), eq(targetQuery))).thenReturn(4l);
 
         Response response = getTestRule().client().target("/v1.0/user/profile")
                 .queryParam("api:aggregation", URLEncoder.encode(aggRequest, "UTF-8"))
@@ -979,7 +985,7 @@ public class UserResourceTest extends UserResourceTestBase {
                 .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(Response.class);
 
         assertThat(response.getStatus()).isEqualTo(200);
-        assertThat(response.readEntity(CountResult.class)).isEqualsToByComparingFields(expectedResult);
+        assertThat(response.readEntity(String.class)).isEqualTo(expectedResult.toString());
     }
 
     @Test

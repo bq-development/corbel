@@ -1,5 +1,6 @@
 package io.corbel.iam.api;
 
+import com.google.gson.JsonElement;
 import io.corbel.iam.exception.DuplicatedOauthServiceIdentityException;
 import io.corbel.iam.exception.IdentityAlreadyExistsException;
 import io.corbel.iam.exception.UserProfileConfigurationException;
@@ -44,14 +45,16 @@ import java.util.stream.Collectors;
     private final DomainService domainService;
     private final Clock clock;
     private final DeviceService deviceService;
+    private final AggregationResultsFactory aggregationResultsFactory;
 
     public UserResource(UserService userService, DomainService domainService, IdentityService identityService, DeviceService deviceService,
-            Clock clock) {
+                        AggregationResultsFactory aggregationResultsFactory, Clock clock) {
         this.userService = userService;
         this.domainService = domainService;
         this.identityService = identityService;
         this.deviceService = deviceService;
         this.clock = clock;
+        this.aggregationResultsFactory = aggregationResultsFactory;
     }
 
     @GET
@@ -377,7 +380,7 @@ import java.util.stream.Collectors;
             return IamErrorResponseFactory.getInstance().badRequest(
                     new Error("bad_request", "Aggregator" + aggregation.getOperator() + "not supported"));
         }
-        AggregationResult result = userService.countUsersByDomain(domainId, query);
+        JsonElement result = aggregationResultsFactory.countResult(userService.countUsersByDomain(domainId, query));
         return Response.ok().type(MediaType.APPLICATION_JSON).entity(result).build();
     }
 

@@ -12,6 +12,8 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+
+import io.corbel.lib.queries.request.AggregationResultsFactory;
 import io.dropwizard.auth.Authenticator;
 import io.dropwizard.auth.oauth.OAuthFactory;
 import io.dropwizard.testing.junit.ResourceTestRule;
@@ -77,10 +79,11 @@ public class UserResourceDevicesTest extends UserResourceTestBase {
     private static final Authenticator<String, AuthorizationInfo> authenticator = mock(Authenticator.class);
     private static OAuthFactory oAuthFactory = new OAuthFactory<>(authenticator, "realm", AuthorizationInfo.class);
     private static final AuthorizationRequestFilter filter = spy(new AuthorizationRequestFilter(oAuthFactory, null, "",false));
+    private static  AggregationResultsFactory aggregationResultsFactory = new AggregationResultsFactory();
 
     @ClassRule public static ResourceTestRule RULE = ResourceTestRule
             .builder()
-            .addResource(new UserResource(userServiceMock, domainServiceMock, identityServiceMock, devicesServiceMock, Clock.systemUTC()))
+            .addResource(new UserResource(userServiceMock, domainServiceMock, identityServiceMock, devicesServiceMock, aggregationResultsFactory, Clock.systemUTC()))
             .addProvider(filter)
             .addProvider(authorizationInfoProvider.getBinder())
             .addProvider(

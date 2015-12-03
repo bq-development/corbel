@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import io.corbel.lib.queries.StringQueryLiteral;
 import io.corbel.lib.queries.builder.ResourceQueryBuilder;
 import io.corbel.lib.queries.request.Aggregation;
-import io.corbel.lib.queries.request.AggregationResult;
 import io.corbel.lib.queries.request.QueryOperator;
 import io.corbel.lib.queries.request.ResourceQuery;
 import io.corbel.lib.queries.request.Search;
@@ -66,7 +65,7 @@ public class WithSearchResmiService extends DefaultResmiService implements Searc
         }
     }
 
-    private AggregationResult countWithSearchService(ResourceUri resourceUri, CollectionParameters apiParameters)
+    private JsonElement countWithSearchService(ResourceUri resourceUri, CollectionParameters apiParameters)
             throws BadConfigurationException {
         Search searchObject = apiParameters.getSearch().get();
         if (searchObject.getText().isPresent()) {

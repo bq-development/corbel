@@ -4,6 +4,7 @@ import java.security.SecureRandom;
 import java.util.List;
 import java.util.Optional;
 
+import com.google.gson.JsonElement;
 import org.springframework.dao.DataIntegrityViolationException;
 
 import io.corbel.iam.exception.ClientAlreadyExistsException;
@@ -15,9 +16,11 @@ import io.corbel.lib.queries.request.*;
 
 public class DefaultClientService implements ClientService {
     private ClientRepository clientRepository;
+    private AggregationResultsFactory aggregationResultsFactory;
 
-    public DefaultClientService(ClientRepository clientRepository) {
+    public DefaultClientService(ClientRepository clientRepository, AggregationResultsFactory aggregationResultsFactory) {
         this.clientRepository = clientRepository;
+        this.aggregationResultsFactory = aggregationResultsFactory;
     }
 
     @Override
@@ -56,13 +59,13 @@ public class DefaultClientService implements ClientService {
     }
 
     @Override
-    public AggregationResult getClientsAggregation(String domainId, ResourceQuery query, Aggregation aggregation)
+    public JsonElement getClientsAggregation(String domainId, ResourceQuery query, Aggregation aggregation)
             throws InvalidAggregationException {
 
         if (!AggregationOperator.$COUNT.equals(aggregation.getOperator())) {
             throw new InvalidAggregationException();
         }
-        return clientRepository.count(addDomainToQuery(domainId, query));
+        return aggregationResultsFactory.countResult(clientRepository.count(addDomainToQuery(domainId, query)));
 
     }
 

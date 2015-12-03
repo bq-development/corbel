@@ -6,8 +6,6 @@ import static org.mockito.Mockito.when;
 import com.google.gson.JsonElement;
 import io.corbel.lib.queries.request.Aggregation;
 import io.corbel.lib.queries.request.AggregationOperator;
-import io.corbel.lib.queries.request.AverageResult;
-import io.corbel.lib.queries.request.CountResult;
 import io.corbel.lib.queries.request.Pagination;
 import io.corbel.lib.queries.request.ResourceQuery;
 import io.corbel.lib.queries.request.Sort;

@@ -1,6 +1,6 @@
 package io.corbel.resources.rem.search;
 
-import io.corbel.lib.queries.request.AggregationResult;
+import com.google.gson.JsonElement;
 import io.corbel.lib.queries.request.Pagination;
 import io.corbel.lib.queries.request.ResourceQuery;
 import io.corbel.lib.queries.request.Sort;
@@ -21,11 +21,11 @@ public interface ResmiSearch {
     JsonArray search(ResourceUri uri, String search, Optional<List<ResourceQuery>> resourceQueries, Pagination pagination,
             Optional<Sort> sort);
 
-    AggregationResult count(ResourceUri uri, String search, Optional<List<ResourceQuery>> resourceQueries);
+    JsonElement count(ResourceUri uri, String search, Optional<List<ResourceQuery>> resourceQueries);
 
     JsonArray search(ResourceUri resourceUri, String templateName, Map<String, Object> templateParams, int page, int size);
 
-    AggregationResult count(ResourceUri resourceUri, String templateName, Map<String, Object> templateParams);
+    JsonElement count(ResourceUri resourceUri, String templateName, Map<String, Object> templateParams);
 
     void indexDocument(ResourceUri uri, JsonObject fields);
 

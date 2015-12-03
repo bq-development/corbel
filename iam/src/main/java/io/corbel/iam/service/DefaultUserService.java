@@ -8,7 +8,6 @@ import io.corbel.iam.repository.CreateUserException;
 import io.corbel.iam.repository.UserRepository;
 import io.corbel.iam.repository.UserTokenRepository;
 import io.corbel.lib.queries.builder.ResourceQueryBuilder;
-import io.corbel.lib.queries.request.AggregationResult;
 import io.corbel.lib.queries.request.Pagination;
 import io.corbel.lib.queries.request.ResourceQuery;
 import io.corbel.lib.queries.request.Sort;
@@ -198,7 +197,7 @@ public class DefaultUserService implements UserService {
     }
 
     @Override
-    public AggregationResult countUsersByDomain(String domain, ResourceQuery resourceQuery) {
+    public long countUsersByDomain(String domain, ResourceQuery resourceQuery) {
         return userRepository.count(addUserDomainToQuery(domain, resourceQuery));
     }
 

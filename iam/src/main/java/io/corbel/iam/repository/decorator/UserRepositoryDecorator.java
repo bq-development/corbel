@@ -2,7 +2,6 @@ package io.corbel.iam.repository.decorator;
 
 import io.corbel.iam.model.User;
 import io.corbel.iam.repository.UserRepository;
-import io.corbel.lib.queries.request.AggregationResult;
 import io.corbel.lib.queries.request.Pagination;
 import io.corbel.lib.queries.request.ResourceQuery;
 import io.corbel.lib.queries.request.Sort;
@@ -49,7 +48,7 @@ public class UserRepositoryDecorator implements UserRepository {
     }
 
     @Override
-    public AggregationResult count(ResourceQuery resourceQuery) {
+    public long count(ResourceQuery resourceQuery) {
         return decoratedUserRepository.count(resourceQuery);
     }
 

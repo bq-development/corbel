@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -75,7 +76,7 @@ import com.mongodb.WriteResult;
     @Before
     public void setup() {
         when(defaultNameNormalizer.normalize(anyString())).then(returnsFirstArg());
-        mongoResmiDao = new MongoResmiDao(mongoOperations, jsonObjectMongoWriteConverter, defaultNameNormalizer, resmiOrderMock, gson);
+        mongoResmiDao = new MongoResmiDao(mongoOperations, jsonObjectMongoWriteConverter, defaultNameNormalizer, resmiOrderMock, gson, new AggregationResultsFactory(gson));
     }
 
     @Test
@@ -255,8 +256,8 @@ import com.mongodb.WriteResult;
         ArgumentCaptor<Aggregation> argument = ArgumentCaptor.forClass(Aggregation.class);
         query.addQueryNode(new QueryNodeImpl(QueryOperator.$EQ, field, new StringQueryLiteral(value)));
 
-        Mockito.when(mongoOperations.aggregate(argument.capture(), eq(TEST_COLLECTION), eq(AverageResult.class))).thenReturn(
-                new AggregationResults<>(Collections.singletonList(new AverageResult(10)), new BasicDBObject()));
+        Mockito.when(mongoOperations.aggregate(argument.capture(), eq(TEST_COLLECTION), eq(DBObject.class))).thenReturn(
+                new AggregationResults<>(Collections.singletonList(new BasicDBObject("average", 10d)), new BasicDBObject()));
         JsonElement result = mongoResmiDao.average(resourceUri, Collections.singletonList(query), testField);
         assertThat(result.getAsJsonObject().get("average").getAsInt()).isEqualTo(10);
 
@@ -275,8 +276,8 @@ import com.mongodb.WriteResult;
         ResourceUri resourceUri = new ResourceUri(TEST_COLLECTION, TEST_ID, TEST_REL);
 
         ArgumentCaptor<Aggregation> argument = ArgumentCaptor.forClass(Aggregation.class);
-        Mockito.when(mongoOperations.aggregate(argument.capture(), eq(RELATION_COLLECTION_NAME), eq(AverageResult.class))).thenReturn(
-                new AggregationResults<>(Collections.singletonList(new AverageResult(10)), new BasicDBObject()));
+        Mockito.when(mongoOperations.aggregate(argument.capture(), eq(RELATION_COLLECTION_NAME), eq(DBObject.class))).thenReturn(
+                new AggregationResults<>(Collections.singletonList(new BasicDBObject("average", 10d)), new BasicDBObject()));
 
         query.addQueryNode(new QueryNodeImpl(QueryOperator.$EQ, field, new StringQueryLiteral(value)));
 
@@ -301,8 +302,8 @@ import com.mongodb.WriteResult;
         ArgumentCaptor<Aggregation> argument = ArgumentCaptor.forClass(Aggregation.class);
         query.addQueryNode(new QueryNodeImpl(QueryOperator.$EQ, field, new StringQueryLiteral(value)));
 
-        Mockito.when(mongoOperations.aggregate(argument.capture(), eq(TEST_COLLECTION), eq(SumResult.class))).thenReturn(
-                new AggregationResults<>(Collections.singletonList(new SumResult(10)), new BasicDBObject()));
+        Mockito.when(mongoOperations.aggregate(argument.capture(), eq(TEST_COLLECTION), eq(DBObject.class))).thenReturn(
+                new AggregationResults<>(Collections.singletonList(new BasicDBObject("sum", 10d)), new BasicDBObject()));
         JsonElement result = mongoResmiDao.sum(resourceUri, Collections.singletonList(query), testField);
         assertThat(result.getAsJsonObject().get("sum").getAsInt()).isEqualTo(10);
 
@@ -323,8 +324,8 @@ import com.mongodb.WriteResult;
         ArgumentCaptor<Aggregation> argument = ArgumentCaptor.forClass(Aggregation.class);
         query.addQueryNode(new QueryNodeImpl(QueryOperator.$EQ, field, new StringQueryLiteral(value)));
 
-        Mockito.when(mongoOperations.aggregate(argument.capture(), eq(RELATION_COLLECTION_NAME), eq(SumResult.class))).thenReturn(
-                new AggregationResults<>(Collections.singletonList(new SumResult(10)), new BasicDBObject()));
+        Mockito.when(mongoOperations.aggregate(argument.capture(), eq(RELATION_COLLECTION_NAME), eq(DBObject.class))).thenReturn(
+                new AggregationResults<>(Collections.singletonList(new BasicDBObject("sum", 10d)), new BasicDBObject()));
 
         JsonElement result = mongoResmiDao.sum(resourceUri, Collections.singletonList(query), testField);
         assertThat(result.getAsJsonObject().get("sum").getAsInt()).isEqualTo(10);
@@ -347,14 +348,33 @@ import com.mongodb.WriteResult;
         ArgumentCaptor<Aggregation> argument = ArgumentCaptor.forClass(Aggregation.class);
         query.addQueryNode(new QueryNodeImpl(QueryOperator.$EQ, field, new StringQueryLiteral(value)));
 
-        Mockito.when(mongoOperations.aggregate(argument.capture(), eq(TEST_COLLECTION), eq(MaxResult.class))).thenReturn(
-                new AggregationResults<>(Collections.singletonList(new MaxResult(10)), new BasicDBObject()));
+        Mockito.when(mongoOperations.aggregate(argument.capture(), eq(TEST_COLLECTION), eq(DBObject.class))).thenReturn(
+                new AggregationResults<>(Collections.singletonList(new BasicDBObject("max", 10)), new BasicDBObject()));
         JsonElement result = mongoResmiDao.max(resourceUri, Collections.singletonList(query), testField);
         assertThat(result.getAsJsonObject().get("max").getAsInt()).isEqualTo(10);
 
         assertThat(argument.getValue().toString()).isEqualTo(
                 "{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"" + field + "\" : \"" + value
                         + "\"}} , { \"$group\" : { \"_id\" :  null  , \"max\" : { \"$max\" : \"$" + testField + "\"}}}]}");
+    }
+
+
+    @Test
+    public void maxOnEmptyCollectionTest() {
+        ResourceQuery query = new ResourceQuery();
+        String field = "field";
+        String value = "value";
+        String testField = "test";
+
+        ResourceUri resourceUri = new ResourceUri(TEST_COLLECTION);
+
+        ArgumentCaptor<Aggregation> argument = ArgumentCaptor.forClass(Aggregation.class);
+        query.addQueryNode(new QueryNodeImpl(QueryOperator.$EQ, field, new StringQueryLiteral(value)));
+
+        Mockito.when(mongoOperations.aggregate(argument.capture(), eq(TEST_COLLECTION), eq(DBObject.class))).thenReturn(
+                new AggregationResults<>(Collections.emptyList(), new BasicDBObject()));
+        JsonElement result = mongoResmiDao.max(resourceUri, Collections.singletonList(query), testField);
+        assertThat(result.getAsJsonObject().get("max").isJsonNull()).isTrue();
     }
 
     @Test
@@ -369,8 +389,8 @@ import com.mongodb.WriteResult;
         ArgumentCaptor<Aggregation> argument = ArgumentCaptor.forClass(Aggregation.class);
         query.addQueryNode(new QueryNodeImpl(QueryOperator.$EQ, field, new StringQueryLiteral(value)));
 
-        Mockito.when(mongoOperations.aggregate(argument.capture(), eq(RELATION_COLLECTION_NAME), eq(MaxResult.class))).thenReturn(
-                new AggregationResults<>(Collections.singletonList(new MaxResult(10)), new BasicDBObject()));
+        Mockito.when(mongoOperations.aggregate(argument.capture(), eq(RELATION_COLLECTION_NAME), eq(DBObject.class))).thenReturn(
+                new AggregationResults<>(Collections.singletonList(new BasicDBObject("max", 10)), new BasicDBObject()));
 
         JsonElement result = mongoResmiDao.max(resourceUri, Collections.singletonList(query), testField);
         assertThat(result.getAsJsonObject().get("max").getAsInt()).isEqualTo(10);
@@ -393,8 +413,8 @@ import com.mongodb.WriteResult;
         ArgumentCaptor<Aggregation> argument = ArgumentCaptor.forClass(Aggregation.class);
         query.addQueryNode(new QueryNodeImpl(QueryOperator.$EQ, field, new StringQueryLiteral(value)));
 
-        Mockito.when(mongoOperations.aggregate(argument.capture(), eq(TEST_COLLECTION), eq(MinResult.class))).thenReturn(
-                new AggregationResults<>(Collections.singletonList(new MinResult(10)), new BasicDBObject()));
+        Mockito.when(mongoOperations.aggregate(argument.capture(), eq(TEST_COLLECTION), eq(DBObject.class))).thenReturn(
+                new AggregationResults<>(Collections.singletonList(new BasicDBObject("min", 10)), new BasicDBObject()));
         JsonElement result = mongoResmiDao.min(resourceUri, Collections.singletonList(query), testField);
         assertThat(result.getAsJsonObject().get("min").getAsInt()).isEqualTo(10);
 
@@ -415,8 +435,8 @@ import com.mongodb.WriteResult;
         ArgumentCaptor<Aggregation> argument = ArgumentCaptor.forClass(Aggregation.class);
         query.addQueryNode(new QueryNodeImpl(QueryOperator.$EQ, field, new StringQueryLiteral(value)));
 
-        Mockito.when(mongoOperations.aggregate(argument.capture(), eq(RELATION_COLLECTION_NAME), eq(MinResult.class))).thenReturn(
-                new AggregationResults<>(Collections.singletonList(new MinResult(10)), new BasicDBObject()));
+        Mockito.when(mongoOperations.aggregate(argument.capture(), eq(RELATION_COLLECTION_NAME), eq(DBObject.class))).thenReturn(
+                new AggregationResults<>(Collections.singletonList(new BasicDBObject("min", 10)), new BasicDBObject()));
 
         JsonElement result = mongoResmiDao.min(resourceUri, Collections.singletonList(query), testField);
         assertThat(result.getAsJsonObject().get("min").getAsInt()).isEqualTo(10);
@@ -433,8 +453,11 @@ import com.mongodb.WriteResult;
         ObjectMapper mapper = new ObjectMapper(); //needed for parsing json
 
         ArgumentCaptor<Aggregation> argument = ArgumentCaptor.forClass(Aggregation.class);
-        Mockito.when(mongoOperations.aggregate(argument.capture(), eq(TEST_COLLECTION), eq(HistogramResult.HistogramValue.class))).thenReturn(
-                new AggregationResults<>(Collections.singletonList(new HistogramResult.HistogramValue("t", 1)), new BasicDBObject()));
+        BasicDBObject result = new BasicDBObject();
+        result.put("_id", new BasicDBObject(testField, "t"));
+        result.put("count", 1l);
+        Mockito.when(mongoOperations.aggregate(argument.capture(), eq(TEST_COLLECTION), eq(DBObject.class))).thenReturn(
+                new AggregationResults<>(Collections.singletonList(result), new BasicDBObject()));
 
         mongoResmiDao.histogram(new ResourceUri(TEST_COLLECTION), Collections.emptyList(), Optional.<Pagination>empty(), Optional.<Sort>empty(), testField);
 
@@ -465,8 +488,11 @@ import com.mongodb.WriteResult;
         ObjectMapper mapper = new ObjectMapper(); //needed for parsing json
 
         ArgumentCaptor<Aggregation> argument = ArgumentCaptor.forClass(Aggregation.class);
-        Mockito.when(mongoOperations.aggregate(argument.capture(), eq(TEST_COLLECTION), eq(HistogramResult.HistogramValue.class))).thenReturn(
-                new AggregationResults<>(Collections.singletonList(new HistogramResult.HistogramValue("t", 1)), new BasicDBObject()));
+        BasicDBObject result = new BasicDBObject();
+        result.put("_id", new BasicDBObject(testField, "t"));
+        result.put("count", 1l);
+        Mockito.when(mongoOperations.aggregate(argument.capture(), eq(TEST_COLLECTION), eq(DBObject.class))).thenReturn(
+                new AggregationResults<>(Collections.singletonList(result), new BasicDBObject()));
 
         mongoResmiDao.histogram(new ResourceUri(TEST_COLLECTION), Collections.emptyList(), Optional.of(new Pagination(0, n)), Optional.of(new Sort("desc", "count")), testField);
 

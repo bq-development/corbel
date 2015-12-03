@@ -56,7 +56,8 @@ public class ResmiGetRem extends AbstractResmiRem {
         } catch (BadConfigurationException bce) {
             return ErrorResponseFactory.getInstance().badRequest(new Error("bad_request", bce.getMessage()));
         } catch (Exception e) {
-            return ErrorResponseFactory.getInstance().badRequest();
+            LOG.error("Unexpected error", e);
+            return ErrorResponseFactory.getInstance().serverError(e);
         }
     }
 
