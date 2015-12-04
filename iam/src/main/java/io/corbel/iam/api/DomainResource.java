@@ -1,5 +1,6 @@
 package io.corbel.iam.api;
 
+import com.google.gson.JsonElement;
 import io.corbel.iam.exception.ClientAlreadyExistsException;
 import io.corbel.iam.exception.DomainAlreadyExists;
 import io.corbel.iam.exception.InvalidAggregationException;
@@ -11,7 +12,6 @@ import io.corbel.iam.service.DomainService;
 import io.corbel.iam.utils.Message;
 import com.google.common.base.Strings;
 import io.corbel.lib.queries.jaxrs.QueryParameters;
-import io.corbel.lib.queries.request.AggregationResult;
 import io.corbel.lib.queries.request.Pagination;
 import io.corbel.lib.queries.request.ResourceQuery;
 import io.corbel.lib.queries.request.Sort;
@@ -79,7 +79,7 @@ import java.util.Optional;
 
         return queryParameters.getAggregation().map(aggregation -> {
             try {
-                AggregationResult result = domainService.getDomainsAggregation(query, aggregation);
+                JsonElement result = domainService.getDomainsAggregation(query, aggregation);
                 return Response.ok(result).build();
 
             } catch (InvalidAggregationException e) {
@@ -152,7 +152,7 @@ import java.util.Optional;
 
         return queryParameters.getAggregation().map(aggregation -> {
             try {
-                AggregationResult result = clientService.getClientsAggregation(domainId, query, aggregation);
+                JsonElement result = clientService.getClientsAggregation(domainId, query, aggregation);
                 return Response.ok(result).build();
 
             } catch (InvalidAggregationException e) {

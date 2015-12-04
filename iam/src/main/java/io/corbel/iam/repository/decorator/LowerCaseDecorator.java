@@ -36,7 +36,7 @@ public class LowerCaseDecorator extends UserRepositoryDecorator {
     }
 
     @Override
-    public AggregationResult count(ResourceQuery resourceQuery) {
+    public long count(ResourceQuery resourceQuery) {
         emailQueryToLowerCase(resourceQuery);
         return decoratedUserRepository.count(resourceQuery);
     }

@@ -1,10 +1,13 @@
 package io.corbel.resources.rem.resmi.ioc;
 
+import com.google.gson.JsonElement;
 import io.corbel.lib.config.ConfigurationIoC;
 import io.corbel.lib.mongo.IdInjectorMongoEventListener;
 import io.corbel.lib.mongo.JsonObjectMongoReadConverter;
 import io.corbel.lib.mongo.JsonObjectMongoWriteConverter;
 import io.corbel.lib.mongo.config.DefaultMongoConfiguration;
+import io.corbel.lib.queries.request.AggregationResultsFactory;
+import io.corbel.lib.queries.request.JsonAggregationResultsFactory;
 import io.corbel.resources.rem.Rem;
 import io.corbel.resources.rem.dao.DefaultResmiOrder;
 import io.corbel.resources.rem.dao.MongoResmiDao;
@@ -48,8 +51,6 @@ import com.google.gson.Gson;
 @Configuration// Import configuration mechanism
 @Import({ConfigurationIoC.class, DefaultElasticSearchConfiguration.class}) public class ResmiIoc extends DefaultMongoConfiguration {
 
-    @Value("${resmi.elasticsearch.enabled:true}") private boolean elasticSearchEnabled;
-
     @Value("${resmi.elasticsearch.index.settings:/elasticsearch/index.settings}") private String elasticSearchIndexSettings;
 
     @Autowired private Environment env;
@@ -62,9 +63,9 @@ import com.google.gson.Gson;
     @Autowired private ApplicationContext applicationContext;
 
     @Bean
-    public ResmiDao getMongoResmiDao() throws Exception {
+    public ResmiDao mongoResmiDao(AggregationResultsFactory<JsonElement> aggregationResultsFactory) throws Exception {
         return new MongoResmiDao(mongoTemplate(), getJsonObjectMongoWriteConverter(), getNamespaceNormilizer(), getMongoResmiOrder(),
-                getGson());
+                getGson(), aggregationResultsFactory);
     }
 
     @Bean
@@ -73,23 +74,23 @@ import com.google.gson.Gson;
     }
 
     @Bean(name = ResmiRemNames.RESMI_GET)
-    public Rem getResmiGetRem() throws Exception {
-        return new ResmiGetRem(getResmiService());
+    public Rem getResmiGetRem(ResmiService resmiService) throws Exception {
+        return new ResmiGetRem(resmiService);
     }
 
     @Bean(name = ResmiRemNames.RESMI_POST)
-    public Rem getResmiPostRem() throws Exception {
-        return new ResmiPostRem(getResmiService());
+    public Rem getResmiPostRem(ResmiService resmiService) throws Exception {
+        return new ResmiPostRem(resmiService);
     }
 
     @Bean(name = ResmiRemNames.RESMI_PUT)
-    public Rem getResmiPutRem() throws Exception {
-        return new ResmiPutRem(getResmiService());
+    public Rem getResmiPutRem(ResmiService resmiService) throws Exception {
+        return new ResmiPutRem(resmiService);
     }
 
     @Bean(name = ResmiRemNames.RESMI_DELETE)
-    public Rem getResmiDeleteRem() throws Exception {
-        return new ResmiDeleteRem(getResmiService());
+    public Rem getResmiDeleteRem(ResmiService resmiService) throws Exception {
+        return new ResmiDeleteRem(resmiService);
     }
 
     @Bean
@@ -118,11 +119,11 @@ import com.google.gson.Gson;
     }
 
     @Bean
-    public ResmiService getResmiService() throws Exception {
+    public ResmiService resmiService(@Value("${resmi.elasticsearch.enabled:true}") boolean elasticSearchEnabled, AggregationResultsFactory<JsonElement> aggregationResultsFactory, ResmiDao resmiDao) throws Exception {
         if (elasticSearchEnabled) {
-            return new WithSearchResmiService(getMongoResmiDao(), getResmiSearch(), getSearchableFieldsRegistry(), getGson(), getClock());
+            return new WithSearchResmiService(resmiDao, resmiSearch(aggregationResultsFactory), getSearchableFieldsRegistry(), getGson(), getClock());
         } else {
-            return new DefaultResmiService(getMongoResmiDao(), getClock());
+            return new DefaultResmiService(resmiDao, getClock());
         }
     }
 
@@ -139,14 +140,19 @@ import com.google.gson.Gson;
 
     @Bean
     @Lazy
-    public ResmiSearch getResmiSearch() {
-        return new ElasticSearchResmiSearch(getElasticeSearchService(), getNamespaceNormilizer(), elasticSearchIndexSettings, getClock());
+    public ResmiSearch resmiSearch(AggregationResultsFactory<JsonElement> aggregationResultsFactory) {
+        return new ElasticSearchResmiSearch(getElasticeSearchService(), getNamespaceNormilizer(), elasticSearchIndexSettings, aggregationResultsFactory, getClock());
     }
 
     @Bean
     @Lazy
     public ElasticSearchService getElasticeSearchService() {
         return new ElasticSearchService(applicationContext.getBean(Client.class), getGson());
+    }
+
+    @Bean
+    public AggregationResultsFactory<JsonElement> aggregationResultsFactory(Gson gson) {
+        return new JsonAggregationResultsFactory(gson);
     }
 
     @Bean

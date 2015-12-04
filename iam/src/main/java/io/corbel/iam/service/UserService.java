@@ -4,7 +4,6 @@ import io.corbel.iam.exception.UserProfileConfigurationException;
 import io.corbel.iam.model.Domain;
 import io.corbel.iam.model.User;
 import io.corbel.iam.repository.CreateUserException;
-import io.corbel.lib.queries.request.AggregationResult;
 import io.corbel.lib.queries.request.Pagination;
 import io.corbel.lib.queries.request.ResourceQuery;
 import io.corbel.lib.queries.request.Sort;
@@ -56,5 +55,5 @@ public interface UserService {
 
     void removeScopes(String userId, String... scopes);
 
-    AggregationResult countUsersByDomain(String domainId, ResourceQuery query);
+    long countUsersByDomain(String domainId, ResourceQuery query);
 }

@@ -1,7 +1,7 @@
 package io.corbel.resources.rem.search;
 
-import io.corbel.lib.queries.request.AggregationResult;
-import io.corbel.lib.queries.request.CountResult;
+import com.google.gson.JsonElement;
+import io.corbel.lib.queries.request.AggregationResultsFactory;
 import io.corbel.lib.queries.request.Pagination;
 import io.corbel.lib.queries.request.ResourceQuery;
 import io.corbel.lib.queries.request.Sort;
@@ -30,13 +30,15 @@ public class ElasticSearchResmiSearch implements ResmiSearch {
     private final NamespaceNormalizer namespaceNormalizer;
     private final String indexSettingsPath;
     private final Clock clock;
+    private final AggregationResultsFactory<JsonElement> aggregationResultsFactory;
 
     public ElasticSearchResmiSearch(ElasticSearchService elasticeSerachService, NamespaceNormalizer namespaceNormalizer,
-            String indexSettingsPath, Clock clock) {
+            String indexSettingsPath, AggregationResultsFactory aggregationResultsFactory, Clock clock) {
         this.elasticSearchService = elasticeSerachService;
         this.namespaceNormalizer = namespaceNormalizer;
         this.clock = clock;
         this.indexSettingsPath = indexSettingsPath;
+        this.aggregationResultsFactory = aggregationResultsFactory;
     }
 
     @Override
@@ -69,12 +71,12 @@ public class ElasticSearchResmiSearch implements ResmiSearch {
     }
 
     @Override
-    public AggregationResult count(ResourceUri uri, String templateName, Map<String, Object> templateParams) {
+    public JsonElement count(ResourceUri uri, String templateName, Map<String, Object> templateParams) {
         String elasticSearchType = getElasticSearchType(uri);
         if (upsertResmiIndex(elasticSearchType)) {
-            return elasticSearchService.count(RESMI_INDEX_PREFIX + elasticSearchType, elasticSearchType, templateName, templateParams);
+            return aggregationResultsFactory.countResult(elasticSearchService.count(RESMI_INDEX_PREFIX + elasticSearchType, elasticSearchType, templateName, templateParams));
         } else {
-            return new CountResult(0);
+           return aggregationResultsFactory.countResult(0);
         }
     }
 
@@ -91,13 +93,13 @@ public class ElasticSearchResmiSearch implements ResmiSearch {
     }
 
     @Override
-    public AggregationResult count(ResourceUri uri, String search, Optional<List<ResourceQuery>> queries) {
+    public JsonElement count(ResourceUri uri, String search, Optional<List<ResourceQuery>> queries) {
         String elasticSearchType = getElasticSearchType(uri);
         if (upsertResmiIndex(elasticSearchType)) {
-            return new CountResult(elasticSearchService.count(RESMI_INDEX_PREFIX + elasticSearchType, elasticSearchType, search,
+            return aggregationResultsFactory.countResult(elasticSearchService.count(RESMI_INDEX_PREFIX + elasticSearchType, elasticSearchType, search,
                     queries.orElse(Collections.emptyList())));
         } else {
-            return new CountResult(0);
+            return aggregationResultsFactory.countResult(0);
         }
     }
 

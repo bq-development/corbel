@@ -3,6 +3,7 @@ package io.corbel.iam.service;
 import java.util.List;
 import java.util.Optional;
 
+import com.google.gson.JsonElement;
 import io.corbel.iam.exception.ClientAlreadyExistsException;
 import io.corbel.iam.exception.InvalidAggregationException;
 import io.corbel.iam.model.Client;
@@ -19,6 +20,6 @@ public interface ClientService {
 
     List<Client> findClientsByDomain(String domainId, ResourceQuery query, Pagination pagination, Sort sort);
 
-    AggregationResult getClientsAggregation(String domainId, ResourceQuery query, Aggregation aggregation)
+    JsonElement getClientsAggregation(String domainId, ResourceQuery query, Aggregation aggregation)
             throws InvalidAggregationException;
 }
