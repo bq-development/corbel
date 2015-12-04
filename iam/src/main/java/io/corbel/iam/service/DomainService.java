@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import com.google.gson.JsonElement;
 import io.corbel.iam.exception.DomainAlreadyExists;
 import io.corbel.iam.exception.InvalidAggregationException;
 import io.corbel.iam.model.Domain;
@@ -38,6 +39,6 @@ public interface DomainService {
 
     List<Domain> getAll(ResourceQuery resourceQuery, Pagination pagination, Sort sort);
 
-    AggregationResult getDomainsAggregation(ResourceQuery query, Aggregation aggregation) throws InvalidAggregationException;
+    JsonElement getDomainsAggregation(ResourceQuery query, Aggregation aggregation) throws InvalidAggregationException;
 
 }

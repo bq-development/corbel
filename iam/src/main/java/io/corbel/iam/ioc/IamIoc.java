@@ -4,8 +4,11 @@ import java.time.Clock;
 import java.util.Arrays;
 import java.util.List;
 
+import com.google.gson.JsonElement;
 import io.corbel.event.DomainPublicScopesNotPublishedEvent;
 import io.corbel.iam.eventbus.DomainPublicScopesNotPublishedEventHandler;
+import io.corbel.lib.queries.request.AggregationResultsFactory;
+import io.corbel.lib.queries.request.JsonAggregationResultsFactory;
 import net.oauth.jsontoken.Checker;
 import net.oauth.jsontoken.JsonTokenParser;
 import net.oauth.jsontoken.crypto.SignatureAlgorithm;
@@ -153,8 +156,8 @@ public class IamIoc {
 
     @Bean
     public UserResource getUserResource(UserService userService, DomainService domainService, IdentityService identityService,
-                                        DeviceService deviceService) {
-        return new UserResource(userService, domainService, identityService, deviceService, Clock.systemUTC());
+                                        DeviceService deviceService, AggregationResultsFactory aggregationResultsFactory) {
+        return new UserResource(userService, domainService, identityService, deviceService, aggregationResultsFactory, Clock.systemUTC());
     }
 
     @Bean
@@ -183,8 +186,8 @@ public class IamIoc {
     }
 
     @Bean
-    public ClientService getClientService(ClientRepository clientRepository) {
-        return new DefaultClientService(clientRepository);
+    public ClientService getClientService(ClientRepository clientRepository, AggregationResultsFactory aggregationResultsFactory) {
+        return new DefaultClientService(clientRepository, aggregationResultsFactory);
     }
 
     @Bean
@@ -312,8 +315,8 @@ public class IamIoc {
     }
 
     @Bean
-    public DomainService getDomainService(ScopeService scopeService, EventsService eventsService) {
-        return new DefaultDomainService(domainRepository, scopeService, eventsService);
+    public DomainService getDomainService(ScopeService scopeService, EventsService eventsService, AggregationResultsFactory<JsonElement> aggregationResultsFactory) {
+        return new DefaultDomainService(domainRepository, scopeService, eventsService, aggregationResultsFactory);
     }
 
     @Bean
@@ -348,6 +351,11 @@ public class IamIoc {
     @Bean
     public Gson getGson() {
         return new Gson();
+    }
+
+    @Bean
+    public AggregationResultsFactory<JsonElement> aggregationResultsFactory(Gson gson){
+        return new JsonAggregationResultsFactory(gson);
     }
 
     private IdGenerator<Client> getClientIdGenerator() {

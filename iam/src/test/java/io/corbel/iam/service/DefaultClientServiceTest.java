@@ -5,6 +5,9 @@ import static org.mockito.Mockito.*;
 
 import java.util.Optional;
 
+import com.google.gson.JsonElement;
+import io.corbel.lib.queries.request.AggregationResultsFactory;
+import io.corbel.lib.queries.request.JsonAggregationResultsFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -23,6 +26,7 @@ import io.corbel.iam.repository.ClientRepository;
     private static final String TEST_NAME = "testName";
     @Mock private ClientRepository clientRepository;
     private ClientService clientService;
+    private AggregationResultsFactory<JsonElement> aggregationResultsFactory = new JsonAggregationResultsFactory();
 
     private static Client getClient() {
         Client client = new Client();
@@ -33,7 +37,7 @@ import io.corbel.iam.repository.ClientRepository;
 
     @Before
     public void setUp() {
-        clientService = new DefaultClientService(clientRepository);
+        clientService = new DefaultClientService(clientRepository, aggregationResultsFactory);
     }
 
     @Test
