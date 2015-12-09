@@ -63,7 +63,6 @@ public class FacebookProviderTest {
             if (testUser.path("id").asText().equals(idTestUser)) {
                 tokenTestUser = testUser.path("access_token").asText();
             }
-
         }
     }
 

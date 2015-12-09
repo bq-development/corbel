@@ -112,10 +112,11 @@
             	</exclusion>
             </exclusions>
         </dependency>
+		<!-- Temporal dependency until Facebook solve the breaking change in spring-social-facebook library -->
         <dependency>
-            <groupId>org.springframework.social</groupId>
-            <artifactId>spring-social-facebook</artifactId>
-            <version>2.0.1.RELEASE</version>
+			<groupId>com.github.corbel-platform</groupId>
+			<artifactId>spring-social-facebook</artifactId>
+			<version>2.0.2.RELEASE-temporal</version>
             <exclusions>
             	<exclusion>
             		<artifactId>jackson-core</artifactId>
@@ -221,4 +222,13 @@
 			</plugin>
 		</plugins>
 	</build>
+
+	<!-- Temporal repository until Facebook solve the breaking change in spring-social-facebook library -->
+	<repositories>
+		<repository>
+			<id>jitpack.io</id>
+			<url>https://jitpack.io</url>
+		</repository>
+	</repositories>
+
 </project>

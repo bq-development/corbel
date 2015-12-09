@@ -23,7 +23,8 @@ public interface DomainService {
      * 
      * This method is null safe, if the specified scopes are null or empty the result is always true.
      * 
-     * 
+     * @param scopes Scopes to check.
+     * @param domain Domain to check.
      * @return true if scopes are allowed.
      * @throws IllegalArgumentException if the specified domainId does not correspond to an existing domain.
      */

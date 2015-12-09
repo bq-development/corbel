@@ -52,4 +52,5 @@ public class IamRunner extends ServiceRunnerWithVersionResource<IamIoc> {
         environment.healthChecks().register("redis", context.getBean(AuthorizationRedisHealthCheck.class));
         environment.healthChecks().register("mongo", context.getBean(MongoHealthCheck.class));
     }
+
 }
