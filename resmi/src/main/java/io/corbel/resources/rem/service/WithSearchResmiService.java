@@ -1,6 +1,5 @@
 package io.corbel.resources.rem.service;
 
-import com.google.gson.Gson;
 import io.corbel.lib.queries.StringQueryLiteral;
 import io.corbel.lib.queries.builder.ResourceQueryBuilder;
 import io.corbel.lib.queries.request.Aggregation;
@@ -20,8 +19,13 @@ import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
 import io.corbel.resources.rem.search.ResmiSearch;
 
 import java.time.Clock;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -38,7 +42,8 @@ public class WithSearchResmiService extends DefaultResmiService implements Searc
     private final SearchableFieldsRegistry searchableFieldsRegistry;
     private final Gson gson;
 
-    public WithSearchResmiService(ResmiDao resmiDao, ResmiSearch search, SearchableFieldsRegistry searchableFieldsRegistry, Gson gson, Clock clock) {
+    public WithSearchResmiService(ResmiDao resmiDao, ResmiSearch search, SearchableFieldsRegistry searchableFieldsRegistry, Gson gson,
+            Clock clock) {
         super(resmiDao, clock);
         this.search = search;
         this.searchableFieldsRegistry = searchableFieldsRegistry;
@@ -51,7 +56,8 @@ public class WithSearchResmiService extends DefaultResmiService implements Searc
     }
 
     @Override
-    public JsonElement aggregate(ResourceUri resourceUri, CollectionParameters apiParameters) throws BadConfigurationException, MongoAggregationException {
+    public JsonElement aggregate(ResourceUri resourceUri, CollectionParameters apiParameters) throws BadConfigurationException,
+            MongoAggregationException {
         Aggregation operation = apiParameters.getAggregation().get();
         switch (operation.getOperator()) {
             case $COUNT:
@@ -69,9 +75,17 @@ public class WithSearchResmiService extends DefaultResmiService implements Searc
             throws BadConfigurationException {
         Search searchObject = apiParameters.getSearch().get();
         if (searchObject.getText().isPresent()) {
-            return search.count(resourceUri, searchObject.getText().get(), apiParameters.getQueries());
+            List<ResourceQuery> queries = apiParameters.getQueries().orElseGet(ArrayList::new);
+            addRelationQuery(resourceUri, queries);
+            return search.count(resourceUri, searchObject.getText().get(), queries);
         } else {
             return search.count(resourceUri, searchObject.getTemplate().get(), searchObject.getParams().get());
+        }
+    }
+
+    private void addRelationQuery(ResourceUri resourceUri, List<ResourceQuery> queries) {
+        if (resourceUri.isRelation() && !resourceUri.isRelationWildcard()) {
+            queries.add(new ResourceQueryBuilder().add(_SRC_ID, resourceUri.getTypeId()).build());
         }
     }
 
@@ -88,8 +102,10 @@ public class WithSearchResmiService extends DefaultResmiService implements Searc
         Search searchObject = apiParameters.getSearch().get();
         JsonArray searchResult;
         if (searchObject.getText().isPresent()) {
-            searchResult = search.search(resourceUri, searchObject.getText().get(), apiParameters.getQueries(),
-                    apiParameters.getPagination(), apiParameters.getSort());
+            List<ResourceQuery> queries = apiParameters.getQueries().orElseGet(ArrayList::new);
+            addRelationQuery(resourceUri, queries);
+            searchResult = search.search(resourceUri, searchObject.getText().get(), queries, apiParameters.getPagination(),
+                    apiParameters.getSort());
         } else {
             searchResult = search.search(resourceUri, searchObject.getTemplate().get(), searchObject.getParams().get(), apiParameters
                     .getPagination().getPage(), apiParameters.getPagination().getPageSize());
@@ -109,8 +125,8 @@ public class WithSearchResmiService extends DefaultResmiService implements Searc
             ids.add(new StringQueryLiteral(((JsonObject) element).get(ID).getAsString()));
         }
         ResourceQueryBuilder builder = new ResourceQueryBuilder().add(ID, ids, QueryOperator.$IN);
-        return new CollectionParametersImpl(apiParameters.getPagination(), apiParameters.getSort(),
-                Optional.of(Collections.singletonList(builder.build())), Optional.empty(), Optional.empty(), Optional.empty());
+        return new CollectionParametersImpl(apiParameters.getPagination(), apiParameters.getSort(), Optional.of(Collections
+                .singletonList(builder.build())), Optional.empty(), Optional.empty(), Optional.empty());
     }
 
     @Override
@@ -160,6 +176,7 @@ public class WithSearchResmiService extends DefaultResmiService implements Searc
         if (fields.contains(ALL_FIELDS)) {
             return jsonObject;
         }
+        fields.add(_SRC_ID);
         JsonObject searchableJsonObject = new JsonObject();
         fields.stream().filter(jsonObject::has).forEach(field -> searchableJsonObject.add(field, jsonObject.get(field)));
         return searchableJsonObject;
@@ -168,6 +185,7 @@ public class WithSearchResmiService extends DefaultResmiService implements Searc
     @Override
     public JsonObject createRelation(ResourceUri uri, JsonObject requestEntity) throws NotFoundException, StartsWithUnderscoreException {
         requestEntity = super.createRelation(uri, requestEntity);
+        requestEntity.addProperty(_SRC_ID, uri.getTypeId());
         indexInSearchService(uri, requestEntity);
         return requestEntity;
     }

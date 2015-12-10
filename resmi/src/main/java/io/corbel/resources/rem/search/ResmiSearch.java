@@ -1,6 +1,5 @@
 package io.corbel.resources.rem.search;
 
-import com.google.gson.JsonElement;
 import io.corbel.lib.queries.request.Pagination;
 import io.corbel.lib.queries.request.ResourceQuery;
 import io.corbel.lib.queries.request.Sort;
@@ -11,6 +10,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 /**
@@ -18,10 +18,9 @@ import com.google.gson.JsonObject;
  */
 public interface ResmiSearch {
 
-    JsonArray search(ResourceUri uri, String search, Optional<List<ResourceQuery>> resourceQueries, Pagination pagination,
-            Optional<Sort> sort);
+    JsonArray search(ResourceUri uri, String search, List<ResourceQuery> resourceQueries, Pagination pagination, Optional<Sort> sort);
 
-    JsonElement count(ResourceUri uri, String search, Optional<List<ResourceQuery>> resourceQueries);
+    JsonElement count(ResourceUri uri, String search, List<ResourceQuery> resourceQueries);
 
     JsonArray search(ResourceUri resourceUri, String templateName, Map<String, Object> templateParams, int page, int size);
 
@@ -33,5 +32,5 @@ public interface ResmiSearch {
 
     boolean upsertResmiIndex(String name);
 
-    boolean upsertResmiIndex(String name, String settings);
+    boolean upsertResmiIndex(String name, String settings, String defaultMapping);
 }

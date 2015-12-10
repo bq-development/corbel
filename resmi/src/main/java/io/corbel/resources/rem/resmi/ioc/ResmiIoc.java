@@ -1,6 +1,5 @@
 package io.corbel.resources.rem.resmi.ioc;
 
-import com.google.gson.JsonElement;
 import io.corbel.lib.config.ConfigurationIoC;
 import io.corbel.lib.mongo.IdInjectorMongoEventListener;
 import io.corbel.lib.mongo.JsonObjectMongoReadConverter;
@@ -44,6 +43,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.data.mongodb.core.convert.CustomConversions;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 
 /**
  * @author Cristian del Cerro
@@ -52,6 +52,7 @@ import com.google.gson.Gson;
 @Import({ConfigurationIoC.class, DefaultElasticSearchConfiguration.class}) public class ResmiIoc extends DefaultMongoConfiguration {
 
     @Value("${resmi.elasticsearch.index.settings:/elasticsearch/index.settings}") private String elasticSearchIndexSettings;
+    @Value("${resmi.elasticsearch.defaultMapping.settings:/elasticsearch/defaultMapping.settings}") private String elasticSearchDefaultMappingSettings;
 
     @Autowired private Environment env;
 
@@ -119,9 +120,11 @@ import com.google.gson.Gson;
     }
 
     @Bean
-    public ResmiService resmiService(@Value("${resmi.elasticsearch.enabled:true}") boolean elasticSearchEnabled, AggregationResultsFactory<JsonElement> aggregationResultsFactory, ResmiDao resmiDao) throws Exception {
+    public ResmiService resmiService(@Value("${resmi.elasticsearch.enabled:true}") boolean elasticSearchEnabled,
+            AggregationResultsFactory<JsonElement> aggregationResultsFactory, ResmiDao resmiDao) throws Exception {
         if (elasticSearchEnabled) {
-            return new WithSearchResmiService(resmiDao, resmiSearch(aggregationResultsFactory), getSearchableFieldsRegistry(), getGson(), getClock());
+            return new WithSearchResmiService(resmiDao, resmiSearch(aggregationResultsFactory), getSearchableFieldsRegistry(), getGson(),
+                    getClock());
         } else {
             return new DefaultResmiService(resmiDao, getClock());
         }
@@ -141,7 +144,8 @@ import com.google.gson.Gson;
     @Bean
     @Lazy
     public ResmiSearch resmiSearch(AggregationResultsFactory<JsonElement> aggregationResultsFactory) {
-        return new ElasticSearchResmiSearch(getElasticeSearchService(), getNamespaceNormilizer(), elasticSearchIndexSettings, aggregationResultsFactory, getClock());
+        return new ElasticSearchResmiSearch(getElasticeSearchService(), getNamespaceNormilizer(), elasticSearchIndexSettings,
+                aggregationResultsFactory, getClock(), elasticSearchDefaultMappingSettings);
     }
 
     @Bean

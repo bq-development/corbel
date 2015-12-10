@@ -1,6 +1,5 @@
 package io.corbel.resources.rem.search;
 
-import com.google.gson.JsonElement;
 import io.corbel.lib.queries.request.AggregationResultsFactory;
 import io.corbel.lib.queries.request.Pagination;
 import io.corbel.lib.queries.request.ResourceQuery;
@@ -9,13 +8,13 @@ import io.corbel.resources.rem.dao.NamespaceNormalizer;
 import io.corbel.resources.rem.model.ResourceUri;
 
 import java.time.Clock;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Scanner;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
@@ -24,6 +23,7 @@ import com.google.gson.JsonPrimitive;
  */
 public class ElasticSearchResmiSearch implements ResmiSearch {
 
+    private static final String ELASTICSEARCH_DEFAULT_MAPPING = "_default_";
     public static final String RESMI_INDEX_PREFIX = "resmi_";
     private static final String EMPTY_STRING = "";
     private final ElasticSearchService elasticSearchService;
@@ -31,29 +31,34 @@ public class ElasticSearchResmiSearch implements ResmiSearch {
     private final String indexSettingsPath;
     private final Clock clock;
     private final AggregationResultsFactory<JsonElement> aggregationResultsFactory;
+    private final String defaultMappingSettingsPath;
 
+    @SuppressWarnings("rawtypes")
     public ElasticSearchResmiSearch(ElasticSearchService elasticeSerachService, NamespaceNormalizer namespaceNormalizer,
-            String indexSettingsPath, AggregationResultsFactory aggregationResultsFactory, Clock clock) {
+            String indexSettingsPath, AggregationResultsFactory aggregationResultsFactory, Clock clock, String defaultMappingSettingsPath) {
         this.elasticSearchService = elasticeSerachService;
         this.namespaceNormalizer = namespaceNormalizer;
         this.clock = clock;
         this.indexSettingsPath = indexSettingsPath;
         this.aggregationResultsFactory = aggregationResultsFactory;
+        this.defaultMappingSettingsPath = defaultMappingSettingsPath;
     }
 
     @Override
     public boolean upsertResmiIndex(String name) {
-        return upsertResmiIndex(name, indexSettingsPath);
+        return upsertResmiIndex(name, indexSettingsPath, defaultMappingSettingsPath);
     }
 
     @Override
-    public boolean upsertResmiIndex(String name, String settings) {
+    public boolean upsertResmiIndex(String name, String settings, String defaultMapping) {
         String finalAliasName = RESMI_INDEX_PREFIX + name;
         if (!elasticSearchService.indexExists(finalAliasName)) {
             String indexName = RESMI_INDEX_PREFIX + (name + clock.millis()).toLowerCase();
             elasticSearchService.createIndex(indexName, new Scanner(getClass().getResourceAsStream(settings), "UTF-8").useDelimiter("\\A")
                     .next());
             elasticSearchService.addAlias(indexName, finalAliasName);
+            elasticSearchService.setupMapping(indexName, ELASTICSEARCH_DEFAULT_MAPPING,
+                    new Scanner(getClass().getResourceAsStream(defaultMapping), "UTF-8").useDelimiter("\\A").next());
             return false;
         }
         return true;
@@ -74,30 +79,30 @@ public class ElasticSearchResmiSearch implements ResmiSearch {
     public JsonElement count(ResourceUri uri, String templateName, Map<String, Object> templateParams) {
         String elasticSearchType = getElasticSearchType(uri);
         if (upsertResmiIndex(elasticSearchType)) {
-            return aggregationResultsFactory.countResult(elasticSearchService.count(RESMI_INDEX_PREFIX + elasticSearchType, elasticSearchType, templateName, templateParams));
+            return aggregationResultsFactory.countResult(elasticSearchService.count(RESMI_INDEX_PREFIX + elasticSearchType,
+                    elasticSearchType, templateName, templateParams));
         } else {
-           return aggregationResultsFactory.countResult(0);
+            return aggregationResultsFactory.countResult(0);
         }
     }
 
     @Override
-    public JsonArray search(ResourceUri uri, String search, Optional<List<ResourceQuery>> queries, Pagination pagination,
-            Optional<Sort> sort) {
+    public JsonArray search(ResourceUri uri, String search, List<ResourceQuery> queries, Pagination pagination, Optional<Sort> sort) {
         String elasticSearchType = getElasticSearchType(uri);
         if (upsertResmiIndex(elasticSearchType)) {
-            return elasticSearchService.search(RESMI_INDEX_PREFIX + elasticSearchType, elasticSearchType, search,
-                    queries.orElseGet(Collections::emptyList), pagination, sort);
+            return elasticSearchService
+                    .search(RESMI_INDEX_PREFIX + elasticSearchType, elasticSearchType, search, queries, pagination, sort);
         } else {
             return new JsonArray();
         }
     }
 
     @Override
-    public JsonElement count(ResourceUri uri, String search, Optional<List<ResourceQuery>> queries) {
+    public JsonElement count(ResourceUri uri, String search, List<ResourceQuery> queries) {
         String elasticSearchType = getElasticSearchType(uri);
         if (upsertResmiIndex(elasticSearchType)) {
-            return aggregationResultsFactory.countResult(elasticSearchService.count(RESMI_INDEX_PREFIX + elasticSearchType, elasticSearchType, search,
-                    queries.orElse(Collections.emptyList())));
+            return aggregationResultsFactory.countResult(elasticSearchService.count(RESMI_INDEX_PREFIX + elasticSearchType,
+                    elasticSearchType, search, queries));
         } else {
             return aggregationResultsFactory.countResult(0);
         }

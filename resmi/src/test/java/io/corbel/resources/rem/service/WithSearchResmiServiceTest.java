@@ -7,8 +7,6 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import com.google.gson.Gson;
 import io.corbel.lib.queries.request.Pagination;
 import io.corbel.lib.queries.request.ResourceQuery;
 import io.corbel.lib.queries.request.Search;
@@ -18,6 +16,7 @@ import io.corbel.resources.rem.dao.ResmiDao;
 import io.corbel.resources.rem.model.ResourceUri;
 import io.corbel.resources.rem.request.CollectionParameters;
 import io.corbel.resources.rem.request.RelationParameters;
+import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
 import io.corbel.resources.rem.search.ResmiSearch;
 
 import java.time.Clock;
@@ -29,10 +28,13 @@ import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 /**
  * @author Francisco Sanchez
@@ -41,6 +43,7 @@ import com.google.gson.JsonArray;
 
     String TYPE = "resource:TYPE";
     ResourceUri RESOURCE_URI = new ResourceUri(TYPE);
+    String RELATION = "resource:RELATION";
     String ID = "test";
     int PAGE = 2;
     int SIZE = 4;
@@ -64,7 +67,6 @@ import com.google.gson.JsonArray;
         defaultResmiService = new WithSearchResmiService(resmiDao, resmiSearch, searchableFieldRegistry, gson, Clock.systemUTC());
         when(relationParametersMock.getAggregation()).thenReturn(Optional.empty());
         when(relationParametersMock.getQueries()).thenReturn(Optional.ofNullable(resourceQueriesMock));
-        when(relationParametersMock.getQueries()).thenReturn(Optional.ofNullable(resourceQueriesMock));
         when(relationParametersMock.getSearch()).thenReturn(Optional.ofNullable(resourceSearchMock));
         when(relationParametersMock.getPagination()).thenReturn(paginationMock);
         when(relationParametersMock.getSort()).thenReturn(Optional.ofNullable(sortMock));
@@ -83,9 +85,8 @@ import com.google.gson.JsonArray;
         when(resourceSearchMock.getText()).thenReturn(search);
         when(resourceSearchMock.getParams()).thenReturn(Optional.empty());
         when(searchableFieldRegistry.getFieldsFromResourceUri(eq(RESOURCE_URI))).thenReturn(new HashSet(Arrays.asList("t1", "t2")));
-        when(
-                resmiSearch.search(eq(RESOURCE_URI), eq(search.get()), eq(Optional.of(resourceQueriesMock)), eq(paginationMock),
-                        eq(Optional.of(sortMock)))).thenReturn(fakeResult);
+        when(resmiSearch.search(eq(RESOURCE_URI), eq(search.get()), eq(resourceQueriesMock), eq(paginationMock), eq(Optional.of(sortMock))))
+                .thenReturn(fakeResult);
 
         JsonArray result = defaultResmiService.findCollection(resourceUri, Optional.of(collectionParametersMock));
         assertThat(fakeResult).isEqualTo(result);
@@ -106,6 +107,43 @@ import com.google.gson.JsonArray;
         defaultResmiService.deleteResource(uri);
         verify(resmiDao).deleteResource(uri);
         verify(resmiSearch).deleteDocument(uri);
+    }
+
+    @Test
+    public void createRelationTest() throws NotFoundException, StartsWithUnderscoreException {
+        ResourceUri uri = new ResourceUri(TYPE, ID, RELATION);
+        when(searchableFieldRegistry.getFieldsFromResourceUri(eq(uri))).thenReturn(new HashSet(Arrays.asList("t1", "t2")));
+        JsonObject relationData = new JsonObject();
+        defaultResmiService.createRelation(uri, relationData);
+
+        ArgumentCaptor<JsonObject> object = ArgumentCaptor.forClass(JsonObject.class);
+        verify(resmiSearch).indexDocument(eq(uri), object.capture());
+
+        assertThat(object.getValue().has("_src_id")).isTrue();
+        assertThat(object.getValue().get("_src_id").getAsString()).isEqualTo(ID);
+
+        verify(resmiDao).createRelation(uri, relationData);
+    }
+
+    @Test
+    public void findInRelationWithSearchTest() throws BadConfigurationException {
+        ResourceUri resourceUri = new ResourceUri(TYPE, ID, RELATION);
+
+        JsonArray fakeResult = new JsonArray();
+        Optional<String> search = Optional.of("my+search");
+        when(paginationMock.getPage()).thenReturn(PAGE);
+        when(paginationMock.getPageSize()).thenReturn(SIZE);
+        when(resourceSearchMock.getText()).thenReturn(search);
+        when(resourceSearchMock.getParams()).thenReturn(Optional.empty());
+        when(searchableFieldRegistry.getFieldsFromResourceUri(eq(resourceUri))).thenReturn(new HashSet(Arrays.asList("t1", "t2")));
+        when(resmiSearch.search(eq(resourceUri), eq(search.get()), eq(resourceQueriesMock), eq(paginationMock), eq(Optional.of(sortMock))))
+                .thenReturn(fakeResult);
+
+        JsonArray result = (JsonArray) defaultResmiService.findRelation(resourceUri, Optional.of(relationParametersMock));
+        assertThat(fakeResult).isEqualTo(result);
+        ArgumentCaptor<ResourceQuery> query = ArgumentCaptor.forClass(ResourceQuery.class);
+        verify(resourceQueriesMock).add(query.capture());
+        assertThat(query.getValue().toString()).isEqualTo("[{\"$eq\":{\"_src_id\":\"" + ID + "\"}}]");
     }
 
 
