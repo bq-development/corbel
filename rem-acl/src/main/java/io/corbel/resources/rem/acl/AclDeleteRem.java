@@ -1,7 +1,6 @@
 package io.corbel.resources.rem.acl;
 
 import java.io.InputStream;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,8 +29,7 @@ public class AclDeleteRem extends AclBaseRem {
     }
 
     @Override
-    public Response resource(String type, ResourceId id, RequestParameters<ResourceParameters> parameters, Optional<InputStream> entity) {
-
+    public Response resource(String type, ResourceId id, RequestParameters<ResourceParameters> parameters, Optional<InputStream> entity, Optional<List<Rem>> excludedRems) {
         try {
             if (!aclResourcesService.isAuthorized(parameters.getTokenInfo(), type, id, AclPermission.ADMIN)) {
                 return ErrorResponseFactory.getInstance().unauthorized(AclUtils.buildMessage(AclPermission.ADMIN));
@@ -40,14 +38,14 @@ public class AclDeleteRem extends AclBaseRem {
             return ErrorResponseFactory.getInstance().forbidden();
         }
 
-        Rem rem = remService.getRem(type, parameters.getAcceptedMediaTypes(), HttpMethod.DELETE, Collections.singletonList(this));
-        return aclResourcesService.deleteResource(rem, type, id, parameters);
-
+        List<Rem> excluded = getExcludedRems(excludedRems);
+        Rem rem = remService.getRem(type, parameters.getAcceptedMediaTypes(), HttpMethod.DELETE, excluded);
+        return aclResourcesService.deleteResource(rem, type, id, parameters, excluded);
     }
 
     @Override
     public Response relation(String type, ResourceId id, String relation, RequestParameters<RelationParameters> parameters,
-            Optional<InputStream> entity) {
+            Optional<InputStream> entity, Optional<List<Rem>> excludedRems) {
 
         if (id.isWildcard()) {
             return ErrorResponseFactory.getInstance().methodNotAllowed();
@@ -61,8 +59,9 @@ public class AclDeleteRem extends AclBaseRem {
             return ErrorResponseFactory.getInstance().forbidden();
         }
 
-        Rem rem = remService.getRem(type, parameters.getAcceptedMediaTypes(), HttpMethod.DELETE, Collections.singletonList(this));
-        return aclResourcesService.deleteRelation(rem, type, id, relation, parameters);
+        List<Rem> excluded = getExcludedRems(excludedRems);
+        Rem rem = remService.getRem(type, parameters.getAcceptedMediaTypes(), HttpMethod.DELETE, excluded);
+        return aclResourcesService.deleteRelation(rem, type, id, relation, parameters, excluded);
     }
 
 }

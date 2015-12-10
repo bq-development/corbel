@@ -3,14 +3,10 @@ package io.corbel.resources.rem.acl;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
-import javax.swing.text.html.Option;
 import javax.ws.rs.core.Response;
 
-import io.corbel.lib.token.TokenInfo;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 
@@ -35,7 +31,7 @@ public class AclPostRem extends AclBaseRem {
     }
 
     @Override
-    public Response collection(String type, RequestParameters<CollectionParameters> parameters, URI uri, Optional<InputStream> entity) {
+    public Response collection(String type, RequestParameters<CollectionParameters> parameters, URI uri, Optional<InputStream> entity, Optional<List<Rem>> excludedRems) {
 
         Optional<String> userId = Optional.ofNullable(parameters.getTokenInfo().getUserId());
 
@@ -68,18 +64,19 @@ public class AclPostRem extends AclBaseRem {
 
         jsonObject.add(DefaultAclResourcesService._ACL, acl);
 
-        Rem resmiPostRem = remService.getRem(type, JSON_MEDIATYPE, HttpMethod.POST, Collections.singletonList(this));
-        Response response = aclResourcesService.saveResource(resmiPostRem, parameters, type, uri, jsonObject);
+        List<Rem> excluded = getExcludedRems(excludedRems);
+        Rem postRem = remService.getRem(type, JSON_MEDIATYPE, HttpMethod.POST, excluded);
+        Response response = aclResourcesService.saveResource(postRem, parameters, type, uri, jsonObject, excluded);
 
         if (!jsonMediaTypeAccepted) {
             String path = response.getMetadata().getFirst("Location").toString();
             String id = path.substring(path.lastIndexOf("/") + 1);
-            Rem rem = remService.getRem(type, parameters.getAcceptedMediaTypes(), HttpMethod.PUT, REMS_TO_EXCLUDE);
+            Rem rem = remService.getRem(type, parameters.getAcceptedMediaTypes(), HttpMethod.PUT, excluded);
 
             RequestParameters<ResourceParameters> requestParameters = new RequestParametersImpl<>(null, null,
                     parameters.getAcceptedMediaTypes(), null, parameters.getHeaders(), null);
             Response responsePutNotJsonResource = aclResourcesService.updateResource(rem, type, new ResourceId(id), requestParameters,
-                    requestBody);
+                    requestBody, excluded);
             if (responsePutNotJsonResource.getStatus() != Response.Status.NO_CONTENT.getStatusCode()) {
                 return responsePutNotJsonResource;
             }

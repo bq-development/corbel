@@ -56,7 +56,7 @@ import io.corbel.resources.rem.service.RemService;
     public void setUp() throws Exception {
 
         when(getResponse.getStatus()).thenReturn(200);
-        when(aclResourcesService.getResource(any(), eq(TYPE), eq(RESOURCE_ID), any())).thenReturn(getResponse);
+        when(aclResourcesService.getResource(any(), eq(TYPE), eq(RESOURCE_ID), any(), any())).thenReturn(getResponse);
         rem = new AclDeleteRem(aclResourcesService, Collections.singletonList(getRem));
         rem.setRemService(remService);
 
@@ -66,6 +66,14 @@ import io.corbel.resources.rem.service.RemService;
         when(relationParameters.getTokenInfo()).thenReturn(tokenInfo);
     }
 
+    @Test
+    public void testDeleteResourceNoUserId() {
+        when(tokenInfo.getUserId()).thenReturn(null);
+        when(resourceParameters.getTokenInfo()).thenReturn(tokenInfo);
+        Response response = rem.resource(TYPE, RESOURCE_ID, resourceParameters, Optional.empty(), Optional.empty());
+        assertThat(response.getStatus()).isEqualTo(401);
+    }
+
     @Test(expected = WebApplicationException.class)
     public void testDeleteResourceNotFoundObject() throws AclFieldNotPresentException {
         when(getResponse.getStatus()).thenReturn(404);
@@ -73,7 +81,7 @@ import io.corbel.resources.rem.service.RemService;
         doThrow(new WebApplicationException(getResponse)).when(aclResourcesService).isAuthorized(eq(tokenInfo), eq(TYPE), eq(RESOURCE_ID),
                 eq(AclPermission.ADMIN));
         try {
-            rem.resource(TYPE, RESOURCE_ID, resourceParameters, null);
+            rem.resource(TYPE, RESOURCE_ID, resourceParameters, null, Optional.empty());
         } catch (WebApplicationException wae) {
             assertThat(wae.getResponse().getStatus()).isEqualTo(404);
             throw wae;
@@ -94,9 +102,9 @@ import io.corbel.resources.rem.service.RemService;
 
         Response response = mock(Response.class);
         when(response.getStatus()).thenReturn(204);
-        when(aclResourcesService.deleteResource(any(), eq(TYPE), eq(RESOURCE_ID), any())).thenReturn(response);
+        when(aclResourcesService.deleteResource(any(), eq(TYPE), eq(RESOURCE_ID), any(), any())).thenReturn(response);
 
-        response = rem.resource(TYPE, RESOURCE_ID, resourceParameters, null);
+        response = rem.resource(TYPE, RESOURCE_ID, resourceParameters, null, Optional.empty());
         assertThat(response.getStatus()).isEqualTo(204);
     }
 
@@ -109,9 +117,9 @@ import io.corbel.resources.rem.service.RemService;
 
         Response response = mock(Response.class);
         when(response.getStatus()).thenReturn(204);
-        when(aclResourcesService.deleteRelation(any(), eq(TYPE), eq(RESOURCE_ID), eq(TYPE), any())).thenReturn(response);
+        when(aclResourcesService.deleteRelation(any(), eq(TYPE), eq(RESOURCE_ID), eq(TYPE), any(), any())).thenReturn(response);
 
-        response = rem.relation(TYPE, RESOURCE_ID, TYPE, relationParameters, null);
+        response = rem.relation(TYPE, RESOURCE_ID, TYPE, relationParameters, null, Optional.empty());
         assertThat(response.getStatus()).isEqualTo(204);
     }
 
@@ -123,7 +131,7 @@ import io.corbel.resources.rem.service.RemService;
         when(apiParameters.getPredicateResource()).thenReturn(Optional.empty());
         ResourceId resourceId = new ResourceId("_");
 
-        Response response = rem.relation(TYPE, resourceId, TYPE, relationParameters, Optional.empty());
+        Response response = rem.relation(TYPE, resourceId, TYPE, relationParameters, Optional.empty(), Optional.empty());
         assertThat(response.getStatus()).isEqualTo(405);
     }
 

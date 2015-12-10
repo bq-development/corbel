@@ -39,7 +39,7 @@ public class AclPutRem extends AclBaseRem {
     }
 
     @Override
-    public Response resource(String type, ResourceId id, RequestParameters<ResourceParameters> parameters, Optional<InputStream> entity) {
+    public Response resource(String type, ResourceId id, RequestParameters<ResourceParameters> parameters, Optional<InputStream> entity, Optional<List<Rem>> excludedRems) {
 
         TokenInfo tokenInfo = parameters.getTokenInfo();
         Optional<String> userId = Optional.ofNullable(tokenInfo.getUserId());
@@ -57,9 +57,7 @@ public class AclPutRem extends AclBaseRem {
 
         try {
             originalObject = aclResourcesService.getResourceIfIsAuthorized(tokenInfo, type, id, AclPermission.WRITE);
-        }
-
-        catch (AclFieldNotPresentException e) {
+        } catch (AclFieldNotPresentException e) {
             return ErrorResponseFactory.getInstance().forbidden();
         }
 
@@ -70,6 +68,8 @@ public class AclPutRem extends AclBaseRem {
 
             newResource = true;
         }
+
+        List<Rem> excluded = getExcludedRems(excludedRems);
 
         if (newResource) {
 
@@ -84,7 +84,7 @@ public class AclPutRem extends AclBaseRem {
             acl.add(DefaultAclResourcesService._ACL, user);
 
             Rem rem = remService.getRem(type, JSON_MEDIATYPE, HttpMethod.PUT, Collections.singletonList(this));
-            Response responseSetAcl = aclResourcesService.updateResource(rem, type, id, parameters, acl);
+            Response responseSetAcl = aclResourcesService.updateResource(rem, type, id, parameters, acl, excluded);
 
             if (responseSetAcl.getStatus() != Status.NO_CONTENT.getStatusCode()) {
                 return responseSetAcl;
@@ -94,7 +94,7 @@ public class AclPutRem extends AclBaseRem {
             return ErrorResponseFactory.getInstance().unauthorized(AclUtils.buildMessage(AclPermission.WRITE));
         }
 
-        Rem rem = remService.getRem(type, parameters.getAcceptedMediaTypes(), HttpMethod.PUT, Collections.singletonList(this));
+        Rem rem = remService.getRem(type, parameters.getAcceptedMediaTypes(), HttpMethod.PUT, excluded);
 
         InputStream requestBody = entity.get();
 
@@ -102,15 +102,15 @@ public class AclPutRem extends AclBaseRem {
             JsonReader reader = new JsonReader(new InputStreamReader(requestBody));
             JsonObject jsonObject = new JsonParser().parse(reader).getAsJsonObject();
             jsonObject.remove(DefaultAclResourcesService._ACL);
-            return aclResourcesService.updateResource(rem, type, id, parameters, jsonObject);
+            return aclResourcesService.updateResource(rem, type, id, parameters, jsonObject, excluded);
         }
 
-        return aclResourcesService.updateResource(rem, type, id, parameters, requestBody);
+        return aclResourcesService.updateResource(rem, type, id, parameters, requestBody, excluded);
     }
 
     @Override
     public Response relation(String type, ResourceId id, String relation, RequestParameters<RelationParameters> parameters,
-            Optional<InputStream> entity) {
+            Optional<InputStream> entity, Optional<List<Rem>> excludedRems) {
 
         TokenInfo tokenInfo = parameters.getTokenInfo();
 
@@ -126,7 +126,8 @@ public class AclPutRem extends AclBaseRem {
             return ErrorResponseFactory.getInstance().forbidden();
         }
 
-        Rem rem = remService.getRem(type, parameters.getAcceptedMediaTypes(), HttpMethod.PUT, Collections.singletonList(this));
+        List<Rem> excluded = getExcludedRems(excludedRems);
+        Rem rem = remService.getRem(type, parameters.getAcceptedMediaTypes(), HttpMethod.PUT, excluded);
         JsonObject jsonObject = new JsonObject();
 
         InputStream requestBody = entity.get();
@@ -136,7 +137,7 @@ public class AclPutRem extends AclBaseRem {
             jsonObject = new JsonParser().parse(reader).getAsJsonObject();
         }
 
-        return aclResourcesService.putRelation(rem, type, id, relation, parameters, jsonObject);
+        return aclResourcesService.putRelation(rem, type, id, relation, parameters, jsonObject, excluded);
 
     }
 

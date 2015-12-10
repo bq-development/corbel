@@ -26,22 +26,22 @@ public interface AclResourcesService {
 
     void setRemsAndMethods(List<Pair<Rem, HttpMethod>> remsAndMethods);
 
-    Response saveResource(Rem rem, RequestParameters<CollectionParameters> parameters, String type, URI uri, Object entity);
+    Response saveResource(Rem rem, RequestParameters<CollectionParameters> parameters, String type, URI uri, Object entity, List<Rem> excludedRems);
 
-    Response getResource(Rem rem, String type, ResourceId id, RequestParameters<ResourceParameters> parameters);
+    Response getResource(Rem rem, String type, ResourceId id, RequestParameters<ResourceParameters> parameters, List<Rem> excludedRems);
 
-    Response getCollection(Rem rem, String type, RequestParameters<CollectionParameters> parameters);
+    Response getCollection(Rem rem, String type, RequestParameters<CollectionParameters> parameters, List<Rem> excludedRems);
 
-    Response getRelation(Rem rem, String type, ResourceId id, String relation, RequestParameters<RelationParameters> parameters);
+    Response getRelation(Rem rem, String type, ResourceId id, String relation, RequestParameters<RelationParameters> parameters, List<Rem> excludedRems);
 
-    Response updateResource(Rem rem, String type, ResourceId id, RequestParameters<ResourceParameters> parameters, Object entity);
+    Response updateResource(Rem rem, String type, ResourceId id, RequestParameters<ResourceParameters> parameters, Object entity, List<Rem> excludedRems);
 
     Response putRelation(Rem rem, String type, ResourceId id, String relation, RequestParameters<RelationParameters> parameters,
-            Object entity);
+            Object entity, List<Rem> excludedRems);
 
-    Response deleteResource(Rem rem, String type, ResourceId id, RequestParameters<ResourceParameters> parameters);
+    Response deleteResource(Rem rem, String type, ResourceId id, RequestParameters<ResourceParameters> parameters, List<Rem> excludedRems);
 
-    Response deleteRelation(Rem rem, String type, ResourceId id, String relation, RequestParameters<RelationParameters> parameters);
+    Response deleteRelation(Rem rem, String type, ResourceId id, String relation, RequestParameters<RelationParameters> parameters, List<Rem> excludedRems);
 
     boolean isAuthorized(TokenInfo tokenInfo, String type, ResourceId resourceId, AclPermission operation)
             throws AclFieldNotPresentException;
@@ -49,15 +49,15 @@ public interface AclResourcesService {
     boolean isAuthorized(String domainId, Optional<String> userId, Collection<String> groupIds, String type, ResourceId resourceId,
             AclPermission operation) throws AclFieldNotPresentException;
 
-    boolean isManagedBy(TokenInfo tokenInfo, String collection);
-
-    boolean isManagedBy(String domainId, Optional<String> userId, Collection<String> groupIds, String collection);
-
     Optional<JsonObject> getResourceIfIsAuthorized(TokenInfo tokenInfo, String type, ResourceId resourceId, AclPermission operation)
             throws AclFieldNotPresentException;
 
     Optional<JsonObject> getResourceIfIsAuthorized(String domainId, Optional<String> userId, Collection<String> groupIds, String type,
-            ResourceId resourceId, AclPermission operation) throws AclFieldNotPresentException;
+                                                   ResourceId resourceId, AclPermission operation) throws AclFieldNotPresentException;
+
+    boolean isManagedBy(TokenInfo tokenInfo, String collection);
+
+    boolean isManagedBy(String domainId, Optional<String> userId, Collection<String> groupIds, String collection);
 
     Response updateConfiguration(ResourceId id, RequestParameters<ResourceParameters> parameters, ManagedCollection managedCollection);
 

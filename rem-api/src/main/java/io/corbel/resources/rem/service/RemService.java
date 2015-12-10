@@ -30,11 +30,29 @@ public interface RemService {
 
     void unregisterRem(Class<?> remClass, String uriPattern);
 
-    Response collection(Rem rem, String type, RequestParameters<CollectionParameters> parameters, URI uri, Optional entity);
+    default Response collection(Rem rem, String type, RequestParameters<CollectionParameters> parameters, URI uri, Optional entity) {
+        return collection(rem, type, parameters, uri, entity, null);
+    }
 
-    Response resource(Rem rem, String type, ResourceId id, RequestParameters<ResourceParameters> parameters, Optional entity);
+    default Response resource(Rem rem, String type, ResourceId id, RequestParameters<ResourceParameters> parameters, Optional entity) {
+        return resource(rem, type, id, parameters, entity, null);
+    }
 
-    Response relation(Rem rem, String type, ResourceId id, String rel, RequestParameters<RelationParameters> parameters, Optional entity);
+    default Response relation(Rem rem, String type, ResourceId id, String rel, RequestParameters<RelationParameters> parameters, Optional entity) {
+        return relation(rem, type, id, rel, parameters, entity, null);
+    }
+
+    default Response collection(Rem rem, String type, RequestParameters<CollectionParameters> parameters, URI uri, Optional entity, List<Rem> remsExcluded) {
+        return collection(rem, type, parameters, uri, entity);
+    }
+
+    default Response resource(Rem rem, String type, ResourceId id, RequestParameters<ResourceParameters> parameters, Optional entity, List<Rem> remsExcluded) {
+        return resource(rem, type, id, parameters, entity);
+    }
+
+    default Response relation(Rem rem, String type, ResourceId id, String rel, RequestParameters<RelationParameters> parameters, Optional entity, List<Rem> remsExcluded) {
+        return relation(rem, type, id, rel, parameters, entity);
+    }
 
     List<RemDescription> getRegisteredRemDescriptions();
 }

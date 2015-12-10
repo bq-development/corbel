@@ -189,7 +189,7 @@ public class RemResourceTest {
         ArgumentCaptor<Optional> optionalJsonObjectCaptor = ArgumentCaptor.forClass(Optional.class);
         when(
                 remMock.collection(Mockito.eq(TEST_TYPE), parametersCaptor.capture(), Mockito.any(URI.class),
-                        optionalJsonObjectCaptor.capture())).thenReturn(testResponse);
+                        optionalJsonObjectCaptor.capture(), any())).thenReturn(testResponse);
 
         assertThat(RULE.client().target(COLLECTION_URI).request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(String.class))
                 .isEqualTo(TEST_OK);
@@ -206,7 +206,7 @@ public class RemResourceTest {
 
         when(
                 remMock.collection(Mockito.eq(TEST_TYPE), parametersCaptor.capture(), Mockito.any(URI.class),
-                        optionalJsonObjectCaptor.capture())).thenReturn(testResponse);
+                        optionalJsonObjectCaptor.capture(), any())).thenReturn(testResponse);
         assertThat(
                 RULE.client().target(COLLECTION_URI).queryParam("api:pageSize", "20").queryParam("api:page", "3").request()
                         .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(String.class)).isEqualTo(TEST_OK);
@@ -224,7 +224,7 @@ public class RemResourceTest {
 
         when(
                 remMock.collection(Mockito.eq(TEST_TYPE), parametersCaptor.capture(), Mockito.any(URI.class),
-                        optionalJsonObjectCaptor.capture())).thenReturn(testResponse);
+                        optionalJsonObjectCaptor.capture(), any())).thenReturn(testResponse);
         assertThat(RULE.client().target(COLLECTION_URI).request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(String.class))
                 .isEqualTo(TEST_OK);
         assertThat(((CollectionParameters) parametersCaptor.getValue().getApiParameters()).getPagination()).isEqualTo(pagination);
@@ -240,7 +240,7 @@ public class RemResourceTest {
 
         when(
                 remMock.collection(Mockito.eq(TEST_TYPE), parametersCaptor.capture(), Mockito.any(URI.class),
-                        optionalJsonObjectCaptor.capture())).thenReturn(testResponse);
+                        optionalJsonObjectCaptor.capture(), any())).thenReturn(testResponse);
         assertThat(
                 RULE.client().target(COLLECTION_URI).queryParam("api:limit", "-20").queryParam("api:page", "3").request()
                         .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).head().getStatus() == testResponse.getStatus());
@@ -256,7 +256,7 @@ public class RemResourceTest {
         Optional<Sort> optionalSort = Optional.of(sort);
         ArgumentCaptor<RequestParameters> parametersCaptor = ArgumentCaptor.forClass(RequestParameters.class);
 
-        when(remMock.collection(Mockito.eq(TEST_TYPE), parametersCaptor.capture(), Mockito.any(URI.class), Mockito.eq(Optional.empty())))
+        when(remMock.collection(Mockito.eq(TEST_TYPE), parametersCaptor.capture(), Mockito.any(URI.class), Mockito.eq(Optional.empty()), any()))
                 .thenReturn(testResponse);
         assertThat(
                 RULE.client().target(COLLECTION_URI).queryParam("api:sort", URLEncoder.encode(sortRequest, "UTF-8"))
@@ -295,7 +295,7 @@ public class RemResourceTest {
         when(queryParserMock.parse(query)).thenReturn(resourceQuery);
         when(
                 remMock.collection(Mockito.eq(TEST_TYPE), parametersCaptor.capture(), Mockito.any(URI.class),
-                        optionalJsonObjectCaptor.capture())).thenReturn(testResponse);
+                        optionalJsonObjectCaptor.capture(), any())).thenReturn(testResponse);
         assertThat(
                 RULE.client().target(COLLECTION_URI).queryParam("api:query", URLEncoder.encode(query, "UTF-8")).request()
                         .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(String.class)).isEqualTo(TEST_OK);
@@ -326,7 +326,7 @@ public class RemResourceTest {
         when(queryParserMock.parse(query)).thenReturn(resourceQuery);
         when(
                 remMock.collection(Mockito.eq(TEST_TYPE), parametersCaptor.capture(), Mockito.any(URI.class),
-                        optionalJsonObjectCaptor.capture())).thenReturn(testResponse);
+                        optionalJsonObjectCaptor.capture(), any())).thenReturn(testResponse);
         assertThat(
                 RULE.client().target(COLLECTION_URI).queryParam("api:query", URLEncoder.encode(query, "UTF-8")).request()
                         .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(String.class)).isEqualTo(TEST_OK);
@@ -347,7 +347,7 @@ public class RemResourceTest {
         when(queryParserMock.parse(query)).thenReturn(resourceQuery);
         when(
                 remMock.collection(Mockito.eq(TEST_TYPE), parametersCaptor.capture(), Mockito.any(URI.class),
-                        optionalJsonObjectCaptor.capture())).thenReturn(testResponse);
+                        optionalJsonObjectCaptor.capture(), any())).thenReturn(testResponse);
         assertThat(
                 RULE.client().target(COLLECTION_URI).queryParam("api:query", URLEncoder.encode(query, "UTF-8")).request()
                         .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(String.class)).isEqualTo(TEST_OK);
@@ -365,7 +365,7 @@ public class RemResourceTest {
         ArgumentCaptor<Optional> optionalJsonObjectCaptor = ArgumentCaptor.forClass(Optional.class);
         when(
                 remMock.collection(Mockito.eq(TEST_TYPE), parametersCaptor.capture(), Mockito.any(URI.class),
-                        optionalJsonObjectCaptor.capture())).thenReturn(testResponse);
+                        optionalJsonObjectCaptor.capture(), any())).thenReturn(testResponse);
         assertThat(
                 RULE.client().target(COLLECTION_URI).request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
                         .post(Entity.json(jsonTest), String.class)).isEqualTo(TEST_OK);
@@ -383,7 +383,7 @@ public class RemResourceTest {
         ArgumentCaptor<Optional> optionalJsonObjectCaptor = ArgumentCaptor.forClass(Optional.class);
         when(
                 remMock.collection(Mockito.eq(TEST_TYPE), parametersCaptor.capture(), Mockito.any(URI.class),
-                        optionalJsonObjectCaptor.capture())).thenReturn(testResponse);
+                        optionalJsonObjectCaptor.capture(), any())).thenReturn(testResponse);
         assertThat(
                 RULE.client().target(COLLECTION_URI).request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
                         .post(Entity.json(jsonTest), String.class)).isEqualTo(TEST_OK);
@@ -401,7 +401,7 @@ public class RemResourceTest {
         ArgumentCaptor<Optional> optionalJsonObjectCaptor = ArgumentCaptor.forClass(Optional.class);
         when(
                 remMock.collection(Mockito.eq(TEST_TYPE), parametersCaptor.capture(), Mockito.any(URI.class),
-                        optionalJsonObjectCaptor.capture())).thenReturn(testResponse);
+                        optionalJsonObjectCaptor.capture(), any())).thenReturn(testResponse);
         assertThat(
                 RULE.client().target(COLLECTION_URI).request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
                         .put(Entity.json(jsonTest), String.class)).isEqualTo(TEST_OK);
@@ -420,7 +420,7 @@ public class RemResourceTest {
 
         when(
                 remMock.collection(Mockito.eq(TEST_TYPE), parametersCaptor.capture(), Mockito.any(URI.class),
-                        optionalJsonObjectCaptor.capture())).thenReturn(testResponse);
+                        optionalJsonObjectCaptor.capture(), any())).thenReturn(testResponse);
         assertThat(RULE.client().target(COLLECTION_URI).request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN).delete(String.class))
                 .isEqualTo(TEST_OK);
         assertThat(parametersCaptor.getValue().getTokenInfo().getUserId()).isSameAs(TEST_USER_ID);
@@ -434,7 +434,7 @@ public class RemResourceTest {
 
         ArgumentCaptor<RequestParameters> parametersCaptor = ArgumentCaptor.forClass(RequestParameters.class);
 
-        when(remMock.collection(Mockito.eq(TEST_TYPE), parametersCaptor.capture(), Mockito.any(URI.class), Mockito.eq(Optional.empty())))
+        when(remMock.collection(Mockito.eq(TEST_TYPE), parametersCaptor.capture(), Mockito.any(URI.class), Mockito.eq(Optional.empty()), any()))
                 .thenReturn(testResponse);
         assertThat(
                 RULE.client().target(COLLECTION_URI).queryParam("api:aggregation", URLEncoder.encode(aggRequest, "UTF-8"))
@@ -472,7 +472,7 @@ public class RemResourceTest {
 
         when(
                 remMock.resource(Mockito.eq(TEST_TYPE), Mockito.eq(RESOURCE_ID), parametersCaptor.capture(),
-                        optionalJsonObjectCaptor.capture())).thenReturn(testResponse);
+                        optionalJsonObjectCaptor.capture(), any())).thenReturn(testResponse);
         assertThat(RULE.client().target(RESOURCE_URI).request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(String.class)).isEqualTo(
                 TEST_OK);
         assertThat(parametersCaptor.getValue().getTokenInfo().getUserId()).isSameAs(TEST_USER_ID);
@@ -487,7 +487,7 @@ public class RemResourceTest {
 
         when(
                 remMock.collection(Mockito.eq(TEST_TYPE), parametersCaptor.capture(), Mockito.any(URI.class),
-                        optionalJsonObjectCaptor.capture())).thenReturn(testResponse);
+                        optionalJsonObjectCaptor.capture(), any())).thenReturn(testResponse);
         assertThat(RULE.client().target(RESOURCE_WILDCARD_URI).request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(String.class))
                 .isEqualTo(TEST_OK);
         assertThat(parametersCaptor.getValue().getTokenInfo().getUserId()).isSameAs(TEST_USER_ID);
@@ -503,7 +503,7 @@ public class RemResourceTest {
 
         when(
                 remMock.resource(Mockito.eq(TEST_TYPE), Mockito.eq(RESOURCE_ID), parametersCaptor.capture(),
-                        optionalJsonObjectCaptor.capture())).thenReturn(testResponse);
+                        optionalJsonObjectCaptor.capture(), any())).thenReturn(testResponse);
         assertThat(RULE.client().target(uri).request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(String.class)).isEqualTo(TEST_OK);
         assertThat(parametersCaptor.getValue().getCustomParameterValue("ns:param")).isEqualTo("1");
         assertThat(parametersCaptor.getValue().getTokenInfo().getUserId()).isSameAs(TEST_USER_ID);
@@ -519,7 +519,7 @@ public class RemResourceTest {
 
         when(
                 remMock.resource(Mockito.eq(TEST_TYPE), Mockito.eq(RESOURCE_ID), parametersCaptor.capture(),
-                        optionalJsonObjectCaptor.capture())).thenReturn(testResponse);
+                        optionalJsonObjectCaptor.capture(), any())).thenReturn(testResponse);
         assertThat(RULE.client().target(RESOURCE_URI).request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN).delete(String.class))
                 .isEqualTo(TEST_OK);
         assertThat(parametersCaptor.getValue().getTokenInfo().getUserId()).isSameAs(TEST_USER_ID);
@@ -535,7 +535,7 @@ public class RemResourceTest {
 
         when(
                 remMock.collection(Mockito.eq(TEST_TYPE), parametersCaptor.capture(), Mockito.any(URI.class),
-                        optionalJsonObjectCaptor.capture())).thenReturn(testResponse);
+                        optionalJsonObjectCaptor.capture(), any())).thenReturn(testResponse);
         assertThat(RULE.client().target(RESOURCE_WILDCARD_URI).request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN).delete(String.class))
                 .isEqualTo(TEST_OK);
         assertThat(parametersCaptor.getValue().getTokenInfo().getUserId()).isSameAs(TEST_USER_ID);
@@ -550,7 +550,7 @@ public class RemResourceTest {
         ArgumentCaptor<Optional> optionalJsonObjectCaptor = ArgumentCaptor.forClass(Optional.class);
         when(
                 remMock.resource(Mockito.eq(TEST_TYPE), Mockito.eq(RESOURCE_ID), parametersCaptor.capture(),
-                        optionalJsonObjectCaptor.capture())).thenReturn(testResponse);
+                        optionalJsonObjectCaptor.capture(), any())).thenReturn(testResponse);
         assertThat(
                 RULE.client().target(RESOURCE_URI).request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
                         .put(Entity.json(jsonTest), String.class)).isEqualTo(TEST_OK);
@@ -566,7 +566,7 @@ public class RemResourceTest {
         ArgumentCaptor<Optional> optionalJsonObjectCaptor = ArgumentCaptor.forClass(Optional.class);
         when(
                 remMock.collection(Mockito.eq(TEST_TYPE), parametersCaptor.capture(), Mockito.any(URI.class),
-                        optionalJsonObjectCaptor.capture())).thenReturn(testResponse);
+                        optionalJsonObjectCaptor.capture(), any())).thenReturn(testResponse);
         assertThat(
                 RULE.client().target(RESOURCE_WILDCARD_URI).request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
                         .put(Entity.json(jsonTest), String.class)).isEqualTo(TEST_OK);
@@ -582,7 +582,7 @@ public class RemResourceTest {
 
         when(
                 remMock.relation(Mockito.eq(TEST_TYPE), Mockito.eq(RESOURCE_ID), Mockito.eq(TEST_REL), parametersCaptor.capture(),
-                        optionalJsonObjectCaptor.capture())).thenReturn(testResponse);
+                        optionalJsonObjectCaptor.capture(), any())).thenReturn(testResponse);
         assertThat(RULE.client().target(RELATION_URI).request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(String.class)).isEqualTo(
                 TEST_OK);
         assertThat(parametersCaptor.getValue().getTokenInfo().getUserId()).isSameAs(TEST_USER_ID);
@@ -597,7 +597,7 @@ public class RemResourceTest {
 
         when(
                 remMock.relation(Mockito.eq(TEST_TYPE), Mockito.eq(RESOURCE_WILDCARD_ID), Mockito.eq(TEST_REL), parametersCaptor.capture(),
-                        optionalJsonObjectCaptor.capture())).thenReturn(testResponse);
+                        optionalJsonObjectCaptor.capture(), any())).thenReturn(testResponse);
         assertThat(RULE.client().target(RELATION_WILDCARD_URI).request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(String.class))
                 .isEqualTo(TEST_OK);
         assertThat(parametersCaptor.getValue().getTokenInfo().getUserId()).isSameAs(TEST_USER_ID);
@@ -613,7 +613,7 @@ public class RemResourceTest {
 
         when(
                 remMock.relation(Mockito.eq(TEST_TYPE), Mockito.eq(RESOURCE_ID), Mockito.eq(TEST_REL), parametersCaptor.capture(),
-                        optionalJsonObjectCaptor.capture())).thenReturn(testResponse);
+                        optionalJsonObjectCaptor.capture(), any())).thenReturn(testResponse);
         assertThat(
                 RULE.client().target(RELATION_URI).queryParam("api:pageSize", "20").queryParam("api:page", "3").request()
                         .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(String.class)).isEqualTo(TEST_OK);
@@ -631,7 +631,7 @@ public class RemResourceTest {
 
         when(
                 remMock.relation(Mockito.eq(TEST_TYPE), Mockito.eq(RESOURCE_ID), Mockito.eq(TEST_REL), parametersCaptor.capture(),
-                        optionalJsonObjectCaptor.capture())).thenReturn(testResponse);
+                        optionalJsonObjectCaptor.capture(), any())).thenReturn(testResponse);
         assertThat(RULE.client().target(RELATION_URI).request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(String.class)).isEqualTo(
                 TEST_OK);
         assertThat(((RelationParameters) parametersCaptor.getValue().getApiParameters()).getPagination()).isEqualTo(pagination);
@@ -647,7 +647,7 @@ public class RemResourceTest {
 
         when(
                 remMock.relation(Mockito.eq(TEST_TYPE), Mockito.eq(RESOURCE_ID), Mockito.eq(TEST_REL), parametersCaptor.capture(),
-                        optionalJsonObjectCaptor.capture())).thenReturn(testResponse);
+                        optionalJsonObjectCaptor.capture(), any())).thenReturn(testResponse);
         assertThat(RULE.client().target(RELATION_URI).queryParam("api:limit", "-20")
 
                 .queryParam("api:page", "3").request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN).head().getStatus()).isEqualTo(
@@ -667,7 +667,7 @@ public class RemResourceTest {
 
         when(
                 remMock.relation(Mockito.eq(TEST_TYPE), Mockito.eq(RESOURCE_ID), Mockito.eq(TEST_REL), parametersCaptor.capture(),
-                        optionalJsonObjectCaptor.capture())).thenReturn(testResponse);
+                        optionalJsonObjectCaptor.capture(), any())).thenReturn(testResponse);
         assertThat(
                 RULE.client().target(RELATION_URI).queryParam("api:sort", URLEncoder.encode(sortRequest, "UTF-8")).request()
                         .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(String.class)).isEqualTo(TEST_OK);
@@ -705,7 +705,7 @@ public class RemResourceTest {
         when(queryParserMock.parse(query)).thenReturn(resourceQuery);
         when(
                 remMock.relation(Mockito.eq(TEST_TYPE), Mockito.eq(RESOURCE_ID), Mockito.eq(TEST_REL), parametersCaptor.capture(),
-                        optionalJsonObjectCaptor.capture())).thenReturn(testResponse);
+                        optionalJsonObjectCaptor.capture(), any())).thenReturn(testResponse);
         assertThat(
                 RULE.client().target(RELATION_URI).queryParam("api:query", URLEncoder.encode(query, "UTF-8")).request()
                         .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(String.class)).isEqualTo(TEST_OK);
@@ -733,7 +733,7 @@ public class RemResourceTest {
         ArgumentCaptor<Optional> optionalJsonObjectCaptor = ArgumentCaptor.forClass(Optional.class);
         when(
                 remMock.relation(Mockito.eq(TEST_TYPE), Mockito.eq(RESOURCE_ID), Mockito.eq(TEST_REL), parametersCaptor.capture(),
-                        optionalJsonObjectCaptor.capture())).thenReturn(testResponse);
+                        optionalJsonObjectCaptor.capture(), any())).thenReturn(testResponse);
         assertThat(
                 RULE.client().target(RELATION_URI).request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
                         .post(Entity.json(jsonTest), String.class)).isEqualTo(TEST_OK);
@@ -751,7 +751,7 @@ public class RemResourceTest {
         ArgumentCaptor<Optional> optionalJsonObjectCaptor = ArgumentCaptor.forClass(Optional.class);
         when(
                 remMock.relation(Mockito.eq(TEST_TYPE), Mockito.eq(RESOURCE_ID), Mockito.eq(TEST_REL), parametersCaptor.capture(),
-                        optionalJsonObjectCaptor.capture())).thenReturn(testResponse);
+                        optionalJsonObjectCaptor.capture(), any())).thenReturn(testResponse);
         assertThat(
                 RULE.client().target(uri).request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN).put(Entity.json(""), Response.class)
                         .getStatus()).isEqualTo(204);
@@ -768,7 +768,7 @@ public class RemResourceTest {
         ArgumentCaptor<Optional> optionalJsonObjectCaptor = ArgumentCaptor.forClass(Optional.class);
         when(
                 remMock.relation(Mockito.eq(TEST_TYPE), Mockito.eq(RESOURCE_WILDCARD_ID), Mockito.eq(TEST_REL), parametersCaptor.capture(),
-                        optionalJsonObjectCaptor.capture())).thenReturn(testResponse);
+                        optionalJsonObjectCaptor.capture(), any())).thenReturn(testResponse);
         assertThat(
                 RULE.client().target(uri).request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN).put(Entity.json(""), Response.class)
                         .getStatus()).isEqualTo(204);
@@ -785,7 +785,7 @@ public class RemResourceTest {
         ArgumentCaptor<Optional> optionalJsonObjectCaptor = ArgumentCaptor.forClass(Optional.class);
         when(
                 remMock.relation(Mockito.eq(TEST_TYPE), Mockito.eq(RESOURCE_ID), Mockito.eq(TEST_REL), parametersCaptor.capture(),
-                        optionalJsonObjectCaptor.capture())).thenReturn(testResponse);
+                        optionalJsonObjectCaptor.capture(), any())).thenReturn(testResponse);
         assertThat(
                 RULE.client().target(uri).request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN).put(Entity.json(""), Response.class)
                         .getStatus()).isEqualTo(204);
@@ -802,7 +802,7 @@ public class RemResourceTest {
         ArgumentCaptor<Optional> optionalJsonObjectCaptor = ArgumentCaptor.forClass(Optional.class);
         when(
                 remMock.relation(Mockito.eq(TEST_TYPE), Mockito.eq(RESOURCE_ID), Mockito.eq(TEST_REL), parametersCaptor.capture(),
-                        optionalJsonObjectCaptor.capture())).thenReturn(testResponse);
+                        optionalJsonObjectCaptor.capture(), any())).thenReturn(testResponse);
         Response response = RULE.client().target(relUri).request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN).delete(Response.class);
         assertThat(response.getStatus()).isEqualTo(204);
         assertThat(parametersCaptor.getValue().getTokenInfo().getUserId()).isSameAs(TEST_USER_ID);
@@ -818,7 +818,7 @@ public class RemResourceTest {
 
         when(
                 remMock.relation(Mockito.eq(TEST_TYPE), Mockito.eq(RESOURCE_ID), Mockito.eq(TEST_REL), parametersCaptor.capture(),
-                        optionalJsonObjectCaptor.capture())).thenReturn(testResponse);
+                        optionalJsonObjectCaptor.capture(), any())).thenReturn(testResponse);
         assertThat(RULE.client().target(RELATION_URI).request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN).delete(String.class))
                 .isEqualTo(TEST_OK);
         assertThat(parametersCaptor.getValue().getTokenInfo().getUserId()).isSameAs(TEST_USER_ID);
@@ -834,7 +834,7 @@ public class RemResourceTest {
 
         when(
                 remMock.relation(Mockito.eq(TEST_TYPE), Mockito.eq(RESOURCE_WILDCARD_ID), Mockito.eq(TEST_REL), parametersCaptor.capture(),
-                        optionalJsonObjectCaptor.capture())).thenReturn(testResponse);
+                        optionalJsonObjectCaptor.capture(), any())).thenReturn(testResponse);
         assertThat(RULE.client().target(RELATION_WILDCARD_URI).request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN).delete(String.class))
                 .isEqualTo(TEST_OK);
         assertThat(parametersCaptor.getValue().getTokenInfo().getUserId()).isSameAs(TEST_USER_ID);
@@ -859,7 +859,7 @@ public class RemResourceTest {
 
         when(
                 remMock.relation(Mockito.eq(TEST_TYPE), Mockito.eq(RESOURCE_ID), Mockito.eq(TEST_REL), parametersCaptor.capture(),
-                        optionalJsonObjectCaptor.capture())).thenReturn(testResponse);
+                        optionalJsonObjectCaptor.capture(), any())).thenReturn(testResponse);
         assertThat(
                 RULE.client().target(RELATION_URI).queryParam("api:aggregation", URLEncoder.encode(aggRequest, "UTF-8")).request()
                         .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(String.class)).isEqualTo(TEST_OK);
