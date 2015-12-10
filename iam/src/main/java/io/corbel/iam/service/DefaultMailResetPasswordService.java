@@ -1,15 +1,15 @@
 package io.corbel.iam.service;
 
+import java.time.Clock;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
+
 import io.corbel.iam.model.Client;
 import io.corbel.iam.model.Scope;
 import io.corbel.iam.repository.ClientRepository;
 import io.corbel.lib.token.TokenInfo;
 import io.corbel.lib.token.factory.TokenFactory;
 import io.corbel.lib.token.model.TokenType;
-
-import java.time.Clock;
-import java.time.temporal.ChronoUnit;
-import java.util.*;
 
 public class DefaultMailResetPasswordService implements MailResetPasswordService {
     private final EventsService eventsService;
@@ -54,7 +54,6 @@ public class DefaultMailResetPasswordService implements MailResetPasswordService
         String clientUrl = resetUrl.replace("{token}", token);
 
         Map<String, String> properties = new HashMap<>();
-        properties.put("email", email);
         properties.put("clientUrl", clientUrl);
 
         eventsService.sendNotificationEvent(notificationId, email, properties);
