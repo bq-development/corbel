@@ -69,14 +69,12 @@ import com.mongodb.WriteResult;
 
     @Mock ResmiOrder resmiOrderMock;
 
-    Gson gson = new Gson();
-
     private MongoResmiDao mongoResmiDao;
 
     @Before
     public void setup() {
         when(defaultNameNormalizer.normalize(anyString())).then(returnsFirstArg());
-        mongoResmiDao = new MongoResmiDao(mongoOperations, jsonObjectMongoWriteConverter, defaultNameNormalizer, resmiOrderMock, gson, new JsonAggregationResultsFactory(gson));
+        mongoResmiDao = new MongoResmiDao(mongoOperations, jsonObjectMongoWriteConverter, defaultNameNormalizer, resmiOrderMock, new JsonAggregationResultsFactory(new Gson()));
     }
 
     @Test
@@ -206,7 +204,7 @@ import com.mongodb.WriteResult;
     @Test
     public void testDelete() {
         ResourceUri uri = new ResourceUri("type", "id", "relation", "uri");
-        mongoResmiDao.deleteRelation(uri);
+        mongoResmiDao.deleteRelation(uri, Optional.empty());
         Query query = new Query(Criteria.where("_src_id").is("id").and("_dst_id").is("uri"));
         verify(mongoOperations).findAllAndRemove(eq(query), any(), eq("type.relation"));
     }

@@ -1,12 +1,14 @@
 package io.corbel.resources.rem.resmi;
 
 import java.net.URI;
+import java.util.List;
 import java.util.Optional;
 
 import javax.ws.rs.core.Response;
 
 import com.google.gson.JsonObject;
 
+import io.corbel.lib.queries.request.ResourceQuery;
 import io.corbel.lib.ws.api.error.ErrorResponseFactory;
 import io.corbel.resources.rem.model.ResourceUri;
 import io.corbel.resources.rem.request.*;
@@ -39,10 +41,10 @@ public class ResmiDeleteRem extends AbstractResmiRem {
     @Override
     public Response relation(String type, ResourceId id, String relation, RequestParameters<RelationParameters> parameters,
             Optional<JsonObject> entity) {
-        ResourceUri uri = buildRelationUri(type, id.getId(), relation,
-                parameters.getOptionalApiParameters().flatMap(RelationParameters::getPredicateResource));
+        Optional<RelationParameters> apiParameters = parameters.getOptionalApiParameters();
+        ResourceUri uri = buildRelationUri(type, id.getId(), relation, apiParameters.flatMap(RelationParameters::getPredicateResource));
         if (!id.isWildcard() || uri.getRelationId() != null) {
-            resmiService.deleteRelation(uri);
+            resmiService.deleteRelation(uri, apiParameters.flatMap(RelationParameters::getQueries));
             return noContent();
         } else {
             return ErrorResponseFactory.getInstance().methodNotAllowed();

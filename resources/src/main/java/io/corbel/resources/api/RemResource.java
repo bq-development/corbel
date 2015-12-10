@@ -1,24 +1,11 @@
 package io.corbel.resources.api;
 
-import io.dropwizard.auth.Auth;
-
 import java.io.InputStream;
 import java.net.URI;
 
 import javax.annotation.Resource;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.MatrixParam;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.*;
+import javax.ws.rs.core.*;
 import javax.ws.rs.ext.Providers;
 
 import org.glassfish.jersey.server.ContainerRequest;
@@ -26,13 +13,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpMethod;
 
-import io.corbel.resources.href.LinksFilter;
-import io.corbel.resources.rem.request.ResourceId;
-import io.corbel.resources.service.ResourcesService;
 import io.corbel.lib.queries.jaxrs.QueryParameters;
 import io.corbel.lib.token.TokenInfo;
 import io.corbel.lib.ws.annotation.Rest;
 import io.corbel.lib.ws.auth.AuthorizationInfo;
+import io.corbel.resources.href.LinksFilter;
+import io.corbel.resources.rem.request.ResourceId;
+import io.corbel.resources.service.ResourcesService;
+import io.dropwizard.auth.Auth;
 
 /**
  * Entry point for any resource on the resources. Here we obtain the appropiate Resource Resolver Module (REM) and delegate on it the
@@ -151,8 +139,9 @@ import io.corbel.lib.ws.auth.AuthorizationInfo;
     @DELETE
     @Path("/{type}/{id}/{rel}")
     public Response deleteRelation(@PathParam("type") String type, @PathParam("id") ResourceId id, @PathParam("rel") String rel,
-            @Context Request request, @Context UriInfo uriInfo, @Auth AuthorizationInfo authorizationInfo, @MatrixParam("r") String resource) {
-        return resourcesService.relationOperation(type, id, rel, request, uriInfo, getTokenInfo(authorizationInfo), HttpMethod.PUT, null,
+            @Context Request request, @Context UriInfo uriInfo, @Auth AuthorizationInfo authorizationInfo, @MatrixParam("r") String resource,
+                                   @Rest QueryParameters queryParameters) {
+        return resourcesService.relationOperation(type, id, rel, request, uriInfo, getTokenInfo(authorizationInfo), HttpMethod.DELETE, queryParameters,
                 resource, null, null);
     }
 

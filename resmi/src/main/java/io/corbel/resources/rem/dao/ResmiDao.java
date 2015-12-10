@@ -49,7 +49,7 @@ public interface ResmiDao {
 
     List<GenericDocument> deleteCollection(ResourceUri uri, Optional<List<ResourceQuery>> queries);
 
-    List<GenericDocument> deleteRelation(ResourceUri uri);
+    List<GenericDocument> deleteRelation(ResourceUri uri, Optional<List<ResourceQuery>> queries);
 
     JsonElement count(ResourceUri resourceUri, List<ResourceQuery> resourceQueries);
 

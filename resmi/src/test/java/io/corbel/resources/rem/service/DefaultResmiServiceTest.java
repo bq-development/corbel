@@ -232,8 +232,8 @@ import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
     @Test
     public void deleteRelationTest() throws NotFoundException {
         ResourceUri uri = new ResourceUri(TYPE, ID, RELATION_TYPE, "dst");
-        defaultResmiService.deleteRelation(uri);
-        verify(resmiDao).deleteRelation(uri);
+        defaultResmiService.deleteRelation(uri, Optional.empty());
+        verify(resmiDao).deleteRelation(uri, Optional.empty());
     }
 
     @Test

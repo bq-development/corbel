@@ -59,6 +59,7 @@ public abstract class ResmiRemTest {
         RequestParameters requestParameters = Mockito.mock(RequestParameters.class);
         RelationParameters parameters = Mockito.mock(RelationParameters.class);
         when(parameters.getPredicateResource()).thenReturn(optional);
+        when(parameters.getQueries()).thenReturn(Optional.empty());
         when(requestParameters.getApiParameters()).thenReturn(parameters);
         when(requestParameters.getOptionalApiParameters()).thenReturn(Optional.of(parameters));
         return requestParameters;

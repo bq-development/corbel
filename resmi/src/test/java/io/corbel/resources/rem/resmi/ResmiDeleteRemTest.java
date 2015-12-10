@@ -67,7 +67,7 @@ public class ResmiDeleteRemTest extends ResmiRemTest {
         ResourceUri uri = new ResourceUri(TEST_TYPE, TEST_ID.getId(), TEST_RELATION);
         Response response = deleteRem.relation(TEST_TYPE, TEST_ID, TEST_RELATION, getParametersWithEmptyUri(), Optional.empty());
         assertThat(response.getStatus()).isEqualTo(204);
-        verify(resmiServiceMock).deleteRelation(eq(uri));
+        verify(resmiServiceMock).deleteRelation(eq(uri), eq(Optional.empty()));
     }
 
     @Test

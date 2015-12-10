@@ -58,7 +58,7 @@ public interface ResmiService {
 
     void deleteResource(ResourceUri uri);
 
-    void deleteRelation(ResourceUri uri);
+    void deleteRelation(ResourceUri uri, Optional<List<ResourceQuery>> queries);
 
     void ensureExpireIndex(ResourceUri uri);
 

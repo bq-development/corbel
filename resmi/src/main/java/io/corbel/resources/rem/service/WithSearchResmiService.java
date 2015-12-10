@@ -191,8 +191,8 @@ public class WithSearchResmiService extends DefaultResmiService implements Searc
     }
 
     @Override
-    public void deleteRelation(ResourceUri uri) {
-        List<GenericDocument> deleteEntries = resmiDao.deleteRelation(uri);
+    public void deleteRelation(ResourceUri uri, Optional<List<ResourceQuery>> queries) {
+        List<GenericDocument> deleteEntries = resmiDao.deleteRelation(uri, queries);
         deleteInSearchService(uri, deleteEntries);
     }
 

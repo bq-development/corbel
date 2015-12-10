@@ -65,7 +65,7 @@ import com.google.gson.Gson;
     @Bean
     public ResmiDao mongoResmiDao(AggregationResultsFactory<JsonElement> aggregationResultsFactory) throws Exception {
         return new MongoResmiDao(mongoTemplate(), getJsonObjectMongoWriteConverter(), getNamespaceNormilizer(), getMongoResmiOrder(),
-                getGson(), aggregationResultsFactory);
+                aggregationResultsFactory);
     }
 
     @Bean

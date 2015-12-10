@@ -52,17 +52,15 @@ public class MongoResmiDao implements ResmiDao {
     private final JsonObjectMongoWriteConverter jsonObjectMongoWriteConverter;
     private final NamespaceNormalizer namespaceNormalizer;
     private final ResmiOrder resmiOrder;
-    private final Gson gson;
     private final AggregationResultsFactory<JsonElement> aggregationResultsFactory;
 
     public MongoResmiDao(MongoOperations mongoOperations, JsonObjectMongoWriteConverter jsonObjectMongoWriteConverter,
-                         NamespaceNormalizer namespaceNormalizer, ResmiOrder resmiOrder, Gson gson,
+                         NamespaceNormalizer namespaceNormalizer, ResmiOrder resmiOrder,
                          AggregationResultsFactory<JsonElement> aggregationResultsFactory) {
         this.mongoOperations = mongoOperations;
         this.jsonObjectMongoWriteConverter = jsonObjectMongoWriteConverter;
         this.namespaceNormalizer = namespaceNormalizer;
         this.resmiOrder = resmiOrder;
-        this.gson = gson;
         this.aggregationResultsFactory = aggregationResultsFactory;
     }
 
@@ -302,8 +300,9 @@ public class MongoResmiDao implements ResmiDao {
     }
 
     @Override
-    public List<GenericDocument> deleteRelation(ResourceUri uri) {
-        Criteria criteria = new Criteria();
+    public List<GenericDocument> deleteRelation(ResourceUri uri, Optional<List<ResourceQuery>> queries) {
+        List<ResourceQuery> resourceQueries = queries.orElse(Collections.<ResourceQuery>emptyList());
+        Criteria criteria = CriteriaBuilder.buildFromResourceQueries(resourceQueries);
         if (!uri.isTypeWildcard()) {
             criteria = criteria.and(JsonRelation._SRC_ID).is(uri.getTypeId());
         }

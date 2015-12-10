@@ -1,25 +1,5 @@
 package io.corbel.resources.service;
 
-import io.corbel.event.ResourceEvent;
-import io.corbel.eventbus.service.EventBus;
-import io.corbel.lib.queries.jaxrs.QueryParameters;
-import io.corbel.lib.queries.parser.QueryParametersParser;
-import io.corbel.lib.token.TokenInfo;
-import io.corbel.lib.ws.api.error.ApiRequestException;
-import io.corbel.lib.ws.api.error.ErrorResponseFactory;
-import io.corbel.rem.internal.RemEntityTypeResolver;
-import io.corbel.resources.rem.Rem;
-import io.corbel.resources.rem.request.CollectionParameters;
-import io.corbel.resources.rem.request.CollectionParametersImpl;
-import io.corbel.resources.rem.request.RelationParameters;
-import io.corbel.resources.rem.request.RelationParametersImpl;
-import io.corbel.resources.rem.request.RequestParameters;
-import io.corbel.resources.rem.request.RequestParametersImpl;
-import io.corbel.resources.rem.request.ResourceId;
-import io.corbel.resources.rem.request.ResourceParameters;
-import io.corbel.resources.rem.request.ResourceParametersImpl;
-import io.corbel.resources.rem.service.RemService;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
@@ -28,12 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.core.*;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.Providers;
 
@@ -45,6 +20,18 @@ import org.springframework.http.HttpMethod;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.google.common.collect.Lists;
+
+import io.corbel.event.ResourceEvent;
+import io.corbel.eventbus.service.EventBus;
+import io.corbel.lib.queries.jaxrs.QueryParameters;
+import io.corbel.lib.queries.parser.QueryParametersParser;
+import io.corbel.lib.token.TokenInfo;
+import io.corbel.lib.ws.api.error.ApiRequestException;
+import io.corbel.lib.ws.api.error.ErrorResponseFactory;
+import io.corbel.rem.internal.RemEntityTypeResolver;
+import io.corbel.resources.rem.Rem;
+import io.corbel.resources.rem.request.*;
+import io.corbel.resources.rem.service.RemService;
 
 /**
  * Created by Alexander De Leon on 26/05/15.
@@ -86,7 +73,7 @@ public class DefaultResourcesService implements ResourcesService {
         Response result;
         try {
             List<org.springframework.http.MediaType> acceptedMediaTypes = getRequestAcceptedMediaTypes(request);
-            Rem rem = remService.getRem(type, acceptedMediaTypes, getRequestMethod(request));
+            Rem rem = remService.getRem(type, acceptedMediaTypes, method);
 
             queryParameters = (method.equals(HttpMethod.GET) || method.equals(HttpMethod.DELETE) || method.equals(HttpMethod.PUT)) ? queryParameters
                     : getDefaultQueryParameters();
@@ -126,7 +113,7 @@ public class DefaultResourcesService implements ResourcesService {
         Response result;
         try {
             List<org.springframework.http.MediaType> acceptedMediaTypes = getRequestAcceptedMediaTypes(request);
-            Rem rem = remService.getRem(type, acceptedMediaTypes, getRequestMethod(request));
+            Rem rem = remService.getRem(type, acceptedMediaTypes, method);
 
             RequestParameters<ResourceParameters> resourceParameters = resourceParameters(queryParameters, tokenInfo, acceptedMediaTypes,
                     contentLength, uriInfo.getQueryParameters(), request);
@@ -163,9 +150,9 @@ public class DefaultResourcesService implements ResourcesService {
             HttpMethod method, QueryParameters queryParameters, String resource, InputStream inputStream, MediaType contentType) {
         try {
             List<org.springframework.http.MediaType> acceptedMediaTypes = getRequestAcceptedMediaTypes(request);
-            Rem rem = remService.getRem(type + "/" + id.getId() + "/" + rel, acceptedMediaTypes, getRequestMethod(request));
+            Rem rem = remService.getRem(type + "/" + id.getId() + "/" + rel, acceptedMediaTypes, method);
 
-            queryParameters = method.equals(HttpMethod.GET) ? queryParameters : getDefaultQueryParameters();
+            queryParameters = Optional.ofNullable(queryParameters).orElse(getDefaultQueryParameters());
             RequestParameters<RelationParameters> parameters = relationParameters(queryParameters, Optional.ofNullable(resource),
                     tokenInfo, acceptedMediaTypes, uriInfo.getQueryParameters(), request);
             Optional<?> entity = getEntity(Optional.ofNullable(inputStream), rem, contentType);
@@ -214,11 +201,6 @@ public class DefaultResourcesService implements ResourcesService {
                 input.getSubtype(), input.getParameters()));
     }
 
-    private org.springframework.http.HttpMethod getRequestMethod(Request request) {
-        return org.springframework.http.HttpMethod.valueOf(request.getMethod());
-    }
-
-
     private MultivaluedMap<String, String> getHeadersFromRequest(Request request) {
         MultivaluedMap<String, String> headers;
 
@@ -244,6 +226,5 @@ public class DefaultResourcesService implements ResourcesService {
         }
         return Optional.empty();
     }
-
 
 }

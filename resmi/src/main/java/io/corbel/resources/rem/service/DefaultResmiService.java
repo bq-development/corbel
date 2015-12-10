@@ -178,8 +178,8 @@ public class DefaultResmiService implements ResmiService {
     }
 
     @Override
-    public void deleteRelation(ResourceUri uri) {
-        resmiDao.deleteRelation(uri);
+    public void deleteRelation(ResourceUri uri, Optional<List<ResourceQuery>> queries) {
+        resmiDao.deleteRelation(uri, queries);
     }
 
     @Override
