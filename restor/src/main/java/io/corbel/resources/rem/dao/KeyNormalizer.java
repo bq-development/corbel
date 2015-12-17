@@ -1,6 +1,6 @@
 package io.corbel.resources.rem.dao;
 
-import org.springframework.http.MediaType;
+import io.corbel.resources.rem.model.RestorResourceUri;
 
 /**
  * Normalizes namespaced labels into syntactic valid ids for Resources Storage.
@@ -10,6 +10,6 @@ import org.springframework.http.MediaType;
  */
 public interface KeyNormalizer {
 
-	String normalize(MediaType mediaType, String collection, String resource);
+	String normalize(RestorResourceUri uri);
 
 }

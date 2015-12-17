@@ -1,5 +1,6 @@
 package io.corbel.resources.rem.dao;
 
+import io.corbel.resources.rem.model.RestorResourceUri;
 import io.corbel.resources.rem.model.RestorInputStream;
 import org.springframework.http.MediaType;
 
@@ -25,15 +26,15 @@ public class S3RestorDao implements RestorDao {
     }
 
     @Override
-    public RestorObject getObject(MediaType mediaType, String collection, String resource) {
-        return getObject(mediaType, collection, resource, 0);
+    public RestorObject getObject(RestorResourceUri resourceUri) {
+        return getObject(resourceUri, 0);
     }
 
-    private RestorObject getObject(MediaType mediaType, String collection, String resource, int retryNumber) {
-        GetObjectRequest objectRequest = new GetObjectRequest(bucket, keyNormalizer.normalize(mediaType, collection, resource));
+    private RestorObject getObject(RestorResourceUri resourceUri, int retryNumber) {
+        GetObjectRequest objectRequest = new GetObjectRequest(bucket,  keyNormalizer.normalize(resourceUri));
         try {
             S3Object s3Object = amazonS3Client.getObject(objectRequest);
-            MediaType objectType = MediaType.parseMediaType(s3Object.getObjectMetadata().getContentType());
+            String objectType = MediaType.parseMediaType(s3Object.getObjectMetadata().getContentType()).toString();
             return new RestorObject(objectType, new RestorInputStream(s3Object), s3Object.getObjectMetadata().getContentLength());
         } catch (AmazonS3Exception e) {
             switch (e.getStatusCode()) {
@@ -41,7 +42,7 @@ public class S3RestorDao implements RestorDao {
                     return null;
                 case 500:
                     if (retryNumber > amazonS3Retries) {
-                        return getObject(mediaType, collection, resource, retryNumber + 1);
+                        return getObject(resourceUri, retryNumber + 1);
                     }
                 default:
                     throw e;
@@ -50,31 +51,31 @@ public class S3RestorDao implements RestorDao {
     }
 
     @Override
-    public void uploadObject(String collection, String resource, RestorObject object) {
-        PutObjectRequest objectRequest = new PutObjectRequest(bucket, keyNormalizer.normalize(object.getMediaType(), collection, resource),
+    public void uploadObject(RestorResourceUri resourceUri, RestorObject object) {
+        PutObjectRequest objectRequest = new PutObjectRequest(bucket, keyNormalizer.normalize(resourceUri),
                 object.getInputStream(), createObjectMetadataForObject(object.getMediaType(), object.getContentLength()));
         amazonS3Client.putObject(objectRequest);
     }
 
     @Override
-    public void deleteObject(MediaType mediaType, String collection, String resource) {
-        deleteObject(mediaType, collection, resource, 0);
+    public void deleteObject(RestorResourceUri resourceUri) {
+        deleteObject(resourceUri, 0);
     }
 
     @Override
-    public void deleteObjectWithPrefix(MediaType mediaType, String collection, String prefix) {
+    public void deleteObjectWithPrefix(RestorResourceUri resourceUri, String prefix) {
         amazonS3Client.listObjects(new ListObjectsRequest().withBucketName(bucket).withPrefix(prefix)).getObjectSummaries()
-                .forEach(objectSummary -> deleteObject(mediaType, collection, objectSummary.getKey()));
+                .forEach(objectSummary -> deleteObject(new RestorResourceUri(resourceUri.getDomain(), resourceUri.getMediaType(), resourceUri.getType(), objectSummary.getKey())));
     }
 
-    private void deleteObject(MediaType mediaType, String collection, String resource, int retryNumber) {
+    private void deleteObject(RestorResourceUri resourceUri, int retryNumber) {
         try {
-            amazonS3Client.deleteObject(new DeleteObjectRequest(bucket, keyNormalizer.normalize(mediaType, collection, resource)));
+            amazonS3Client.deleteObject(new DeleteObjectRequest(bucket, keyNormalizer.normalize(resourceUri)));
         } catch (AmazonS3Exception e) {
             switch (e.getStatusCode()) {
                 case 500:
                     if (retryNumber > amazonS3Retries) {
-                        deleteObject(mediaType, collection, resource, retryNumber + 1);
+                        deleteObject(resourceUri, retryNumber + 1);
                         break;
                     }
                 default:
@@ -83,9 +84,9 @@ public class S3RestorDao implements RestorDao {
         }
     }
 
-    private ObjectMetadata createObjectMetadataForObject(MediaType mediaType, Long contentLength) {
+    private ObjectMetadata createObjectMetadataForObject(String mediaType, Long contentLength) {
         ObjectMetadata objectMetadata = new ObjectMetadata();
-        objectMetadata.setContentType(mediaType.toString());
+        objectMetadata.setContentType(mediaType);
         if (contentLength != null) {
             objectMetadata.setContentLength(contentLength);
         }

@@ -1,4 +1,4 @@
-FROM      java:8
+FROM      java:8u45
 MAINTAINER Corbel Team @ bq <corbel-dev@bq.com>
 
 EXPOSE ${port}

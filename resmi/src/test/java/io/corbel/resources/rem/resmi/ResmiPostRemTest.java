@@ -38,11 +38,13 @@ public class ResmiPostRemTest extends ResmiRemTest {
 
     @Test
     public void testPostCollectionWithUserToken() throws URISyntaxException, StartsWithUnderscoreException {
-        ResourceUri uri = new ResourceUri(TEST_TYPE);
+        ResourceUri uri = new ResourceUri(DOMAIN, TEST_TYPE);
 
         RequestParameters<CollectionParameters> requestParameters = mock(RequestParameters.class);
         TokenInfo tokenInfo = mock(TokenInfo.class);
         when(requestParameters.getTokenInfo()).thenReturn(tokenInfo);
+        when(requestParameters.getRequestedDomain()).thenReturn(DOMAIN);
+
         when(tokenInfo.getUserId()).thenReturn("userId");
 
         JsonObject testResource = getTestResource();
@@ -71,11 +73,12 @@ public class ResmiPostRemTest extends ResmiRemTest {
 
     @Test
     public void testPostCollectionWithClientToken() throws URISyntaxException, StartsWithUnderscoreException {
-        ResourceUri uri = new ResourceUri(TEST_TYPE);
+        ResourceUri uri = new ResourceUri(DOMAIN, TEST_TYPE);
 
         RequestParameters<CollectionParameters> requestParameters = mock(RequestParameters.class);
         TokenInfo tokenInfo = mock(TokenInfo.class);
         when(requestParameters.getTokenInfo()).thenReturn(tokenInfo);
+        when(requestParameters.getRequestedDomain()).thenReturn(DOMAIN);
         when(tokenInfo.getUserId()).thenReturn(null);
 
         JsonObject testResource = getTestResource();
@@ -88,13 +91,13 @@ public class ResmiPostRemTest extends ResmiRemTest {
 
     @Test
     public void testInvalidPostCollection() {
-        Response response = postRem.collection(TEST_TYPE, null, null, Optional.empty());
+        Response response = postRem.collection(TEST_TYPE, getParametersWithEmptyUri(), null, Optional.empty());
         assertThat(response.getStatus()).isEqualTo(400);
     }
 
     @Test
     public void testMethodNotAllowed() {
-        Response response = postRem.resource(TEST_TYPE, TEST_ID, null, Optional.empty());
+        Response response = postRem.resource(TEST_TYPE, TEST_ID, getParametersWithEmptyUri(), Optional.empty());
         assertThat(response.getStatus()).isEqualTo(405);
     }
 

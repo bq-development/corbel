@@ -1,11 +1,12 @@
 package io.corbel.resources.rem.util;
 
-import io.corbel.lib.queries.request.Pagination;
-import io.corbel.resources.rem.request.*;
+import java.util.Optional;
 
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
-import java.util.Optional;
+
+import io.corbel.lib.queries.request.Pagination;
+import io.corbel.resources.rem.request.*;
 
 public class ImageRemUtil {
 
@@ -16,7 +17,9 @@ public class ImageRemUtil {
         newParameters.putSingle("prefix", cacheCollection + "/" + originalFilename);
 
         return new RequestParametersImpl<>(new CollectionParametersImpl(new Pagination(1, 10), Optional.empty(), Optional.empty(),
-                Optional.empty(), Optional.empty(), Optional.empty()), requestParameters.getTokenInfo(),
+ Optional.empty(), Optional.empty(),
+                        Optional.empty()),
+                requestParameters.getTokenInfo(), requestParameters.getRequestedDomain(),
                 requestParameters.getAcceptedMediaTypes(), requestParameters.getContentLength(), newParameters,
                 requestParameters.getHeaders());
     }

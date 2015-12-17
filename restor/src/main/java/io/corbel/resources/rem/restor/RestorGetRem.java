@@ -6,6 +6,7 @@ import java.util.Optional;
 import javax.ws.rs.core.Response;
 
 import io.corbel.lib.ws.api.error.ErrorResponseFactory;
+import io.corbel.resources.rem.model.RestorResourceUri;
 import io.corbel.resources.rem.request.RequestParameters;
 import io.corbel.resources.rem.dao.RestorDao;
 import io.corbel.resources.rem.request.ResourceId;
@@ -24,7 +25,10 @@ public class RestorGetRem extends AbstractRestorRem {
 	@Override
 	public Response resource(String collection, ResourceId resource, RequestParameters<ResourceParameters> parameters,
 			Optional<InputStream> entity) {
-		RestorObject object = dao.getObject(getMediaType(parameters), collection, resource.getId());
+
+        RestorResourceUri resourceUri = new RestorResourceUri(parameters.getRequestedDomain(), getMediaType(parameters), collection, resource.getId());
+
+        RestorObject object = dao.getObject(resourceUri);
 		if (object != null) {
 			return Response.ok().type(object.getMediaType().toString()).entity(object.getInputStream()).build();
 		}

@@ -37,6 +37,7 @@ public class WithSearchResmiService extends DefaultResmiService implements Searc
 
     private static final String ALL_FIELDS = "*";
     public final static String SEARCHABLE_FIELDS = "searchable";
+    private static final String RESMI_DOMAIN = "_resmi";
 
     private final ResmiSearch search;
     private final SearchableFieldsRegistry searchableFieldsRegistry;
@@ -197,7 +198,7 @@ public class WithSearchResmiService extends DefaultResmiService implements Searc
     }
 
     private void deleteInSearchService(ResourceUri uri) {
-        if (!searchableFieldsRegistry.getFieldsFromType(uri.getType()).isEmpty()) {
+        if (!searchableFieldsRegistry.getFieldsFromResourceUri(uri).isEmpty()) {
             search.deleteDocument(uri);
         }
     }
@@ -215,7 +216,7 @@ public class WithSearchResmiService extends DefaultResmiService implements Searc
     }
 
     private void deleteInSearchService(ResourceUri uri, List<GenericDocument> deleteEntries) {
-        if (!searchableFieldsRegistry.getFieldsFromType(uri.getType()).isEmpty()) {
+        if (!searchableFieldsRegistry.getFieldsFromResourceUri(uri).isEmpty()) {
             for (GenericDocument deleteEntry : deleteEntries) {
                 search.deleteDocument(uri.setRelationId(deleteEntry.getId()));
             }
@@ -224,13 +225,12 @@ public class WithSearchResmiService extends DefaultResmiService implements Searc
 
     @Override
     public List<SearchResource> getSearchableFields() {
-        return resmiDao.findAll(SEARCHABLE_FIELDS, SearchResource.class);
+        return resmiDao.findAll(new ResourceUri(RESMI_DOMAIN, SEARCHABLE_FIELDS), SearchResource.class);
     }
-
 
     @Override
     public void addSearchableFields(SearchResource searchResource) {
-        resmiDao.saveResource(new ResourceUri(SEARCHABLE_FIELDS), searchResource);
+        resmiDao.saveResource(new ResourceUri(RESMI_DOMAIN, SEARCHABLE_FIELDS), searchResource);
         searchableFieldsRegistry.addFields(searchResource);
     }
 

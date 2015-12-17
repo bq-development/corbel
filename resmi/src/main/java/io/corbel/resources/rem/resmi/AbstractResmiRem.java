@@ -33,16 +33,16 @@ public abstract class AbstractResmiRem implements Rem<JsonObject> {
         }
     }
 
-    protected ResourceUri buildCollectionUri(String type) {
-        return new ResourceUri(type);
+    protected ResourceUri buildCollectionUri(String domain, String type) {
+        return new ResourceUri(domain, type);
     }
 
-    protected ResourceUri buildResourceUri(String type, String id) {
-        return new ResourceUri(type, id);
+    protected ResourceUri buildResourceUri(String domain, String type, String id) {
+        return new ResourceUri(domain, type, id);
     }
 
-    protected ResourceUri buildRelationUri(String type, String id, String relation,Optional<String> predicateResource) {
-        return new ResourceUri(type, id, relation, predicateResource.orElse(null));
+    protected ResourceUri buildRelationUri(String domain, String type, String id, String relation,Optional<String> predicateResource) {
+        return new ResourceUri(domain, type, id, relation, predicateResource.orElse(null));
     }
 
     protected Response noContent() {

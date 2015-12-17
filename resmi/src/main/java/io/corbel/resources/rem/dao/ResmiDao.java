@@ -19,7 +19,7 @@ import com.google.gson.JsonObject;
  */
 public interface ResmiDao {
 
-    boolean exists(String type, String id);
+    boolean existsResources(ResourceUri uri);
 
     JsonObject findResource(ResourceUri uri);
 
@@ -69,7 +69,7 @@ public interface ResmiDao {
 
     void moveRelation(ResourceUri uri, RelationMoveOperation relationMoveOperation);
 
-    <T> List<T> findAll(String collection, Class<T> entityClass);
+    <T> List<T> findAll(ResourceUri uri, Class<T> entityClass);
 
     void ensureExpireIndex(ResourceUri uri);
 

@@ -15,6 +15,7 @@ import com.google.gson.JsonPrimitive;
 
 public class DefaultResmiOrder implements ResmiOrder {
 
+    private static final String DOMAIN_CONCATENATION = "@";
     private static final String RELATION_CONCATENATOR = ".";
     private static final String RELATION_ORDER_COUNTER_KEY = "counter";
     private static final String ORDER_FIELD = "_order";
@@ -29,19 +30,21 @@ public class DefaultResmiOrder implements ResmiOrder {
     }
 
     @Override
-    public void addNextOrderInRelation(String type, String id, String relation, JsonObject relationJson) {
-        relationJson.add(ORDER_FIELD, new JsonPrimitive(nextOrderInRelation(type, id, relation)));
+    public void addNextOrderInRelation(ResourceUri uri, JsonObject relationJson) {
+        relationJson.add(ORDER_FIELD, new JsonPrimitive(nextOrderInRelation(uri)));
     }
 
     @Override
     public void moveRelation(ResourceUri uri, RelationMoveOperation relationMoveOperation) {
-        String originCollection = namespaceNormalizer.normalize(uri.getType());
-        String destCollection = namespaceNormalizer.normalize(uri.getRelation());
-
         if (relationMoveOperation.getValue() < 1) {
             throw new IllegalArgumentException("$pos must be greater or equal than 1");
         }
-        String collection = originCollection + RELATION_CONCATENATOR + destCollection;;
+
+        String domain = uri.getDomain();
+        String originCollection = namespaceNormalizer.normalize(uri.getType());
+        String destCollection = namespaceNormalizer.normalize(uri.getRelation());
+        String collection = domain + DOMAIN_CONCATENATION + originCollection + RELATION_CONCATENATOR + destCollection;
+
         Query query = Query.query(Criteria.where(JsonRelation._SRC_ID).is(uri.getTypeId()).and(JsonRelation._DST_ID).ne(uri.getRelationId())).limit(2);
         if (relationMoveOperation.getValue() > 1) {
             query.skip((int) relationMoveOperation.getValue() - 2);
@@ -60,13 +63,13 @@ public class DefaultResmiOrder implements ResmiOrder {
             if (order == order1 || order == order2) {
                 Update update = new Update();
                 update.inc(ORDER_FIELD, 1);
-                nextOrderInRelation(originCollection, uri.getTypeId(), destCollection);
+                nextOrderInRelation(uri);
                 mongoOperations.updateMulti(Query.query(Criteria.where(JsonRelation._SRC_ID).is(uri.getTypeId()).and(ORDER_FIELD).gt(order1)), update,
                         collection);
                 order = (order1 + order2 + 1) / 2;
             }
         } else {
-            order = nextOrderInRelation(originCollection, uri.getTypeId(), destCollection);
+            order = nextOrderInRelation(uri);
         }
 
         Update update = new Update();
@@ -75,9 +78,9 @@ public class DefaultResmiOrder implements ResmiOrder {
                 collection);
     }
 
-    private double nextOrderInRelation(String type, String id, String relation) {
+    private double nextOrderInRelation(ResourceUri uri) {
         Query query = Query.query(Criteria.where(_ID).is(
-                namespaceNormalizer.normalize(type).concat(id).concat(namespaceNormalizer.normalize(relation))));
+                uri.getDomain().concat(namespaceNormalizer.normalize(uri.getType())).concat(uri.getTypeId()).concat(namespaceNormalizer.normalize(uri.getRelation()))));
         query.fields().include(RELATION_ORDER_COUNTER_KEY);
         Update update = new Update().inc(RELATION_ORDER_COUNTER_KEY, 1);
         FindAndModifyOptions options = new FindAndModifyOptions();

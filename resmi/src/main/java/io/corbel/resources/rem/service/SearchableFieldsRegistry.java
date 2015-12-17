@@ -9,11 +9,11 @@ import io.corbel.resources.rem.model.SearchResource;
  * @author Francisco Sanchez
  */
 public interface SearchableFieldsRegistry {
-    public Set<String> getFieldsFromType(String type);
+    Set<String> getFieldsFromType(String domain, String type);
 
-    public Set<String> getFieldsFromRelation(String type, String relation);
+    Set<String> getFieldsFromRelation(String domain, String type, String relation);
 
-    public void addFields(SearchResource searchResource);
+    void addFields(SearchResource searchResource);
 
     Set<String> getFieldsFromResourceUri(ResourceUri resourceUri);
 }

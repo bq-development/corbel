@@ -7,6 +7,7 @@ import java.util.Optional;
 import javax.ws.rs.core.Response;
 
 import io.corbel.lib.ws.api.error.ErrorResponseFactory;
+import io.corbel.resources.rem.model.RestorResourceUri;
 import io.corbel.resources.rem.request.RequestParameters;
 import io.corbel.resources.rem.dao.RestorDao;
 import io.corbel.resources.rem.request.ResourceId;
@@ -44,8 +45,9 @@ public class RestorPutRem extends AbstractRestorRem {
 						break;
 				}
 			}
-			dao.uploadObject(collection, resource.getId(), new RestorObject(getMediaType(parameters), stream,
-					contentLength));
+            RestorResourceUri resourceUri = new RestorResourceUri(parameters.getRequestedDomain(), getMediaType(parameters), collection, resource.getId());
+
+            dao.uploadObject(resourceUri, new RestorObject(getMediaType(parameters), stream, contentLength));
 			return Response.noContent().build();
 		} catch (NumberFormatException e) {
 			return ErrorResponseFactory.getInstance().badRequest();

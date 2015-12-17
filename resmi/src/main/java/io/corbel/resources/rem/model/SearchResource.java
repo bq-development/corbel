@@ -18,13 +18,13 @@ public class SearchResource {
 
     public SearchResource() {}
 
-    public SearchResource(String type, Set<String> fields) {
-        this.resourceUri = new ResourceUri(type);
+    public SearchResource(String domain, String type, Set<String> fields) {
+        this.resourceUri = new ResourceUri(domain, type);
         this.fields = fields;
     }
 
-    public SearchResource(String type, String relation, Set<String> fields) {
-        this.resourceUri = new ResourceUri(type, null, relation);
+    public SearchResource(String domain, String type, String relation, Set<String> fields) {
+        this.resourceUri = new ResourceUri(domain, type, null, relation);
         this.fields = fields;
     }
 

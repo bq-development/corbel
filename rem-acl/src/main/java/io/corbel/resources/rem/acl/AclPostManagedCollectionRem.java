@@ -29,12 +29,8 @@ public class AclPostManagedCollectionRem extends BaseRem<ManagedCollection> {
             Optional<ManagedCollection> entity) {
 
         return entity.map(managedCollection -> {
-            RequestParameters<ResourceParameters> requestParameters = new RequestParametersBuilder<ResourceParameters>()
-                    .tokenInfo(parameters.getTokenInfo()).acceptedMediaTypes(parameters.getAcceptedMediaTypes())
-                    .contentLength(parameters.getContentLength()).params(parameters.getParams()).headers(parameters.getHeaders()).build();
-
             String id = managedCollection.getId();
-            Response response = aclResourcesService.updateConfiguration(new ResourceId(id), requestParameters, managedCollection);
+            Response response = aclResourcesService.updateConfiguration(new ResourceId(id), managedCollection);
 
             if (response.getStatus() != Response.Status.NO_CONTENT.getStatusCode()) {
                 return response;

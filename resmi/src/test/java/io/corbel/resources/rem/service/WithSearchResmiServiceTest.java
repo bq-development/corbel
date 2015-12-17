@@ -41,8 +41,9 @@ import com.google.gson.JsonObject;
  */
 @RunWith(MockitoJUnitRunner.class) public class WithSearchResmiServiceTest {
 
+    String DOMAIN = "DOMAIN";
     String TYPE = "resource:TYPE";
-    ResourceUri RESOURCE_URI = new ResourceUri(TYPE);
+    ResourceUri RESOURCE_URI = new ResourceUri(DOMAIN, TYPE);
     String RELATION = "resource:RELATION";
     String ID = "test";
     int PAGE = 2;
@@ -76,7 +77,7 @@ import com.google.gson.JsonObject;
 
     @Test
     public void findWithSearchTest() throws BadConfigurationException {
-        ResourceUri resourceUri = new ResourceUri(TYPE);
+        ResourceUri resourceUri = new ResourceUri(DOMAIN, TYPE);
 
         JsonArray fakeResult = new JsonArray();
         Optional<String> search = Optional.of("my+search");
@@ -95,7 +96,7 @@ import com.google.gson.JsonObject;
 
     @Test
     public void deleteResourceByIdTest() throws NotFoundException {
-        ResourceUri uri = new ResourceUri(TYPE, ID);
+        ResourceUri uri = new ResourceUri(DOMAIN, TYPE, ID);
         defaultResmiService.deleteResource(uri);
         verify(resmiDao).deleteResource(uri);
         verify(resmiSearch, times(0)).deleteDocument(any());
@@ -103,8 +104,8 @@ import com.google.gson.JsonObject;
 
     @Test
     public void deleteIndexedResourceByIdTest() throws NotFoundException {
-        ResourceUri uri = new ResourceUri(TYPE, ID);
-        when(searchableFieldRegistry.getFieldsFromType(eq(TYPE))).thenReturn(new HashSet(Arrays.asList("t1", "t2")));
+        ResourceUri uri = new ResourceUri(DOMAIN, TYPE, ID);
+        when(searchableFieldRegistry.getFieldsFromResourceUri(eq(uri))).thenReturn(new HashSet(Arrays.asList("t1", "t2")));
         defaultResmiService.deleteResource(uri);
         verify(resmiDao).deleteResource(uri);
         verify(resmiSearch).deleteDocument(uri);
@@ -112,7 +113,7 @@ import com.google.gson.JsonObject;
 
     @Test
     public void createRelationTest() throws NotFoundException, StartsWithUnderscoreException {
-        ResourceUri uri = new ResourceUri(TYPE, ID, RELATION);
+        ResourceUri uri = new ResourceUri(DOMAIN, TYPE, ID, RELATION);
         when(searchableFieldRegistry.getFieldsFromResourceUri(eq(uri))).thenReturn(new HashSet(Arrays.asList("t1", "t2")));
         JsonObject relationData = new JsonObject();
         defaultResmiService.createRelation(uri, relationData);
@@ -128,7 +129,7 @@ import com.google.gson.JsonObject;
 
     @Test
     public void findInRelationWithSearchTest() throws BadConfigurationException {
-        ResourceUri resourceUri = new ResourceUri(TYPE, ID, RELATION);
+        ResourceUri resourceUri = new ResourceUri(DOMAIN, TYPE, ID, RELATION);
 
         JsonArray fakeResult = new JsonArray();
         Optional<String> search = Optional.of("my+search");

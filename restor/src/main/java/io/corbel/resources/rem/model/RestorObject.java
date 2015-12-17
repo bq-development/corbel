@@ -9,17 +9,17 @@ import org.springframework.http.MediaType;
  */
 public class RestorObject {
 
-	private final MediaType mediaType;
+	private final String mediaType;
 	private final InputStream inputStream;
 	private final Long contentLength;
 
-	public RestorObject(MediaType mediaType, InputStream inputStream, Long contentLength) {
+	public RestorObject(String mediaType, InputStream inputStream, Long contentLength) {
 		this.mediaType = mediaType;
 		this.inputStream = inputStream;
 		this.contentLength = contentLength;
 	}
 
-	public MediaType getMediaType() {
+	public String getMediaType() {
 		return mediaType;
 	}
 

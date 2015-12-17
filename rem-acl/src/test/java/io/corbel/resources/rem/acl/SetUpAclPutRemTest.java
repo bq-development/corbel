@@ -1,7 +1,6 @@
 package io.corbel.resources.rem.acl;
 
 import static io.corbel.resources.rem.acl.AclTestUtils.getEntity;
-import static io.corbel.resources.rem.acl.AclTestUtils.getEntityWithoutAcl;
 import static io.corbel.resources.rem.utils.AclUtils.buildMessage;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -45,12 +44,12 @@ import io.corbel.resources.rem.service.RemService;
 @RunWith(MockitoJUnitRunner.class) public class SetUpAclPutRemTest {
 
     private static final String USER_ID = "userId";
-    private static final Optional<String> OPT_USER_ID = Optional.of(USER_ID);
     private static final String GROUP_ID = "groupId";
     private static final List<String> GROUPS = Collections.singletonList(GROUP_ID);
     private static final String ALL = "ALL";
     private static final String TYPE = "type";
     private static final ResourceId RESOURCE_ID = new ResourceId("resourceId");
+    private static final String REQUESTED_DOMAIN_ID = "requestedDomainId";
 
     private SetUpAclPutRem rem;
 
@@ -72,6 +71,8 @@ import io.corbel.resources.rem.service.RemService;
         when(tokenInfo.getUserId()).thenReturn(USER_ID);
         when(tokenInfo.getGroups()).thenReturn(GROUPS);
         when(parameters.getTokenInfo()).thenReturn(tokenInfo);
+
+        when(parameters.getRequestedDomain()).thenReturn(REQUESTED_DOMAIN_ID);
     }
 
     @Test
@@ -95,7 +96,7 @@ import io.corbel.resources.rem.service.RemService;
         JsonObject entity = getEntity("asdf", "");
         when(getResponse.getEntity()).thenReturn(entity);
         Response response = rem.resource(TYPE, RESOURCE_ID, parameters,
-                Optional.of(new ByteArrayInputStream(getEntityWithoutAcl().toString().getBytes())), Optional.empty());
+                Optional.of(getEntityWithoutAcl()), Optional.empty());
         assertThat(response.getStatus()).isEqualTo(401);
         assertThat(getError(response).getErrorDescription()).isEqualTo(buildMessage(AclPermission.ADMIN));
     }
@@ -105,7 +106,7 @@ import io.corbel.resources.rem.service.RemService;
         JsonObject entity = getEntity(USER_ID, AclPermission.READ.toString());
         when(getResponse.getEntity()).thenReturn(entity);
         Response response = rem.resource(TYPE, RESOURCE_ID, parameters,
-                Optional.of(new ByteArrayInputStream(getEntityWithoutAcl().toString().getBytes())), Optional.empty());
+                Optional.of(getEntityWithoutAcl()), Optional.empty());
         assertThat(response.getStatus()).isEqualTo(401);
         assertThat(getError(response).getErrorDescription()).contains(AclPermission.ADMIN.toString());
     }
@@ -115,7 +116,7 @@ import io.corbel.resources.rem.service.RemService;
         JsonObject entity = getEntity(USER_ID, AclPermission.WRITE.toString());
         when(getResponse.getEntity()).thenReturn(entity);
         Response response = rem.resource(TYPE, RESOURCE_ID, parameters,
-                Optional.of(new ByteArrayInputStream(getEntityWithoutAcl().toString().getBytes())), Optional.empty());
+                Optional.of(getEntityWithoutAcl()), Optional.empty());
         assertThat(response.getStatus()).isEqualTo(401);
         assertThat(getError(response).getErrorDescription()).contains(AclPermission.ADMIN.toString());
     }
@@ -125,7 +126,7 @@ import io.corbel.resources.rem.service.RemService;
         List<String> ids = Arrays.asList("user:" + USER_ID, "group:" + GROUP_ID, ALL);
 
         for (String id : ids) {
-            when(aclResourcesService.isAuthorized(eq(tokenInfo), eq(TYPE), eq(RESOURCE_ID), eq(AclPermission.ADMIN))).thenReturn(true);
+            when(aclResourcesService.isAuthorized(eq(REQUESTED_DOMAIN_ID), eq(tokenInfo), eq(TYPE), eq(RESOURCE_ID), eq(AclPermission.ADMIN))).thenReturn(true);
 
             Response beforeResponse = mock(Response.class);
             when(beforeResponse.getStatus()).thenReturn(200);
@@ -151,7 +152,7 @@ import io.corbel.resources.rem.service.RemService;
 
     @Test
     public void testUpdateAclPermissionOverALLUsersAsNotAdmin() throws AclFieldNotPresentException {
-        when(aclResourcesService.isAuthorized(eq(tokenInfo), eq(TYPE), eq(RESOURCE_ID), eq(AclPermission.ADMIN))).thenReturn(true);
+        when(aclResourcesService.isAuthorized(eq(REQUESTED_DOMAIN_ID), eq(tokenInfo), eq(TYPE), eq(RESOURCE_ID), eq(AclPermission.ADMIN))).thenReturn(true);
 
         Response response = mock(Response.class);
         when(response.getStatus()).thenReturn(400);
@@ -170,7 +171,7 @@ import io.corbel.resources.rem.service.RemService;
         when(response.getStatus()).thenReturn(200);
         when(aclResourcesService.updateResource(any(), eq(TYPE), eq(RESOURCE_ID), eq(parameters), eq(acl), any())).thenReturn(response);
 
-        response = rem.resource(TYPE, RESOURCE_ID, parameters, Optional.of(new ByteArrayInputStream(objectToSave.toString().getBytes())));
+        response = rem.resource(TYPE, RESOURCE_ID, parameters, Optional.of(getEntityAsInputStream(objectToSave)));
         assertThat(response.getStatus()).isEqualTo(200);
     }
 
@@ -179,7 +180,7 @@ import io.corbel.resources.rem.service.RemService;
         List<String> ids = Arrays.asList("user:" + USER_ID, "group:" + GROUP_ID);
 
         for (String id : ids) {
-            when(aclResourcesService.isAuthorized(eq(tokenInfo), eq(TYPE), eq(RESOURCE_ID), eq(AclPermission.ADMIN))).thenReturn(true);
+            when(aclResourcesService.isAuthorized(eq(REQUESTED_DOMAIN_ID), eq(tokenInfo), eq(TYPE), eq(RESOURCE_ID), eq(AclPermission.ADMIN))).thenReturn(true);
 
             JsonObject objectToSave = new JsonObject();
             objectToSave.addProperty(id, AclPermission.READ.toString());
@@ -193,10 +194,12 @@ import io.corbel.resources.rem.service.RemService;
         }
     }
 
-    @Test
-    public void testUpdateMalformedAclPermission() {
-        assertThat(rem.resource(TYPE, RESOURCE_ID, parameters, Optional.of(new ByteArrayInputStream("blablabla".getBytes()))).getStatus())
-                .isEqualTo(422);
+    private InputStream getEntityWithoutAcl () {
+        return getEntityAsInputStream(AclTestUtils.getEntityWithoutAcl());
+    }
+
+    private InputStream getEntityAsInputStream (JsonObject jsonObject) {
+        return new ByteArrayInputStream(jsonObject.toString().getBytes());
     }
 
     private io.corbel.lib.ws.model.Error getError(Response response) {

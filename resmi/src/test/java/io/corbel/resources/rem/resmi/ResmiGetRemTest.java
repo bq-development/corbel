@@ -10,10 +10,7 @@ import io.corbel.lib.queries.request.Pagination;
 import io.corbel.lib.queries.request.ResourceQuery;
 import io.corbel.lib.queries.request.Sort;
 import io.corbel.resources.rem.model.ResourceUri;
-import io.corbel.resources.rem.request.CollectionParameters;
-import io.corbel.resources.rem.request.RelationParameters;
-import io.corbel.resources.rem.request.RequestParameters;
-import io.corbel.resources.rem.request.ResourceId;
+import io.corbel.resources.rem.request.*;
 import io.corbel.resources.rem.resmi.exception.MongoAggregationException;
 import io.corbel.resources.rem.service.BadConfigurationException;
 
@@ -39,6 +36,7 @@ public class ResmiGetRemTest extends ResmiRemTest {
 
     private AbstractResmiRem getRem;
 
+    @Mock RequestParameters<ResourceParameters> requestParametersResourceParametersMock;
     @Mock RequestParameters<CollectionParameters> requestParametersCollectionParametersMock;
     @Mock RequestParameters<RelationParameters> requestParametersRelationParametersMock;
     @Mock CollectionParameters collectionParametersMock;
@@ -61,12 +59,15 @@ public class ResmiGetRemTest extends ResmiRemTest {
 
     @Test
     public void testGetResource() {
-        ResourceUri resourceUri = new ResourceUri(TEST_TYPE, ID);
+        ResourceUri resourceUri = new ResourceUri(DOMAIN, TEST_TYPE, ID);
         JsonObject json = new JsonObject();
         json.add("a", new JsonPrimitive("1"));
 
         when(resmiServiceMock.findResource(resourceUri)).thenReturn(json);
-        Response response = getRem.resource(TEST_TYPE, TEST_ID, null, Optional.empty());
+
+        when(requestParametersResourceParametersMock.getRequestedDomain()).thenReturn(DOMAIN);
+
+        Response response = getRem.resource(TEST_TYPE, TEST_ID, requestParametersResourceParametersMock, Optional.empty());
         assertThat(response.getStatus()).isEqualTo(200);
         assertThat(response.getEntity()).isEqualTo(json);
 
@@ -74,11 +75,12 @@ public class ResmiGetRemTest extends ResmiRemTest {
 
     @Test
     public void testGetCollection() throws BadConfigurationException {
-        ResourceUri resourceUri = new ResourceUri(TEST_TYPE);
+        ResourceUri resourceUri = new ResourceUri(DOMAIN, TEST_TYPE);
         JsonArray jsonArray = new JsonArray();
         when(resmiServiceMock.findCollection(resourceUri, Optional.of(collectionParametersMock))).thenReturn(jsonArray);
 
         when(requestParametersCollectionParametersMock.getOptionalApiParameters()).thenReturn(Optional.of(collectionParametersMock));
+        when(requestParametersCollectionParametersMock.getRequestedDomain()).thenReturn(DOMAIN);
         when(collectionParametersMock.getAggregation()).thenReturn(Optional.empty());
         when(collectionParametersMock.getQueries()).thenReturn(Optional.ofNullable(Arrays.asList(resourceQueryMock)));
         when(collectionParametersMock.getPagination()).thenReturn(paginationMock);
@@ -91,9 +93,11 @@ public class ResmiGetRemTest extends ResmiRemTest {
 
     @Test
     public void testGetCollectionCount() throws BadConfigurationException, MongoAggregationException {
-        when(resmiServiceMock.aggregate(new ResourceUri(TEST_TYPE), collectionParametersMock)).thenReturn(countResultMock);
+        when(resmiServiceMock.aggregate(new ResourceUri(DOMAIN, TEST_TYPE), collectionParametersMock)).thenReturn(countResultMock);
 
         when(requestParametersCollectionParametersMock.getOptionalApiParameters()).thenReturn(Optional.of(collectionParametersMock));
+        when(requestParametersCollectionParametersMock.getRequestedDomain()).thenReturn(DOMAIN);
+
         when(collectionParametersMock.getAggregation()).thenReturn(Optional.of(aggregationOperationMock));
         when(aggregationOperationMock.getOperator()).thenReturn(AggregationOperator.$COUNT);
 
@@ -108,9 +112,11 @@ public class ResmiGetRemTest extends ResmiRemTest {
 
     @Test
     public void testGetCollectionAverage() throws BadConfigurationException, MongoAggregationException {
-        when(resmiServiceMock.aggregate(new ResourceUri(TEST_TYPE), collectionParametersMock)).thenReturn(averageResultMock);
+        when(resmiServiceMock.aggregate(new ResourceUri(DOMAIN, TEST_TYPE), collectionParametersMock)).thenReturn(averageResultMock);
 
         when(requestParametersCollectionParametersMock.getOptionalApiParameters()).thenReturn(Optional.of(collectionParametersMock));
+        when(requestParametersCollectionParametersMock.getRequestedDomain()).thenReturn(DOMAIN);
+
         when(collectionParametersMock.getAggregation()).thenReturn(Optional.of(aggregationOperationMock));
         when(aggregationOperationMock.getOperator()).thenReturn(AggregationOperator.$AVG);
 
@@ -126,12 +132,14 @@ public class ResmiGetRemTest extends ResmiRemTest {
     @Test
     public void testGetRelation() throws BadConfigurationException {
         JsonArray jsonArray = new JsonArray();
-        ResourceUri resourceUri = new ResourceUri(TEST_TYPE, ID, TEST_TYPE_RELATION, null);
+        ResourceUri resourceUri = new ResourceUri(DOMAIN, TEST_TYPE, ID, TEST_TYPE_RELATION, null);
         ResourceId resourceId = new ResourceId(ID);
 
         when(resmiServiceMock.findRelation(resourceUri, Optional.of(relationParametersMock))).thenReturn(jsonArray);
 
         when(requestParametersRelationParametersMock.getOptionalApiParameters()).thenReturn(Optional.of(relationParametersMock));
+        when(requestParametersRelationParametersMock.getRequestedDomain()).thenReturn(DOMAIN);
+
         when(relationParametersMock.getAggregation()).thenReturn(Optional.empty());
 
         when(relationParametersMock.getQueries()).thenReturn(Optional.ofNullable(Arrays.asList(resourceQueryMock)));
@@ -148,13 +156,15 @@ public class ResmiGetRemTest extends ResmiRemTest {
     @Test
     public void testGetRelationResource() throws BadConfigurationException {
         JsonArray jsonArray = new JsonArray();
-        ResourceUri resourceUri = new ResourceUri(TEST_TYPE, ID, TEST_TYPE_RELATION, DST_ID);
+        ResourceUri resourceUri = new ResourceUri(DOMAIN, TEST_TYPE, ID, TEST_TYPE_RELATION, DST_ID);
         ResourceId resourceId = new ResourceId(ID);
 
 
         when(resmiServiceMock.findRelation(resourceUri, Optional.of(relationParametersMock))).thenReturn(jsonArray);
 
         when(requestParametersRelationParametersMock.getOptionalApiParameters()).thenReturn(Optional.of(relationParametersMock));
+        when(requestParametersRelationParametersMock.getRequestedDomain()).thenReturn(DOMAIN);
+
         when(relationParametersMock.getAggregation()).thenReturn(Optional.empty());
 
         when(relationParametersMock.getQueries()).thenReturn(Optional.ofNullable(Arrays.asList(resourceQueryMock)));
@@ -171,7 +181,7 @@ public class ResmiGetRemTest extends ResmiRemTest {
 
     @Test
     public void testGetRelationResourceNotFound() throws BadConfigurationException {
-        ResourceUri resourceUri = new ResourceUri(TEST_TYPE, ID, TEST_TYPE_RELATION, DST_ID);
+        ResourceUri resourceUri = new ResourceUri(DOMAIN, TEST_TYPE, ID, TEST_TYPE_RELATION, DST_ID);
         ResourceId resourceId = new ResourceId(ID);
 
 
@@ -193,10 +203,12 @@ public class ResmiGetRemTest extends ResmiRemTest {
 
     @Test
     public void testGetRelationCount() throws BadConfigurationException, MongoAggregationException {
-        when(resmiServiceMock.aggregate(new ResourceUri(TEST_TYPE, resourceIdMock.getId(), TEST_TYPE_RELATION), relationParametersMock))
+        when(resmiServiceMock.aggregate(new ResourceUri(DOMAIN, TEST_TYPE, resourceIdMock.getId(), TEST_TYPE_RELATION), relationParametersMock))
                 .thenReturn(countResultMock);
 
         when(requestParametersRelationParametersMock.getOptionalApiParameters()).thenReturn(Optional.of(relationParametersMock));
+        when(requestParametersRelationParametersMock.getRequestedDomain()).thenReturn(DOMAIN);
+
         when(relationParametersMock.getAggregation()).thenReturn(Optional.of(aggregationOperationMock));
 
         when(aggregationOperationMock.getOperator()).thenReturn(AggregationOperator.$COUNT);
@@ -214,15 +226,19 @@ public class ResmiGetRemTest extends ResmiRemTest {
 
     @Test
     public void testResourceNotFound() {
-        ResourceUri resourceUri = new ResourceUri(TEST_TYPE, ID);
+        ResourceUri resourceUri = new ResourceUri(DOMAIN, TEST_TYPE, ID);
         when(resmiServiceMock.findResource(resourceUri)).thenReturn(null);
-        Response response = getRem.resource(TEST_TYPE, TEST_ID, null, Optional.empty());
+
+        when(requestParametersResourceParametersMock.getRequestedDomain()).thenReturn(DOMAIN);
+
+        Response response = getRem.resource(TEST_TYPE, TEST_ID, requestParametersResourceParametersMock, Optional.empty());
         assertThat(response.getStatus()).isEqualTo(404);
     }
 
     @Test
     public void testNotAllowed() {
-        Response response = getRem.resource(TEST_TYPE, TEST_ID, null, Optional.empty());
+        when(requestParametersResourceParametersMock.getRequestedDomain()).thenReturn(DOMAIN);
+        Response response = getRem.resource(TEST_TYPE, TEST_ID, requestParametersResourceParametersMock, Optional.empty());
         assertThat(response.getStatus()).isEqualTo(404);
     }
 }

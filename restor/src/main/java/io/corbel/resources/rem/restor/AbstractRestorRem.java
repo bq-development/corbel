@@ -2,8 +2,6 @@ package io.corbel.resources.rem.restor;
 
 import java.io.InputStream;
 
-import org.springframework.http.MediaType;
-
 import io.corbel.resources.rem.request.RequestParameters;
 import io.corbel.resources.rem.BaseRem;
 import io.corbel.resources.rem.dao.RestorDao;
@@ -19,8 +17,8 @@ public abstract class AbstractRestorRem extends BaseRem<InputStream> {
 		this.dao = dao;
 	}
 
-	public MediaType getMediaType(RequestParameters<?> parameters) {
-		return parameters.getAcceptedMediaTypes().get(0);
+	public String getMediaType(RequestParameters<?> parameters) {
+		return parameters.getAcceptedMediaTypes().get(0).toString();
 	}
 
 	@Override

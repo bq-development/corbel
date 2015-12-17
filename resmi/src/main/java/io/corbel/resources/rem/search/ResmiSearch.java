@@ -1,10 +1,5 @@
 package io.corbel.resources.rem.search;
 
-import io.corbel.lib.queries.request.Pagination;
-import io.corbel.lib.queries.request.ResourceQuery;
-import io.corbel.lib.queries.request.Sort;
-import io.corbel.resources.rem.model.ResourceUri;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -12,6 +7,11 @@ import java.util.Optional;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+
+import io.corbel.lib.queries.request.Pagination;
+import io.corbel.lib.queries.request.ResourceQuery;
+import io.corbel.lib.queries.request.Sort;
+import io.corbel.resources.rem.model.ResourceUri;
 
 /**
  * @author Francisco Sanchez
@@ -30,7 +30,12 @@ public interface ResmiSearch {
 
     void deleteDocument(ResourceUri uri);
 
-    boolean upsertResmiIndex(String name);
+    boolean upsertResmiIndex(ResourceUri uri);
 
-    boolean upsertResmiIndex(String name, String settings, String defaultMapping);
+    boolean upsertResmiIndex(ResourceUri uri, String settings, String defaultMapping);
+
+    void setupMapping(ResourceUri uri, String mapping);
+
+    void createIndex(String domain, String name, String settings);
+
 }

@@ -64,6 +64,7 @@ public class MongoResmiDao implements ResmiDao {
     private static final String _ID = "_id";
 
     private static final String RELATION_CONCATENATION = ".";
+    private static final String DOMAIN_CONCATENATION = "@";
     private static final String EMPTY_STRING = "";
     private static final String EXPIRE_AT = "_expireAt";
     private static final String CREATED_AT = "_createdAt";
@@ -84,8 +85,8 @@ public class MongoResmiDao implements ResmiDao {
     }
 
     @Override
-    public boolean exists(String type, String id) {
-        return mongoOperations.exists(Query.query(Criteria.where(_ID).is(id)), namespaceNormalizer.normalize(type));
+    public boolean existsResources(ResourceUri uri) {
+        return mongoOperations.exists(Query.query(Criteria.where(_ID).is(uri.getTypeId())), getMongoCollectionName(uri));
     }
 
     @Override
@@ -168,8 +169,8 @@ public class MongoResmiDao implements ResmiDao {
     }
 
     @Override
-    public <T> List<T> findAll(String type, Class<T> entityClass) {
-        return mongoOperations.findAll(entityClass, namespaceNormalizer.normalize(type));
+    public <T> List<T> findAll(ResourceUri uri, Class<T> entityClass) {
+        return mongoOperations.findAll(entityClass, getMongoCollectionName(uri));
     }
 
     @Override
@@ -247,7 +248,7 @@ public class MongoResmiDao implements ResmiDao {
 
     @Override
     public void createRelation(ResourceUri uri, JsonObject entity) throws NotFoundException {
-        if (!exists(uri.getType(), uri.getTypeId())) {
+        if (!existsResources(new ResourceUri(uri.getDomain(), uri.getType(), uri.getTypeId()))) {
             throw new NotFoundException("The resource does not exist");
         }
 
@@ -256,7 +257,7 @@ public class MongoResmiDao implements ResmiDao {
 
         if (!storedRelation.has("_order")) {
             JsonObject order = new JsonObject();
-            resmiOrder.addNextOrderInRelation(uri.getType(), uri.getTypeId(), uri.getRelation(), order);
+            resmiOrder.addNextOrderInRelation(uri, order);
             findAndModify(getMongoCollectionName(uri), Optional.ofNullable(storedRelation.get("id").getAsString()), order, false,
                     Optional.empty());
         }
@@ -469,11 +470,10 @@ public class MongoResmiDao implements ResmiDao {
     }
 
     private String getMongoCollectionName(ResourceUri resourceUri) {
-        return Optional
-                .ofNullable(namespaceNormalizer.normalize(resourceUri.getType()))
-                .map(type -> type
-                        + Optional.ofNullable(resourceUri.getRelation())
-                                .map(relation -> RELATION_CONCATENATION + namespaceNormalizer.normalize(relation)).orElse(EMPTY_STRING))
+        return  namespaceNormalizer.normalize(resourceUri.getDomain()) + DOMAIN_CONCATENATION +
+                Optional.ofNullable(namespaceNormalizer.normalize(resourceUri.getType()))
+                .map(type -> type + Optional.ofNullable(resourceUri.getRelation())
+                        .map(relation -> RELATION_CONCATENATION + namespaceNormalizer.normalize(relation)).orElse(EMPTY_STRING))
                 .orElse(EMPTY_STRING);
     }
 

@@ -34,7 +34,7 @@ public class ResmiPutRem extends AbstractResmiRem {
 
     @Override
     public Response collection(String type, RequestParameters<CollectionParameters> parameters, URI uri, Optional<JsonObject> entity) {
-        ResourceUri resourceUri = buildCollectionUri(type);
+        ResourceUri resourceUri = buildCollectionUri(parameters.getRequestedDomain(), type);
         return entity.map(object -> {
             try {
                 Optional<List<ResourceQuery>> conditions = Optional.ofNullable(parameters)
@@ -55,7 +55,7 @@ public class ResmiPutRem extends AbstractResmiRem {
 
     @Override
     public Response resource(String type, ResourceId id, RequestParameters<ResourceParameters> parameters, Optional<JsonObject> entity) {
-        ResourceUri resourceUri = buildResourceUri(type, id.getId());
+        ResourceUri resourceUri = buildResourceUri(parameters.getRequestedDomain(), type, id.getId());
         return entity.map(object -> {
             try {
                 Optional<List<ResourceQuery>> conditions = Optional.ofNullable(parameters)
@@ -80,7 +80,7 @@ public class ResmiPutRem extends AbstractResmiRem {
     @Override
     public Response relation(String type, ResourceId id, String relation, RequestParameters<RelationParameters> parameters,
             Optional<JsonObject> entity) {
-        ResourceUri resourceUri = buildRelationUri(type, id.getId(), relation,
+        ResourceUri resourceUri = buildRelationUri(parameters.getRequestedDomain(), type, id.getId(), relation,
                 parameters.getOptionalApiParameters().flatMap(RelationParameters::getPredicateResource));
 
         if (id.isWildcard()) {

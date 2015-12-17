@@ -40,6 +40,7 @@ import io.corbel.resources.rem.service.RemService;
     private static final String GROUP_ID = "groupId";
     private static final String TYPE = "type";
     private static final ResourceId RESOURCE_ID = new ResourceId("resourceId");
+    private static final String REQUESTED_DOMAIN_ID = "requestedDomainId";
 
     private AclDeleteRem rem;
 
@@ -64,6 +65,8 @@ import io.corbel.resources.rem.service.RemService;
         when(tokenInfo.getGroups()).thenReturn(Collections.singletonList(GROUP_ID));
         when(resourceParameters.getTokenInfo()).thenReturn(tokenInfo);
         when(relationParameters.getTokenInfo()).thenReturn(tokenInfo);
+        when(resourceParameters.getRequestedDomain()).thenReturn(REQUESTED_DOMAIN_ID);
+        when(relationParameters.getRequestedDomain()).thenReturn(REQUESTED_DOMAIN_ID);
     }
 
     @Test
@@ -78,7 +81,7 @@ import io.corbel.resources.rem.service.RemService;
     public void testDeleteResourceNotFoundObject() throws AclFieldNotPresentException {
         when(getResponse.getStatus()).thenReturn(404);
         when(getResponse.getStatusInfo()).thenReturn(Response.Status.NOT_FOUND);
-        doThrow(new WebApplicationException(getResponse)).when(aclResourcesService).isAuthorized(eq(tokenInfo), eq(TYPE), eq(RESOURCE_ID),
+        doThrow(new WebApplicationException(getResponse)).when(aclResourcesService).isAuthorized(eq(REQUESTED_DOMAIN_ID), eq(tokenInfo), eq(TYPE), eq(RESOURCE_ID),
                 eq(AclPermission.ADMIN));
         try {
             rem.resource(TYPE, RESOURCE_ID, resourceParameters, null, Optional.empty());
@@ -90,7 +93,7 @@ import io.corbel.resources.rem.service.RemService;
 
     @Test
     public void testDeleteResourceNotPermission() throws AclFieldNotPresentException {
-        when(aclResourcesService.isAuthorized(eq(tokenInfo), eq(TYPE), eq(RESOURCE_ID), eq(AclPermission.ADMIN))).thenReturn(false);
+        when(aclResourcesService.isAuthorized(eq(REQUESTED_DOMAIN_ID), eq(tokenInfo), eq(TYPE), eq(RESOURCE_ID), eq(AclPermission.ADMIN))).thenReturn(false);
         Response response = rem.resource(TYPE, RESOURCE_ID, resourceParameters, null);
         assertThat(response.getStatus()).isEqualTo(401);
         assertThat(getError(response).getErrorDescription()).contains(AclPermission.ADMIN.toString());
@@ -98,7 +101,7 @@ import io.corbel.resources.rem.service.RemService;
 
     @Test
     public void testDeleteResourceWithCorrectPermissions() throws AclFieldNotPresentException {
-        when(aclResourcesService.isAuthorized(eq(tokenInfo), eq(TYPE), eq(RESOURCE_ID), eq(AclPermission.ADMIN))).thenReturn(true);
+        when(aclResourcesService.isAuthorized(eq(REQUESTED_DOMAIN_ID), eq(tokenInfo), eq(TYPE), eq(RESOURCE_ID), eq(AclPermission.ADMIN))).thenReturn(true);
 
         Response response = mock(Response.class);
         when(response.getStatus()).thenReturn(204);
@@ -110,7 +113,7 @@ import io.corbel.resources.rem.service.RemService;
 
     @Test
     public void testDeleteRelationWithCorrectPermissions() throws AclFieldNotPresentException {
-        when(aclResourcesService.isAuthorized(eq(tokenInfo), eq(TYPE), eq(RESOURCE_ID), eq(AclPermission.ADMIN))).thenReturn(true);
+        when(aclResourcesService.isAuthorized(eq(REQUESTED_DOMAIN_ID), eq(tokenInfo), eq(TYPE), eq(RESOURCE_ID), eq(AclPermission.ADMIN))).thenReturn(true);
         RelationParameters apiParameters = mock(RelationParameters.class);
         when(relationParameters.getOptionalApiParameters()).thenReturn(Optional.of(apiParameters));
         when(apiParameters.getPredicateResource()).thenReturn(Optional.of("idDist"));
@@ -125,7 +128,7 @@ import io.corbel.resources.rem.service.RemService;
 
     @Test
     public void testRelationWildcardInOrigin() throws AclFieldNotPresentException {
-        when(aclResourcesService.isAuthorized(eq(tokenInfo), eq(TYPE), eq(RESOURCE_ID), eq(AclPermission.ADMIN))).thenReturn(true);
+        when(aclResourcesService.isAuthorized(eq(REQUESTED_DOMAIN_ID), eq(tokenInfo), eq(TYPE), eq(RESOURCE_ID), eq(AclPermission.ADMIN))).thenReturn(true);
         RelationParameters apiParameters = mock(RelationParameters.class);
         when(relationParameters.getOptionalApiParameters()).thenReturn(Optional.of(apiParameters));
         when(apiParameters.getPredicateResource()).thenReturn(Optional.empty());

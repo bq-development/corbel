@@ -45,6 +45,7 @@ import io.corbel.resources.rem.service.RemService;
     private static final String GROUP_ID = "groupId";
     private static final String TYPE = "type";
     private static final ResourceId RESOURCE_ID = new ResourceId("resourceId");
+    private static final String REQUESTED_DOMAIN_ID = "requestedDomainId";
 
     private AclPutRem rem;
 
@@ -52,7 +53,7 @@ import io.corbel.resources.rem.service.RemService;
     @Mock private AclResourcesService aclResourcesService;
     @Mock private List<MediaType> acceptedMediaTypes;
     @Mock private RemService remService;
-    @Mock private RequestParameters<ResourceParameters> parameters;
+    @Mock private RequestParameters<ResourceParameters> resourceParameters;
     @Mock private TokenInfo tokenInfo;
     @Mock private Response getResponse;
     @Mock private RequestParameters<RelationParameters> relationParameters;
@@ -66,15 +67,18 @@ import io.corbel.resources.rem.service.RemService;
 
         when(tokenInfo.getUserId()).thenReturn(USER_ID);
         when(tokenInfo.getGroups()).thenReturn(Collections.singletonList(GROUP_ID));
-        when(parameters.getTokenInfo()).thenReturn(tokenInfo);
+        when(resourceParameters.getTokenInfo()).thenReturn(tokenInfo);
         when(relationParameters.getTokenInfo()).thenReturn(tokenInfo);
+
+        when(resourceParameters.getRequestedDomain()).thenReturn(REQUESTED_DOMAIN_ID);
+        when(relationParameters.getRequestedDomain()).thenReturn(REQUESTED_DOMAIN_ID);
     }
 
     @Test
     public void testPutResourceNoUserId() {
         when(tokenInfo.getUserId()).thenReturn(null);
-        when(parameters.getTokenInfo()).thenReturn(tokenInfo);
-        Response response = rem.resource(TYPE, RESOURCE_ID, parameters, Optional.empty(), Optional.empty());
+        when(resourceParameters.getTokenInfo()).thenReturn(tokenInfo);
+        Response response = rem.resource(TYPE, RESOURCE_ID, resourceParameters, Optional.empty(), Optional.empty());
         assertThat(response.getStatus()).isEqualTo(405);
     }
 
@@ -82,7 +86,7 @@ import io.corbel.resources.rem.service.RemService;
     public void testPutResourceEmptyObject() throws IOException {
         InputStream entity = mock(InputStream.class);
         when(entity.available()).thenReturn(0);
-        Response response = rem.resource(TYPE, RESOURCE_ID, parameters, Optional.of(entity), Optional.empty());
+        Response response = rem.resource(TYPE, RESOURCE_ID, resourceParameters, Optional.of(entity), Optional.empty());
         assertThat(response.getStatus()).isEqualTo(400);
     }
 
@@ -92,16 +96,16 @@ import io.corbel.resources.rem.service.RemService;
         JsonObject entity = getEntity(USER_ID, AclPermission.ADMIN.toString());
         when(getResponse.getEntity()).thenReturn(entity);
 
-        when(aclResourcesService.getResourceIfIsAuthorized(eq(tokenInfo), eq(TYPE), eq(RESOURCE_ID), eq(AclPermission.WRITE)))
+        when(aclResourcesService.getResourceIfIsAuthorized(eq(REQUESTED_DOMAIN_ID), eq(tokenInfo), eq(TYPE), eq(RESOURCE_ID), eq(AclPermission.WRITE)))
                 .thenReturn(Optional.of(entity));
 
         Response response = mock(Response.class);
         when(response.getStatus()).thenReturn(200);
-        when(aclResourcesService.updateResource(any(), eq(TYPE), eq(RESOURCE_ID), eq(parameters), eq(getEntityWithoutAcl()), any()))
+        when(aclResourcesService.updateResource(any(), eq(TYPE), eq(RESOURCE_ID), eq(resourceParameters), eq(getEntityWithoutAcl()), any()))
                 .thenReturn(response);
-        when(parameters.getAcceptedMediaTypes()).thenReturn(Collections.singletonList(MediaType.APPLICATION_JSON));
+        when(resourceParameters.getAcceptedMediaTypes()).thenReturn(Collections.singletonList(MediaType.APPLICATION_JSON));
 
-        response = rem.resource(TYPE, RESOURCE_ID, parameters,
+        response = rem.resource(TYPE, RESOURCE_ID, resourceParameters,
                 Optional.of(new ByteArrayInputStream(getEntityWithoutAcl().toString().getBytes())), Optional.empty());
         assertThat(response.getStatus()).isEqualTo(200);
     }
@@ -114,7 +118,7 @@ import io.corbel.resources.rem.service.RemService;
         ResourceId resourceId = new ResourceId("idOrigin");
 
         when(getResponse.getStatus()).thenReturn(204);
-        when(aclResourcesService.isAuthorized(eq(tokenInfo), eq(TYPE), eq(resourceId), eq(AclPermission.WRITE))).thenReturn(true);
+        when(aclResourcesService.isAuthorized(eq(REQUESTED_DOMAIN_ID), eq(tokenInfo), eq(TYPE), eq(resourceId), eq(AclPermission.WRITE))).thenReturn(true);
 
 
         RelationParameters apiParameters = mock(RelationParameters.class);

@@ -43,7 +43,7 @@ public class ResmiDeleteRemTest extends ResmiRemTest {
         JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty("field1", "field1content");
 
-        Response response = deleteRem.resource(TEST_TYPE, TEST_ID, null, Optional.of(jsonObject));
+        Response response = deleteRem.resource(TEST_TYPE, TEST_ID, getParametersWithEmptyUri(), Optional.of(jsonObject));
         assertThat(response.getStatus()).isEqualTo(204);
     }
 
@@ -64,7 +64,7 @@ public class ResmiDeleteRemTest extends ResmiRemTest {
 
     @Test
     public void testMethodDeleteRelationFromSrcID() {
-        ResourceUri uri = new ResourceUri(TEST_TYPE, TEST_ID.getId(), TEST_RELATION);
+        ResourceUri uri = new ResourceUri(DOMAIN, TEST_TYPE, TEST_ID.getId(), TEST_RELATION);
         Response response = deleteRem.relation(TEST_TYPE, TEST_ID, TEST_RELATION, getParametersWithEmptyUri(), Optional.empty());
         assertThat(response.getStatus()).isEqualTo(204);
         verify(resmiServiceMock).deleteRelation(eq(uri), eq(Optional.empty()));
@@ -80,7 +80,7 @@ public class ResmiDeleteRemTest extends ResmiRemTest {
 
     @Test
     public void testDeleteCollectionQuery() {
-        ResourceUri uri = new ResourceUri(TEST_TYPE);
+        ResourceUri uri = new ResourceUri(DOMAIN, TEST_TYPE);
 
         Optional<List<ResourceQuery>> optionalQueries = Optional.of(mock(List.class));
         RequestParameters<CollectionParameters> parameters = getParametersWithEmptyUri();

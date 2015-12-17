@@ -5,8 +5,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
-import java.net.URI;
-import java.security.URIParameter;
 import java.util.List;
 import java.util.Optional;
 
@@ -58,6 +56,7 @@ public class ResmiPutRemTest extends ResmiRemTest {
         RequestParameters<ResourceParameters> requestParametersMock = mock(RequestParameters.class);
         when(requestParametersMock.getOptionalApiParameters()).thenReturn(Optional.of(resourceParametersMock));
         when(resourceParametersMock.getConditions()).thenReturn(conditions);
+        when(requestParametersMock.getRequestedDomain()).thenReturn(DOMAIN);
         return requestParametersMock;
 
     }
@@ -75,7 +74,7 @@ public class ResmiPutRemTest extends ResmiRemTest {
 
     @Test
     public void updateCollectionTestWithCondition() throws StartsWithUnderscoreException {
-        ResourceUri resourceUri = new ResourceUri(TEST_TYPE);
+        ResourceUri resourceUri = new ResourceUri(DOMAIN, TEST_TYPE);
         JsonObject json = new JsonObject();
         json.add("a", new JsonPrimitive("1"));
         @SuppressWarnings("unchecked")
@@ -90,7 +89,7 @@ public class ResmiPutRemTest extends ResmiRemTest {
 
     @Test
     public void updateCollectionTestWithFailCondition() throws StartsWithUnderscoreException {
-        ResourceUri resourceUri = new ResourceUri(TEST_TYPE);
+        ResourceUri resourceUri = new ResourceUri(DOMAIN, TEST_TYPE);
         JsonObject json = new JsonObject();
         json.add("a", new JsonPrimitive("1"));
         @SuppressWarnings("unchecked")
@@ -118,7 +117,7 @@ public class ResmiPutRemTest extends ResmiRemTest {
 
     @Test
     public void updateResourceTestWithCondition() throws StartsWithUnderscoreException {
-        ResourceUri resourceUri = new ResourceUri(TEST_TYPE, ID);
+        ResourceUri resourceUri = new ResourceUri(DOMAIN, TEST_TYPE, ID);
 
         JsonObject json = new JsonObject();
         json.add("a", new JsonPrimitive("1"));
@@ -134,7 +133,7 @@ public class ResmiPutRemTest extends ResmiRemTest {
 
     @Test
     public void updateResourceTestWithFailCondition() throws StartsWithUnderscoreException {
-        ResourceUri resourceUri = new ResourceUri(TEST_TYPE, ID);
+        ResourceUri resourceUri = new ResourceUri(DOMAIN, TEST_TYPE, ID);
         JsonObject json = new JsonObject();
         json.add("a", new JsonPrimitive("1"));
         @SuppressWarnings("unchecked")
@@ -163,7 +162,7 @@ public class ResmiPutRemTest extends ResmiRemTest {
 
     @Test
     public void updateMissingTest() {
-        Response response = putRem.resource(TEST_TYPE, TEST_ID, null, Optional.empty());
+        Response response = putRem.resource(TEST_TYPE, TEST_ID, getParametersWithEmptyUri(), Optional.empty());
         assertThat(response.getStatus()).isEqualTo(400);
     }
 

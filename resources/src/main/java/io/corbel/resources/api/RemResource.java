@@ -50,7 +50,8 @@ import io.dropwizard.auth.Auth;
             @Auth AuthorizationInfo authorizationInfo, @Rest QueryParameters queryParameters) {
         URI typeUri = getBaseUriWithType(uriInfo, domain, type);
         updateRequestWithLinksTypeAndUri(request, typeUri, type);
-        return resourcesService.collectionOperation(type, request, uriInfo, getTokenInfo(authorizationInfo), typeUri, HttpMethod.GET,
+        return resourcesService.collectionOperation(domain, type, request, uriInfo, getTokenInfo(authorizationInfo), typeUri,
+                HttpMethod.GET,
                 queryParameters, null, null);
     }
 
@@ -58,7 +59,7 @@ import io.dropwizard.auth.Auth;
     @Path("/{type}")
     public Response postCollection(@PathParam("domain") String domain, @PathParam("type") String type, @Context Request request, @Context UriInfo uriInfo,
             @Auth AuthorizationInfo authorizationInfo, InputStream inputStream, @HeaderParam("Content-Type") MediaType contentType) {
-        return resourcesService.collectionOperation(type, request, uriInfo, getTokenInfo(authorizationInfo),
+        return resourcesService.collectionOperation(domain, type, request, uriInfo, getTokenInfo(authorizationInfo),
                 getBaseUriWithType(uriInfo, domain, type), HttpMethod.POST, null, inputStream, contentType);
     }
 
@@ -67,7 +68,7 @@ import io.dropwizard.auth.Auth;
     public Response putCollection(@PathParam("domain") String domain, @PathParam("type") String type, @Context Request request, @Context UriInfo uriInfo,
             @Auth AuthorizationInfo authorizationInfo, InputStream inputStream, @HeaderParam("Content-Type") MediaType contentType,
             @Rest QueryParameters queryParameters) {
-        return resourcesService.collectionOperation(type, request, uriInfo, getTokenInfo(authorizationInfo),
+        return resourcesService.collectionOperation(domain, type, request, uriInfo, getTokenInfo(authorizationInfo),
                 getBaseUriWithType(uriInfo, domain, type), HttpMethod.PUT, queryParameters, inputStream, contentType);
     }
 
@@ -75,7 +76,7 @@ import io.dropwizard.auth.Auth;
     @Path("/{type}")
     public Response deleteCollection(@PathParam("domain") String domain, @PathParam("type") String type, @Context Request request, @Context UriInfo uriInfo,
             @Auth AuthorizationInfo authorizationInfo, @Rest QueryParameters queryParameters) {
-        return resourcesService.collectionOperation(type, request, uriInfo, getTokenInfo(authorizationInfo),
+        return resourcesService.collectionOperation(domain, type, request, uriInfo, getTokenInfo(authorizationInfo),
                 getBaseUriWithType(uriInfo, domain, type), HttpMethod.DELETE, queryParameters, null, null);
     }
 
@@ -85,7 +86,8 @@ import io.dropwizard.auth.Auth;
             @Context UriInfo uriInfo, @Auth AuthorizationInfo authorizationInfo, @Rest QueryParameters queryParameters) {
         URI typeUri = getBaseUriWithType(uriInfo, domain, type);
         updateRequestWithLinksTypeAndUri(request, typeUri, type);
-        return resourcesService.resourceOperation(type, id, request, queryParameters, uriInfo, getTokenInfo(authorizationInfo), typeUri,
+        return resourcesService.resourceOperation(domain, type, id, request, queryParameters, uriInfo, getTokenInfo(authorizationInfo),
+                typeUri,
                 HttpMethod.GET, null, null, null);
     }
 
@@ -95,7 +97,7 @@ import io.dropwizard.auth.Auth;
             @Context UriInfo uriInfo, @Auth AuthorizationInfo authorizationInfo, InputStream inputStream,
             @HeaderParam("Content-Type") MediaType contentType, @HeaderParam("Content-Length") Long contentLength,
             @Rest QueryParameters queryParameters) {
-        return resourcesService.resourceOperation(type, id, request, queryParameters, uriInfo, getTokenInfo(authorizationInfo),
+        return resourcesService.resourceOperation(domain, type, id, request, queryParameters, uriInfo, getTokenInfo(authorizationInfo),
                 getBaseUriWithType(uriInfo, domain, type), HttpMethod.PUT, inputStream, contentType, contentLength);
     }
 
@@ -103,7 +105,7 @@ import io.dropwizard.auth.Auth;
     @Path("/{type}/{id}")
     public Response deleteResource(@PathParam("domain") String domain, @PathParam("type") String type, @PathParam("id") ResourceId id, @Context Request request,
             @Context UriInfo uriInfo, @Auth AuthorizationInfo authorizationInfo, @Rest QueryParameters queryParameters) {
-        return resourcesService.resourceOperation(type, id, request, queryParameters, uriInfo, getTokenInfo(authorizationInfo),
+        return resourcesService.resourceOperation(domain, type, id, request, queryParameters, uriInfo, getTokenInfo(authorizationInfo),
                 getBaseUriWithType(uriInfo, domain, type), HttpMethod.DELETE, null, null, null);
     }
 
@@ -114,34 +116,40 @@ import io.dropwizard.auth.Auth;
             @Rest QueryParameters queryParameters, @MatrixParam("r") String resource) {
         URI typeUri = getBaseUri(uriInfo, domain);
         updateRequestWithLinksTypeAndUri(request, typeUri, type);
-        return resourcesService.relationOperation(type, id, rel, request, uriInfo, getTokenInfo(authorizationInfo), HttpMethod.GET,
+        return resourcesService.relationOperation(domain, type, id, rel, request, uriInfo, getTokenInfo(authorizationInfo), HttpMethod.GET,
                 queryParameters, resource, null, null);
     }
 
     @POST
     @Path("/{type}/{id}/{rel}")
-    public Response postRelation(@PathParam("type") String type, @PathParam("id") ResourceId id, @PathParam("rel") String rel,
+    public Response postRelation(@PathParam("domain") String domain, @PathParam("type") String type, @PathParam("id") ResourceId id,
+            @PathParam("rel") String rel,
             @Context Request request, @Context UriInfo uriInfo, @Auth AuthorizationInfo authorizationInfo, InputStream inputStream,
             @HeaderParam("Content-Type") MediaType contentType) {
-        return resourcesService.relationOperation(type, id, rel, request, uriInfo, getTokenInfo(authorizationInfo), HttpMethod.POST, null,
+        return resourcesService.relationOperation(domain, type, id, rel, request, uriInfo, getTokenInfo(authorizationInfo), HttpMethod.POST,
+                null,
                 null, inputStream, contentType);
     }
 
     @PUT
     @Path("/{type}/{id}/{rel}")
-    public Response putRelation(@PathParam("type") String type, @PathParam("id") ResourceId id, @PathParam("rel") String rel,
+    public Response putRelation(@PathParam("domain") String domain, @PathParam("type") String type, @PathParam("id") ResourceId id,
+            @PathParam("rel") String rel,
             @Context Request request, @Context UriInfo uriInfo, @Auth AuthorizationInfo authorizationInfo,
             @MatrixParam("r") String resource, InputStream inputStream, @HeaderParam("Content-Type") MediaType contentType) {
-        return resourcesService.relationOperation(type, id, rel, request, uriInfo, getTokenInfo(authorizationInfo), HttpMethod.PUT, null,
+        return resourcesService.relationOperation(domain, type, id, rel, request, uriInfo, getTokenInfo(authorizationInfo), HttpMethod.PUT,
+                null,
                 resource, inputStream, contentType);
     }
 
     @DELETE
     @Path("/{type}/{id}/{rel}")
-    public Response deleteRelation(@PathParam("type") String type, @PathParam("id") ResourceId id, @PathParam("rel") String rel,
+    public Response deleteRelation(@PathParam("domain") String domain, @PathParam("type") String type, @PathParam("id") ResourceId id,
+            @PathParam("rel") String rel,
             @Context Request request, @Context UriInfo uriInfo, @Auth AuthorizationInfo authorizationInfo, @MatrixParam("r") String resource,
                                    @Rest QueryParameters queryParameters) {
-        return resourcesService.relationOperation(type, id, rel, request, uriInfo, getTokenInfo(authorizationInfo), HttpMethod.DELETE, queryParameters,
+        return resourcesService.relationOperation(domain, type, id, rel, request, uriInfo, getTokenInfo(authorizationInfo),
+                HttpMethod.DELETE, queryParameters,
                 resource, null, null);
     }
 

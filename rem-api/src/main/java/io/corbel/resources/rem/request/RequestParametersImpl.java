@@ -1,12 +1,12 @@
 package io.corbel.resources.rem.request;
 
-import io.corbel.lib.token.TokenInfo;
-
 import java.util.List;
 
 import javax.ws.rs.core.MultivaluedMap;
 
 import org.springframework.http.MediaType;
+
+import io.corbel.lib.token.TokenInfo;
 
 /**
  * @author Alexander De Leon
@@ -16,15 +16,18 @@ public class RequestParametersImpl<E> implements RequestParameters<E> {
 
     private final E apiParameters;
     private final TokenInfo tokenInfo;
+    private final String requestedDomain;
     private final List<MediaType> acceptedMediaTypes;
     private final MultivaluedMap<String, String> params;
     private final Long contentLength;
     private final MultivaluedMap<String, String> headers;
 
-    public RequestParametersImpl(E apiParameters, TokenInfo tokenInfo, List<MediaType> acceptedMediaTypes, Long contentLength,
+    public RequestParametersImpl(E apiParameters, TokenInfo tokenInfo, String requestedDomain, List<MediaType> acceptedMediaTypes,
+            Long contentLength,
             MultivaluedMap<String, String> params, MultivaluedMap<String, String> headers) {
         this.apiParameters = apiParameters;
         this.tokenInfo = tokenInfo;
+        this.requestedDomain = requestedDomain;
         this.acceptedMediaTypes = acceptedMediaTypes;
         this.contentLength = contentLength;
         this.params = params;
@@ -39,6 +42,11 @@ public class RequestParametersImpl<E> implements RequestParameters<E> {
     @Override
     public TokenInfo getTokenInfo() {
         return tokenInfo;
+    }
+
+    @Override
+    public String getRequestedDomain() {
+        return requestedDomain;
     }
 
     @Override

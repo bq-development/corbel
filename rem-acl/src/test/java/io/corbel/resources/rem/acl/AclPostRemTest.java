@@ -48,7 +48,6 @@ import com.google.gson.JsonObject;
     private static final String ID = "resourceId";
     private static final ResourceId RESOURCE_ID = new ResourceId("resourceId");
     private static final MultivaluedMap<String, Object> POST_METADATA = new StringKeyIgnoreCaseMultivaluedMap<>();
-    private static final String ACL_CONFIGURATION_COLLECTION = "acl:Configuration";
 
     private AclPostRem rem;
 

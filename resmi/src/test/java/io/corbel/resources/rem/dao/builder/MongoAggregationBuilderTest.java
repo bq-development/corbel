@@ -25,6 +25,7 @@ public class MongoAggregationBuilderTest {
     private static final String FIELD_2 = "field_2";
     private static final String ASC = "ASC";
     private static final String VALUE = "value";
+    private static final String DOMAIN = "DOMAIN";
     MongoAggregationBuilder builder;
 
     @Before
@@ -36,7 +37,7 @@ public class MongoAggregationBuilderTest {
     public void testMatch() throws MongoAggregationException {
         List<ResourceQuery> resourceQueries = new ArrayList<>();
         resourceQueries.add(new ResourceQueryBuilder().add(FIELD_1, VALUE).build());
-        Aggregation agg = builder.match(new ResourceUri("testType", "testRes", "testRel"), Optional.of(resourceQueries)).build();
+        Aggregation agg = builder.match(new ResourceUri(DOMAIN, "testType", "testRes", "testRel"), Optional.of(resourceQueries)).build();
         assertEquals(
                 "{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"field_1\" : \"value\" , \"_src_id\" : \"testRes\"}}]}",
                 agg.toString());
@@ -70,7 +71,7 @@ public class MongoAggregationBuilderTest {
         fields.add(FIELD_1);
         List<ResourceQuery> resourceQueries = new ArrayList<>();
         resourceQueries.add(new ResourceQueryBuilder().add(FIELD_1, VALUE).build());
-        Aggregation agg = builder.match(new ResourceUri("testType", "testRes", "testRel"), Optional.of(resourceQueries)).sort(ASC, FIELD_1)
+        Aggregation agg = builder.match(new ResourceUri(DOMAIN, "testType", "testRes", "testRel"), Optional.of(resourceQueries)).sort(ASC, FIELD_1)
                 .group(fields).pagination(pagination).build();
         assertEquals(
                 "{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"field_1\" : \"value\" , \"_src_id\" : \"testRes\"}} , { \"$sort\" : { \"field_1\" : 1}} , { \"$group\" : { \"_id\" : \"$field_1\"}} , { \"$skip\" : 0} , { \"$limit\" : 50}]}",

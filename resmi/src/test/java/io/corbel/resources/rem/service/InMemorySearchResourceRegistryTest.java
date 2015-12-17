@@ -16,6 +16,9 @@ import io.corbel.resources.rem.model.SearchResource;
  */
 public class InMemorySearchResourceRegistryTest {
 
+    private static final String DOMAIN1 = "DOMAIN1";
+    private static final String DOMAIN2 = "DOMAIN2";
+
     private InMemorySearchableFieldsRegistry inMemorySearchableFieldsRegistry;
 
     @Before
@@ -29,10 +32,10 @@ public class InMemorySearchResourceRegistryTest {
         Set<String> s2Fields = new HashSet(Arrays.asList("s2.1", "s2.2"));
         Set<String> s3Fields = new HashSet(Arrays.asList("s3.1", "s3.2"));
 
-        SearchResource s1 = new SearchResource("s1", s1Fields);
-        SearchResource s2 = new SearchResource("s2", s2Fields);
-        SearchResource s3 = new SearchResource("s3", s3Fields);
-        SearchResource s3Mod = new SearchResource("s3", s1Fields);
+        SearchResource s1 = new SearchResource(DOMAIN1, "s1", s1Fields);
+        SearchResource s2 = new SearchResource(DOMAIN2, "s2", s2Fields);
+        SearchResource s3 = new SearchResource(DOMAIN1, "s3", s3Fields);
+        SearchResource s3Mod = new SearchResource(DOMAIN1, "s3", s1Fields);
 
         inMemorySearchableFieldsRegistry.addFields(s1);
         inMemorySearchableFieldsRegistry.addFields(s2);
@@ -40,10 +43,11 @@ public class InMemorySearchResourceRegistryTest {
         inMemorySearchableFieldsRegistry.addFields(s3Mod);
 
 
-        assertThat(inMemorySearchableFieldsRegistry.getFieldsFromType("s1")).isEqualTo(s1Fields);
-        assertThat(inMemorySearchableFieldsRegistry.getFieldsFromType("s2")).isEqualTo(s2Fields);
-        assertThat(inMemorySearchableFieldsRegistry.getFieldsFromType("s3")).isEqualTo(s1Fields);
-        assertThat(inMemorySearchableFieldsRegistry.getFieldsFromType("s4")).isEmpty();
+        assertThat(inMemorySearchableFieldsRegistry.getFieldsFromType(DOMAIN1, "s1")).isEqualTo(s1Fields);
+        assertThat(inMemorySearchableFieldsRegistry.getFieldsFromType(DOMAIN1,"s2")).isEmpty();
+        assertThat(inMemorySearchableFieldsRegistry.getFieldsFromType(DOMAIN2,"s2")).isEqualTo(s2Fields);
+        assertThat(inMemorySearchableFieldsRegistry.getFieldsFromType(DOMAIN1,"s3")).isEqualTo(s1Fields);
+        assertThat(inMemorySearchableFieldsRegistry.getFieldsFromType(DOMAIN1,"s4")).isEmpty();
 
     }
 

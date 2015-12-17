@@ -2,6 +2,7 @@ package io.corbel.resources.rem.resmi;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
 import io.corbel.resources.rem.request.RelationParameters;
 import io.corbel.resources.rem.request.RequestParameters;
 import io.corbel.resources.rem.request.ResourceId;
@@ -20,6 +21,7 @@ import com.google.gson.JsonObject;
  */
 public abstract class ResmiRemTest {
 
+    protected static final String DOMAIN = "DOMAIN";
     protected static final String TEST_TYPE = "testType";
     protected static final String TEST_TYPE_RELATION = "testTypeRelation";
     protected static final String ID = "testId";
@@ -62,6 +64,7 @@ public abstract class ResmiRemTest {
         when(parameters.getQueries()).thenReturn(Optional.empty());
         when(requestParameters.getApiParameters()).thenReturn(parameters);
         when(requestParameters.getOptionalApiParameters()).thenReturn(Optional.of(parameters));
+        when(requestParameters.getRequestedDomain()).thenReturn(DOMAIN);
         return requestParameters;
     }
 

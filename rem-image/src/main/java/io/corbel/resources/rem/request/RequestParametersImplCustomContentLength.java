@@ -1,10 +1,12 @@
 package io.corbel.resources.rem.request;
 
-import io.corbel.lib.token.TokenInfo;
+import java.util.List;
 
 import javax.ws.rs.core.MultivaluedMap;
+
 import org.springframework.http.MediaType;
-import java.util.List;
+
+import io.corbel.lib.token.TokenInfo;
 
 public class RequestParametersImplCustomContentLength<E> implements RequestParameters<E> {
 
@@ -25,6 +27,11 @@ public class RequestParametersImplCustomContentLength<E> implements RequestParam
     @Override
     public TokenInfo getTokenInfo() {
         return requestParameters.getTokenInfo();
+    }
+
+    @Override
+    public String getRequestedDomain() {
+        return requestParameters.getRequestedDomain();
     }
 
     @Override

@@ -4,6 +4,7 @@ import io.corbel.lib.queries.request.ResourceQuery;
 import io.corbel.resources.rem.dao.NotFoundException;
 import io.corbel.resources.rem.dao.RelationMoveOperation;
 import io.corbel.resources.rem.model.ResourceUri;
+import io.corbel.resources.rem.model.SearchResource;
 import io.corbel.resources.rem.request.CollectionParameters;
 import io.corbel.resources.rem.request.RelationParameters;
 import io.corbel.resources.rem.resmi.exception.MongoAggregationException;

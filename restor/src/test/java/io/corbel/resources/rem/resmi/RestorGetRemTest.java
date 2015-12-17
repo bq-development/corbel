@@ -9,6 +9,7 @@ import java.util.Optional;
 
 import javax.ws.rs.core.Response;
 
+import io.corbel.resources.rem.model.RestorResourceUri;
 import io.corbel.resources.rem.model.RestorObject;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,8 +43,9 @@ public class RestorGetRemTest {
 	@Test
 	public void testGetOkResource() {
 		when(requestParameters.getAcceptedMediaTypes()).thenReturn(Arrays.asList(MediaType.APPLICATION_XML));
-		when(daoMock.getObject(MediaType.APPLICATION_XML, "test", "resourceId")).thenReturn(
-				new RestorObject(MediaType.APPLICATION_XML, entity, null));
+        when(requestParameters.getRequestedDomain()).thenReturn("RequestedDomain");
+		when(daoMock.getObject(new RestorResourceUri("RequestedDomain", MediaType.APPLICATION_XML.toString(), "test", "resourceId"))).thenReturn(
+				new RestorObject(MediaType.APPLICATION_XML.toString(), entity, null));
 		Response response = getRem.resource("test", new ResourceId("resourceId"), requestParameters, Optional.empty());
 		String responseContentType = response.getMetadata().getFirst("Content-Type").toString();
 		assertThat(responseContentType).isEqualTo(MediaType.APPLICATION_XML_VALUE);

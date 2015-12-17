@@ -39,9 +39,8 @@ public class AclGetRem extends AclBaseRem {
     public Response resource(String type, ResourceId id, RequestParameters<ResourceParameters> parameters, Optional<InputStream> entity, Optional<List<Rem>> excludedRems) {
 
         try {
-
             List<Rem> excluded = getExcludedRems(excludedRems);
-            return aclResourcesService.getResourceIfIsAuthorized(parameters.getTokenInfo(), type, id, AclPermission.READ).map(originalObject -> {
+            return aclResourcesService.getResourceIfIsAuthorized(parameters.getRequestedDomain(), parameters.getTokenInfo(), type, id, AclPermission.READ).map(originalObject -> {
                 if (parameters.getAcceptedMediaTypes().contains(MediaType.APPLICATION_JSON)) {
                     return Response.ok(originalObject).build();
                 }
@@ -65,7 +64,7 @@ public class AclGetRem extends AclBaseRem {
 
         TokenInfo tokenInfo = parameters.getTokenInfo();
 
-        if (!aclResourcesService.isManagedBy(tokenInfo, type)) {
+        if (!aclResourcesService.isManagedBy(parameters.getRequestedDomain(), tokenInfo, type)) {
             addAclQueryParams(parameters, tokenInfo);
         }
 
@@ -89,7 +88,7 @@ public class AclGetRem extends AclBaseRem {
         }
 
         try {
-            if (!aclResourcesService.isAuthorized(parameters.getTokenInfo(), type, id, AclPermission.READ)) {
+            if (!aclResourcesService.isAuthorized(parameters.getRequestedDomain(), parameters.getTokenInfo(), type, id, AclPermission.READ)) {
                 return ErrorResponseFactory.getInstance().unauthorized(AclUtils.buildMessage(AclPermission.READ));
             }
         } catch (AclFieldNotPresentException e) {

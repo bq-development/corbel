@@ -29,7 +29,7 @@ public class ResmiPostRem extends AbstractResmiRem {
 
     @Override
     public Response collection(String type, RequestParameters<CollectionParameters> parameters, URI uri, Optional<JsonObject> entity) {
-        ResourceUri resourceUri = buildCollectionUri(type);
+        ResourceUri resourceUri = buildCollectionUri(parameters.getRequestedDomain(), type);
         return entity.map(object -> {
             resmiService.removeObjectId(object);
             JsonObject savedObject;
@@ -55,7 +55,7 @@ public class ResmiPostRem extends AbstractResmiRem {
             return ErrorResponseFactory.getInstance().methodNotAllowed();
         }
 
-        ResourceUri resourceUri = buildRelationUri(type, id.getId(), relation,
+        ResourceUri resourceUri = buildRelationUri(parameters.getRequestedDomain(), type, id.getId(), relation,
                 parameters.getOptionalApiParameters().flatMap(RelationParameters::getPredicateResource));
 
         try {

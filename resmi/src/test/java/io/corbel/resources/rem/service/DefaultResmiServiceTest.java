@@ -41,6 +41,7 @@ import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
     private static final long DATE = 1234;
     private static final String _UPDATED_AT = "_updatedAt";
     private static final String _CREATED_AT = "_createdAt";
+    private static final String DOMAIN = "DOMAIN";
 
     SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.forLanguageTag("ES"));
 
@@ -76,7 +77,7 @@ import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
 
     @Test
     public void findTest() throws BadConfigurationException {
-        ResourceUri resourceUri = new ResourceUri(TYPE);
+        ResourceUri resourceUri = new ResourceUri(DOMAIN, TYPE);
         JsonArray fakeResult = new JsonArray();
         when(
                 resmiDao.findCollection(eq(resourceUri), eq(Optional.of(resourceQueriesMock)), eq(Optional.of(paginationMock)),
@@ -88,7 +89,7 @@ import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
 
     @Test
     public void findResourceByIdTest() throws BadConfigurationException {
-        ResourceUri resourceUri = new ResourceUri(TYPE, ID);
+        ResourceUri resourceUri = new ResourceUri(DOMAIN, TYPE, ID);
 
         JsonObject fakeResult = new JsonObject();
         when(resmiDao.findResource(eq(resourceUri))).thenReturn(fakeResult);
@@ -101,7 +102,7 @@ import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
     @Test
     public void findRelationTest() throws BadConfigurationException {
         JsonElement fakeResult = new JsonObject();
-        ResourceUri resourceUri = new ResourceUri(TYPE, ID, RELATION_TYPE, "test");
+        ResourceUri resourceUri = new ResourceUri(DOMAIN, TYPE, ID, RELATION_TYPE, "test");
 
         when(
                 resmiDao.findRelation(eq(resourceUri), eq(Optional.of(resourceQueriesMock)), eq(Optional.of(paginationMock)),
@@ -116,17 +117,17 @@ import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
     @Test
     public void countCollectionTest() throws BadConfigurationException, MongoAggregationException {
         JsonElement fakeResult = new JsonObject();
-        when(resmiDao.count(eq(new ResourceUri(TYPE)), eq(resourceQueriesMock))).thenReturn(fakeResult);
+        when(resmiDao.count(eq(new ResourceUri(DOMAIN, TYPE)), eq(resourceQueriesMock))).thenReturn(fakeResult);
         when(collectionParametersMock.getAggregation()).thenReturn(Optional.of(new Count("*")));
         when(collectionParametersMock.getSearch()).thenReturn(Optional.empty());
-        JsonElement result = defaultResmiService.aggregate(new ResourceUri(TYPE), collectionParametersMock);
+        JsonElement result = defaultResmiService.aggregate(new ResourceUri(DOMAIN, TYPE), collectionParametersMock);
         assertThat(fakeResult).isEqualTo(result);
     }
 
     @Test
     public void countRelationTest() throws BadConfigurationException, MongoAggregationException {
         JsonElement fakeResult = new JsonObject();
-        ResourceUri resourceUri = new ResourceUri(TYPE, ID, RELATION_TYPE);
+        ResourceUri resourceUri = new ResourceUri(DOMAIN, TYPE, ID, RELATION_TYPE);
         when(resmiDao.count(eq(resourceUri), eq(resourceQueriesMock))).thenReturn(fakeResult);
         when(collectionParametersMock.getAggregation()).thenReturn(Optional.of(new Count("*")));
         when(collectionParametersMock.getSearch()).thenReturn(Optional.empty());
@@ -136,7 +137,7 @@ import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
 
     @Test
     public void saveResourceTest() throws StartsWithUnderscoreException {
-        ResourceUri uri = new ResourceUri(TYPE);
+        ResourceUri uri = new ResourceUri(DOMAIN, TYPE);
         JsonObject fakeResult = new JsonObject();
         defaultResmiService.saveResource(uri, fakeResult, Optional.of(USER_ID));
         assertThat(fakeResult.get(DefaultResmiService.ID).getAsString()).startsWith(USER_ID);
@@ -147,7 +148,7 @@ import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
 
     @Test(expected = StartsWithUnderscoreException.class)
     public void saveResourceWithUnderscoreTest() throws StartsWithUnderscoreException {
-        ResourceUri uri = new ResourceUri(TYPE);
+        ResourceUri uri = new ResourceUri(DOMAIN, TYPE);
         JsonObject fakeResult = new JsonObject();
         fakeResult.add("_test", new JsonPrimitive("123"));
         defaultResmiService.saveResource(uri, fakeResult, Optional.of(USER_ID));
@@ -156,7 +157,7 @@ import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
     @Test
     public void upsertTest() throws StartsWithUnderscoreException {
         String id = "123";
-        ResourceUri resourceUri = new ResourceUri(TYPE, id);
+        ResourceUri resourceUri = new ResourceUri(DOMAIN, TYPE, id);
         JsonObject fakeResult = new JsonObject();
         defaultResmiService.updateResource(resourceUri, fakeResult);
         assertThat(fakeResult.get(_CREATED_AT)).isNotNull();
@@ -167,7 +168,7 @@ import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
     @Test
     public void upsertWithDatesTest() throws StartsWithUnderscoreException, ParseException {
         String id = "123";
-        ResourceUri resourceUri = new ResourceUri(TYPE, id);
+        ResourceUri resourceUri = new ResourceUri(DOMAIN, TYPE, id);
         JsonObject fakeResult = new JsonObject();
         fakeResult.addProperty(_CREATED_AT, DATE);
         fakeResult.addProperty(_UPDATED_AT, DATE);
@@ -180,7 +181,7 @@ import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
     @Test(expected = StartsWithUnderscoreException.class)
     public void upsertWithUnderscoreTest() throws StartsWithUnderscoreException {
         String id = "123";
-        ResourceUri resourceUri = new ResourceUri(TYPE, id);
+        ResourceUri resourceUri = new ResourceUri(DOMAIN, TYPE, id);
 
         JsonObject fakeResult = new JsonObject();
         fakeResult.add("_test", new JsonPrimitive("123"));
@@ -191,7 +192,7 @@ import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
     public void createRelationTest() throws NotFoundException, StartsWithUnderscoreException {
         String resourceId = "test";
         JsonObject jsonObject = new JsonObject();
-        ResourceUri resourceUri = new ResourceUri(TYPE, resourceId, RELATION_TYPE, RELATION_URI);
+        ResourceUri resourceUri = new ResourceUri(DOMAIN, TYPE, resourceId, RELATION_TYPE, RELATION_URI);
         defaultResmiService.createRelation(resourceUri, jsonObject);
         assertThat(jsonObject.get(_CREATED_AT)).isNotNull();
         assertThat(jsonObject.get(_UPDATED_AT)).isNotNull();
@@ -208,13 +209,13 @@ import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
         String resourceId = "test";
         JsonObject jsonObject = new JsonObject();
         jsonObject.add("_test", new JsonPrimitive("123"));
-        ResourceUri resourceUri = new ResourceUri(TYPE, resourceId, RELATION_TYPE, RELATION_URI);
+        ResourceUri resourceUri = new ResourceUri(DOMAIN, TYPE, resourceId, RELATION_TYPE, RELATION_URI);
         defaultResmiService.createRelation(resourceUri, jsonObject);
     }
 
     @Test
     public void moveElementTest() throws NotFoundException {
-        ResourceUri resourceUri = new ResourceUri(TYPE, ID, RELATION_TYPE, RELATION_URI);
+        ResourceUri resourceUri = new ResourceUri(DOMAIN, TYPE, ID, RELATION_TYPE, RELATION_URI);
 
         RelationMoveOperation relationMoveOperation = new RelationMoveOperation(1);
 
@@ -224,14 +225,14 @@ import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
 
     @Test
     public void deleteResourceByIdTest() throws NotFoundException {
-        ResourceUri uri = new ResourceUri(TYPE, ID);
+        ResourceUri uri = new ResourceUri(DOMAIN, TYPE, ID);
         defaultResmiService.deleteResource(uri);
         verify(resmiDao).deleteResource(uri);
     }
 
     @Test
     public void deleteRelationTest() throws NotFoundException {
-        ResourceUri uri = new ResourceUri(TYPE, ID, RELATION_TYPE, "dst");
+        ResourceUri uri = new ResourceUri(DOMAIN, TYPE, ID, RELATION_TYPE, "dst");
         defaultResmiService.deleteRelation(uri, Optional.empty());
         verify(resmiDao).deleteRelation(uri, Optional.empty());
     }
@@ -239,7 +240,7 @@ import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
     @Test
     public void ensureCollectionIndexTest() throws NotFoundException {
         Index index = mock(Index.class);
-        ResourceUri resourceUri = new ResourceUri(TYPE);
+        ResourceUri resourceUri = new ResourceUri(DOMAIN, TYPE);
         defaultResmiService.ensureIndex(resourceUri, index);
         verify(resmiDao).ensureIndex(resourceUri, index);
     }
@@ -247,7 +248,7 @@ import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
     @Test
     public void ensureRelationIndexTest() throws NotFoundException {
         Index index = mock(Index.class);
-        ResourceUri resourceUri = new ResourceUri(TYPE).setRelation(RELATION_TYPE);
+        ResourceUri resourceUri = new ResourceUri(DOMAIN, TYPE).setRelation(RELATION_TYPE);
         defaultResmiService.ensureIndex(resourceUri, index);
         verify(resmiDao).ensureIndex(resourceUri, index);
     }
@@ -255,7 +256,7 @@ import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
     @Test
     public void averageTest() throws BadConfigurationException, MongoAggregationException {
         JsonElement fakeResult = new JsonObject();
-        ResourceUri resourceUri = new ResourceUri(TYPE);
+        ResourceUri resourceUri = new ResourceUri(DOMAIN, TYPE);
         when(resmiDao.average(eq(resourceUri), eq(resourceQueriesMock), eq("testField"))).thenReturn(fakeResult);
         when(collectionParametersMock.getAggregation()).thenReturn(Optional.of(new Average("testField")));
         when(collectionParametersMock.getSearch()).thenReturn(Optional.empty());
@@ -266,7 +267,7 @@ import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
     @Test
     public void maxTest() throws BadConfigurationException, MongoAggregationException {
         JsonElement fakeResult = new JsonObject();
-        ResourceUri resourceUri = new ResourceUri(TYPE);
+        ResourceUri resourceUri = new ResourceUri(DOMAIN, TYPE);
         when(resmiDao.max(eq(resourceUri), eq(resourceQueriesMock), eq("testField"))).thenReturn(fakeResult);
         when(collectionParametersMock.getAggregation()).thenReturn(Optional.of(new Max("testField")));
         when(collectionParametersMock.getSearch()).thenReturn(Optional.empty());
@@ -277,7 +278,7 @@ import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
     @Test
     public void minTest() throws BadConfigurationException, MongoAggregationException {
         JsonElement fakeResult = new JsonObject();
-        ResourceUri resourceUri = new ResourceUri(TYPE);
+        ResourceUri resourceUri = new ResourceUri(DOMAIN, TYPE);
         when(resmiDao.min(eq(resourceUri), eq(resourceQueriesMock), eq("testField"))).thenReturn(fakeResult);
         when(collectionParametersMock.getAggregation()).thenReturn(Optional.of(new Min("testField")));
         when(collectionParametersMock.getSearch()).thenReturn(Optional.empty());

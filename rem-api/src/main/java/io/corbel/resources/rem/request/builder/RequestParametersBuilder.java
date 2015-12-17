@@ -1,9 +1,5 @@
 package io.corbel.resources.rem.request.builder;
 
-import io.corbel.lib.token.TokenInfo;
-import io.corbel.resources.rem.request.RequestParameters;
-import io.corbel.resources.rem.request.RequestParametersImpl;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,6 +7,10 @@ import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 
 import org.springframework.http.MediaType;
+
+import io.corbel.lib.token.TokenInfo;
+import io.corbel.resources.rem.request.RequestParameters;
+import io.corbel.resources.rem.request.RequestParametersImpl;
 
 /**
  * @author Rubén Carrasco
@@ -20,6 +20,7 @@ public class RequestParametersBuilder<E> {
 
     private E apiParameters;
     private TokenInfo tokenInfo;
+    private String requestedDomain;
     private List<MediaType> acceptedMediaTypes;
     private MultivaluedMap<String, String> params;
     private Long contentLength;
@@ -37,7 +38,7 @@ public class RequestParametersBuilder<E> {
     }
 
     public RequestParameters<E> build() {
-        return new RequestParametersImpl<E>(apiParameters, tokenInfo, acceptedMediaTypes, contentLength, params, headers);
+        return new RequestParametersImpl<E>(apiParameters, tokenInfo, requestedDomain, acceptedMediaTypes, contentLength, params, headers);
     }
 
     public RequestParametersBuilder<E> apiParameters(E apiParameters) {
@@ -47,6 +48,11 @@ public class RequestParametersBuilder<E> {
 
     public RequestParametersBuilder<E> tokenInfo(TokenInfo tokenInfo) {
         this.tokenInfo = tokenInfo;
+        return this;
+    }
+
+    public RequestParametersBuilder<E> setRequestedDomain(String requestedDomain) {
+        this.requestedDomain = requestedDomain;
         return this;
     }
 

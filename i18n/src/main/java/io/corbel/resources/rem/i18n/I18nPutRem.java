@@ -6,13 +6,14 @@ import javax.ws.rs.core.Response;
 
 import org.springframework.http.HttpMethod;
 
+import com.google.common.base.Strings;
+import com.google.gson.Gson;
+
 import io.corbel.resources.rem.i18n.api.I18nErrorResponseFactory;
 import io.corbel.resources.rem.i18n.model.I18n;
 import io.corbel.resources.rem.request.RequestParameters;
 import io.corbel.resources.rem.request.ResourceId;
 import io.corbel.resources.rem.request.ResourceParameters;
-import com.google.common.base.Strings;
-import com.google.gson.Gson;
 
 public class I18nPutRem extends I18nBaseRem {
 
@@ -32,9 +33,8 @@ public class I18nPutRem extends I18nBaseRem {
             id.setId(entity.getLang() + ID_SEPARATOR + id.getId());
             entity.setId(id.getId());
             return gson.toJsonTree(entity).getAsJsonObject();
-        }).map(entityJson -> {
-            return getJsonRem(type, HttpMethod.PUT).resource(type, id, parameters, Optional.of(entityJson));
-        }).orElse(I18nErrorResponseFactory.getInstance().invalidEntity("I18n requires key and lang values"));
+        }).map(entityJson -> getJsonRem(type, HttpMethod.PUT).resource(type, id, parameters, Optional.of(entityJson)))
+                .orElse(I18nErrorResponseFactory.getInstance().invalidEntity("I18n requires key and lang values"));
     }
 
     @Override

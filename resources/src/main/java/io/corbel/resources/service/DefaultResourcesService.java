@@ -68,8 +68,8 @@ public class DefaultResourcesService implements ResourcesService {
     }
 
     @Override
-    public Response collectionOperation(String type, Request request, UriInfo uriInfo, TokenInfo tokenInfo, URI typeUri, HttpMethod method,
-            QueryParameters queryParameters, InputStream inputStream, MediaType contentType) {
+    public Response collectionOperation(String domain, String type, Request request, UriInfo uriInfo, TokenInfo tokenInfo, URI typeUri,
+            HttpMethod method, QueryParameters queryParameters, InputStream inputStream, MediaType contentType) {
         Response result;
         try {
             List<org.springframework.http.MediaType> acceptedMediaTypes = getRequestAcceptedMediaTypes(request);
@@ -77,7 +77,8 @@ public class DefaultResourcesService implements ResourcesService {
 
             queryParameters = (method.equals(HttpMethod.GET) || method.equals(HttpMethod.DELETE) || method.equals(HttpMethod.PUT)) ? queryParameters
                     : getDefaultQueryParameters();
-            RequestParameters<CollectionParameters> parameters = collectionParameters(queryParameters, tokenInfo, acceptedMediaTypes,
+            RequestParameters<CollectionParameters> parameters = collectionParameters(domain, queryParameters, tokenInfo,
+                    acceptedMediaTypes,
                     uriInfo.getQueryParameters(), request);
 
             Optional<?> entity = method.equals(HttpMethod.POST) || method.equals(HttpMethod.PUT)? getEntity(Optional.ofNullable(inputStream), rem, contentType) : Optional
@@ -103,11 +104,13 @@ public class DefaultResourcesService implements ResourcesService {
     }
 
     @Override
-    public Response resourceOperation(String type, ResourceId id, Request request, QueryParameters queryParameters, UriInfo uriInfo,
-            TokenInfo tokenInfo, URI typeUri, HttpMethod method, InputStream inputStream, MediaType contentType, Long contentLength) {
+    public Response resourceOperation(String domain, String type, ResourceId id, Request request, QueryParameters queryParameters,
+            UriInfo uriInfo, TokenInfo tokenInfo, URI typeUri, HttpMethod method, InputStream inputStream, MediaType contentType,
+            Long contentLength) {
 
         if (id.isWildcard()) {
-            return collectionOperation(type, request, uriInfo, tokenInfo, typeUri, method, queryParameters, inputStream, contentType);
+            return collectionOperation(domain, type, request, uriInfo, tokenInfo, typeUri, method, queryParameters, inputStream,
+                    contentType);
         }
 
         Response result;
@@ -115,7 +118,8 @@ public class DefaultResourcesService implements ResourcesService {
             List<org.springframework.http.MediaType> acceptedMediaTypes = getRequestAcceptedMediaTypes(request);
             Rem rem = remService.getRem(type, acceptedMediaTypes, method);
 
-            RequestParameters<ResourceParameters> resourceParameters = resourceParameters(queryParameters, tokenInfo, acceptedMediaTypes,
+            RequestParameters<ResourceParameters> resourceParameters = resourceParameters(domain, queryParameters, tokenInfo,
+                    acceptedMediaTypes,
                     contentLength, uriInfo.getQueryParameters(), request);
             Optional<?> entity = method == HttpMethod.PUT ? getEntity(Optional.ofNullable(inputStream), rem, contentType) : Optional
                     .empty();
@@ -146,14 +150,15 @@ public class DefaultResourcesService implements ResourcesService {
     }
 
     @Override
-    public Response relationOperation(String type, ResourceId id, String rel, Request request, UriInfo uriInfo, TokenInfo tokenInfo,
-            HttpMethod method, QueryParameters queryParameters, String resource, InputStream inputStream, MediaType contentType) {
+    public Response relationOperation(String domain, String type, ResourceId id, String rel, Request request, UriInfo uriInfo,
+            TokenInfo tokenInfo, HttpMethod method, QueryParameters queryParameters, String resource, InputStream inputStream,
+            MediaType contentType) {
         try {
             List<org.springframework.http.MediaType> acceptedMediaTypes = getRequestAcceptedMediaTypes(request);
             Rem rem = remService.getRem(type + "/" + id.getId() + "/" + rel, acceptedMediaTypes, method);
 
             queryParameters = Optional.ofNullable(queryParameters).orElse(getDefaultQueryParameters());
-            RequestParameters<RelationParameters> parameters = relationParameters(queryParameters, Optional.ofNullable(resource),
+            RequestParameters<RelationParameters> parameters = relationParameters(domain, queryParameters, Optional.ofNullable(resource),
                     tokenInfo, acceptedMediaTypes, uriInfo.getQueryParameters(), request);
             Optional<?> entity = getEntity(Optional.ofNullable(inputStream), rem, contentType);
 
@@ -169,23 +174,26 @@ public class DefaultResourcesService implements ResourcesService {
         }
     }
 
-    private RequestParameters<CollectionParameters> collectionParameters(QueryParameters queryParameters, TokenInfo tokenInfo,
+    private RequestParameters<CollectionParameters> collectionParameters(String domain, QueryParameters queryParameters,
+            TokenInfo tokenInfo,
             List<org.springframework.http.MediaType> acceptedMediaTypes, MultivaluedMap<String, String> params, Request request) {
-        return new RequestParametersImpl<>(new CollectionParametersImpl(queryParameters), tokenInfo, acceptedMediaTypes, null, params,
+        return new RequestParametersImpl<>(new CollectionParametersImpl(queryParameters), tokenInfo, domain, acceptedMediaTypes, null,
+                params,
                 getHeadersFromRequest(request));
     }
 
-    private RequestParameters<ResourceParameters> resourceParameters(QueryParameters queryParameters, TokenInfo tokenInfo,
+    private RequestParameters<ResourceParameters> resourceParameters(String domain, QueryParameters queryParameters, TokenInfo tokenInfo,
             List<org.springframework.http.MediaType> acceptedMediaTypes, Long contentLength, MultivaluedMap<String, String> params,
             Request request) {
-        return new RequestParametersImpl<>(new ResourceParametersImpl(queryParameters), tokenInfo, acceptedMediaTypes, contentLength,
+        return new RequestParametersImpl<>(new ResourceParametersImpl(queryParameters), tokenInfo, domain, acceptedMediaTypes,
+                contentLength,
                 params, getHeadersFromRequest(request));
     }
 
-    private RequestParameters<RelationParameters> relationParameters(QueryParameters queryParameters,
+    private RequestParameters<RelationParameters> relationParameters(String domain, QueryParameters queryParameters,
             Optional<String> predicateResourceUri, TokenInfo tokenInfo, List<org.springframework.http.MediaType> acceptedMediaTypes,
             MultivaluedMap<String, String> params, Request request) {
-        return new RequestParametersImpl<>(new RelationParametersImpl(queryParameters, predicateResourceUri), tokenInfo,
+        return new RequestParametersImpl<>(new RelationParametersImpl(queryParameters, predicateResourceUri), tokenInfo, domain,
                 acceptedMediaTypes, null, params, getHeadersFromRequest(request));
     }
 

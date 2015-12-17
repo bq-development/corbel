@@ -1,5 +1,6 @@
 package io.corbel.resources.rem.dao;
 
+import io.corbel.resources.rem.model.RestorResourceUri;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.http.MediaType;
@@ -20,11 +21,11 @@ public class DefaultKeyNormalizerTest {
 
 	@Test
 	public void testRawResource() {
-		assertThat(normalizer.normalize(MediaType.IMAGE_PNG, "test", "imageId")).isEqualTo("test/imageId.image_png");
+		assertThat(normalizer.normalize(new RestorResourceUri("domain", MediaType.IMAGE_PNG.toString(), "test", "imageId"))).isEqualTo("domain/test/imageId.image_png");
 	}
 
 	@Test
 	public void testNormalizedResource() {
-		assertThat(normalizer.normalize(MediaType.IMAGE_PNG, "test", "test/imageId.image_png")).isEqualTo("test/imageId.image_png");
+		assertThat(normalizer.normalize(new RestorResourceUri("domain", MediaType.IMAGE_PNG.toString(), "test", "test/imageId.image_png"))).isEqualTo("domain/test/imageId.image_png");
 	}
 }

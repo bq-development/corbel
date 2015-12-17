@@ -1,8 +1,5 @@
 package io.corbel.resources.rem.resmi;
 
-import io.corbel.lib.queries.request.Aggregation;
-import io.corbel.lib.queries.request.AggregationOperator;
-import io.corbel.lib.queries.request.Combine;
 import io.corbel.lib.ws.api.error.ErrorResponseFactory;
 import io.corbel.lib.ws.model.Error;
 import io.corbel.resources.rem.model.ResourceUri;
@@ -42,7 +39,7 @@ public class ResmiGetRem extends AbstractResmiRem {
 
     @Override
     public Response collection(String type, RequestParameters<CollectionParameters> parameters, URI uri, Optional<JsonObject> entity) {
-        ResourceUri resourceUri = buildCollectionUri(type);
+        ResourceUri resourceUri = buildCollectionUri(parameters.getRequestedDomain(), type);
         try {
             if (parameters.getOptionalApiParameters().flatMap(CollectionParameters::getAggregation).isPresent()) {
                 return buildResponse(resmiService.aggregate(resourceUri, parameters.getOptionalApiParameters().get()));
@@ -63,14 +60,14 @@ public class ResmiGetRem extends AbstractResmiRem {
 
     @Override
     public Response resource(String type, ResourceId id, RequestParameters<ResourceParameters> parameters, Optional<JsonObject> entity) {
-        ResourceUri resourceUri = buildResourceUri(type, id.getId());
+        ResourceUri resourceUri = buildResourceUri(parameters.getRequestedDomain(), type, id.getId());
         return buildResponse(resmiService.findResource(resourceUri));
     }
 
     @Override
     public Response relation(String type, ResourceId id, String relation, RequestParameters<RelationParameters> parameters,
             Optional<JsonObject> entity) {
-        ResourceUri resourceUri = buildRelationUri(type, id.getId(), relation,
+        ResourceUri resourceUri = buildRelationUri(parameters.getRequestedDomain(), type, id.getId(), relation,
                 parameters.getOptionalApiParameters().flatMap(RelationParameters::getPredicateResource));
         try {
             if (parameters.getOptionalApiParameters().flatMap(CollectionParameters::getAggregation).isPresent()) {

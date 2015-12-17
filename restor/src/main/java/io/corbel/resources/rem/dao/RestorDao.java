@@ -1,6 +1,6 @@
 package io.corbel.resources.rem.dao;
 
-import org.springframework.http.MediaType;
+import io.corbel.resources.rem.model.RestorResourceUri;
 
 import io.corbel.resources.rem.model.RestorObject;
 
@@ -9,12 +9,12 @@ import io.corbel.resources.rem.model.RestorObject;
  */
 public interface RestorDao {
 
-    RestorObject getObject(MediaType mediaType, String collection, String resource);
+    RestorObject getObject(RestorResourceUri resourceUri);
 
-    void uploadObject(String collection, String resource, RestorObject object);
+    void uploadObject(RestorResourceUri resourceUri, RestorObject object);
 
-    void deleteObject(MediaType mediaType, String collection, String resource);
+    void deleteObject(RestorResourceUri resourceUri);
 
-    void deleteObjectWithPrefix(MediaType mediaType, String collection, String prefix);
+    void deleteObjectWithPrefix(RestorResourceUri resourceUri, String prefix);
 
 }

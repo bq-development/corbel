@@ -24,7 +24,7 @@ public class AclPutManagedCollectionRem extends BaseRem<ManagedCollection> {
     public Response resource(String type, ResourceId id, RequestParameters<ResourceParameters> parameters,
             Optional<ManagedCollection> entity) {
 
-        return entity.map(managedCollection -> aclResourcesService.updateConfiguration(id, parameters, managedCollection))
+        return entity.map(managedCollection -> aclResourcesService.updateConfiguration(id, managedCollection))
                 .orElseGet(() -> ErrorResponseFactory.getInstance().badRequest());
 
     }

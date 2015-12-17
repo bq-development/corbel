@@ -30,7 +30,6 @@ import io.corbel.resources.rem.utils.AclUtils;
  * @author Cristian del Cerro
  */
 public class SetUpAclPutRem extends AclBaseRem {
-
     private Pattern prefixPattern = Pattern
             .compile("(?:(?:" + DefaultAclResourcesService.USER_PREFIX + ")|(?:" + DefaultAclResourcesService.GROUP_PREFIX + "))\\S+");
 
@@ -66,7 +65,7 @@ public class SetUpAclPutRem extends AclBaseRem {
         excluded.addAll(remsToExclude);
 
         try {
-            isAuthorized = aclResourcesService.isAuthorized(tokenInfo, type, id, AclPermission.ADMIN);
+            isAuthorized = aclResourcesService.isAuthorized(parameters.getRequestedDomain(), tokenInfo, type, id, AclPermission.ADMIN);
         } catch (AclFieldNotPresentException ignored) {}
 
         if (!isAuthorized) {
@@ -76,8 +75,8 @@ public class SetUpAclPutRem extends AclBaseRem {
         JsonObject filteredAclObject = getFilteredAclObject(jsonObject);
 
         if (!hasAdminPermission(tokenInfo, filteredAclObject)) {
-            Optional.ofNullable(tokenInfo.getUserId()).ifPresent(userId -> filteredAclObject
-                    .addProperty(DefaultAclResourcesService.USER_PREFIX + userId, AclPermission.ADMIN.toString()));
+            filteredAclObject
+                    .addProperty(DefaultAclResourcesService.USER_PREFIX + tokenInfo.getUserId(), AclPermission.ADMIN.toString());
         }
 
         JsonObject objectToSave = new JsonObject();

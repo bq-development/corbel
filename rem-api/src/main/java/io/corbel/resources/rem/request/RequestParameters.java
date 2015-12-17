@@ -17,27 +17,6 @@ import io.corbel.lib.token.TokenInfo;
  */
 public interface RequestParameters<E> {
 
-    @Deprecated
-    E getApiParameters();
-
-    default Optional<E> getOptionalApiParameters() {
-        return Optional.ofNullable(getApiParameters());
-    }
-
-    TokenInfo getTokenInfo();
-
-    List<MediaType> getAcceptedMediaTypes();
-
-    String getCustomParameterValue(String parameterName);
-
-    List<String> getCustomParameterValues(String parameterName);
-
-    MultivaluedMap<String, String> getParams();
-
-    MultivaluedMap<String, String> getHeaders();
-
-    Long getContentLength();
-
     static <E> RequestParameters<E> emptyParameters() {
         return new RequestParameters<E>() {
             @Override
@@ -52,6 +31,11 @@ public interface RequestParameters<E> {
 
             @Override
             public TokenInfo getTokenInfo() {
+                return null;
+            }
+
+            @Override
+            public String getRequestedDomain() {
                 return null;
             }
 
@@ -82,6 +66,27 @@ public interface RequestParameters<E> {
         };
     }
 
+    @Deprecated
+    E getApiParameters();
 
+    default Optional<E> getOptionalApiParameters() {
+        return Optional.ofNullable(getApiParameters());
+    }
+
+    TokenInfo getTokenInfo();
+
+    String getRequestedDomain();
+
+    List<MediaType> getAcceptedMediaTypes();
+
+    String getCustomParameterValue(String parameterName);
+
+    List<String> getCustomParameterValues(String parameterName);
+
+    MultivaluedMap<String, String> getParams();
+
+    MultivaluedMap<String, String> getHeaders();
+
+    Long getContentLength();
 
 }
