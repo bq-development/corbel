@@ -146,7 +146,7 @@ import java.util.stream.Collectors;
             try {
                 userService.update(user);
             } catch (DuplicateKeyException e) {
-                return IamErrorResponseFactory.getInstance().conflict(new Error("conflict", e.getMessage()));
+                return IamErrorResponseFactory.getInstance().conflict(new Error("conflict", "The email or username already exists"));
             }
         }
         return Response.status(Status.NO_CONTENT).build();
