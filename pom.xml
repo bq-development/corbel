@@ -43,7 +43,7 @@
     <lib-queries.version>0.12.0-SNAPSHOT</lib-queries.version>
     <lib-ws.version>0.15.0-SNAPSHOT</lib-ws.version>
     <lib-rabbitmq.version>0.8.0</lib-rabbitmq.version>
-    <events.version>1.26.0-SNAPSHOT</events.version>
+    <events.version>1.26.0</events.version>
     <spring.version>4.1.7.RELEASE</spring.version>
     <dropwizard.version>0.8.1</dropwizard.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -460,9 +460,9 @@
               <configuration>
                 <target>
                   <exec executable="chmod" dir="${project.build.directory}/generated-resources/appassembler/jsw/${project.name}">
-                    <arg value="-R" />
-                    <arg value="a+x" />
-                    <arg value="bin" />
+                    <arg value="-R"/>
+                    <arg value="a+x"/>
+                    <arg value="bin"/>
                   </exec>
                 </target>
               </configuration>
@@ -476,7 +476,7 @@
               <configuration>
                 <target>
                   <exec executable="mkdir" dir="${project.build.directory}/generated-resources/appassembler/jsw/${project.name}">
-                    <arg value="plugins" />
+                    <arg value="plugins"/>
                   </exec>
                 </target>
               </configuration>
