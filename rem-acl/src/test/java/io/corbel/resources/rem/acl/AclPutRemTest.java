@@ -7,13 +7,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import io.corbel.lib.token.TokenInfo;
-import io.corbel.resources.rem.request.RelationParameters;
-import io.corbel.resources.rem.request.RequestParameters;
-import io.corbel.resources.rem.request.ResourceId;
-import io.corbel.resources.rem.request.ResourceParameters;
-import io.corbel.resources.rem.service.AclResourcesService;
-import io.corbel.resources.rem.service.RemService;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -33,6 +26,15 @@ import org.springframework.http.MediaType;
 
 import com.google.gson.JsonObject;
 
+import io.corbel.lib.token.TokenInfo;
+import io.corbel.resources.rem.acl.exception.AclFieldNotPresentException;
+import io.corbel.resources.rem.request.RelationParameters;
+import io.corbel.resources.rem.request.RequestParameters;
+import io.corbel.resources.rem.request.ResourceId;
+import io.corbel.resources.rem.request.ResourceParameters;
+import io.corbel.resources.rem.service.AclResourcesService;
+import io.corbel.resources.rem.service.RemService;
+
 /**
  * @author Rubén Carrasco
  *
@@ -40,9 +42,11 @@ import com.google.gson.JsonObject;
 @RunWith(MockitoJUnitRunner.class) public class AclPutRemTest {
 
     private static final String USER_ID = "userId";
+    private static final Optional<String> OPT_USER_ID = Optional.of(USER_ID);
     private static final String GROUP_ID = "groupId";
     private static final String TYPE = "type";
     private static final ResourceId RESOURCE_ID = new ResourceId("resourceId");
+    private static final String ACL_CONFIGURATION_COLLECTION = "acl:Configuration";
 
     private AclPutRem rem;
 
@@ -70,14 +74,6 @@ import com.google.gson.JsonObject;
     }
 
     @Test
-    public void testPutResourceNoUserId() {
-        when(tokenInfo.getUserId()).thenReturn(null);
-        when(parameters.getTokenInfo()).thenReturn(tokenInfo);
-        Response response = rem.resource(TYPE, RESOURCE_ID, parameters, Optional.empty());
-        assertThat(response.getStatus()).isEqualTo(405);
-    }
-
-    @Test
     public void testPutResourceEmptyObject() throws IOException {
         InputStream entity = mock(InputStream.class);
         when(entity.available()).thenReturn(0);
@@ -87,17 +83,17 @@ import com.google.gson.JsonObject;
 
 
     @Test
-    public void testUpdateResourceObject() {
+    public void testUpdateResourceObject() throws AclFieldNotPresentException {
         JsonObject entity = getEntity(USER_ID, AclPermission.ADMIN.toString());
         when(getResponse.getEntity()).thenReturn(entity);
 
-        when(aclResourcesService.getResourceIfIsAuthorized(eq(USER_ID), any(), eq(TYPE), eq(RESOURCE_ID), eq(AclPermission.WRITE)))
+        when(aclResourcesService.getResourceIfIsAuthorized(eq(tokenInfo), eq(TYPE), eq(RESOURCE_ID), eq(AclPermission.WRITE)))
                 .thenReturn(Optional.of(entity));
 
         Response response = mock(Response.class);
         when(response.getStatus()).thenReturn(200);
-        when(aclResourcesService.updateResource(any(), eq(TYPE), eq(RESOURCE_ID), eq(parameters), eq(getEntityWithoutAcl()))).thenReturn(
-                response);
+        when(aclResourcesService.updateResource(any(), eq(TYPE), eq(RESOURCE_ID), eq(parameters), eq(getEntityWithoutAcl())))
+                .thenReturn(response);
         when(parameters.getAcceptedMediaTypes()).thenReturn(Collections.singletonList(MediaType.APPLICATION_JSON));
 
         response = rem.resource(TYPE, RESOURCE_ID, parameters,
@@ -106,32 +102,24 @@ import com.google.gson.JsonObject;
     }
 
     @Test
-    public void testPutRelation() throws IOException {
+    public void testPutRelation() throws IOException, AclFieldNotPresentException {
         InputStream entity = mock(InputStream.class);
         when(entity.available()).thenReturn(0);
 
         ResourceId resourceId = new ResourceId("idOrigin");
 
         when(getResponse.getStatus()).thenReturn(204);
-        when(aclResourcesService.isAuthorized(eq(USER_ID), any(), eq(TYPE), eq(resourceId), eq(AclPermission.WRITE))).thenReturn(true);
+        when(aclResourcesService.isAuthorized(eq(tokenInfo), eq(TYPE), eq(resourceId), eq(AclPermission.WRITE))).thenReturn(true);
 
         RelationParameters apiParameters = mock(RelationParameters.class);
         when(relationParameters.getOptionalApiParameters()).thenReturn(Optional.of(apiParameters));
         when(apiParameters.getPredicateResource()).thenReturn(Optional.of("idDist"));
 
-        when(aclResourcesService.putRelation(any(), eq(TYPE), eq(resourceId), eq(TYPE), eq(relationParameters), any())).thenReturn(
-                getResponse);
+        when(aclResourcesService.putRelation(any(), eq(TYPE), eq(resourceId), eq(TYPE), eq(relationParameters), any()))
+                .thenReturn(getResponse);
         when(getResponse.getEntity()).thenReturn(entity);
         Response response = rem.relation(TYPE, resourceId, TYPE, relationParameters, Optional.of(entity));
         assertThat(response.getStatus()).isEqualTo(204);
-    }
-
-    @Test
-    public void testPutRelationNoUserId() {
-        when(tokenInfo.getUserId()).thenReturn(null);
-        when(relationParameters.getTokenInfo()).thenReturn(tokenInfo);
-        Response response = rem.relation(TYPE, RESOURCE_ID, TYPE, relationParameters, Optional.empty());
-        assertThat(response.getStatus()).isEqualTo(405);
     }
 
     @Test

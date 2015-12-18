@@ -11,5 +11,7 @@ public interface AclRemNames {
     String DELETE = "ACL_DELETE";
     String SETUP_GET = "ACL_SETUP_GET";
     String SETUP_PUT = "ACL_SETUP_PUT";
+    String ADMIN_POST = "ACL_ADMIN_POST";
+    String ADMIN_PUT = "ACL_ADMIN_PUT";
 
 }

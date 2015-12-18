@@ -2,9 +2,7 @@ package io.corbel.resources.rem.acl.query;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 import org.junit.Test;
 
@@ -14,7 +12,6 @@ import io.corbel.lib.queries.StringQueryLiteral;
 import io.corbel.lib.queries.request.QueryNode;
 import io.corbel.lib.queries.request.QueryOperator;
 import io.corbel.lib.queries.request.ResourceQuery;
-import io.corbel.resources.rem.acl.query.AclQueryBuilder;
 
 /**
  * @author Rubén Carrasco
@@ -32,19 +29,20 @@ public class AclQueryBuilderTest {
     private static final String _ACL_USER_USER_ID = "_acl.user:userId";
     private static final String _ACL_ALL = "_acl.ALL";
     private static final String USER_ID = "userId";
+    private static final Optional<String> OPT_USER_ID = Optional.of(USER_ID);
 
     @Test
     public void testWithUserId() {
-        AclQueryBuilder builder = new AclQueryBuilder(USER_ID, null);
-        List<ResourceQuery> queries = builder.build(null);
+        AclQueryBuilder builder = new AclQueryBuilder(OPT_USER_ID, Collections.emptyList());
+        List<ResourceQuery> queries = builder.build(Collections.emptyList());
         assertThat(queries.contains(getResourceQuery(getBooleanQueryLiteral(_ACL_ALL)))).isTrue();
         assertThat(queries.contains(getResourceQuery(getBooleanQueryLiteral(_ACL_USER_USER_ID)))).isTrue();
     }
 
     @Test
     public void testWithGroups() {
-        AclQueryBuilder builder = new AclQueryBuilder(null, GROUPS);
-        List<ResourceQuery> queries = builder.build(null);
+        AclQueryBuilder builder = new AclQueryBuilder(Optional.empty(), GROUPS);
+        List<ResourceQuery> queries = builder.build(Collections.emptyList());
         assertThat(queries.contains(getResourceQuery(getBooleanQueryLiteral(_ACL_ALL)))).isTrue();
         assertThat(queries.contains(getResourceQuery(getBooleanQueryLiteral(_ACL_GROUP_GROUP1)))).isTrue();
         assertThat(queries.contains(getResourceQuery(getBooleanQueryLiteral(_ACL_GROUP_GROUP2)))).isTrue();
@@ -52,14 +50,14 @@ public class AclQueryBuilderTest {
 
     @Test
     public void testWithQueries() {
-        List<QueryNode> nodes = new ArrayList<>();
-        nodes.add(getBooleanQueryLiteral(_ACL_ALL));
-        nodes.add(getBooleanQueryLiteral(_ACL_USER_USER_ID));
-        nodes.add(getBooleanQueryLiteral(_ACL_GROUP_GROUP1));
-        nodes.add(getBooleanQueryLiteral(_ACL_GROUP_GROUP2));
-        nodes.add(getTestQueryLiteral());
+        List<QueryNode> nodes = Arrays.asList(
+            getBooleanQueryLiteral(_ACL_ALL),
+            getBooleanQueryLiteral(_ACL_USER_USER_ID),
+            getBooleanQueryLiteral(_ACL_GROUP_GROUP1),
+            getBooleanQueryLiteral(_ACL_GROUP_GROUP2),
+            getTestQueryLiteral());
 
-        AclQueryBuilder builder = new AclQueryBuilder(USER_ID, GROUPS);
+        AclQueryBuilder builder = new AclQueryBuilder(OPT_USER_ID, GROUPS);
         List<ResourceQuery> queries = builder
                 .build(Arrays.asList(getResourceQuery(getTestQueryLiteral()), getResourceQuery(getTestQueryLiteral())));
         queries.forEach(query -> {

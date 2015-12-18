@@ -26,6 +26,10 @@ public interface RemService {
 
     void registerExcludedRems(String uri, List<Rem> excludedRems);
 
+    void registerRem(Rem rem, String uriPattern, HttpMethod httpMethod);
+
+    void unregisterRem(Class<?> remClass, String uriPattern);
+
     Response collection(Rem rem, String type, RequestParameters<CollectionParameters> parameters, URI uri, Optional entity);
 
     Response resource(Rem rem, String type, ResourceId id, RequestParameters<ResourceParameters> parameters, Optional entity);
