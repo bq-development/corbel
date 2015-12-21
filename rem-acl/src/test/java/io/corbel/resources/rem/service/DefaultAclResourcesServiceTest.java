@@ -196,7 +196,6 @@ import io.corbel.resources.rem.request.ResourceId;
         try {
             assertThat(aclService.isManagedBy(DOMAIN_ID, OPT_USER_ID, GROUPS, TYPE)).isTrue();
         } catch (WebApplicationException e) {
-            verify(remService).getRem(DefaultAclResourcesService.RESMI_PUT);
             verify(remService).getRem(DefaultAclResourcesService.RESMI_GET);
             verify(resmiGetRem).resource(eq(ADMINS_COLLECTION), eq(MANAGED_COLLECTION_RESOURCE), any(), any());
             verifyNoMoreInteractions(remService, resmiGetRem);
@@ -216,7 +215,6 @@ import io.corbel.resources.rem.request.ResourceId;
 
         assertThat(aclService.isManagedBy(DOMAIN_ID, OPT_USER_ID, GROUPS, TYPE)).isTrue();
 
-        verify(remService).getRem(DefaultAclResourcesService.RESMI_PUT);
         verify(remService).getRem(DefaultAclResourcesService.RESMI_GET);
         verify(resmiGetRem).resource(eq(ADMINS_COLLECTION), eq(MANAGED_COLLECTION_RESOURCE), any(), any());
         verifyNoMoreInteractions(remService, resmiGetRem);
@@ -234,7 +232,6 @@ import io.corbel.resources.rem.request.ResourceId;
 
         assertThat(aclService.isManagedBy(DOMAIN_ID, OPT_USER_ID, GROUPS, TYPE)).isTrue();
 
-        verify(remService).getRem(DefaultAclResourcesService.RESMI_PUT);
         verify(remService).getRem(DefaultAclResourcesService.RESMI_GET);
         verify(resmiGetRem).resource(eq(ADMINS_COLLECTION), eq(MANAGED_COLLECTION_RESOURCE), any(), any());
         verifyNoMoreInteractions(remService, resmiGetRem);
@@ -257,7 +254,6 @@ import io.corbel.resources.rem.request.ResourceId;
 
         assertThat(aclService.isManagedBy(DOMAIN_ID, OPT_USER_ID, GROUPS, TYPE)).isFalse();
 
-        verify(remService).getRem(DefaultAclResourcesService.RESMI_PUT);
         verify(remService).getRem(DefaultAclResourcesService.RESMI_GET);
         verify(resmiGetRem).resource(eq(ADMINS_COLLECTION), eq(MANAGED_COLLECTION_RESOURCE), any(), any());
         verify(resmiGetRem).resource(eq(ADMINS_COLLECTION), eq(MANAGED_DOMAIN_RESOURCE), any(), any());
@@ -283,7 +279,6 @@ import io.corbel.resources.rem.request.ResourceId;
 
         assertThat(aclService.isManagedBy(DOMAIN_ID, OPT_USER_ID, GROUPS, TYPE)).isTrue();
 
-        verify(remService).getRem(DefaultAclResourcesService.RESMI_PUT);
         verify(remService).getRem(DefaultAclResourcesService.RESMI_GET);
         verify(resmiGetRem).resource(eq(ADMINS_COLLECTION), eq(MANAGED_COLLECTION_RESOURCE), any(), any());
         verify(resmiGetRem).resource(eq(ADMINS_COLLECTION), eq(MANAGED_DOMAIN_RESOURCE), any(), any());
@@ -309,7 +304,6 @@ import io.corbel.resources.rem.request.ResourceId;
 
         assertThat(aclService.isManagedBy(DOMAIN_ID, OPT_USER_ID, GROUPS, TYPE)).isTrue();
 
-        verify(remService).getRem(DefaultAclResourcesService.RESMI_PUT);
         verify(remService).getRem(DefaultAclResourcesService.RESMI_GET);
         verify(resmiGetRem).resource(eq(ADMINS_COLLECTION), eq(MANAGED_COLLECTION_RESOURCE), any(), any());
         verify(resmiGetRem).resource(eq(ADMINS_COLLECTION), eq(MANAGED_DOMAIN_RESOURCE), any(), any());

@@ -41,7 +41,6 @@ public class DefaultAclResourcesService implements AclResourcesService {
     public static final char SEPARATOR = ':';
     public static final String USER_PREFIX = USER + SEPARATOR;
     public static final String GROUP_PREFIX = GROUP + SEPARATOR;
-    public static final String ALL_COLLECTIONS = "*";
     public static final String PERMISSION = "permission";
     public static final String PROPERTIES = "properties";
     public static final char JOIN_CHAR = ':';
@@ -190,7 +189,7 @@ public class DefaultAclResourcesService implements AclResourcesService {
     private Optional<JsonObject> getResource(String type, ResourceId resourceId) {
 
         @SuppressWarnings("unchecked")
-        Response response = resmiGetRem.resource(type, resourceId, null, Optional.empty());
+        Response response = getResmiGetRem().resource(type, resourceId, null, Optional.empty());
 
         if (response.getStatus() != Response.Status.OK.getStatusCode()) {
             throw new WebApplicationException(response);
@@ -258,7 +257,7 @@ public class DefaultAclResourcesService implements AclResourcesService {
     public Response updateConfiguration(ResourceId id, RequestParameters<ResourceParameters> parameters,
             ManagedCollection managedCollection) {
         JsonObject jsonObject = gson.toJsonTree(managedCollection).getAsJsonObject();
-        return updateResource(resmiPutRem, adminsCollection, id, parameters, jsonObject);
+        return updateResource(getResmiPutRem(), adminsCollection, id, parameters, jsonObject);
     }
 
     @Override
@@ -284,7 +283,7 @@ public class DefaultAclResourcesService implements AclResourcesService {
 
     @Override
     public void refreshRegistry() {
-        Response response = getCollection(resmiGetRem, adminsCollection, null);
+        Response response = getCollection(getResmiGetRem(), adminsCollection, null);
 
         if (response.getStatus() != Response.Status.OK.getStatusCode()) {
             LOG.error("Can't access {}", adminsCollection);
@@ -336,11 +335,23 @@ public class DefaultAclResourcesService implements AclResourcesService {
 
     }
 
+    private Rem getResmiGetRem() {
+        if (resmiGetRem == null) {
+            resmiGetRem = remService.getRem(RESMI_GET);
+        }
+        return resmiGetRem;
+    }
+
+    private Rem getResmiPutRem() {
+        if (resmiPutRem == null) {
+            resmiPutRem = remService.getRem(RESMI_PUT);
+        }
+        return resmiPutRem;
+    }
+
     @Override
     public void setRemService(RemService remService) {
         this.remService = remService;
-        resmiGetRem = remService.getRem(RESMI_GET);
-        resmiPutRem = remService.getRem(RESMI_PUT);
     }
 
 }
