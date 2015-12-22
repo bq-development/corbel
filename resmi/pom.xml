@@ -189,7 +189,7 @@
                         <resource>
                             <targetPath>/</targetPath>
                             <directory>${project.build.directory}</directory>
-                            <include>${project.name}-${project.parent.version}.jar</include>
+                            <include>${project.name}-${project.version}.jar</include>
                         </resource>
                     </resources>
                 </configuration>
