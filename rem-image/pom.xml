@@ -11,6 +11,10 @@
     <artifactId>rem-image</artifactId>
     <name>rem-image</name>
 
+    <properties>
+        <docker.files>${project.basedir}/../src/docker/rem</docker.files>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>io.corbel</groupId>
