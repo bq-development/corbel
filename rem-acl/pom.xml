@@ -10,6 +10,10 @@
     <artifactId>rem-acl</artifactId>
     <name>rem-acl</name>
 
+    <properties>
+        <docker.files>${project.basedir}/../src/docker/rem</docker.files>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>io.corbel</groupId>
@@ -70,6 +74,21 @@
                     <connectionType>developerConnection</connectionType>
                     <buildDatePattern>dd/MM/yyyy HH:mm:ss z</buildDatePattern>
                     <propertiesOutputFile>${project.artifactId}-plugin-build.properties</propertiesOutputFile>
+                </configuration>
+            </plugin>
+
+            <!-- Docker -->
+            <plugin>
+                <groupId>com.spotify</groupId>
+                <artifactId>docker-maven-plugin</artifactId>
+                <configuration>
+                    <resources>
+                        <resource>
+                            <targetPath>/</targetPath>
+                            <directory>${project.build.directory}</directory>
+                            <include>${project.name}-${project.version}.jar</include>
+                        </resource>
+                    </resources>
                 </configuration>
             </plugin>
         </plugins>

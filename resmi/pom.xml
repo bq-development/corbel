@@ -12,6 +12,10 @@
     <artifactId>resmi</artifactId>
     <name>resmi</name>
 
+    <properties>
+        <docker.files>${project.basedir}/../src/docker/rem</docker.files>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>io.corbel</groupId>
@@ -98,6 +102,7 @@
                     </execution>
                 </executions>
             </plugin>
+
             <!-- Groovy support -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -177,6 +182,23 @@
                     </execution>
                 </executions>
             </plugin>
+
+
+            <!-- Docker -->
+            <plugin>
+                <groupId>com.spotify</groupId>
+                <artifactId>docker-maven-plugin</artifactId>
+                <configuration>
+                    <resources>
+                        <resource>
+                            <targetPath>/</targetPath>
+                            <directory>${project.build.directory}</directory>
+                            <include>${project.name}-${project.version}.jar</include>
+                        </resource>
+                    </resources>
+                </configuration>
+            </plugin>
+
         </plugins>
     </build>
 

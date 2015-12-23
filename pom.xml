@@ -47,6 +47,7 @@
     <spring.version>4.1.7.RELEASE</spring.version>
     <dropwizard.version>0.8.1</dropwizard.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <docker.files>${project.basedir}/../src/docker/service</docker.files>
   </properties>
   <modules>
     <module>eworker-api</module>
@@ -387,11 +388,7 @@
               <outputDirectory>${project.build.directory}/docker</outputDirectory>
               <resources>
                 <resource>
-                  <directory>${project.basedir}/../src/docker</directory>
-                  <filtering>true</filtering>
-                </resource>
-                <resource>
-                  <directory>${project.basedir}/src/docker</directory>
+                  <directory>${docker.files}</directory>
                   <filtering>true</filtering>
                 </resource>
               </resources>
