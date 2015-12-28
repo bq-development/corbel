@@ -1,6 +1,18 @@
 package io.corbel.resources.rem.service;
 
-import java.io.IOException;
+import io.corbel.lib.token.TokenInfo;
+import io.corbel.resources.rem.Rem;
+import io.corbel.resources.rem.acl.AclPermission;
+import io.corbel.resources.rem.acl.exception.AclFieldNotPresentException;
+import io.corbel.resources.rem.model.ManagedCollection;
+import io.corbel.resources.rem.model.RemDescription;
+import io.corbel.resources.rem.request.CollectionParameters;
+import io.corbel.resources.rem.request.RelationParameters;
+import io.corbel.resources.rem.request.RequestParameters;
+import io.corbel.resources.rem.request.ResourceId;
+import io.corbel.resources.rem.request.ResourceParameters;
+import io.corbel.resources.rem.request.builder.RequestParametersBuilder;
+
 import java.net.URI;
 import java.util.Collection;
 import java.util.Collections;
@@ -17,15 +29,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpMethod;
 
-import com.google.gson.*;
-
-import io.corbel.lib.token.TokenInfo;
-import io.corbel.resources.rem.Rem;
-import io.corbel.resources.rem.acl.AclPermission;
-import io.corbel.resources.rem.acl.exception.AclFieldNotPresentException;
-import io.corbel.resources.rem.model.ManagedCollection;
-import io.corbel.resources.rem.model.RemDescription;
-import io.corbel.resources.rem.request.*;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSyntaxException;
 
 /**
  * @author Cristian del Cerro
@@ -141,8 +150,7 @@ public class DefaultAclResourcesService implements AclResourcesService {
 
         Optional<ManagedCollection> collectionManagers = getManagers(domainId, collection);
 
-        if (collectionManagers.filter(presentCollectionManagers -> verifyPresence(userId, groupIds, presentCollectionManagers))
-                .isPresent()) {
+        if (collectionManagers.filter(presentCollectionManagers -> verifyPresence(userId, groupIds, presentCollectionManagers)).isPresent()) {
             return true;
         }
 
@@ -230,11 +238,12 @@ public class DefaultAclResourcesService implements AclResourcesService {
             throw new AclFieldNotPresentException();
         }
 
-        return aclObject.filter(JsonElement::isJsonObject).map(JsonElement::getAsJsonObject)
+        return aclObject
+                .filter(JsonElement::isJsonObject)
+                .map(JsonElement::getAsJsonObject)
                 .filter(acl -> checkAclEntry(acl, ALL, operation)
                         || userId.filter(id -> checkAclEntry(acl, USER_PREFIX + id, operation)).isPresent()
-                        || checkAclEntry(acl, GROUP_PREFIX, groupIds, operation))
-                .flatMap(acl -> originalObject);
+                        || checkAclEntry(acl, GROUP_PREFIX, groupIds, operation)).flatMap(acl -> originalObject);
 
     }
 
@@ -254,8 +263,7 @@ public class DefaultAclResourcesService implements AclResourcesService {
     }
 
     @Override
-    public Response updateConfiguration(ResourceId id, RequestParameters<ResourceParameters> parameters,
-            ManagedCollection managedCollection) {
+    public Response updateConfiguration(ResourceId id, RequestParameters<ResourceParameters> parameters, ManagedCollection managedCollection) {
         JsonObject jsonObject = gson.toJsonTree(managedCollection).getAsJsonObject();
         return updateResource(getResmiPutRem(), adminsCollection, id, parameters, jsonObject);
     }
@@ -264,8 +272,8 @@ public class DefaultAclResourcesService implements AclResourcesService {
     public void addAclConfiguration(String collection) {
         List<RemDescription> remDescriptions = remService.getRegisteredRemDescriptions();
 
-        boolean alreadyRegistered = remDescriptions.stream()
-                .anyMatch(description -> description.getUriPattern().equals(collection) && description.getRemName().startsWith("Acl"));
+        boolean alreadyRegistered = remDescriptions.stream().anyMatch(
+                description -> description.getUriPattern().equals(collection) && description.getRemName().startsWith("Acl"));
 
         if (alreadyRegistered) {
             return;
@@ -283,7 +291,8 @@ public class DefaultAclResourcesService implements AclResourcesService {
 
     @Override
     public void refreshRegistry() {
-        Response response = getCollection(getResmiGetRem(), adminsCollection, null);
+        RequestParameters requestParameters = new RequestParametersBuilder().build();
+        Response response = getCollection(getResmiGetRem(), adminsCollection, requestParameters);
 
         if (response.getStatus() != Response.Status.OK.getStatusCode()) {
             LOG.error("Can't access {}", adminsCollection);
@@ -293,12 +302,9 @@ public class DefaultAclResourcesService implements AclResourcesService {
         JsonArray jsonArray;
 
         try {
-            jsonArray = Optional.ofNullable(response.getEntity()).filter(object -> object instanceof JsonObject)
-                    .map(object -> (JsonObject) object).filter(JsonObject::isJsonArray).map(JsonObject::getAsJsonArray)
-                    .orElseThrow(IOException::new);
-
-        } catch (IOException e) {
-            LOG.error("Can't read {} properly", adminsCollection);
+            jsonArray = (JsonArray) response.getEntity();
+        } catch (ClassCastException e) {
+            LOG.error("Can't read " + adminsCollection + " properly", e);
             return;
         }
 
