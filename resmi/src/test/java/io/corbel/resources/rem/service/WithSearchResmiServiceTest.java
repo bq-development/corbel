@@ -84,6 +84,7 @@ import com.google.gson.JsonObject;
         when(paginationMock.getPageSize()).thenReturn(SIZE);
         when(resourceSearchMock.getText()).thenReturn(search);
         when(resourceSearchMock.getParams()).thenReturn(Optional.empty());
+        when(resourceSearchMock.indexFieldsOnly()).thenReturn(true);
         when(searchableFieldRegistry.getFieldsFromResourceUri(eq(RESOURCE_URI))).thenReturn(new HashSet(Arrays.asList("t1", "t2")));
         when(resmiSearch.search(eq(RESOURCE_URI), eq(search.get()), eq(resourceQueriesMock), eq(paginationMock), eq(Optional.of(sortMock))))
                 .thenReturn(fakeResult);
@@ -135,12 +136,13 @@ import com.google.gson.JsonObject;
         when(paginationMock.getPageSize()).thenReturn(SIZE);
         when(resourceSearchMock.getText()).thenReturn(search);
         when(resourceSearchMock.getParams()).thenReturn(Optional.empty());
+        when(resourceSearchMock.indexFieldsOnly()).thenReturn(true);
         when(searchableFieldRegistry.getFieldsFromResourceUri(eq(resourceUri))).thenReturn(new HashSet(Arrays.asList("t1", "t2")));
         when(resmiSearch.search(eq(resourceUri), eq(search.get()), eq(resourceQueriesMock), eq(paginationMock), eq(Optional.of(sortMock))))
                 .thenReturn(fakeResult);
 
         JsonArray result = (JsonArray) defaultResmiService.findRelation(resourceUri, Optional.of(relationParametersMock));
-        assertThat(fakeResult).isEqualTo(result);
+        assertThat(result).isEqualTo(fakeResult);
         ArgumentCaptor<ResourceQuery> query = ArgumentCaptor.forClass(ResourceQuery.class);
         verify(resourceQueriesMock).add(query.capture());
         assertThat(query.getValue().toString()).isEqualTo("[{\"$eq\":{\"_src_id\":\"" + ID + "\"}}]");

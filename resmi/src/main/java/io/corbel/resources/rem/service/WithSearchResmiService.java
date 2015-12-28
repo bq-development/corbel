@@ -111,11 +111,11 @@ public class WithSearchResmiService extends DefaultResmiService implements Searc
                     .getPagination().getPage(), apiParameters.getPagination().getPageSize());
         }
 
-        if (searchObject.isBinded()) {
+        if (searchObject.indexFieldsOnly()) {
+            return searchResult;
+        } else {
             CollectionParameters parameters = buildParametersForBinding(apiParameters, searchResult);
             return findCollection(resourceUri, Optional.of(parameters));
-        } else {
-            return searchResult;
         }
     }
 
