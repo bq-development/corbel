@@ -18,8 +18,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
@@ -55,8 +53,6 @@ public class DefaultAclResourcesService implements AclResourcesService {
     public static final char JOIN_CHAR = ':';
     public static final String RESMI_GET = "ResmiGetRem";
     public static final String RESMI_PUT = "ResmiPutRem";
-
-    private final Pattern collectionPattern = Pattern.compile("^(?:.*/)?[\\w-_]+?(?::(?<collection>[\\w-_:]+))?$");
 
     private RemService remService;
     private Rem resmiGetRem;
@@ -269,24 +265,22 @@ public class DefaultAclResourcesService implements AclResourcesService {
     }
 
     @Override
-    public void addAclConfiguration(String collection) {
+    public void addAclConfiguration(String pattern) {
         List<RemDescription> remDescriptions = remService.getRegisteredRemDescriptions();
 
         boolean alreadyRegistered = remDescriptions.stream().anyMatch(
-                description -> description.getUriPattern().equals(collection) && description.getRemName().startsWith("Acl"));
+                description -> description.getUriPattern().equals(pattern) && description.getRemName().startsWith("Acl"));
 
         if (alreadyRegistered) {
             return;
         }
 
-        String collectionPattern = collection + "(?:/.*)?";
-        remsAndMethods.forEach(remAndMethod -> remService.registerRem(remAndMethod.getLeft(), collectionPattern, remAndMethod.getRight()));
+        remsAndMethods.forEach(remAndMethod -> remService.registerRem(remAndMethod.getLeft(), pattern, remAndMethod.getRight()));
     }
 
     @Override
-    public void removeAclConfiguration(String collection) {
-        String collectionPattern = collection + "(?:/.*)?";
-        remsAndMethods.stream().map(Pair::getLeft).forEach(aclRem -> remService.unregisterRem(aclRem.getClass(), collectionPattern));
+    public void removeAclConfiguration(String pattern) {
+        remsAndMethods.stream().map(Pair::getLeft).forEach(aclRem -> remService.unregisterRem(aclRem.getClass(), pattern));
     }
 
     @Override
@@ -318,24 +312,17 @@ public class DefaultAclResourcesService implements AclResourcesService {
                 continue;
             }
 
-            Optional<String> id = idField.map(jsonObject -> jsonObject.get("id")).filter(JsonElement::isJsonPrimitive)
+            Optional<String> idOptional = idField.map(jsonObject -> jsonObject.get("id")).filter(JsonElement::isJsonPrimitive)
                     .map(JsonElement::getAsJsonPrimitive).filter(JsonPrimitive::isString).map(JsonPrimitive::getAsString);
 
-            if (!id.isPresent()) {
+            if (!idOptional.isPresent()) {
                 LOG.error("Unrecognized id: {}", jsonElement.toString());
                 continue;
             }
 
-            id.flatMap(string -> {
-                Matcher matcher = collectionPattern.matcher(string);
-
-                if (matcher.matches()) {
-                    return Optional.of(matcher.group("collection")).filter(collection -> !collection.isEmpty());
-
-                } else {
-                    return Optional.empty();
-                }
-            }).ifPresent(this::addAclConfiguration);
+            String id = idOptional.get();
+            // TODO: Ignoring domain by the moment (rem registration by domain needed)
+            addAclConfiguration(id.substring(id.indexOf(":") + 1));
 
         }
 
