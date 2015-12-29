@@ -20,6 +20,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -28,7 +29,7 @@ import org.springframework.stereotype.Component;
  * @author Cristian del Cerro
  */
 
-@Component public class RemAclPlugin extends RemPlugin {
+@Component @DependsOn("resmiRemPlugin") public class RemAclPlugin extends RemPlugin {
 
     private static final Logger LOG = LoggerFactory.getLogger(RemAclPlugin.class);
 
