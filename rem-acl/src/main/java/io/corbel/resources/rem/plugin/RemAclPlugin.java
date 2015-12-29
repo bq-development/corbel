@@ -1,5 +1,18 @@
 package io.corbel.resources.rem.plugin;
 
+import io.corbel.lib.config.ConfigurationHelper;
+import io.corbel.resources.rem.Rem;
+import io.corbel.resources.rem.RemRegistry;
+import io.corbel.resources.rem.acl.AclDeleteRem;
+import io.corbel.resources.rem.acl.AclGetRem;
+import io.corbel.resources.rem.acl.AclPostRem;
+import io.corbel.resources.rem.acl.AclPutRem;
+import io.corbel.resources.rem.acl.SetUpAclPutRem;
+import io.corbel.resources.rem.eventbus.AclConfigurationEventHandler;
+import io.corbel.resources.rem.ioc.AclRemNames;
+import io.corbel.resources.rem.ioc.RemAclIoc;
+import io.corbel.resources.rem.service.AclResourcesService;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -10,17 +23,6 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
-
-import io.corbel.event.ResourceEvent;
-import io.corbel.eventbus.service.EventBus;
-import io.corbel.lib.config.ConfigurationHelper;
-import io.corbel.resources.rem.Rem;
-import io.corbel.resources.rem.RemRegistry;
-import io.corbel.resources.rem.acl.*;
-import io.corbel.resources.rem.eventbus.AclConfigurationEventHandler;
-import io.corbel.resources.rem.ioc.AclRemNames;
-import io.corbel.resources.rem.ioc.RemAclIoc;
-import io.corbel.resources.rem.service.AclResourcesService;
 
 /**
  * @author Cristian del Cerro
@@ -54,8 +56,8 @@ import io.corbel.resources.rem.service.AclResourcesService;
         aclDeleteRem.setRemService(remService);
         context.getBean(SetUpAclPutRem.class).setRemService(remService);
 
-        List<Pair<Rem, HttpMethod>> remsAndMethods = Arrays.asList(Pair.of(aclPostRem, HttpMethod.POST), Pair.of(aclPutRem, HttpMethod.PUT),
-                Pair.of(aclGetRem, HttpMethod.GET), Pair.of(aclDeleteRem, HttpMethod.DELETE));
+        List<Pair<Rem, HttpMethod>> remsAndMethods = Arrays.asList(Pair.of(aclPostRem, HttpMethod.POST),
+                Pair.of(aclPutRem, HttpMethod.PUT), Pair.of(aclGetRem, HttpMethod.GET), Pair.of(aclDeleteRem, HttpMethod.DELETE));
 
         AclResourcesService aclResourcesService = context.getBean(AclResourcesService.class);
         aclResourcesService.setRemService(remService);
@@ -64,14 +66,13 @@ import io.corbel.resources.rem.service.AclResourcesService;
         context.getBean(AclConfigurationEventHandler.class).setAclResourcesService(aclResourcesService);
         aclConfigurationCollection = context.getEnvironment().getProperty("rem.acl.configuration.collection", ACL_CONFIGURATION_COLLECTION);
 
-        context.getBean(EventBus.class).dispatch(ResourceEvent.createResourceEvent(aclConfigurationCollection, "@ALL", "", ""));
+        context.getBean(AclResourcesService.class).refreshRegistry();
     }
 
     @Override
     protected void register(RemRegistry registry) {
         registry.registerRem(context.getBean(AclRemNames.SETUP_PUT, Rem.class), ".*", MediaType.valueOf(ACL_MEDIA_TYPE), HttpMethod.PUT);
-        registry.registerRem(context.getBean(AclRemNames.ADMIN_POST, Rem.class), aclConfigurationCollection, MediaType.ALL,
-                HttpMethod.POST);
+        registry.registerRem(context.getBean(AclRemNames.ADMIN_POST, Rem.class), aclConfigurationCollection, MediaType.ALL, HttpMethod.POST);
         registry.registerRem(context.getBean(AclRemNames.ADMIN_PUT, Rem.class), aclConfigurationCollection, MediaType.ALL, HttpMethod.PUT);
     }
 
