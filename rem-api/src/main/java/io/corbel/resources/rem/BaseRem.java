@@ -1,6 +1,7 @@
 package io.corbel.resources.rem;
 
 import java.net.URI;
+import java.util.List;
 import java.util.Optional;
 
 import javax.ws.rs.core.MediaType;
@@ -34,9 +35,8 @@ public abstract class BaseRem<E> implements Rem<E> {
 
     @Override
     public Response relation(String type, ResourceId id, String relation, RequestParameters<RelationParameters> parameters,
-            Optional<E> entity) {
+                             Optional<E> entity) {
         LOG.warn("Relations not implemented in this Rem: " + this.getClass().getName());
         return Response.status(Response.Status.NOT_FOUND).entity(DEFAULT_NOT_FOUND_ERROR).type(MediaType.APPLICATION_JSON_TYPE).build();
     }
-
 }

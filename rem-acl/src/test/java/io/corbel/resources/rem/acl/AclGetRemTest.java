@@ -55,7 +55,7 @@ import io.corbel.resources.rem.service.RemService;
     public void setUp() throws Exception {
 
         when(getResponse.getStatus()).thenReturn(200);
-        when(aclResourcesService.getResource(any(), eq(TYPE), eq(RESOURCE_ID), any())).thenReturn(getResponse);
+        when(aclResourcesService.getResource(any(), eq(TYPE), eq(RESOURCE_ID), any(), any())).thenReturn(getResponse);
         rem = new AclGetRem(aclResourcesService);
         rem.setRemService(remService);
 
@@ -78,7 +78,7 @@ import io.corbel.resources.rem.service.RemService;
 
         when(aclResourcesService.getResourceIfIsAuthorized(eq(tokenInfo), eq(TYPE), eq(RESOURCE_ID), eq(AclPermission.READ)))
                 .thenReturn(Optional.of(entity));
-        Response response = rem.resource(TYPE, RESOURCE_ID, resourceParameters, Optional.empty());
+        Response response = rem.resource(TYPE, RESOURCE_ID, resourceParameters, Optional.empty(), Optional.empty());
         assertThat(response.getStatus()).isEqualTo(200);
     }
 
@@ -89,7 +89,7 @@ import io.corbel.resources.rem.service.RemService;
         doThrow(new WebApplicationException(getResponse)).when(aclResourcesService).getResourceIfIsAuthorized(eq(tokenInfo), eq(TYPE),
                 eq(RESOURCE_ID), eq(AclPermission.READ));
         try {
-            rem.resource(TYPE, RESOURCE_ID, resourceParameters, null);
+            rem.resource(TYPE, RESOURCE_ID, resourceParameters, null, Optional.empty());
         } catch (WebApplicationException wae) {
             assertThat(wae.getResponse().getStatus()).isEqualTo(404);
             throw wae;
@@ -105,9 +105,8 @@ import io.corbel.resources.rem.service.RemService;
 
         when(aclResourcesService.getResourceIfIsAuthorized(eq(tokenInfo), eq(TYPE), eq(RESOURCE_ID), eq(AclPermission.READ)))
                 .thenReturn(Optional.of(entity));
-
         when(getResponse.getEntity()).thenReturn(entity);
-        Response response = rem.resource(TYPE, RESOURCE_ID, resourceParameters, Optional.empty());
+        Response response = rem.resource(TYPE, RESOURCE_ID, resourceParameters, Optional.empty(), Optional.empty());
         assertThat(response.getStatus()).isEqualTo(200);
         assertThat(response.getEntity()).isEqualTo(entity);
     }
@@ -126,16 +125,16 @@ import io.corbel.resources.rem.service.RemService;
         when(tokenInfo.getUserId()).thenReturn(null);
         when(collectionParameters.getTokenInfo()).thenReturn(tokenInfo);
         when(collectionParameters.getAcceptedMediaTypes()).thenReturn(Collections.singletonList(MediaType.APPLICATION_JSON));
-        when(aclResourcesService.getCollection(any(), eq(TYPE), eq(collectionParameters))).thenReturn(getResponse);
+        when(aclResourcesService.getCollection(any(), eq(TYPE), eq(collectionParameters), any())).thenReturn(getResponse);
         when(getResponse.getEntity()).thenReturn(entity);
 
-        Response response = rem.collection(TYPE, collectionParameters, null, Optional.empty());
+        Response response = rem.collection(TYPE, collectionParameters, null, Optional.empty(), Optional.empty());
         assertThat(response.getStatus()).isEqualTo(200);
     }
 
     @Test
     public void testGetCollectionNoJsonMediaType() {
-        Response response = rem.collection(TYPE, collectionParameters, null, Optional.empty());
+        Response response = rem.collection(TYPE, collectionParameters, null, Optional.empty(), Optional.empty());
         assertThat(response.getStatus()).isEqualTo(405);
     }
 
@@ -151,9 +150,9 @@ import io.corbel.resources.rem.service.RemService;
         when(collectionParameters.getOptionalApiParameters()).thenReturn(Optional.of(apiParameters));
         when(apiParameters.getQueries()).thenReturn(Optional.empty());
 
-        when(aclResourcesService.getCollection(any(), eq(TYPE), eq(collectionParameters))).thenReturn(getResponse);
+        when(aclResourcesService.getCollection(any(), eq(TYPE), eq(collectionParameters), any())).thenReturn(getResponse);
         when(getResponse.getEntity()).thenReturn(entity);
-        Response response = rem.collection(TYPE, collectionParameters, null, Optional.empty());
+        Response response = rem.collection(TYPE, collectionParameters, null, Optional.empty(), Optional.empty());
         assertThat(response.getStatus()).isEqualTo(200);
         assertThat(response.getEntity()).isEqualTo(entity);
     }
@@ -170,9 +169,9 @@ import io.corbel.resources.rem.service.RemService;
         when(collectionParameters.getOptionalApiParameters()).thenReturn(Optional.of(apiParameters));
         when(apiParameters.getQueries()).thenReturn(Optional.empty());
 
-        when(aclResourcesService.getCollection(any(), eq(TYPE), eq(collectionParameters))).thenReturn(getResponse);
+        when(aclResourcesService.getCollection(any(), eq(TYPE), eq(collectionParameters), any())).thenReturn(getResponse);
         when(getResponse.getEntity()).thenReturn(entity);
-        Response response = rem.collection(TYPE, collectionParameters, null, Optional.empty());
+        Response response = rem.collection(TYPE, collectionParameters, null, Optional.empty(), Optional.empty());
         assertThat(response.getStatus()).isEqualTo(200);
         assertThat(response.getEntity()).isEqualTo(entity);
     }
@@ -185,7 +184,7 @@ import io.corbel.resources.rem.service.RemService;
         when(relationParameters.getOptionalApiParameters()).thenReturn(Optional.of(apiParameters));
         when(apiParameters.getPredicateResource()).thenReturn(Optional.of("idDst"));
 
-        Response response = rem.relation(TYPE, resourceId, TYPE, relationParameters, Optional.empty());
+        Response response = rem.relation(TYPE, resourceId, TYPE, relationParameters, Optional.empty(), Optional.empty());
         assertThat(response.getStatus()).isEqualTo(405);
     }
 
@@ -204,9 +203,9 @@ import io.corbel.resources.rem.service.RemService;
         when(relationParameters.getOptionalApiParameters()).thenReturn(Optional.of(apiParameters));
         when(apiParameters.getPredicateResource()).thenReturn(Optional.of("idDist"));
 
-        when(aclResourcesService.getRelation(any(), eq(TYPE), eq(resourceId), eq(TYPE), eq(relationParameters))).thenReturn(getResponse);
+        when(aclResourcesService.getRelation(any(), eq(TYPE), eq(resourceId), eq(TYPE), eq(relationParameters), any())).thenReturn(getResponse);
         when(getResponse.getEntity()).thenReturn(entity);
-        Response response = rem.relation(TYPE, resourceId, TYPE, relationParameters, Optional.empty());
+        Response response = rem.relation(TYPE, resourceId, TYPE, relationParameters, Optional.empty(), Optional.empty());
         assertThat(response.getStatus()).isEqualTo(200);
     }
 

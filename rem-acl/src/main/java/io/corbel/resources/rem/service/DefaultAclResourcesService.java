@@ -1,5 +1,6 @@
 package io.corbel.resources.rem.service;
 
+import com.google.common.collect.Lists;
 import io.corbel.lib.token.TokenInfo;
 import io.corbel.resources.rem.Rem;
 import io.corbel.resources.rem.acl.AclPermission;
@@ -73,51 +74,51 @@ public class DefaultAclResourcesService implements AclResourcesService {
 
     @Override
     @SuppressWarnings("unchecked")
-    public Response saveResource(Rem rem, RequestParameters<CollectionParameters> parameters, String type, URI uri, Object entity) {
-        return rem.collection(type, parameters, uri, Optional.of(entity));
+    public Response saveResource(Rem rem, RequestParameters<CollectionParameters> parameters, String type, URI uri, Object entity, List<Rem> excludedRems) {
+        return rem.collection(type, parameters, uri, Optional.of(entity), Optional.ofNullable(excludedRems));
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public Response getResource(Rem rem, String type, ResourceId id, RequestParameters<ResourceParameters> parameters) {
-        return rem.resource(type, id, parameters, null);
+    public Response getResource(Rem rem, String type, ResourceId id, RequestParameters<ResourceParameters> parameters, List<Rem> excludedRems) {
+        return rem.resource(type, id, parameters, null, Optional.ofNullable(excludedRems));
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public Response getCollection(Rem rem, String type, RequestParameters<CollectionParameters> parameters) {
-        return rem.collection(type, parameters, null, null);
+    public Response getCollection(Rem rem, String type, RequestParameters<CollectionParameters> parameters, List<Rem> excludedRems) {
+        return rem.collection(type, parameters, null, null, Optional.ofNullable(excludedRems));
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public Response getRelation(Rem rem, String type, ResourceId id, String relation, RequestParameters<RelationParameters> parameters) {
-        return rem.relation(type, id, relation, parameters, null);
+    public Response getRelation(Rem rem, String type, ResourceId id, String relation, RequestParameters<RelationParameters> parameters, List<Rem> excludedRems) {
+        return rem.relation(type, id, relation, parameters, null, Optional.ofNullable(excludedRems));
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public Response updateResource(Rem rem, String type, ResourceId id, RequestParameters<ResourceParameters> parameters, Object entity) {
-        return rem.resource(type, id, parameters, Optional.of(entity));
+    public Response updateResource(Rem rem, String type, ResourceId id, RequestParameters<ResourceParameters> parameters, Object entity, List<Rem> excludedRems) {
+        return rem.resource(type, id, parameters, Optional.of(entity), Optional.ofNullable(excludedRems));
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public Response putRelation(Rem rem, String type, ResourceId id, String relation, RequestParameters<RelationParameters> parameters,
-            Object entity) {
-        return rem.relation(type, id, relation, parameters, Optional.of(entity));
+            Object entity, List<Rem> excludedRems) {
+        return rem.relation(type, id, relation, parameters, Optional.of(entity), Optional.ofNullable(excludedRems));
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public Response deleteResource(Rem rem, String type, ResourceId id, RequestParameters<ResourceParameters> parameters) {
-        return rem.resource(type, id, parameters, null);
+    public Response deleteResource(Rem rem, String type, ResourceId id, RequestParameters<ResourceParameters> parameters, List<Rem> excludedRems) {
+        return rem.resource(type, id, parameters, null, Optional.ofNullable(excludedRems));
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public Response deleteRelation(Rem rem, String type, ResourceId id, String relation, RequestParameters<RelationParameters> parameters) {
-        return rem.relation(type, id, relation, parameters, null);
+    public Response deleteRelation(Rem rem, String type, ResourceId id, String relation, RequestParameters<RelationParameters> parameters, List<Rem> excludedRems) {
+        return rem.relation(type, id, relation, parameters, null, Optional.ofNullable(excludedRems));
     }
 
     @Override
@@ -261,7 +262,7 @@ public class DefaultAclResourcesService implements AclResourcesService {
     @Override
     public Response updateConfiguration(ResourceId id, RequestParameters<ResourceParameters> parameters, ManagedCollection managedCollection) {
         JsonObject jsonObject = gson.toJsonTree(managedCollection).getAsJsonObject();
-        return updateResource(getResmiPutRem(), adminsCollection, id, parameters, jsonObject);
+        return updateResource(getResmiPutRem(), adminsCollection, id, parameters, jsonObject, Collections.emptyList());
     }
 
     @Override
@@ -286,7 +287,7 @@ public class DefaultAclResourcesService implements AclResourcesService {
     @Override
     public void refreshRegistry() {
         RequestParameters requestParameters = new RequestParametersBuilder().build();
-        Response response = getCollection(getResmiGetRem(), adminsCollection, requestParameters);
+        Response response = getCollection(getResmiGetRem(), adminsCollection, requestParameters, Collections.emptyList());
 
         if (response.getStatus() != Response.Status.OK.getStatusCode()) {
             LOG.error("Can't access {}", adminsCollection);

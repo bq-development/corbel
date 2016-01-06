@@ -19,6 +19,7 @@ import java.util.Optional;
 
 import javax.ws.rs.core.Response;
 
+import com.google.gson.JsonPrimitive;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -53,7 +54,6 @@ import io.corbel.resources.rem.service.RemService;
 
     private SetUpAclPutRem rem;
 
-    @Mock private AclGetRem getRem;
     @Mock private AclResourcesService aclResourcesService;
     @Mock private List<MediaType> acceptedMediaTypes;
     @Mock private RemService remService;
@@ -65,8 +65,8 @@ import io.corbel.resources.rem.service.RemService;
     public void setUp() throws Exception {
 
         when(getResponse.getStatus()).thenReturn(200);
-        when(aclResourcesService.getResource(any(), eq(TYPE), eq(RESOURCE_ID), any())).thenReturn(getResponse);
-        rem = new SetUpAclPutRem(aclResourcesService, Collections.singletonList(getRem));
+        when(aclResourcesService.getResource(any(), eq(TYPE), eq(RESOURCE_ID), any(), any())).thenReturn(getResponse);
+        rem = new SetUpAclPutRem(aclResourcesService, Collections.emptyList());
         rem.setRemService(remService);
 
         when(tokenInfo.getUserId()).thenReturn(USER_ID);
@@ -75,10 +75,18 @@ import io.corbel.resources.rem.service.RemService;
     }
 
     @Test
+    public void testNoUserId() {
+        when(tokenInfo.getUserId()).thenReturn(null);
+        when(parameters.getTokenInfo()).thenReturn(tokenInfo);
+        Response response = rem.resource(TYPE, RESOURCE_ID, parameters, Optional.empty(), Optional.empty());
+        assertThat(response.getStatus()).isEqualTo(405);
+    }
+
+    @Test
     public void testEmptyObject() throws IOException {
         InputStream entity = mock(InputStream.class);
         when(entity.available()).thenReturn(0);
-        Response response = rem.resource(TYPE, RESOURCE_ID, parameters, Optional.of(entity));
+        Response response = rem.resource(TYPE, RESOURCE_ID, parameters, Optional.of(entity), Optional.empty());
         assertThat(response.getStatus()).isEqualTo(400);
     }
 
@@ -87,7 +95,7 @@ import io.corbel.resources.rem.service.RemService;
         JsonObject entity = getEntity("asdf", "");
         when(getResponse.getEntity()).thenReturn(entity);
         Response response = rem.resource(TYPE, RESOURCE_ID, parameters,
-                Optional.of(new ByteArrayInputStream(getEntityWithoutAcl().toString().getBytes())));
+                Optional.of(new ByteArrayInputStream(getEntityWithoutAcl().toString().getBytes())), Optional.empty());
         assertThat(response.getStatus()).isEqualTo(401);
         assertThat(getError(response).getErrorDescription()).isEqualTo(buildMessage(AclPermission.ADMIN));
     }
@@ -97,7 +105,7 @@ import io.corbel.resources.rem.service.RemService;
         JsonObject entity = getEntity(USER_ID, AclPermission.READ.toString());
         when(getResponse.getEntity()).thenReturn(entity);
         Response response = rem.resource(TYPE, RESOURCE_ID, parameters,
-                Optional.of(new ByteArrayInputStream(getEntityWithoutAcl().toString().getBytes())));
+                Optional.of(new ByteArrayInputStream(getEntityWithoutAcl().toString().getBytes())), Optional.empty());
         assertThat(response.getStatus()).isEqualTo(401);
         assertThat(getError(response).getErrorDescription()).contains(AclPermission.ADMIN.toString());
     }
@@ -107,7 +115,7 @@ import io.corbel.resources.rem.service.RemService;
         JsonObject entity = getEntity(USER_ID, AclPermission.WRITE.toString());
         when(getResponse.getEntity()).thenReturn(entity);
         Response response = rem.resource(TYPE, RESOURCE_ID, parameters,
-                Optional.of(new ByteArrayInputStream(getEntityWithoutAcl().toString().getBytes())));
+                Optional.of(new ByteArrayInputStream(getEntityWithoutAcl().toString().getBytes())), Optional.empty());
         assertThat(response.getStatus()).isEqualTo(401);
         assertThat(getError(response).getErrorDescription()).contains(AclPermission.ADMIN.toString());
     }
@@ -133,10 +141,10 @@ import io.corbel.resources.rem.service.RemService;
             acl.add(DefaultAclResourcesService._ACL, objectToSave);
 
             when(beforeResponse.getStatus()).thenReturn(200);
-            when(aclResourcesService.updateResource(any(), eq(TYPE), eq(RESOURCE_ID), eq(parameters), eq(acl))).thenReturn(beforeResponse);
+            when(aclResourcesService.updateResource(any(), eq(TYPE), eq(RESOURCE_ID), eq(parameters), eq(acl), any())).thenReturn(beforeResponse);
 
             Response afterResponse = rem.resource(TYPE, RESOURCE_ID, parameters,
-                    Optional.of(new ByteArrayInputStream(objectToSave.toString().getBytes())));
+                    Optional.of(new ByteArrayInputStream(objectToSave.toString().getBytes())), Optional.empty());
             assertThat(afterResponse.getStatus()).isEqualTo(200);
         }
     }
@@ -154,12 +162,13 @@ import io.corbel.resources.rem.service.RemService;
 
         JsonObject objectToSave = new JsonObject();
         objectToSave.add("ALL", aclValue);
+        objectToSave.add("user:" + USER_ID, new JsonPrimitive(AclPermission.ADMIN.toString()));
 
         JsonObject acl = new JsonObject();
         acl.add(DefaultAclResourcesService._ACL, objectToSave);
 
         when(response.getStatus()).thenReturn(200);
-        when(aclResourcesService.updateResource(any(), eq(TYPE), eq(RESOURCE_ID), eq(parameters), any())).thenReturn(response);
+        when(aclResourcesService.updateResource(any(), eq(TYPE), eq(RESOURCE_ID), eq(parameters), eq(acl), any())).thenReturn(response);
 
         response = rem.resource(TYPE, RESOURCE_ID, parameters, Optional.of(new ByteArrayInputStream(objectToSave.toString().getBytes())));
         assertThat(response.getStatus()).isEqualTo(200);
@@ -177,10 +186,9 @@ import io.corbel.resources.rem.service.RemService;
 
             Response expectedResponse = mock(Response.class);
             when(expectedResponse.getStatus()).thenReturn(200);
-            when(aclResourcesService.updateResource(any(), eq(TYPE), eq(RESOURCE_ID), eq(parameters), any())).thenReturn(expectedResponse);
+            when(aclResourcesService.updateResource(any(), eq(TYPE), eq(RESOURCE_ID), eq(parameters), any(), any())).thenReturn(expectedResponse);
 
-            Response response = rem.resource(TYPE, RESOURCE_ID, parameters,
-                    Optional.of(new ByteArrayInputStream(objectToSave.toString().getBytes())));
+            Response response = rem.resource(TYPE, RESOURCE_ID, parameters, Optional.of(new ByteArrayInputStream(objectToSave.toString().getBytes())));
             assertThat(response.getStatus()).isEqualTo(200);
         }
     }

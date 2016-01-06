@@ -1,6 +1,7 @@
 package io.corbel.resources.rem;
 
 import java.net.URI;
+import java.util.List;
 import java.util.Optional;
 
 import javax.ws.rs.core.Response;
@@ -20,11 +21,29 @@ import io.corbel.resources.rem.request.*;
  */
 public interface Rem<E> {
 
-    Response collection(String type, RequestParameters<CollectionParameters> parameters, URI uri, Optional<E> entity);
+    default Response collection(String type, RequestParameters<CollectionParameters> parameters, URI uri, Optional<E> entity) {
+        return collection(type, parameters, uri, entity, Optional.empty());
+    }
 
-    Response resource(String type, ResourceId id, RequestParameters<ResourceParameters> parameters, Optional<E> entity);
+    default Response resource(String type, ResourceId id, RequestParameters<ResourceParameters> parameters, Optional<E> entity) {
+        return resource(type, id, parameters, entity, Optional.empty());
+    }
 
-    Response relation(String type, ResourceId id, String relation, RequestParameters<RelationParameters> parameters, Optional<E> entity);
+    default Response relation(String type, ResourceId id, String relation, RequestParameters<RelationParameters> parameters, Optional<E> entity) {
+        return relation(type, id, relation, parameters, entity, Optional.empty());
+    }
+
+    default Response collection(String type, RequestParameters<CollectionParameters> parameters, URI uri, Optional<E> entity, Optional<List<Rem>> excludedRems) {
+        return collection(type, parameters, uri, entity);
+    }
+
+    default Response resource(String type, ResourceId id, RequestParameters<ResourceParameters> parameters, Optional<E> entity, Optional<List<Rem>> excludedRems) {
+        return resource(type, id, parameters, entity);
+    }
+
+    default Response relation(String type, ResourceId id, String relation, RequestParameters<RelationParameters> parameters, Optional<E> entity, Optional<List<Rem>> excludedRems) {
+        return relation(type, id, relation, parameters, entity);
+    }
 
     Class<E> getType();
 }

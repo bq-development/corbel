@@ -82,21 +82,21 @@ public class DefaultRemService implements RemService {
 
     @Override
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public Response collection(Rem rem, String type, RequestParameters<CollectionParameters> parameters, URI uri, Optional entity) {
-        return rem.collection(type, parameters, uri, entity);
+    public Response collection(Rem rem, String type, RequestParameters<CollectionParameters> parameters, URI uri, Optional entity, List<Rem> remsExcluded) {
+        return rem.collection(type, parameters, uri, entity, Optional.ofNullable(remsExcluded));
     }
 
     @Override
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public Response resource(Rem rem, String type, ResourceId id, RequestParameters<ResourceParameters> parameters, Optional entity) {
-        return rem.resource(type, id, parameters, entity);
+    public Response resource(Rem rem, String type, ResourceId id, RequestParameters<ResourceParameters> parameters, Optional entity, List<Rem> remsExcluded) {
+        return rem.resource(type, id, parameters, entity, Optional.ofNullable(remsExcluded));
     }
 
     @Override
     @SuppressWarnings({"rawtypes", "unchecked"})
     public Response relation(Rem rem, String type, ResourceId id, String rel, RequestParameters<RelationParameters> parameters,
-            Optional entity) {
-        return rem.relation(type, id, rel, parameters, entity);
+            Optional entity, List<Rem> remsExcluded) {
+        return rem.relation(type, id, rel, parameters, entity, Optional.ofNullable(remsExcluded));
     }
 
     @Override

@@ -9,6 +9,7 @@ import java.util.stream.Stream;
 
 import javax.ws.rs.core.Response;
 
+import com.google.common.collect.Lists;
 import org.springframework.http.HttpMethod;
 
 import com.google.gson.*;
@@ -38,7 +39,7 @@ public class SetUpAclPutRem extends AclBaseRem {
     }
 
     @Override
-    public Response resource(String type, ResourceId id, RequestParameters<ResourceParameters> parameters, Optional<InputStream> entity) {
+    public Response resource(String type, ResourceId id, RequestParameters<ResourceParameters> parameters, Optional<InputStream> entity, Optional<List<Rem>> excludedRems) {
 
         TokenInfo tokenInfo = parameters.getTokenInfo();
 
@@ -60,6 +61,9 @@ public class SetUpAclPutRem extends AclBaseRem {
         }
 
         boolean isAuthorized = false;
+        List<Rem> excluded = Lists.newArrayList(this);
+        excludedRems.ifPresent(excluded::addAll);
+        excluded.addAll(remsToExclude);
 
         try {
             isAuthorized = aclResourcesService.isAuthorized(tokenInfo, type, id, AclPermission.ADMIN);
@@ -79,8 +83,8 @@ public class SetUpAclPutRem extends AclBaseRem {
         JsonObject objectToSave = new JsonObject();
         objectToSave.add(DefaultAclResourcesService._ACL, filteredAclObject);
 
-        Rem rem = remService.getRem(type, JSON_MEDIATYPE, HttpMethod.PUT, REMS_TO_EXCLUDE);
-        return aclResourcesService.updateResource(rem, type, id, parameters, objectToSave);
+        Rem rem = remService.getRem(type, JSON_MEDIATYPE, HttpMethod.PUT, excluded);
+        return aclResourcesService.updateResource(rem, type, id, parameters, objectToSave, excluded);
 
     }
 

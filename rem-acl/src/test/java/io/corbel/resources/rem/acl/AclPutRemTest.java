@@ -42,11 +42,9 @@ import io.corbel.resources.rem.service.RemService;
 @RunWith(MockitoJUnitRunner.class) public class AclPutRemTest {
 
     private static final String USER_ID = "userId";
-    private static final Optional<String> OPT_USER_ID = Optional.of(USER_ID);
     private static final String GROUP_ID = "groupId";
     private static final String TYPE = "type";
     private static final ResourceId RESOURCE_ID = new ResourceId("resourceId");
-    private static final String ACL_CONFIGURATION_COLLECTION = "acl:Configuration";
 
     private AclPutRem rem;
 
@@ -61,9 +59,8 @@ import io.corbel.resources.rem.service.RemService;
 
     @Before
     public void setUp() throws Exception {
-
         when(getResponse.getStatus()).thenReturn(200);
-        when(aclResourcesService.getResource(any(), eq(TYPE), eq(RESOURCE_ID), any())).thenReturn(getResponse);
+        when(aclResourcesService.getResource(any(), eq(TYPE), eq(RESOURCE_ID), any(), any())).thenReturn(getResponse);
         rem = new AclPutRem(aclResourcesService, Collections.singletonList(getRem));
         rem.setRemService(remService);
 
@@ -74,10 +71,18 @@ import io.corbel.resources.rem.service.RemService;
     }
 
     @Test
+    public void testPutResourceNoUserId() {
+        when(tokenInfo.getUserId()).thenReturn(null);
+        when(parameters.getTokenInfo()).thenReturn(tokenInfo);
+        Response response = rem.resource(TYPE, RESOURCE_ID, parameters, Optional.empty(), Optional.empty());
+        assertThat(response.getStatus()).isEqualTo(405);
+    }
+
+    @Test
     public void testPutResourceEmptyObject() throws IOException {
         InputStream entity = mock(InputStream.class);
         when(entity.available()).thenReturn(0);
-        Response response = rem.resource(TYPE, RESOURCE_ID, parameters, Optional.of(entity));
+        Response response = rem.resource(TYPE, RESOURCE_ID, parameters, Optional.of(entity), Optional.empty());
         assertThat(response.getStatus()).isEqualTo(400);
     }
 
@@ -92,12 +97,12 @@ import io.corbel.resources.rem.service.RemService;
 
         Response response = mock(Response.class);
         when(response.getStatus()).thenReturn(200);
-        when(aclResourcesService.updateResource(any(), eq(TYPE), eq(RESOURCE_ID), eq(parameters), eq(getEntityWithoutAcl())))
+        when(aclResourcesService.updateResource(any(), eq(TYPE), eq(RESOURCE_ID), eq(parameters), eq(getEntityWithoutAcl()), any()))
                 .thenReturn(response);
         when(parameters.getAcceptedMediaTypes()).thenReturn(Collections.singletonList(MediaType.APPLICATION_JSON));
 
         response = rem.resource(TYPE, RESOURCE_ID, parameters,
-                Optional.of(new ByteArrayInputStream(getEntityWithoutAcl().toString().getBytes())));
+                Optional.of(new ByteArrayInputStream(getEntityWithoutAcl().toString().getBytes())), Optional.empty());
         assertThat(response.getStatus()).isEqualTo(200);
     }
 
@@ -111,15 +116,24 @@ import io.corbel.resources.rem.service.RemService;
         when(getResponse.getStatus()).thenReturn(204);
         when(aclResourcesService.isAuthorized(eq(tokenInfo), eq(TYPE), eq(resourceId), eq(AclPermission.WRITE))).thenReturn(true);
 
+
         RelationParameters apiParameters = mock(RelationParameters.class);
         when(relationParameters.getOptionalApiParameters()).thenReturn(Optional.of(apiParameters));
         when(apiParameters.getPredicateResource()).thenReturn(Optional.of("idDist"));
 
-        when(aclResourcesService.putRelation(any(), eq(TYPE), eq(resourceId), eq(TYPE), eq(relationParameters), any()))
-                .thenReturn(getResponse);
+        when(aclResourcesService.putRelation(any(), eq(TYPE), eq(resourceId), eq(TYPE), eq(relationParameters), any(), any())).thenReturn(
+                getResponse);
         when(getResponse.getEntity()).thenReturn(entity);
-        Response response = rem.relation(TYPE, resourceId, TYPE, relationParameters, Optional.of(entity));
+        Response response = rem.relation(TYPE, resourceId, TYPE, relationParameters, Optional.of(entity), Optional.empty());
         assertThat(response.getStatus()).isEqualTo(204);
+    }
+
+    @Test
+    public void testPutRelationNoUserId() {
+        when(tokenInfo.getUserId()).thenReturn(null);
+        when(relationParameters.getTokenInfo()).thenReturn(tokenInfo);
+        Response response = rem.relation(TYPE, RESOURCE_ID, TYPE, relationParameters, Optional.empty(), Optional.empty());
+        assertThat(response.getStatus()).isEqualTo(405);
     }
 
     @Test
@@ -130,7 +144,7 @@ import io.corbel.resources.rem.service.RemService;
         when(relationParameters.getOptionalApiParameters()).thenReturn(Optional.of(apiParameters));
         when(apiParameters.getPredicateResource()).thenReturn(Optional.of("idDst"));
 
-        Response response = rem.relation(TYPE, resourceId, TYPE, relationParameters, Optional.empty());
+        Response response = rem.relation(TYPE, resourceId, TYPE, relationParameters, Optional.empty(), Optional.empty());
         assertThat(response.getStatus()).isEqualTo(405);
     }
 

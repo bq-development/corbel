@@ -53,8 +53,8 @@ public class InMemoryRemRegistry implements RemRegistry {
         for (UriPatternRegistryEntry entry : memoryRegistry.get().getRegistry()) {
             if (entry.matches(uri)) {
                 for (MediaType mediaType : acceptableMediaTypes) {
-                    MediaTypeRegistryEntry mediaTypeRegistryEntry = entry.get(mediaType);
-                    if (mediaTypeRegistryEntry != null) {
+                    List<MediaTypeRegistryEntry> mediaTypeRegistryEntries = entry.get(mediaType);
+                    for (MediaTypeRegistryEntry mediaTypeRegistryEntry : mediaTypeRegistryEntries) {
                         Rem rem = mediaTypeRegistryEntry.get(method);
                         if (rem != null && (remsExcluded == null || !remsExcluded.contains(rem))) {
                             return rem;
@@ -266,13 +266,8 @@ public class InMemoryRemRegistry implements RemRegistry {
             return mediaTypeRegistry.isEmpty();
         }
 
-        public MediaTypeRegistryEntry get(MediaType mediaType) {
-            for (MediaTypeRegistryEntry entry : mediaTypeRegistry) {
-                if (entry.matches(mediaType)) {
-                    return entry;
-                }
-            }
-            return null;
+        public List<MediaTypeRegistryEntry> get(MediaType mediaType) {
+            return mediaTypeRegistry.stream().filter(entry -> entry.matches(mediaType)).collect(Collectors.toList());
         }
 
         public Collection<MediaTypeRegistryEntry> getMediaTypeRegistryEntries() {
