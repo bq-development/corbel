@@ -1,17 +1,15 @@
 package io.corbel.resources.rem.eventbus;
 
-import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import io.corbel.event.ResourceEvent;
 import io.corbel.eventbus.EventHandler;
 import io.corbel.resources.rem.service.AclResourcesService;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+
 public class AclConfigurationEventHandler implements EventHandler<ResourceEvent> {
 
     private AclResourcesService aclResourcesService;
-    private final Pattern collectionPattern = Pattern.compile("^(?:.*/)?[\\w-_]+?(?::(?<collection>[\\w-_:]+))?$");
     private final String aclAdminCollection;
 
     private static final String ALL = "@ALL";
@@ -35,13 +33,20 @@ public class AclConfigurationEventHandler implements EventHandler<ResourceEvent>
             aclResourcesService.refreshRegistry();
             return;
         }
+        String id = event.getResourceId();
 
         switch (event.getAction()) {
             case CREATE:
-                extractUriPattern(event.getResourceId()).ifPresent(aclResourcesService::addAclConfiguration);
+                // Why id contains entire url in event? @see DefaultResourcesService line 98
+                String onlyId = id.substring(id.lastIndexOf("/") + 1);
+                try {
+                    aclResourcesService.addAclConfiguration(URLDecoder.decode(onlyId.substring(onlyId.indexOf(":") + 1), "UTF8"));
+                } catch (UnsupportedEncodingException e) {
+                    // Never happends
+                }
                 break;
             case DELETE:
-                extractUriPattern(event.getResourceId()).ifPresent(aclResourcesService::removeAclConfiguration);
+                aclResourcesService.removeAclConfiguration(id.substring(id.indexOf(":") + 1));
         }
 
     }
@@ -49,16 +54,6 @@ public class AclConfigurationEventHandler implements EventHandler<ResourceEvent>
     @Override
     public Class<ResourceEvent> getEventType() {
         return ResourceEvent.class;
-    }
-
-    private Optional<String> extractUriPattern(String resourceId) {
-        Matcher matcher = collectionPattern.matcher(resourceId);
-
-        if (!matcher.matches()) {
-            return Optional.empty();
-        }
-
-        return Optional.ofNullable(matcher.group("collection")).filter(c -> !c.isEmpty());
     }
 
 }
