@@ -5,15 +5,18 @@ import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.*;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import io.corbel.lib.mongo.JsonObjectMongoWriteConverter;
 import io.corbel.lib.queries.QueryNodeImpl;
 import io.corbel.lib.queries.StringQueryLiteral;
-import io.corbel.lib.queries.request.*;
+import io.corbel.lib.queries.request.JsonAggregationResultsFactory;
+import io.corbel.lib.queries.request.Pagination;
+import io.corbel.lib.queries.request.QueryOperator;
+import io.corbel.lib.queries.request.ResourceQuery;
+import io.corbel.lib.queries.request.Sort;
 import io.corbel.resources.rem.model.ResourceUri;
 import io.corbel.resources.rem.request.ResourceId;
 import io.corbel.resources.rem.service.DefaultNamespaceNormalizer;
@@ -24,7 +27,6 @@ import java.util.List;
 import java.util.Optional;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -43,7 +45,11 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.mongodb.BasicDBObject;
@@ -74,7 +80,8 @@ import com.mongodb.WriteResult;
     @Before
     public void setup() {
         when(defaultNameNormalizer.normalize(anyString())).then(returnsFirstArg());
-        mongoResmiDao = new MongoResmiDao(mongoOperations, jsonObjectMongoWriteConverter, defaultNameNormalizer, resmiOrderMock, new JsonAggregationResultsFactory(new Gson()));
+        mongoResmiDao = new MongoResmiDao(mongoOperations, jsonObjectMongoWriteConverter, defaultNameNormalizer, resmiOrderMock,
+                new JsonAggregationResultsFactory(new Gson()));
     }
 
     @Test
@@ -145,8 +152,8 @@ import com.mongodb.WriteResult;
         ResourceUri resourceUri = new ResourceUri(TEST_COLLECTION, TEST_ID, TEST_REL, TEST_ID_RELATION_OBJECT);
         mongoResmiDao.createRelation(resourceUri, json);
 
-        verify(mongoOperations, times(1)).findAndModify(queryCaptor.capture(), updateCaptor.capture(), optionsCaptor.capture(), eq(JsonObject.class),
-                eq(RELATION_COLLECTION_NAME));
+        verify(mongoOperations, times(1)).findAndModify(queryCaptor.capture(), updateCaptor.capture(), optionsCaptor.capture(),
+                eq(JsonObject.class), eq(RELATION_COLLECTION_NAME));
 
         assertThat(optionsCaptor.getValue().isUpsert()).isTrue();
 
@@ -376,6 +383,28 @@ import com.mongodb.WriteResult;
     }
 
     @Test
+    public void maxOnNonExistentFieldTest() {
+        ResourceQuery query = new ResourceQuery();
+        String field = "field";
+        String value = "value";
+        String testField = "test";
+
+        ResourceUri resourceUri = new ResourceUri(TEST_COLLECTION);
+
+        ArgumentCaptor<Aggregation> argument = ArgumentCaptor.forClass(Aggregation.class);
+        query.addQueryNode(new QueryNodeImpl(QueryOperator.$EQ, field, new StringQueryLiteral(value)));
+
+        Mockito.when(mongoOperations.aggregate(argument.capture(), eq(TEST_COLLECTION), eq(DBObject.class))).thenReturn(
+                new AggregationResults<>(Collections.singletonList(new BasicDBObject("max", null)), new BasicDBObject()));
+        JsonElement result = mongoResmiDao.max(resourceUri, Collections.singletonList(query), testField);
+        assertThat(result.getAsJsonObject().get("max").getAsJsonNull()).isEqualTo(JsonNull.INSTANCE);
+
+        assertThat(argument.getValue().toString()).isEqualTo(
+                "{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"" + field + "\" : \"" + value
+                        + "\"}} , { \"$group\" : { \"_id\" :  null  , \"max\" : { \"$max\" : \"$" + testField + "\"}}}]}");
+    }
+
+    @Test
     public void maxRelationTest() {
         ResourceQuery query = new ResourceQuery();
         String field = "field";
@@ -448,7 +477,7 @@ import com.mongodb.WriteResult;
     @Test
     public void histogramTest() throws IOException {
         String testField = "test";
-        ObjectMapper mapper = new ObjectMapper(); //needed for parsing json
+        ObjectMapper mapper = new ObjectMapper(); // needed for parsing json
 
         ArgumentCaptor<Aggregation> argument = ArgumentCaptor.forClass(Aggregation.class);
         BasicDBObject result = new BasicDBObject();
@@ -457,23 +486,24 @@ import com.mongodb.WriteResult;
         Mockito.when(mongoOperations.aggregate(argument.capture(), eq(TEST_COLLECTION), eq(DBObject.class))).thenReturn(
                 new AggregationResults<>(Collections.singletonList(result), new BasicDBObject()));
 
-        mongoResmiDao.histogram(new ResourceUri(TEST_COLLECTION), Collections.emptyList(), Optional.<Pagination>empty(), Optional.<Sort>empty(), testField);
+        mongoResmiDao.histogram(new ResourceUri(TEST_COLLECTION), Collections.emptyList(), Optional.<Pagination>empty(),
+                Optional.<Sort>empty(), testField);
 
         JsonNode actualAggregation = mapper.readTree(argument.getValue().toString());
         JsonNode actualPipeline = actualAggregation.get("pipeline");
         JsonNode actualGroup = null;
         JsonNode actualProject = null;
 
-        for(JsonNode node : actualPipeline) {
-            if(node.has("$group")){
+        for (JsonNode node : actualPipeline) {
+            if (node.has("$group")) {
                 actualGroup = node.get("$group");
             }
-            if(node.has("$project")){
+            if (node.has("$project")) {
                 actualProject = node.get("$project");
             }
         }
 
-        assertThat(actualGroup.get("_id").asText()).isEqualTo("$"+testField);
+        assertThat(actualGroup.get("_id").asText()).isEqualTo("$" + testField);
         assertThat(actualGroup.get("ids").toString()).isEqualTo("{\"$push\":\"$_id\"}");
 
         assertThat(actualProject.get("count").toString()).isEqualTo("{\"$size\":\"$ids\"}");
@@ -483,7 +513,7 @@ import com.mongodb.WriteResult;
     public void histogramTopNTest() throws IOException {
         String testField = "test";
         int n = 10;
-        ObjectMapper mapper = new ObjectMapper(); //needed for parsing json
+        ObjectMapper mapper = new ObjectMapper(); // needed for parsing json
 
         ArgumentCaptor<Aggregation> argument = ArgumentCaptor.forClass(Aggregation.class);
         BasicDBObject result = new BasicDBObject();
@@ -492,7 +522,8 @@ import com.mongodb.WriteResult;
         Mockito.when(mongoOperations.aggregate(argument.capture(), eq(TEST_COLLECTION), eq(DBObject.class))).thenReturn(
                 new AggregationResults<>(Collections.singletonList(result), new BasicDBObject()));
 
-        mongoResmiDao.histogram(new ResourceUri(TEST_COLLECTION), Collections.emptyList(), Optional.of(new Pagination(0, n)), Optional.of(new Sort("desc", "count")), testField);
+        mongoResmiDao.histogram(new ResourceUri(TEST_COLLECTION), Collections.emptyList(), Optional.of(new Pagination(0, n)),
+                Optional.of(new Sort("desc", "count")), testField);
 
         JsonNode actualAggregation = mapper.readTree(argument.getValue().toString());
         JsonNode actualPipeline = actualAggregation.get("pipeline");
@@ -502,25 +533,25 @@ import com.mongodb.WriteResult;
         JsonNode actualOffset = null;
         JsonNode actualLimit = null;
 
-        for(JsonNode node : actualPipeline) {
-            if(node.has("$group")){
+        for (JsonNode node : actualPipeline) {
+            if (node.has("$group")) {
                 actualGroup = node.get("$group");
             }
-            if(node.has("$project")){
+            if (node.has("$project")) {
                 actualProject = node.get("$project");
             }
-            if(node.has("$sort")){
+            if (node.has("$sort")) {
                 actualSort = node.get("$sort");
             }
-            if(node.has("$skip")){
+            if (node.has("$skip")) {
                 actualOffset = node.get("$skip");
             }
-            if(node.has("$limit")){
+            if (node.has("$limit")) {
                 actualLimit = node.get("$limit");
             }
         }
 
-        assertThat(actualGroup.get("_id").asText()).isEqualTo("$"+testField);
+        assertThat(actualGroup.get("_id").asText()).isEqualTo("$" + testField);
         assertThat(actualGroup.get("ids").toString()).isEqualTo("{\"$push\":\"$_id\"}");
 
         assertThat(actualProject.get("count").toString()).isEqualTo("{\"$size\":\"$ids\"}");

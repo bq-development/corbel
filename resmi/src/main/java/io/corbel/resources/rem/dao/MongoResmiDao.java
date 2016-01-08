@@ -1,36 +1,56 @@
 package io.corbel.resources.rem.dao;
 
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.limit;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.skip;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.sort;
+import io.corbel.lib.mongo.JsonObjectMongoWriteConverter;
+import io.corbel.lib.mongo.utils.GsonUtil;
+import io.corbel.lib.queries.mongo.builder.CriteriaBuilder;
+import io.corbel.lib.queries.request.AggregationResultsFactory;
+import io.corbel.lib.queries.request.HistogramEntry;
+import io.corbel.lib.queries.request.Pagination;
+import io.corbel.lib.queries.request.ResourceQuery;
+import io.corbel.lib.queries.request.Sort;
+import io.corbel.resources.rem.dao.builder.MongoAggregationBuilder;
+import io.corbel.resources.rem.model.GenericDocument;
+import io.corbel.resources.rem.model.ResourceUri;
+import io.corbel.resources.rem.resmi.exception.MongoAggregationException;
+import io.corbel.resources.rem.utils.JsonUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
-import com.google.gson.*;
 import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoOperations;
-import org.springframework.data.mongodb.core.aggregation.*;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
+import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
+import org.springframework.data.mongodb.core.aggregation.ExposedFields;
+import org.springframework.data.mongodb.core.aggregation.Fields;
+import org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
-
-import io.corbel.lib.mongo.JsonObjectMongoWriteConverter;
-import io.corbel.lib.mongo.utils.GsonUtil;
-import io.corbel.lib.queries.mongo.builder.CriteriaBuilder;
-import io.corbel.lib.queries.request.*;
-import io.corbel.resources.rem.dao.builder.MongoAggregationBuilder;
-import io.corbel.resources.rem.model.GenericDocument;
-import io.corbel.resources.rem.model.ResourceUri;
-import io.corbel.resources.rem.resmi.exception.MongoAggregationException;
-import io.corbel.resources.rem.utils.JsonUtils;
 
 /**
  * @author Alberto J. Rubio
@@ -55,8 +75,7 @@ public class MongoResmiDao implements ResmiDao {
     private final AggregationResultsFactory<JsonElement> aggregationResultsFactory;
 
     public MongoResmiDao(MongoOperations mongoOperations, JsonObjectMongoWriteConverter jsonObjectMongoWriteConverter,
-                         NamespaceNormalizer namespaceNormalizer, ResmiOrder resmiOrder,
-                         AggregationResultsFactory<JsonElement> aggregationResultsFactory) {
+            NamespaceNormalizer namespaceNormalizer, ResmiOrder resmiOrder, AggregationResultsFactory<JsonElement> aggregationResultsFactory) {
         this.mongoOperations = mongoOperations;
         this.jsonObjectMongoWriteConverter = jsonObjectMongoWriteConverter;
         this.namespaceNormalizer = namespaceNormalizer;
@@ -178,8 +197,8 @@ public class MongoResmiDao implements ResmiDao {
 
     private Query getQueryFromResourceQuery(Optional<List<ResourceQuery>> resourceQueries, Optional<String> id) {
 
-        MongoResmiQueryBuilder builder = id.map(identifier -> new MongoResmiQueryBuilder().id(identifier))
-                .orElse(new MongoResmiQueryBuilder());
+        MongoResmiQueryBuilder builder = id.map(identifier -> new MongoResmiQueryBuilder().id(identifier)).orElse(
+                new MongoResmiQueryBuilder());
 
         if (resourceQueries.isPresent()) {
             builder.query(resourceQueries.get());
@@ -194,8 +213,8 @@ public class MongoResmiDao implements ResmiDao {
         Update update = updateFromJsonObject(entity, id);
         Query query = (id.isPresent()) ? getQueryFromResourceQuery(resourceQueries, id) : Query.query(Criteria.where(_ID).exists(false));
 
-        return mongoOperations.findAndModify(query, update, FindAndModifyOptions.options().upsert(upsert).returnNew(true), JsonObject.class,
-                collection);
+        return mongoOperations.findAndModify(query, update, FindAndModifyOptions.options().upsert(upsert).returnNew(true),
+                JsonObject.class, collection);
     }
 
     @Override
@@ -341,25 +360,27 @@ public class MongoResmiDao implements ResmiDao {
     @Override
     public JsonElement average(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field) {
         List<DBObject> results = aggregate(resourceUri, resourceQueries, group().avg(field).as("average"));
-        return aggregationResultsFactory.averageResult(results.isEmpty() ? Optional.empty() : Optional.of((Number) results.get(0).get("average")).map(Number::doubleValue));
+        return aggregationResultsFactory.averageResult(results.isEmpty() ? Optional.empty() : Optional.ofNullable(
+                (Number) results.get(0).get("average")).map(Number::doubleValue));
     }
 
     @Override
     public JsonElement sum(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field) {
         List<DBObject> results = aggregate(resourceUri, resourceQueries, group().sum(field).as("sum"));
-        return aggregationResultsFactory.sumResult(results.isEmpty()? Optional.empty() : Optional.of((Number) results.get(0).get("sum")).map(Number::doubleValue));
+        return aggregationResultsFactory.sumResult(results.isEmpty() ? Optional.empty() : Optional.ofNullable(
+                (Number) results.get(0).get("sum")).map(Number::doubleValue));
     }
 
     @Override
     public JsonElement max(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field) {
         List<DBObject> results = aggregate(resourceUri, resourceQueries, group().max(field).as("max"));
-        return aggregationResultsFactory.maxResult(results.isEmpty() ? Optional.empty() : Optional.of(results.get(0).get("max")));
+        return aggregationResultsFactory.maxResult(results.isEmpty() ? Optional.empty() : Optional.ofNullable(results.get(0).get("max")));
     }
 
     @Override
     public JsonElement min(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field) {
         List<DBObject> results = aggregate(resourceUri, resourceQueries, group().min(field).as("min"));
-        return aggregationResultsFactory.minResult(results.isEmpty() ? Optional.empty() : Optional.of(results.get(0).get("min")));
+        return aggregationResultsFactory.minResult(results.isEmpty() ? Optional.empty() : Optional.ofNullable(results.get(0).get("min")));
     }
 
     @Override
@@ -394,13 +415,15 @@ public class MongoResmiDao implements ResmiDao {
     @Override
     public JsonElement histogram(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, Optional<Pagination> pagination,
             Optional<Sort> sortParam, String field) {
-        AggregationOperation[] aggregations = {group(Fields.from(Fields.field(field, field))).push("$_id").as("ids"), new ExposingFieldsCustomAggregationOperation(
-                new BasicDBObject("$project", new BasicDBObject("count", new BasicDBObject("$size", "$ids")))) {
-            @Override
-            public ExposedFields getFields() {
-                return ExposedFields.synthetic(Fields.fields("count"));
-            }
-        }};
+        AggregationOperation[] aggregations = {
+                group(Fields.from(Fields.field(field, field))).push("$_id").as("ids"),
+                new ExposingFieldsCustomAggregationOperation(new BasicDBObject("$project", new BasicDBObject("count", new BasicDBObject(
+                        "$size", "$ids")))) {
+                    @Override
+                    public ExposedFields getFields() {
+                        return ExposedFields.synthetic(Fields.fields("count"));
+                    }
+                }};
 
         if (sortParam.isPresent()) {
             Direction direction = Direction.ASC;
@@ -416,18 +439,16 @@ public class MongoResmiDao implements ResmiDao {
         }
 
         List<HistogramEntry> results = aggregate(resourceUri, resourceQueries, aggregations).stream()
-                .map(result -> toHistogramEntry(result, field))
-                .collect(Collectors.toList());
+                .map(result -> toHistogramEntry(result, field)).collect(Collectors.toList());
         return aggregationResultsFactory.histogramResult(results.toArray(new HistogramEntry[results.size()]));
     }
 
-    private HistogramEntry toHistogramEntry(DBObject result, String... fields){
-        long count = ((Number)result.get("count")).longValue();
+    private HistogramEntry toHistogramEntry(DBObject result, String... fields) {
+        long count = ((Number) result.get("count")).longValue();
         Map<String, Object> values;
-        if(fields.length == 1){
+        if (fields.length == 1) {
             values = Collections.singletonMap(fields[0], result.get("_id"));
-        }
-        else {
+        } else {
             values = new HashMap<>(fields.length);
             result.keySet().stream().filter(f -> !f.equals("count")).forEach(f -> values.put(f, result.get(f)));
         }
@@ -435,8 +456,7 @@ public class MongoResmiDao implements ResmiDao {
         return new HistogramEntry(count, values);
     }
 
-    private List<DBObject> aggregate(ResourceUri resourceUri, List<ResourceQuery> resourceQueries,
-            AggregationOperation... operations) {
+    private List<DBObject> aggregate(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, AggregationOperation... operations) {
         Criteria criterias = CriteriaBuilder.buildFromResourceQueries(resourceQueries);
         if (resourceUri.isRelation() && !resourceUri.isTypeWildcard()) {
             criterias = criterias.and(JsonRelation._SRC_ID).is(resourceUri.getTypeId());
@@ -444,18 +464,21 @@ public class MongoResmiDao implements ResmiDao {
         List<AggregationOperation> aggregations = new ArrayList<>(operations.length + 1);
         aggregations.add(Aggregation.match(criterias));
         aggregations.addAll(Arrays.asList(operations));
-        return mongoOperations.aggregate(newAggregation(aggregations), getMongoCollectionName(resourceUri), DBObject.class).getMappedResults();
+        return mongoOperations.aggregate(newAggregation(aggregations), getMongoCollectionName(resourceUri), DBObject.class)
+                .getMappedResults();
     }
 
     private String getMongoCollectionName(ResourceUri resourceUri) {
-        return Optional.ofNullable(namespaceNormalizer.normalize(resourceUri.getType()))
-                .map(type -> type + Optional.ofNullable(resourceUri.getRelation())
-                        .map(relation -> RELATION_CONCATENATION + namespaceNormalizer.normalize(relation)).orElse(EMPTY_STRING))
+        return Optional
+                .ofNullable(namespaceNormalizer.normalize(resourceUri.getType()))
+                .map(type -> type
+                        + Optional.ofNullable(resourceUri.getRelation())
+                                .map(relation -> RELATION_CONCATENATION + namespaceNormalizer.normalize(relation)).orElse(EMPTY_STRING))
                 .orElse(EMPTY_STRING);
     }
 
     private class CustomAggregationOperation implements AggregationOperation {
-        private DBObject operation;
+        private final DBObject operation;
 
         public CustomAggregationOperation(DBObject operation) {
             this.operation = operation;
@@ -467,8 +490,7 @@ public class MongoResmiDao implements ResmiDao {
         }
     }
 
-    private class ExposingFieldsCustomAggregationOperation extends CustomAggregationOperation
-            implements FieldsExposingAggregationOperation {
+    private class ExposingFieldsCustomAggregationOperation extends CustomAggregationOperation implements FieldsExposingAggregationOperation {
 
         public ExposingFieldsCustomAggregationOperation(DBObject operation) {
             super(operation);
@@ -480,5 +502,3 @@ public class MongoResmiDao implements ResmiDao {
         }
     }
 }
-
-
