@@ -1,14 +1,5 @@
 package io.corbel.iam.auth.provider;
 
-import java.util.Map;
-
-import org.springframework.social.NotAuthorizedException;
-import org.springframework.social.connect.Connection;
-import org.springframework.social.facebook.api.Facebook;
-import org.springframework.social.facebook.connect.FacebookConnectionFactory;
-import org.springframework.social.oauth2.AccessGrant;
-import org.springframework.web.client.ResourceAccessException;
-
 import io.corbel.iam.auth.OauthParams;
 import io.corbel.iam.exception.ExchangeOauthCodeException;
 import io.corbel.iam.exception.MissingOAuthParamsException;
@@ -17,11 +8,24 @@ import io.corbel.iam.exception.UnauthorizedException;
 import io.corbel.iam.model.Identity;
 import io.corbel.iam.repository.IdentityRepository;
 
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.social.NotAuthorizedException;
+import org.springframework.social.connect.Connection;
+import org.springframework.social.facebook.api.Facebook;
+import org.springframework.social.facebook.connect.FacebookConnectionFactory;
+import org.springframework.social.oauth2.AccessGrant;
+import org.springframework.web.client.ResourceAccessException;
+
 /**
  * @author Rubén Carrasco
  * 
  */
 public class FacebookProvider extends AbstractOAuth2Provider<Facebook> {
+
+    private static final Logger LOG = LoggerFactory.getLogger(FacebookProvider.class);
 
     public FacebookProvider(IdentityRepository identityRepository) {
         super(identityRepository);
@@ -51,8 +55,10 @@ public class FacebookProvider extends AbstractOAuth2Provider<Facebook> {
         } catch (NotAuthorizedException e) {
             throw new UnauthorizedException("Unable to verify identity with Facebook:  401 Unauthorized");
         } catch (Exception e) {
+            LOG.error("Unexpected error when verify identity with Facebook", e);
             throw new UnauthorizedException("Unable to verify identity with Facebook");
         }
+        LOG.error("Facebook connection failed or expired");
         throw new UnauthorizedException("Unable to verify identity with Facebook");
     }
 
