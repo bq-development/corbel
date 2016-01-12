@@ -143,7 +143,7 @@ import com.mongodb.WriteResult;
         when(mongoOperations.find(queryCaptor.capture(), Mockito.eq(JsonObject.class), Mockito.eq(collectionName))).thenReturn(
                 jsonObjectList);
 
-        ResourceUri resourceUri = new ResourceUri(TEST_COLLECTION, "_", TEST_REL);
+        ResourceUri resourceUri = new ResourceUri(DOMAIN, TEST_COLLECTION, "_", TEST_REL);
         JsonElement result = mongoResmiDao.findRelation(resourceUri, Optional.empty(), Optional.of(pagination), Optional.empty());
 
         assertThat(result.isJsonArray()).isTrue();
