@@ -106,6 +106,7 @@ import com.mongodb.WriteResult;
         json.add("a", new JsonPrimitive("1"));
         json.add("_id", new JsonPrimitive("456"));
         json.add("_dst_id", new JsonPrimitive(TEST_ID_RELATION_OBJECT));
+        json.add("_src_id", new JsonPrimitive(TEST_ID));
         List<JsonObject> jsonObjectList = Collections.singletonList(json);
 
         Pagination pagination = new Pagination(0, 10);
@@ -119,11 +120,39 @@ import com.mongodb.WriteResult;
 
         assertThat(result.isJsonArray()).isTrue();
         assertThat(result.getAsJsonArray().size()).isSameAs(jsonObjectList.size());
-        assertThat(queryCaptor.getValue().fields().getFieldsObject().get("_src_id")).isEqualTo(0);
         assertThat(queryCaptor.getValue().fields().getFieldsObject().get("_id")).isEqualTo(0);
         for (JsonElement element : result.getAsJsonArray()) {
             assertThat(element.getAsJsonObject().get("id")).isEqualTo(new JsonPrimitive(TEST_ID_RELATION_OBJECT));
             assertThat(element.getAsJsonObject().has("_dst_id")).isFalse();
+            assertThat(element.getAsJsonObject().has("_src_id")).isFalse();
+        }
+    }
+
+    @Test
+    public void testFindRelationWithWildcard() {
+        JsonObject json = new JsonObject();
+        json.add("a", new JsonPrimitive("1"));
+        json.add("_id", new JsonPrimitive("456"));
+        json.add("_dst_id", new JsonPrimitive(TEST_ID_RELATION_OBJECT));
+        json.add("_src_id", new JsonPrimitive(TEST_ID));
+        List<JsonObject> jsonObjectList = Collections.singletonList(json);
+
+        Pagination pagination = new Pagination(0, 10);
+        String collectionName = RELATION_COLLECTION_NAME;
+        ArgumentCaptor<Query> queryCaptor = ArgumentCaptor.forClass(Query.class);
+        when(mongoOperations.find(queryCaptor.capture(), Mockito.eq(JsonObject.class), Mockito.eq(collectionName))).thenReturn(
+                jsonObjectList);
+
+        ResourceUri resourceUri = new ResourceUri(TEST_COLLECTION, "_", TEST_REL);
+        JsonElement result = mongoResmiDao.findRelation(resourceUri, Optional.empty(), Optional.of(pagination), Optional.empty());
+
+        assertThat(result.isJsonArray()).isTrue();
+        assertThat(result.getAsJsonArray().size()).isSameAs(jsonObjectList.size());
+        assertThat(queryCaptor.getValue().fields().getFieldsObject().get("_id")).isEqualTo(0);
+        for (JsonElement element : result.getAsJsonArray()) {
+            assertThat(element.getAsJsonObject().get("id")).isEqualTo(new JsonPrimitive(TEST_ID_RELATION_OBJECT));
+            assertThat(element.getAsJsonObject().has("_dst_id")).isFalse();
+            assertThat(element.getAsJsonObject().get("_src_id")).isEqualTo(new JsonPrimitive(TEST_ID));
         }
     }
 
