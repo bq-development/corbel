@@ -2,10 +2,7 @@ package io.corbel.resources.rem.service;
 
 import io.corbel.lib.queries.StringQueryLiteral;
 import io.corbel.lib.queries.builder.ResourceQueryBuilder;
-import io.corbel.lib.queries.request.Aggregation;
-import io.corbel.lib.queries.request.QueryOperator;
-import io.corbel.lib.queries.request.ResourceQuery;
-import io.corbel.lib.queries.request.Search;
+import io.corbel.lib.queries.request.*;
 import io.corbel.resources.rem.dao.NotFoundException;
 import io.corbel.resources.rem.dao.ResmiDao;
 import io.corbel.resources.rem.model.GenericDocument;
@@ -14,6 +11,7 @@ import io.corbel.resources.rem.model.SearchResource;
 import io.corbel.resources.rem.request.CollectionParameters;
 import io.corbel.resources.rem.request.CollectionParametersImpl;
 import io.corbel.resources.rem.request.RelationParameters;
+import io.corbel.resources.rem.request.RelationParametersImpl;
 import io.corbel.resources.rem.resmi.exception.MongoAggregationException;
 import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
 import io.corbel.resources.rem.search.ResmiSearch;
@@ -38,6 +36,7 @@ public class WithSearchResmiService extends DefaultResmiService implements Searc
     private static final String ALL_FIELDS = "*";
     public final static String SEARCHABLE_FIELDS = "searchable";
     private static final String RESMI_DOMAIN = "_resmi";
+    private static final String DST_ID = "_dst_id";
 
     private final ResmiSearch search;
     private final SearchableFieldsRegistry searchableFieldsRegistry;
@@ -115,21 +114,39 @@ public class WithSearchResmiService extends DefaultResmiService implements Searc
         if (searchObject.indexFieldsOnly()) {
             return searchResult;
         } else {
-            CollectionParameters parameters = buildParametersForBinding(apiParameters, searchResult);
-            return findCollection(resourceUri, Optional.of(parameters));
+            if (resourceUri.isRelation()) {
+                RelationParameters parameters = buildRelationParametersForBinding(apiParameters, searchResult);
+                return (JsonArray)findRelation(resourceUri, Optional.of(parameters));
+            } else {
+                CollectionParameters parameters = buildCollectionParametersForBinding(apiParameters, searchResult);
+                return findCollection(resourceUri, Optional.of(parameters));
+            }
         }
     }
 
-    private CollectionParameters buildParametersForBinding(CollectionParameters apiParameters, JsonArray searchResult) {
+    private RelationParameters buildRelationParametersForBinding(CollectionParameters apiParameters, JsonArray searchResult) {
         List<StringQueryLiteral> ids = new ArrayList<>();
         for (JsonElement element : searchResult) {
-            ids.add(new StringQueryLiteral(((JsonObject) element).get(ID).getAsString()));
+            String id = ((JsonObject) element).get(ID).getAsString();
+            ids.add(new StringQueryLiteral(id));
+        }
+        ResourceQueryBuilder builder = new ResourceQueryBuilder().add(DST_ID, ids, QueryOperator.$IN);
+
+        return new RelationParametersImpl(apiParameters.getPagination(), apiParameters.getSort(), Optional.of(Collections
+                .singletonList(builder.build())), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
+    }
+
+
+    private CollectionParameters buildCollectionParametersForBinding(CollectionParameters apiParameters, JsonArray searchResult) {
+        List<StringQueryLiteral> ids = new ArrayList<>();
+        for (JsonElement element : searchResult) {
+            String id = ((JsonObject) element).get(ID).getAsString();
+            ids.add(new StringQueryLiteral(id));
         }
         ResourceQueryBuilder builder = new ResourceQueryBuilder().add(ID, ids, QueryOperator.$IN);
         return new CollectionParametersImpl(apiParameters.getPagination(), apiParameters.getSort(), Optional.of(Collections
                 .singletonList(builder.build())), Optional.empty(), Optional.empty(), Optional.empty());
     }
-
     @Override
     public JsonElement findRelation(ResourceUri uri, Optional<RelationParameters> apiParameters) throws BadConfigurationException {
         if (apiParameters.flatMap(RelationParameters::getSearch).isPresent()) {
