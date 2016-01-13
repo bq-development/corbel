@@ -20,7 +20,7 @@ public enum Message {
     DUPLICATED_OAUTH_SERVICE_IDENTITY("User {0} already has an identity with service {1} in domain {2}"),
     MISSING_OAUTH_PARAM("Missing oauth parameters"),
     INVALID_OAUTH_SERVICE("OAuth service not allowed in domain {0}"),
-    SCOPES_NOT_ALLOWED("Some specified scopes are not allows in the domain {0}"),
+    SCOPES_NOT_ALLOWED("Some specified scopes are not allowed in the domain {0}"),
     INVALID_VERSION("Version {0} is not supported. Versions supported: {1}"),
     MISSING_IDENTITY_PROOF("Missing identity proof"),
     CLIENT_SIDE_AUTHENTICATION_NOT_ALLOWED("The client side authentication is not allowed in the issuer client"),
