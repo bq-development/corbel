@@ -9,9 +9,9 @@ import java.util.stream.Stream;
 
 import javax.ws.rs.core.Response;
 
-import com.google.common.collect.Lists;
 import org.springframework.http.HttpMethod;
 
+import com.google.common.collect.Lists;
 import com.google.gson.*;
 import com.google.gson.stream.JsonReader;
 
@@ -22,6 +22,7 @@ import io.corbel.resources.rem.acl.exception.AclFieldNotPresentException;
 import io.corbel.resources.rem.request.RequestParameters;
 import io.corbel.resources.rem.request.ResourceId;
 import io.corbel.resources.rem.request.ResourceParameters;
+import io.corbel.resources.rem.request.builder.RequestParametersBuilder;
 import io.corbel.resources.rem.service.AclResourcesService;
 import io.corbel.resources.rem.service.DefaultAclResourcesService;
 import io.corbel.resources.rem.utils.AclUtils;
@@ -83,7 +84,10 @@ public class SetUpAclPutRem extends AclBaseRem {
         objectToSave.add(DefaultAclResourcesService._ACL, filteredAclObject);
 
         Rem rem = remService.getRem(type, JSON_MEDIATYPE, HttpMethod.PUT, excluded);
-        return aclResourcesService.updateResource(rem, type, id, parameters, objectToSave, excluded);
+
+        RequestParameters requestParameters = new RequestParametersBuilder<>(parameters)
+                .setRequestedDomain(DefaultAclResourcesService.REGISTRY_DOMAIN).build();
+        return aclResourcesService.updateResource(rem, type, id, requestParameters, objectToSave, excluded);
 
     }
 

@@ -37,7 +37,7 @@ public class DefaultAclResourcesService implements AclResourcesService {
 
     private static final Logger LOG = LoggerFactory.getLogger(DefaultAclResourcesService.class);
 
-    private static final String REGISTRY_DOMAIN = "_silkroad";
+    public static final String REGISTRY_DOMAIN = "_silkroad";
 
 
     public static final String _ACL = "_acl";
