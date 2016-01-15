@@ -111,7 +111,7 @@ import io.corbel.resources.rem.utils.ResmiJsonObjectMongoWriteConverter;
     }
 
     @Bean
-    public ResmiService resmiService(@Value("${resmi.elasticsearch.enabled:true}") boolean elasticSearchEnabled,
+    public ResmiService resmiService(@Value("${resmi.elasticsearch.enabled:false}") boolean elasticSearchEnabled,
             AggregationResultsFactory<JsonElement> aggregationResultsFactory, ResmiDao resmiDao) throws Exception {
         if (elasticSearchEnabled) {
             return new WithSearchResmiService(resmiDao, resmiSearch(aggregationResultsFactory), getSearchableFieldsRegistry(), getGson(),
