@@ -15,7 +15,7 @@ import com.google.gson.JsonPrimitive;
 
 public class DefaultResmiOrder implements ResmiOrder {
 
-    private static final String DOMAIN_CONCATENATION = "@";
+    private static final String DOMAIN_CONCATENATION = "__";
     private static final String RELATION_CONCATENATOR = ".";
     private static final String RELATION_ORDER_COUNTER_KEY = "counter";
     private static final String ORDER_FIELD = "_order";

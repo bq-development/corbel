@@ -64,7 +64,7 @@ public class MongoResmiDao implements ResmiDao {
     private static final String _ID = "_id";
 
     private static final String RELATION_CONCATENATION = ".";
-    private static final String DOMAIN_CONCATENATION = "@";
+    private static final String DOMAIN_CONCATENATION = "__";
     private static final String EMPTY_STRING = "";
     private static final String EXPIRE_AT = "_expireAt";
     private static final String CREATED_AT = "_createdAt";

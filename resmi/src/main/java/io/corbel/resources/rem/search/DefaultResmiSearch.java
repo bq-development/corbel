@@ -23,7 +23,7 @@ import io.corbel.resources.rem.model.ResourceUri;
  */
 public class DefaultResmiSearch implements ResmiSearch {
     private static final String RESMI_INDEX_PREFIX = "resmi_";
-    private static final String DOMAIN_CONCATENATION = "@";
+    private static final String DOMAIN_CONCATENATION = "__";
     private static final String EMPTY_STRING = "";
     private static final String ELASTICSEARCH_DEFAULT_MAPPING = "_default_";
     private final NamespaceNormalizer namespaceNormalizer;

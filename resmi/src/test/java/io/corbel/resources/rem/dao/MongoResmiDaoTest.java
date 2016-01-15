@@ -60,7 +60,7 @@ import com.mongodb.WriteResult;
 
     private static final String DOMAIN = "DOMAIN";
     private static final String TEST_COLLECTION = "testCollection";
-    private static final String DOMAIN_CONCATENATION = "@";
+    private static final String DOMAIN_CONCATENATION = "__";
     private static final String TEST_COLLECTION_NAME_IN_DB = DOMAIN +  DOMAIN_CONCATENATION + TEST_COLLECTION;
 
     private static final String TEST_ID = "testId";
@@ -427,7 +427,7 @@ import com.mongodb.WriteResult;
         ArgumentCaptor<Aggregation> argument = ArgumentCaptor.forClass(Aggregation.class);
         query.addQueryNode(new QueryNodeImpl(QueryOperator.$EQ, field, new StringQueryLiteral(value)));
 
-        Mockito.when(mongoOperations.aggregate(argument.capture(), eq(DOMAIN + "@" + TEST_COLLECTION), eq(DBObject.class))).thenReturn(
+        Mockito.when(mongoOperations.aggregate(argument.capture(), eq(DOMAIN + DOMAIN_CONCATENATION + TEST_COLLECTION), eq(DBObject.class))).thenReturn(
                 new AggregationResults<>(Collections.singletonList(new BasicDBObject("max", null)), new BasicDBObject()));
         JsonElement result = mongoResmiDao.max(resourceUri, Collections.singletonList(query), testField);
         assertThat(result.getAsJsonObject().get("max").getAsJsonNull()).isEqualTo(JsonNull.INSTANCE);
