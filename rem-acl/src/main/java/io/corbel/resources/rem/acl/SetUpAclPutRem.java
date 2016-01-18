@@ -1,20 +1,5 @@
 package io.corbel.resources.rem.acl;
 
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.*;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import javax.ws.rs.core.Response;
-
-import org.springframework.http.HttpMethod;
-
-import com.google.common.collect.Lists;
-import com.google.gson.*;
-import com.google.gson.stream.JsonReader;
-
 import io.corbel.lib.token.TokenInfo;
 import io.corbel.lib.ws.api.error.ErrorResponseFactory;
 import io.corbel.resources.rem.Rem;
@@ -27,19 +12,45 @@ import io.corbel.resources.rem.service.AclResourcesService;
 import io.corbel.resources.rem.service.DefaultAclResourcesService;
 import io.corbel.resources.rem.utils.AclUtils;
 
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import javax.ws.rs.core.Response;
+
+import org.springframework.http.HttpMethod;
+
+import com.google.common.collect.Lists;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonIOException;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSyntaxException;
+import com.google.gson.stream.JsonReader;
+
 /**
  * @author Cristian del Cerro
  */
 public class SetUpAclPutRem extends AclBaseRem {
-    private Pattern prefixPattern = Pattern
-            .compile("(?:(?:" + DefaultAclResourcesService.USER_PREFIX + ")|(?:" + DefaultAclResourcesService.GROUP_PREFIX + "))\\S+");
+    private final Pattern prefixPattern = Pattern.compile("(?:(?:" + DefaultAclResourcesService.USER_PREFIX + ")|(?:"
+            + DefaultAclResourcesService.GROUP_PREFIX + "))\\S+");
 
     public SetUpAclPutRem(AclResourcesService aclResourcesService, List<Rem> remsToExclude) {
         super(aclResourcesService, remsToExclude);
     }
 
     @Override
-    public Response resource(String type, ResourceId id, RequestParameters<ResourceParameters> parameters, Optional<InputStream> entity, Optional<List<Rem>> excludedRems) {
+    public Response resource(String type, ResourceId id, RequestParameters<ResourceParameters> parameters, Optional<InputStream> entity,
+            Optional<List<Rem>> excludedRems) {
 
         TokenInfo tokenInfo = parameters.getTokenInfo();
 
@@ -76,8 +87,7 @@ public class SetUpAclPutRem extends AclBaseRem {
         JsonObject filteredAclObject = getFilteredAclObject(jsonObject);
 
         if (!hasAdminPermission(tokenInfo, filteredAclObject)) {
-            filteredAclObject
-                    .addProperty(DefaultAclResourcesService.USER_PREFIX + tokenInfo.getUserId(), AclPermission.ADMIN.toString());
+            filteredAclObject.addProperty(DefaultAclResourcesService.USER_PREFIX + tokenInfo.getUserId(), AclPermission.ADMIN.toString());
         }
 
         JsonObject objectToSave = new JsonObject();
@@ -85,8 +95,7 @@ public class SetUpAclPutRem extends AclBaseRem {
 
         Rem rem = remService.getRem(type, JSON_MEDIATYPE, HttpMethod.PUT, excluded);
 
-        RequestParameters requestParameters = new RequestParametersBuilder<>(parameters)
-                .setRequestedDomain(DefaultAclResourcesService.REGISTRY_DOMAIN).build();
+        RequestParameters requestParameters = new RequestParametersBuilder<>(parameters).build();
         return aclResourcesService.updateResource(rem, type, id, requestParameters, objectToSave, excluded);
 
     }
@@ -98,9 +107,9 @@ public class SetUpAclPutRem extends AclBaseRem {
 
         JsonObject filteredAcl = new JsonObject();
 
-        validFieldNames.forEach(
-                field -> Optional.ofNullable(aclObject.get(field)).filter(JsonElement::isJsonObject).map(JsonElement::getAsJsonObject)
-                        .flatMap(this::filterAclValue).ifPresent(filteredAclValue -> filteredAcl.add(field, filteredAclValue)));
+        validFieldNames.forEach(field -> Optional.ofNullable(aclObject.get(field)).filter(JsonElement::isJsonObject)
+                .map(JsonElement::getAsJsonObject).flatMap(this::filterAclValue)
+                .ifPresent(filteredAclValue -> filteredAcl.add(field, filteredAclValue)));
 
         return filteredAcl;
     }
@@ -124,8 +133,8 @@ public class SetUpAclPutRem extends AclBaseRem {
             return Optional.empty();
         }
 
-        JsonObject properties = Optional.ofNullable(jsonObject.get(DefaultAclResourcesService.PROPERTIES)).filter(JsonElement::isJsonObject)
-                .map(JsonElement::getAsJsonObject).orElseGet(JsonObject::new);
+        JsonObject properties = Optional.ofNullable(jsonObject.get(DefaultAclResourcesService.PROPERTIES))
+                .filter(JsonElement::isJsonObject).map(JsonElement::getAsJsonObject).orElseGet(JsonObject::new);
 
         JsonObject objectToReturn = new JsonObject();
         objectToReturn.addProperty(DefaultAclResourcesService.PERMISSION, permission);
