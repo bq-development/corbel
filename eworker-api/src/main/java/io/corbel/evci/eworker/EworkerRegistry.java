@@ -1,6 +1,5 @@
 package io.corbel.evci.eworker;
 
-import java.lang.reflect.Type;
 import java.util.regex.Pattern;
 
 /**
@@ -60,4 +59,5 @@ public interface EworkerRegistry {
     default <E> void registerEworker(Eworker<E> eworker, String routingPattern, String queue) {
         registerEworker(eworker, routingPattern, queue, false, DEFAULT_THREADS_NUMBER);
     }
+
 }

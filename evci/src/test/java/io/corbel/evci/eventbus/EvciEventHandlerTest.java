@@ -1,23 +1,21 @@
 package io.corbel.evci.eventbus;
 
 import static org.fest.assertions.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import io.corbel.evci.service.EventsService;
+import io.corbel.event.EvciEvent;
 
 import java.io.IOException;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import io.corbel.evci.eventbus.EvciEventHandler;
-import io.corbel.evci.service.EventsService;
-import io.corbel.event.EvciEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,43 +24,43 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @author Cristian del Cerro
  */
 
-@RunWith(MockitoJUnitRunner.class)
-public class EvciEventHandlerTest {
+@RunWith(MockitoJUnitRunner.class) public class EvciEventHandlerTest {
 
-	private static final String TEST_TYPE = "testType";
+    private static final String TEST_TYPE = "testType";
+    private static final String TEST_DOMAIN = "domain";
 
-	@Mock
-	private EventsService eventsService;
+    @Mock private EventsService eventsService;
 
-	@Mock
-	private ObjectMapper objectMapper;
+    private ObjectMapper objectMapper;
 
-	private EvciEventHandler evciEventHandler;
+    private EvciEventHandler evciEventHandler;
 
-	@Before
-	public void setUp() throws Exception {
-		evciEventHandler = new EvciEventHandler(eventsService, objectMapper);
-	}
+    @Before
+    public void setUp() throws Exception {
+        objectMapper = new ObjectMapper();
+        evciEventHandler = new EvciEventHandler(eventsService, objectMapper);
+    }
 
-	@Test
-	public void testData() throws JsonProcessingException, IOException {
-		EvciEvent evciEvent = new EvciEvent();
-		evciEvent.setType(TEST_TYPE);
-		String json = "{\"a\":1}";
+    @Test
+    public void testData() throws JsonProcessingException, IOException {
+        EvciEvent evciEvent = new EvciEvent();
+        evciEvent.setType(TEST_TYPE);
+        evciEvent.setDomain(TEST_DOMAIN);
+        String json = "{\"a\":1}";
 
-		evciEvent.setData(json);
+        evciEvent.setData(json);
 
-		JsonNode jsonNode = mock(JsonNode.class);
+        ArgumentCaptor<JsonNode> jsonNode = ArgumentCaptor.forClass(JsonNode.class);
+        evciEventHandler.handle(evciEvent);
+        verify(eventsService, times(1)).registerEvent(eq(TEST_TYPE), jsonNode.capture());
 
-		when(objectMapper.readTree(Mockito.eq(json))).thenReturn(jsonNode);
+        assertThat(jsonNode.getValue().path("content").path("a").asInt()).isEqualTo(1);
+        assertThat(jsonNode.getValue().path("header").path("domainId").asText()).isEqualTo(TEST_DOMAIN);
+    }
 
-		evciEventHandler.handle(evciEvent);
-		verify(eventsService, times(1)).registerEvent(TEST_TYPE, jsonNode);
-	}
-
-	@Test
-	public void testGetEventType() {
-		assertThat(evciEventHandler.getEventType()).isEqualTo(EvciEvent.class);
-	}
+    @Test
+    public void testGetEventType() {
+        assertThat(evciEventHandler.getEventType()).isEqualTo(EvciEvent.class);
+    }
 
 }
