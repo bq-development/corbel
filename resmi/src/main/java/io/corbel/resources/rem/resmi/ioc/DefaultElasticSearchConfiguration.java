@@ -38,9 +38,9 @@ import org.springframework.context.annotation.Lazy;
             try {
                 nodesAddresses[node] = new InetSocketTransportAddress(hostAndPort[0], Integer.parseInt(hostAndPort[1]));
             } catch (NumberFormatException e) {
-                throw new IllegalArgumentException("Invalid port for node " + hostAndPort[0], e);
+                throw new IllegalArgumentException("Invalid port for node: " + nodesArray[node], e);
             } catch (ArrayIndexOutOfBoundsException e) {
-                throw new IllegalArgumentException("Missing port for node" + hostAndPort[1], e);
+                throw new IllegalArgumentException("Missing port for node: " + nodesArray[node], e);
             }
         }
         transportClient.addTransportAddresses(nodesAddresses);
