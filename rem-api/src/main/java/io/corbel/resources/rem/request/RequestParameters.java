@@ -17,55 +17,6 @@ import io.corbel.lib.token.TokenInfo;
  */
 public interface RequestParameters<E> {
 
-    static <E> RequestParameters<E> emptyParameters() {
-        return new RequestParameters<E>() {
-            @Override
-            public List<MediaType> getAcceptedMediaTypes() {
-                return Collections.emptyList();
-            }
-
-            @Override
-            public E getApiParameters() {
-                return null;
-            }
-
-            @Override
-            public TokenInfo getTokenInfo() {
-                return null;
-            }
-
-            @Override
-            public String getRequestedDomain() {
-                return null;
-            }
-
-            @Override
-            public String getCustomParameterValue(String parameterName) {
-                return null;
-            }
-
-            @Override
-            public List<String> getCustomParameterValues(String parameterName) {
-                return Collections.emptyList();
-            }
-
-            @Override
-            public MultivaluedMap<String, String> getParams() {
-                return new MultivaluedHashMap();
-            }
-
-            @Override
-            public MultivaluedMap<String, String> getHeaders() {
-                return new MultivaluedHashMap();
-            }
-
-            @Override
-            public Long getContentLength() {
-                return null;
-            }
-        };
-    }
-
     @Deprecated
     E getApiParameters();
 

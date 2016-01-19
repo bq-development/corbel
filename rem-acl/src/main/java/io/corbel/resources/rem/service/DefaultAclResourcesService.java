@@ -188,7 +188,7 @@ public class DefaultAclResourcesService implements AclResourcesService {
     }
 
     private Optional<JsonObject> getResource(String domain, String type, ResourceId resourceId) {
-        RequestParameters requestParameters = new RequestParametersBuilder().setRequestedDomain(domain).build();
+        RequestParameters requestParameters = new RequestParametersBuilder(domain).build();
         @SuppressWarnings("unchecked")
         Response response = getResmiGetRem().resource(type, resourceId, requestParameters, Optional.empty());
 
@@ -257,7 +257,7 @@ public class DefaultAclResourcesService implements AclResourcesService {
     @Override
     public Response updateConfiguration(ResourceId id, ManagedCollection managedCollection) {
         JsonObject jsonObject = gson.toJsonTree(managedCollection).getAsJsonObject();
-        RequestParameters requestParameters = new RequestParametersBuilder().setRequestedDomain(REGISTRY_DOMAIN).build();
+        RequestParameters requestParameters = new RequestParametersBuilder(REGISTRY_DOMAIN).build();
         return updateResource(getResmiPutRem(), adminsCollection, id, requestParameters, jsonObject, Collections.emptyList());
     }
 
@@ -282,7 +282,7 @@ public class DefaultAclResourcesService implements AclResourcesService {
 
     @Override
     public void refreshRegistry() {
-        RequestParameters requestParameters =  new RequestParametersBuilder().setRequestedDomain(REGISTRY_DOMAIN).build();
+        RequestParameters requestParameters =  new RequestParametersBuilder(REGISTRY_DOMAIN).build();
         Response response = getCollection(getResmiGetRem(), adminsCollection, requestParameters, Collections.emptyList());
 
         if (response.getStatus() != Response.Status.OK.getStatusCode()) {

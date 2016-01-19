@@ -26,7 +26,9 @@ public class RequestParametersBuilder<E> {
     private Long contentLength;
     private MultivaluedMap<String, String> headers;
 
-    public RequestParametersBuilder() {}
+    public RequestParametersBuilder(String requestedDomain) {
+        this.requestedDomain = requestedDomain;
+    }
 
     public RequestParametersBuilder(RequestParameters<E> parameters) {
         this.apiParameters = parameters.getOptionalApiParameters().map(apiParameters -> apiParameters).orElse(null);
@@ -49,11 +51,6 @@ public class RequestParametersBuilder<E> {
 
     public RequestParametersBuilder<E> tokenInfo(TokenInfo tokenInfo) {
         this.tokenInfo = tokenInfo;
-        return this;
-    }
-
-    public RequestParametersBuilder<E> setRequestedDomain(String requestedDomain) {
-        this.requestedDomain = requestedDomain;
         return this;
     }
 
