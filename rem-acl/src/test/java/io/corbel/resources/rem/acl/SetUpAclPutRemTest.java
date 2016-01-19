@@ -167,7 +167,12 @@ import io.corbel.resources.rem.service.RemService;
 
         JsonObject objectToSave = new JsonObject();
         objectToSave.add("ALL", aclValue);
-        objectToSave.add("user:" + USER_ID, new JsonPrimitive(AclPermission.ADMIN.toString()));
+
+        JsonObject permission = new JsonObject();
+        permission.addProperty("permission",  AclPermission.ADMIN.toString());
+        permission.add("properties",  new JsonObject());
+
+        objectToSave.add("user:" + USER_ID, permission);
 
         JsonObject acl = new JsonObject();
         acl.add(DefaultAclResourcesService._ACL, objectToSave);
