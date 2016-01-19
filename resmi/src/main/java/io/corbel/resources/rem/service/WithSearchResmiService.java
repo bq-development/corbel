@@ -1,8 +1,13 @@
 package io.corbel.resources.rem.service;
 
+import io.corbel.lib.queries.QueryNodeImpl;
 import io.corbel.lib.queries.StringQueryLiteral;
 import io.corbel.lib.queries.builder.ResourceQueryBuilder;
-import io.corbel.lib.queries.request.*;
+import io.corbel.lib.queries.request.Aggregation;
+import io.corbel.lib.queries.request.QueryNode;
+import io.corbel.lib.queries.request.QueryOperator;
+import io.corbel.lib.queries.request.ResourceQuery;
+import io.corbel.lib.queries.request.Search;
 import io.corbel.resources.rem.dao.NotFoundException;
 import io.corbel.resources.rem.dao.ResmiDao;
 import io.corbel.resources.rem.model.GenericDocument;
@@ -85,7 +90,13 @@ public class WithSearchResmiService extends DefaultResmiService implements Searc
 
     private void addRelationQuery(ResourceUri resourceUri, List<ResourceQuery> queries) {
         if (resourceUri.isRelation() && !resourceUri.isRelationWildcard()) {
-            queries.add(new ResourceQueryBuilder().add(_SRC_ID, resourceUri.getTypeId()).build());
+            if (queries.isEmpty()) {
+                queries.add(new ResourceQueryBuilder().build());
+            }
+            for (ResourceQuery resourceQuery : queries) {
+                QueryNode queryNode = new QueryNodeImpl(QueryOperator.$EQ, _SRC_ID, new StringQueryLiteral(resourceUri.getTypeId()));
+                resourceQuery.addQueryNode(queryNode);
+            }
         }
     }
 
@@ -116,7 +127,7 @@ public class WithSearchResmiService extends DefaultResmiService implements Searc
         } else {
             if (resourceUri.isRelation()) {
                 RelationParameters parameters = buildRelationParametersForBinding(apiParameters, searchResult);
-                return (JsonArray)findRelation(resourceUri, Optional.of(parameters));
+                return (JsonArray) findRelation(resourceUri, Optional.of(parameters));
             } else {
                 CollectionParameters parameters = buildCollectionParametersForBinding(apiParameters, searchResult);
                 return findCollection(resourceUri, Optional.of(parameters));
@@ -147,6 +158,7 @@ public class WithSearchResmiService extends DefaultResmiService implements Searc
         return new CollectionParametersImpl(apiParameters.getPagination(), apiParameters.getSort(), Optional.of(Collections
                 .singletonList(builder.build())), Optional.empty(), Optional.empty(), Optional.empty());
     }
+
     @Override
     public JsonElement findRelation(ResourceUri uri, Optional<RelationParameters> apiParameters) throws BadConfigurationException {
         if (apiParameters.flatMap(RelationParameters::getSearch).isPresent()) {
