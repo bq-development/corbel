@@ -17,7 +17,7 @@ import io.corbel.resources.rem.request.CollectionParameters;
 import io.corbel.resources.rem.request.CollectionParametersImpl;
 import io.corbel.resources.rem.request.RelationParameters;
 import io.corbel.resources.rem.request.RelationParametersImpl;
-import io.corbel.resources.rem.resmi.exception.MongoAggregationException;
+import io.corbel.resources.rem.resmi.exception.ResmiAggregationException;
 import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
 import io.corbel.resources.rem.search.ResmiSearch;
 
@@ -62,7 +62,7 @@ public class WithSearchResmiService extends DefaultResmiService implements Searc
 
     @Override
     public JsonElement aggregate(ResourceUri resourceUri, CollectionParameters apiParameters) throws BadConfigurationException,
-            MongoAggregationException {
+            ResmiAggregationException {
         Aggregation operation = apiParameters.getAggregation().get();
         switch (operation.getOperator()) {
             case $COUNT:
