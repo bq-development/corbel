@@ -365,6 +365,12 @@ public class MongoResmiDao implements ResmiDao {
 
     @Override
     public JsonElement average(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field) {
+        Query query = Query.query(Criteria.where(field).exists(true));
+
+        if (mongoOperations.count(query, getMongoCollectionName(resourceUri)) == 0){
+            return aggregationResultsFactory.averageResult(Optional.empty());
+        }
+
         List<DBObject> results = aggregate(resourceUri, resourceQueries, group().avg(field).as("average"));
         return aggregationResultsFactory.averageResult(results.isEmpty() ? Optional.empty() : Optional.ofNullable(
                 (Number) results.get(0).get("average")).map(Number::doubleValue));
@@ -372,6 +378,12 @@ public class MongoResmiDao implements ResmiDao {
 
     @Override
     public JsonElement sum(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field) {
+        Query query = Query.query(Criteria.where(field).exists(true));
+
+        if (mongoOperations.count(query, getMongoCollectionName(resourceUri)) == 0){
+            return aggregationResultsFactory.sumResult(Optional.empty());
+        }
+
         List<DBObject> results = aggregate(resourceUri, resourceQueries, group().sum(field).as("sum"));
         return aggregationResultsFactory.sumResult(results.isEmpty() ? Optional.empty() : Optional.ofNullable(
                 (Number) results.get(0).get("sum")).map(Number::doubleValue));
