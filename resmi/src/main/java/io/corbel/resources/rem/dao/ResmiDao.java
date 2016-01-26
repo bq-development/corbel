@@ -3,7 +3,7 @@ package io.corbel.resources.rem.dao;
 import io.corbel.lib.queries.request.*;
 import io.corbel.resources.rem.model.GenericDocument;
 import io.corbel.resources.rem.model.ResourceUri;
-import io.corbel.resources.rem.resmi.exception.MongoAggregationException;
+import io.corbel.resources.rem.resmi.exception.ResmiAggregationException;
 
 import java.util.List;
 import java.util.Optional;
@@ -30,10 +30,10 @@ public interface ResmiDao {
             Optional<Sort> sort);
 
     JsonArray findCollectionWithGroup(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries, Optional<Pagination> pagination,
-                                      Optional<Sort> sort, List<String> groups, boolean first) throws MongoAggregationException;
+                                      Optional<Sort> sort, List<String> groups, boolean first) throws ResmiAggregationException;
 
     JsonArray findRelationWithGroup(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries, Optional<Pagination> pagination,
-                                    Optional<Sort> sort, List<String> groups, boolean first) throws MongoAggregationException;
+                                    Optional<Sort> sort, List<String> groups, boolean first) throws ResmiAggregationException;
 
     void updateCollection(ResourceUri uri, JsonObject jsonObject, List<ResourceQuery> resourceQueries);
 
@@ -62,7 +62,7 @@ public interface ResmiDao {
     JsonElement min(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field);
 
     JsonArray combine(ResourceUri resourceUri, Optional<List<ResourceQuery>> resourceQueries, Optional<Pagination> pagination,
-                      Optional<Sort> sort, String field, String expression) throws MongoAggregationException;
+                      Optional<Sort> sort, String field, String expression) throws ResmiAggregationException;
 
     JsonElement histogram(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, Optional<Pagination> pagination,
                               Optional<Sort> sort, String field);

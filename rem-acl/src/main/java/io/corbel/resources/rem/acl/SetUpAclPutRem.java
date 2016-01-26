@@ -41,6 +41,8 @@ import com.google.gson.stream.JsonReader;
  * @author Cristian del Cerro
  */
 public class SetUpAclPutRem extends AclBaseRem {
+    private static final String PERMISSION = "permission";
+    private static final String PROPERTIES = "properties";
     private final Pattern prefixPattern = Pattern.compile("(?:(?:" + DefaultAclResourcesService.USER_PREFIX + ")|(?:"
             + DefaultAclResourcesService.GROUP_PREFIX + "))\\S+");
 
@@ -87,7 +89,10 @@ public class SetUpAclPutRem extends AclBaseRem {
         JsonObject filteredAclObject = getFilteredAclObject(jsonObject);
 
         if (!hasAdminPermission(tokenInfo, filteredAclObject)) {
-            filteredAclObject.addProperty(DefaultAclResourcesService.USER_PREFIX + tokenInfo.getUserId(), AclPermission.ADMIN.toString());
+            JsonObject permission = new JsonObject();
+            permission.addProperty(PERMISSION,  AclPermission.ADMIN.toString());
+            permission.add(PROPERTIES,  new JsonObject());
+            filteredAclObject.add(DefaultAclResourcesService.USER_PREFIX + tokenInfo.getUserId(), permission);
         }
 
         JsonObject objectToSave = new JsonObject();

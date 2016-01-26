@@ -1,33 +1,20 @@
 package io.corbel.resources.rem.dao;
 
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.limit;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.skip;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.sort;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 import io.corbel.lib.mongo.JsonObjectMongoWriteConverter;
 import io.corbel.lib.mongo.utils.GsonUtil;
 import io.corbel.lib.queries.mongo.builder.CriteriaBuilder;
-import io.corbel.lib.queries.request.AggregationResultsFactory;
-import io.corbel.lib.queries.request.HistogramEntry;
-import io.corbel.lib.queries.request.Pagination;
-import io.corbel.lib.queries.request.ResourceQuery;
-import io.corbel.lib.queries.request.Sort;
+import io.corbel.lib.queries.request.*;
 import io.corbel.resources.rem.dao.builder.MongoAggregationBuilder;
 import io.corbel.resources.rem.model.GenericDocument;
 import io.corbel.resources.rem.model.ResourceUri;
-import io.corbel.resources.rem.resmi.exception.MongoAggregationException;
+import io.corbel.resources.rem.resmi.exception.ResmiAggregationException;
 import io.corbel.resources.rem.utils.JsonUtils;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
 import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,22 +22,18 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
-import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
-import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
-import org.springframework.data.mongodb.core.aggregation.ExposedFields;
-import org.springframework.data.mongodb.core.aggregation.Fields;
-import org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation;
+import org.springframework.data.mongodb.core.aggregation.*;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.expression.spel.SpelParseException;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
+
 
 /**
  * @author Alberto J. Rubio
@@ -132,7 +115,7 @@ public class MongoResmiDao implements ResmiDao {
 
     @Override
     public JsonArray findCollectionWithGroup(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries,
-            Optional<Pagination> pagination, Optional<Sort> sort, List<String> groups, boolean first) throws MongoAggregationException {
+            Optional<Pagination> pagination, Optional<Sort> sort, List<String> groups, boolean first) throws ResmiAggregationException {
         Aggregation aggregation = buildGroupAggregation(uri, resourceQueries, pagination, sort, groups, first);
         List<JsonObject> result = mongoOperations.aggregate(aggregation, getMongoCollectionName(uri), JsonObject.class).getMappedResults();
         return JsonUtils.convertToArray(first ? extractDocuments(result) : result);
@@ -140,14 +123,14 @@ public class MongoResmiDao implements ResmiDao {
 
     @Override
     public JsonArray findRelationWithGroup(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries, Optional<Pagination> pagination,
-            Optional<Sort> sort, List<String> groups, boolean first) throws MongoAggregationException {
+            Optional<Sort> sort, List<String> groups, boolean first) throws ResmiAggregationException {
         Aggregation aggregation = buildGroupAggregation(uri, resourceQueries, pagination, sort, groups, first);
         List<JsonObject> result = mongoOperations.aggregate(aggregation, getMongoCollectionName(uri), JsonObject.class).getMappedResults();
         return renameIds(JsonUtils.convertToArray(first ? extractDocuments(result) : result), uri.isTypeWildcard());
     }
 
     private Aggregation buildGroupAggregation(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries,
-            Optional<Pagination> pagination, Optional<Sort> sort, List<String> fields, boolean first) throws MongoAggregationException {
+            Optional<Pagination> pagination, Optional<Sort> sort, List<String> fields, boolean first) throws ResmiAggregationException {
 
         MongoAggregationBuilder builder = new MongoAggregationBuilder();
         builder.match(uri, resourceQueries);
@@ -365,15 +348,26 @@ public class MongoResmiDao implements ResmiDao {
     @Override
     public JsonElement average(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field) {
         List<DBObject> results = aggregate(resourceUri, resourceQueries, group().avg(field).as("average"));
-        return aggregationResultsFactory.averageResult(results.isEmpty() ? Optional.empty() : Optional.ofNullable(
-                (Number) results.get(0).get("average")).map(Number::doubleValue));
+
+        return fieldNotExists(resourceUri, field, results,"average")? aggregationResultsFactory.averageResult(Optional.empty()):
+                aggregationResultsFactory.averageResult(results.isEmpty() ? Optional.empty() : Optional.ofNullable(
+                        (Number) results.get(0).get("average")).map(Number::doubleValue));
     }
+
 
     @Override
     public JsonElement sum(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field) {
         List<DBObject> results = aggregate(resourceUri, resourceQueries, group().sum(field).as("sum"));
-        return aggregationResultsFactory.sumResult(results.isEmpty() ? Optional.empty() : Optional.ofNullable(
-                (Number) results.get(0).get("sum")).map(Number::doubleValue));
+
+         return fieldNotExists(resourceUri, field, results,"sum")? aggregationResultsFactory.sumResult(Optional.empty()):
+                 aggregationResultsFactory.sumResult(results.isEmpty() ? Optional.empty() : Optional.ofNullable(
+                         (Number) results.get(0).get("sum")).map(Number::doubleValue));
+    }
+
+    protected boolean fieldNotExists(ResourceUri resourceUri, String field, List<DBObject> results,String type) {
+        Query query = Query.query(Criteria.where(field).exists(true));
+
+        return ((results.get(0).get(type).equals(0) || results.get(0).get(type).equals(0.0)) && mongoOperations.count(query, getMongoCollectionName(resourceUri)) == 0);
     }
 
     @Override
@@ -390,7 +384,7 @@ public class MongoResmiDao implements ResmiDao {
 
     @Override
     public JsonArray combine(ResourceUri resourceUri, Optional<List<ResourceQuery>> resourceQueries, Optional<Pagination> pagination,
-            Optional<Sort> sort, String field, String expression) throws MongoAggregationException {
+            Optional<Sort> sort, String field, String expression) throws ResmiAggregationException {
 
         MongoAggregationBuilder builder = new MongoAggregationBuilder();
         builder.match(resourceUri, resourceQueries);
@@ -407,8 +401,14 @@ public class MongoResmiDao implements ResmiDao {
 
         Aggregation aggregation = builder.build();
 
-        List<JsonObject> results = mongoOperations.aggregate(aggregation, getMongoCollectionName(resourceUri), JsonObject.class)
-                .getMappedResults();
+        List<JsonObject> results;
+        try {
+            results = mongoOperations.aggregate(aggregation, getMongoCollectionName(resourceUri), JsonObject.class)
+                    .getMappedResults();
+        }
+        catch (SpelParseException spe) {
+            throw new ResmiAggregationException(spe.getMessage());
+        }
 
         return JsonUtils.convertToArray(results.stream().map(result -> {
             JsonObject document = result.get(MongoAggregationBuilder.DOCUMENT).getAsJsonObject();

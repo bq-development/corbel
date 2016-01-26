@@ -7,7 +7,7 @@ import io.corbel.resources.rem.dao.ResmiDao;
 import io.corbel.resources.rem.model.ResourceUri;
 import io.corbel.resources.rem.request.CollectionParameters;
 import io.corbel.resources.rem.request.RelationParameters;
-import io.corbel.resources.rem.resmi.exception.MongoAggregationException;
+import io.corbel.resources.rem.resmi.exception.ResmiAggregationException;
 import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
 
 import java.time.Clock;
@@ -51,7 +51,7 @@ public class DefaultResmiService implements ResmiService {
 
     @Override
     public JsonElement aggregate(ResourceUri resourceUri, CollectionParameters apiParameters)
-            throws BadConfigurationException, MongoAggregationException {
+            throws BadConfigurationException, ResmiAggregationException {
         Aggregation operation = apiParameters.getAggregation().get();
         switch (operation.getOperator()) {
             case $COUNT:
@@ -84,7 +84,7 @@ public class DefaultResmiService implements ResmiService {
 
     @Override
     public JsonArray findCollectionDistinct(ResourceUri uri, Optional<CollectionParameters> apiParameters, List<String> fields,
-            boolean first) throws BadConfigurationException, MongoAggregationException {
+            boolean first) throws BadConfigurationException, ResmiAggregationException {
         return resmiDao.findCollectionWithGroup(uri, apiParameters.flatMap(CollectionParameters::getQueries),
                 apiParameters.map(CollectionParameters::getPagination), apiParameters.flatMap(CollectionParameters::getSort), fields,
                 first);
@@ -103,7 +103,7 @@ public class DefaultResmiService implements ResmiService {
 
     @Override
     public JsonArray findRelationDistinct(ResourceUri uri, Optional<RelationParameters> apiParameters, List<String> fields, boolean first)
-            throws BadConfigurationException, MongoAggregationException {
+            throws BadConfigurationException, ResmiAggregationException {
         return resmiDao.findRelationWithGroup(uri, apiParameters.flatMap(RelationParameters::getQueries),
                 apiParameters.map(RelationParameters::getPagination), apiParameters.flatMap(RelationParameters::getSort), fields, first);
     }

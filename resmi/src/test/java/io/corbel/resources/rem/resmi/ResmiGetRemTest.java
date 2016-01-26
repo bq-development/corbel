@@ -11,7 +11,7 @@ import io.corbel.lib.queries.request.ResourceQuery;
 import io.corbel.lib.queries.request.Sort;
 import io.corbel.resources.rem.model.ResourceUri;
 import io.corbel.resources.rem.request.*;
-import io.corbel.resources.rem.resmi.exception.MongoAggregationException;
+import io.corbel.resources.rem.resmi.exception.ResmiAggregationException;
 import io.corbel.resources.rem.service.BadConfigurationException;
 
 import java.util.Arrays;
@@ -92,7 +92,7 @@ public class ResmiGetRemTest extends ResmiRemTest {
     }
 
     @Test
-    public void testGetCollectionCount() throws BadConfigurationException, MongoAggregationException {
+    public void testGetCollectionCount() throws BadConfigurationException, ResmiAggregationException {
         when(resmiServiceMock.aggregate(new ResourceUri(DOMAIN, TEST_TYPE), collectionParametersMock)).thenReturn(countResultMock);
 
         when(requestParametersCollectionParametersMock.getOptionalApiParameters()).thenReturn(Optional.of(collectionParametersMock));
@@ -111,7 +111,7 @@ public class ResmiGetRemTest extends ResmiRemTest {
     }
 
     @Test
-    public void testGetCollectionAverage() throws BadConfigurationException, MongoAggregationException {
+    public void testGetCollectionAverage() throws BadConfigurationException, ResmiAggregationException {
         when(resmiServiceMock.aggregate(new ResourceUri(DOMAIN, TEST_TYPE), collectionParametersMock)).thenReturn(averageResultMock);
 
         when(requestParametersCollectionParametersMock.getOptionalApiParameters()).thenReturn(Optional.of(collectionParametersMock));
@@ -202,7 +202,7 @@ public class ResmiGetRemTest extends ResmiRemTest {
     }
 
     @Test
-    public void testGetRelationCount() throws BadConfigurationException, MongoAggregationException {
+    public void testGetRelationCount() throws BadConfigurationException, ResmiAggregationException {
         when(resmiServiceMock.aggregate(new ResourceUri(DOMAIN, TEST_TYPE, resourceIdMock.getId(), TEST_TYPE_RELATION), relationParametersMock))
                 .thenReturn(countResultMock);
 

@@ -5,7 +5,7 @@ import io.corbel.lib.queries.request.Pagination;
 import io.corbel.lib.queries.request.ResourceQuery;
 import io.corbel.resources.rem.dao.JsonRelation;
 import io.corbel.resources.rem.model.ResourceUri;
-import io.corbel.resources.rem.resmi.exception.MongoAggregationException;
+import io.corbel.resources.rem.resmi.exception.ResmiAggregationException;
 
 import java.util.*;
 
@@ -71,9 +71,9 @@ public class MongoAggregationBuilder {
         return this;
     }
 
-    public Aggregation build() throws MongoAggregationException {
+    public Aggregation build() throws ResmiAggregationException {
         if (operations.isEmpty()) {
-            throw new MongoAggregationException("Cannot build aggregation without operations");
+            throw new ResmiAggregationException("Cannot build aggregation without operations");
         }
         return Aggregation.newAggregation(operations.toArray(new AggregationOperation[operations.size()]));
     }

@@ -8,6 +8,7 @@ import io.corbel.resources.rem.request.RelationParameters;
 import io.corbel.resources.rem.request.RequestParameters;
 import io.corbel.resources.rem.request.ResourceId;
 import io.corbel.resources.rem.request.ResourceParameters;
+import io.corbel.resources.rem.resmi.exception.ResmiAggregationException;
 import io.corbel.resources.rem.service.BadConfigurationException;
 import io.corbel.resources.rem.service.ResmiService;
 
@@ -52,8 +53,10 @@ public class ResmiGetRem extends AbstractResmiRem {
 
         } catch (BadConfigurationException bce) {
             return ErrorResponseFactory.getInstance().badRequest(new Error("bad_request", bce.getMessage()));
+        } catch (ResmiAggregationException rae) {
+            return ErrorResponseFactory.getInstance().badRequest();
         } catch (Exception e) {
-            LOG.error("Unexpected error", e);
+            LOG.error("Unexpected error: Failed get collection data", e);
             return ErrorResponseFactory.getInstance().serverError(e);
         }
     }
@@ -78,10 +81,11 @@ public class ResmiGetRem extends AbstractResmiRem {
             } else {
                 return buildResponse(resmiService.findRelation(resourceUri, parameters.getOptionalApiParameters()));
             }
-        } catch (Exception e) {
-            LOG.error("Failed to get relation data", e);
-            // TODO: This should not be a bad request... probably a 500 since most like it is a bug
+        } catch (ResmiAggregationException rae) {
             return ErrorResponseFactory.getInstance().badRequest();
+        } catch (Exception e) {
+            LOG.error("Unexpected error: Failed get relation data", e);
+            return ErrorResponseFactory.getInstance().serverError(e);
         }
     }
 

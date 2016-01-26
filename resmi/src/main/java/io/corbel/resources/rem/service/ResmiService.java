@@ -4,10 +4,9 @@ import io.corbel.lib.queries.request.ResourceQuery;
 import io.corbel.resources.rem.dao.NotFoundException;
 import io.corbel.resources.rem.dao.RelationMoveOperation;
 import io.corbel.resources.rem.model.ResourceUri;
-import io.corbel.resources.rem.model.SearchResource;
 import io.corbel.resources.rem.request.CollectionParameters;
 import io.corbel.resources.rem.request.RelationParameters;
-import io.corbel.resources.rem.resmi.exception.MongoAggregationException;
+import io.corbel.resources.rem.resmi.exception.ResmiAggregationException;
 import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
 
 import java.util.List;
@@ -30,16 +29,16 @@ public interface ResmiService {
     JsonArray findCollection(ResourceUri uri, Optional<CollectionParameters> apiParameters) throws BadConfigurationException;
 
     JsonArray findCollectionDistinct(ResourceUri uri, Optional<CollectionParameters> apiParameters, List<String> fields, boolean first)
-            throws BadConfigurationException, MongoAggregationException;
+            throws BadConfigurationException, ResmiAggregationException;
 
     JsonObject findResource(ResourceUri uri);
 
     JsonElement findRelation(ResourceUri uri, Optional<RelationParameters> apiParameters) throws BadConfigurationException;
 
-    JsonElement aggregate(ResourceUri uri, CollectionParameters apiParameters) throws BadConfigurationException, MongoAggregationException;
+    JsonElement aggregate(ResourceUri uri, CollectionParameters apiParameters) throws BadConfigurationException, ResmiAggregationException;
 
     JsonArray findRelationDistinct(ResourceUri uri, Optional<RelationParameters> apiParameters, List<String> fields, boolean first)
-    throws BadConfigurationException, MongoAggregationException;
+    throws BadConfigurationException, ResmiAggregationException;
 
     JsonObject saveResource(ResourceUri uri, JsonObject object, Optional<String> userId) throws StartsWithUnderscoreException;
 
