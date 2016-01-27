@@ -9,6 +9,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import io.corbel.iam.exception.ScopeAbsentIdException;
 import io.dropwizard.testing.junit.ResourceTestRule;
 
 import javax.ws.rs.client.Entity;
@@ -41,7 +43,7 @@ public class ScopeResourceTest {
     }
 
     @Test
-    public void testCreateScopeWithoutParameters() throws ScopeNameException {
+    public void testCreateScopeWithoutParameters() throws ScopeNameException, ScopeAbsentIdException {
 
         String scope = "{\"id\": \"testId\", \"audience\" : \"test\", \"rules\": [{\"rule\":\"rule\"}, {\"rule2\":\"rule2\"}]}";
 
@@ -56,7 +58,7 @@ public class ScopeResourceTest {
     }
 
     @Test
-    public void testCreateScopeWithParameters() throws ScopeNameException {
+    public void testCreateScopeWithParameters() throws ScopeNameException, ScopeAbsentIdException {
 
         String scope = "{\"id\": \"testId\", \"audience\" : \"test\", \"rules\": [{\"rule\":\"rule\"}, "
                 + "{\"rule2\":\"rule2\"}], \"parameters\": { \"resourceId\" : \"id\"}}";
@@ -72,7 +74,7 @@ public class ScopeResourceTest {
     }
 
     @Test
-    public void testCreateBadScope() throws ScopeNameException {
+    public void testCreateBadScope() throws ScopeNameException, ScopeAbsentIdException {
 
         String scope = "{\"id\": \"testId\", \"audience\" : \"test\", \"rules\": [{\"rule\":\"rule\"}, {\"rule2\":\"rule2\"}]}";
 

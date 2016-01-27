@@ -9,6 +9,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
+import io.corbel.iam.exception.ScopeAbsentIdException;
 import io.corbel.iam.exception.ScopeNameException;
 import io.corbel.iam.model.Scope;
 import io.corbel.iam.service.ScopeService;
@@ -26,6 +27,8 @@ import io.corbel.iam.service.ScopeService;
     public final Response createScope(@Context UriInfo uriInfo, @Valid Scope scope) {
         try {
             scopeService.create(scope);
+        } catch (ScopeAbsentIdException e) {
+            return IamErrorResponseFactory.getInstance().missingParameter("id");
         } catch (ScopeNameException e) {
             return IamErrorResponseFactory.getInstance().scopeIdNotAllowed(scope.getId());
         }

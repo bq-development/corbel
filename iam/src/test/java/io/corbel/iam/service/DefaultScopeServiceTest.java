@@ -11,6 +11,7 @@ import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+import io.corbel.iam.exception.ScopeAbsentIdException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -284,7 +285,7 @@ import io.corbel.lib.ws.auth.repository.AuthorizationRulesRepository;
     }
 
     @Test
-    public void testCreateScope() throws ScopeNameException {
+    public void testCreateScope() throws ScopeNameException, ScopeAbsentIdException {
         Scope scope = mock(Scope.class);
         when(scope.getId()).thenReturn(TEST_SCOPE_1);
         defaultScopeService.create(scope);
@@ -293,7 +294,7 @@ import io.corbel.lib.ws.auth.repository.AuthorizationRulesRepository;
 
 
     @Test(expected = ScopeNameException.class)
-    public void testCreateIncorrectScope() throws ScopeNameException {
+    public void testCreateIncorrectScope() throws ScopeNameException, ScopeAbsentIdException {
         Scope scope = new Scope(";", null, null, null, null, null);
         defaultScopeService.create(scope);
     }

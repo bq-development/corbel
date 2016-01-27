@@ -6,6 +6,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import io.corbel.iam.exception.ScopeAbsentIdException;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -227,7 +228,10 @@ public class DefaultScopeService implements ScopeService {
     }
 
     @Override
-    public void create(Scope scope) throws ScopeNameException {
+    public void create(Scope scope) throws ScopeNameException, ScopeAbsentIdException {
+        if(scope.getId() == null) {
+            throw new ScopeAbsentIdException();
+        }
         if (scope.getId().contains(";")) {
             throw new ScopeNameException();
         }

@@ -3,6 +3,7 @@ package io.corbel.iam.service;
 import java.util.Collection;
 import java.util.Set;
 
+import io.corbel.iam.exception.ScopeAbsentIdException;
 import io.corbel.iam.exception.ScopeNameException;
 import io.corbel.iam.model.Scope;
 
@@ -32,7 +33,7 @@ public interface ScopeService {
 
     void publishAuthorizationRules(String token, long tokenExpirationTime, Set<Scope> filledScopes);
 
-    void create(Scope scope) throws ScopeNameException;
+    void create(Scope scope) throws ScopeNameException, ScopeAbsentIdException;
 
     void delete(String scope);
 
