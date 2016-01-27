@@ -18,7 +18,7 @@ import io.corbel.resources.rem.request.CollectionParameters;
 import io.corbel.resources.rem.request.CollectionParametersImpl;
 import io.corbel.resources.rem.request.RelationParameters;
 import io.corbel.resources.rem.request.RelationParametersImpl;
-import io.corbel.resources.rem.resmi.exception.ResmiAggregationException;
+import io.corbel.resources.rem.resmi.exception.InvalidApiParamException;
 import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
 import io.corbel.resources.rem.search.ResmiSearch;
 
@@ -66,7 +66,7 @@ public class WithSearchResmiService extends DefaultResmiService implements Searc
 
     @Override
     public JsonElement aggregate(ResourceUri resourceUri, CollectionParameters apiParameters) throws BadConfigurationException,
-            ResmiAggregationException {
+            InvalidApiParamException {
         Aggregation operation = apiParameters.getAggregation().get();
         switch (operation.getOperator()) {
             case $COUNT:
@@ -105,7 +105,7 @@ public class WithSearchResmiService extends DefaultResmiService implements Searc
     }
 
     @Override
-    public JsonArray findCollection(ResourceUri uri, Optional<CollectionParameters> apiParameters) throws BadConfigurationException {
+    public JsonArray findCollection(ResourceUri uri, Optional<CollectionParameters> apiParameters) throws BadConfigurationException, InvalidApiParamException {
         if (apiParameters.flatMap(CollectionParameters::getSearch).isPresent()) {
             return findInSearchService(uri, apiParameters.get());
         } else {
@@ -113,7 +113,7 @@ public class WithSearchResmiService extends DefaultResmiService implements Searc
         }
     }
 
-    private JsonArray findInSearchService(ResourceUri resourceUri, CollectionParameters apiParameters) throws BadConfigurationException {
+    private JsonArray findInSearchService(ResourceUri resourceUri, CollectionParameters apiParameters) throws BadConfigurationException, InvalidApiParamException {
         Search searchObject = apiParameters.getSearch().get();
         JsonArray searchResult;
         if (searchObject.getText().isPresent()) {
@@ -188,7 +188,7 @@ public class WithSearchResmiService extends DefaultResmiService implements Searc
     }
 
     @Override
-    public JsonElement findRelation(ResourceUri uri, Optional<RelationParameters> apiParameters) throws BadConfigurationException {
+    public JsonElement findRelation(ResourceUri uri, Optional<RelationParameters> apiParameters) throws BadConfigurationException, InvalidApiParamException {
         if (apiParameters.flatMap(RelationParameters::getSearch).isPresent()) {
             return findInSearchService(uri, apiParameters.get());
         } else {

@@ -5,7 +5,7 @@ import io.corbel.lib.queries.request.Pagination;
 import io.corbel.lib.queries.request.ResourceQuery;
 import io.corbel.resources.rem.dao.JsonRelation;
 import io.corbel.resources.rem.model.ResourceUri;
-import io.corbel.resources.rem.resmi.exception.ResmiAggregationException;
+import io.corbel.resources.rem.resmi.exception.InvalidApiParamException;
 
 import java.util.*;
 
@@ -71,9 +71,9 @@ public class MongoAggregationBuilder {
         return this;
     }
 
-    public Aggregation build() throws ResmiAggregationException {
+    public Aggregation build() throws InvalidApiParamException {
         if (operations.isEmpty()) {
-            throw new ResmiAggregationException("Cannot build aggregation without operations");
+            throw new InvalidApiParamException("Cannot build aggregation without operations");
         }
         return Aggregation.newAggregation(operations.toArray(new AggregationOperation[operations.size()]));
     }
