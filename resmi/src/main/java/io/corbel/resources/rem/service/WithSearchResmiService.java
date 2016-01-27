@@ -4,6 +4,7 @@ import io.corbel.lib.queries.QueryNodeImpl;
 import io.corbel.lib.queries.StringQueryLiteral;
 import io.corbel.lib.queries.builder.ResourceQueryBuilder;
 import io.corbel.lib.queries.request.Aggregation;
+import io.corbel.lib.queries.request.Pagination;
 import io.corbel.lib.queries.request.QueryNode;
 import io.corbel.lib.queries.request.QueryOperator;
 import io.corbel.lib.queries.request.ResourceQuery;
@@ -24,9 +25,12 @@ import io.corbel.resources.rem.search.ResmiSearch;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.StreamSupport;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -125,12 +129,18 @@ public class WithSearchResmiService extends DefaultResmiService implements Searc
         if (searchObject.indexFieldsOnly()) {
             return searchResult;
         } else {
+            JsonArray fullResult;
             if (resourceUri.isRelation()) {
                 RelationParameters parameters = buildRelationParametersForBinding(apiParameters, searchResult);
-                return (JsonArray) findRelation(resourceUri, Optional.of(parameters));
+                fullResult = (JsonArray) findRelation(resourceUri, Optional.of(parameters));
             } else {
                 CollectionParameters parameters = buildCollectionParametersForBinding(apiParameters, searchResult);
-                return findCollection(resourceUri, Optional.of(parameters));
+                fullResult = findCollection(resourceUri, Optional.of(parameters));
+            }
+            if (!apiParameters.getSort().isPresent()) {
+                return orderResult(searchResult, fullResult);
+            } else {
+                return fullResult;
             }
         }
     }
@@ -142,7 +152,8 @@ public class WithSearchResmiService extends DefaultResmiService implements Searc
             ids.add(new StringQueryLiteral(id));
         }
         ResourceQueryBuilder builder = new ResourceQueryBuilder().add(DST_ID, ids, QueryOperator.$IN);
-
+        Pagination pagination = apiParameters.getPagination();
+        pagination.setPage(0);
         return new RelationParametersImpl(apiParameters.getPagination(), apiParameters.getSort(), Optional.of(Collections
                 .singletonList(builder.build())), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
     }
@@ -155,8 +166,25 @@ public class WithSearchResmiService extends DefaultResmiService implements Searc
             ids.add(new StringQueryLiteral(id));
         }
         ResourceQueryBuilder builder = new ResourceQueryBuilder().add(ID, ids, QueryOperator.$IN);
-        return new CollectionParametersImpl(apiParameters.getPagination(), apiParameters.getSort(), Optional.of(Collections
-                .singletonList(builder.build())), Optional.empty(), Optional.empty(), Optional.empty());
+        Pagination pagination = apiParameters.getPagination();
+        pagination.setPage(0);
+        return new CollectionParametersImpl(pagination, apiParameters.getSort(), Optional.of(Collections.singletonList(builder.build())),
+                Optional.empty(), Optional.empty(), Optional.empty());
+    }
+
+    private JsonArray orderResult(JsonArray searchResult, JsonArray fullResult) {
+        JsonArray orderedArray = new JsonArray();
+
+        Map<String, Integer> orderedMap = new HashMap<String, Integer>();
+        StreamSupport.stream(searchResult.spliterator(), false).map(JsonElement::getAsJsonObject)
+                .forEachOrdered(element -> orderedMap.put(element.get(ID).getAsString(), orderedMap.size()));
+        StreamSupport
+                .stream(fullResult.spliterator(), false)
+                .sorted((jsonElement1, jsonElement2) -> Integer.compare(
+                        orderedMap.get(jsonElement1.getAsJsonObject().get(ID).getAsString()),
+                        orderedMap.get(jsonElement2.getAsJsonObject().get(ID).getAsString())))
+                .forEach(element -> orderedArray.add(element));
+        return orderedArray;
     }
 
     @Override
