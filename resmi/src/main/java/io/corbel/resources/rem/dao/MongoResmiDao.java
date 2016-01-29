@@ -455,7 +455,7 @@ public class MongoResmiDao implements ResmiDao {
             values = Collections.singletonMap(fields[0], result.get("_id"));
         } else {
             values = new HashMap<>(fields.length);
-            result.keySet().stream().filter(f -> !f.equals("count")).forEach(f -> values.put(f, result.get(f)));
+            result.keySet().stream().filter(f -> !"count".equals(f)).forEach(f -> values.put(f, result.get(f)));
         }
 
         return new HistogramEntry(count, values);
