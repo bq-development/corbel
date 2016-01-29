@@ -11,6 +11,8 @@ import com.google.gson.JsonObject;
  */
 public final class JsonUtils {
 
+    private JsonUtils () {}
+
     public static JsonArray convertToArray(List<JsonObject> jsonObjects) {
         JsonArray jsonArray = new JsonArray();
         for (JsonObject jsonObject : jsonObjects) {

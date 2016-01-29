@@ -6,6 +6,8 @@ package io.corbel.resources.rem.dao;
  */
 public class ReservedFields {
 
+    private ReservedFields () {}
+
     public static final String _SRC_ID = "_src_id";
     public static final String _DST_ID = "_dst_id";
     public static final String _UPDATED_AT = "_updatedAt";
