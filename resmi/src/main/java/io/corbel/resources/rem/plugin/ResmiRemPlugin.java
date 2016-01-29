@@ -10,7 +10,6 @@ import io.corbel.resources.rem.search.ElasticSearchService;
 import io.corbel.resources.rem.search.ResmiSearch;
 import io.corbel.resources.rem.service.ResmiService;
 
-import io.corbel.resources.rem.service.SearchableFieldsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

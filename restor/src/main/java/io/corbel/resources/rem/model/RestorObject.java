@@ -2,8 +2,6 @@ package io.corbel.resources.rem.model;
 
 import java.io.InputStream;
 
-import org.springframework.http.MediaType;
-
 /**
  * @author Alberto J. Rubio
  */

@@ -3,7 +3,6 @@ package io.corbel.resources.rem.acl;
 import com.google.common.collect.Lists;
 import io.corbel.resources.rem.BaseRem;
 import io.corbel.resources.rem.Rem;
-import io.corbel.resources.rem.model.Error;
 import io.corbel.resources.rem.request.*;
 import io.corbel.resources.rem.service.AclResourcesService;
 import io.corbel.resources.rem.service.RemService;
@@ -14,8 +13,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 
 import javax.ws.rs.core.Response;

@@ -4,14 +4,11 @@ import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import com.amazonaws.services.s3.model.S3Object;
 import io.corbel.webfs.service.AmazonS3Service;
 import io.corbel.lib.ws.api.error.ErrorResponseFactory;
-
-import java.util.Optional;
 
 /**
  * @author Rubén Carrasco

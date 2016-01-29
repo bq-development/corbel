@@ -2,7 +2,6 @@ package io.corbel.oauth.api;
 
 import io.corbel.lib.token.reader.TokenReader;
 import io.corbel.lib.ws.api.error.ErrorResponseFactory;
-import io.corbel.lib.ws.auth.AuthorizationInfo;
 import io.corbel.oauth.model.User;
 import io.corbel.oauth.service.UserService;
 import io.dropwizard.auth.Auth;
