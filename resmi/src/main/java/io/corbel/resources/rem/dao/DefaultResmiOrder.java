@@ -60,7 +60,7 @@ public class DefaultResmiOrder implements ResmiOrder {
             double order1 = list.get(0).get(ORDER_FIELD).getAsDouble();
             double order2 = list.get(1).get(ORDER_FIELD).getAsDouble();
             order = (order1 + order2) / 2;
-            if (order == order1 || order == order2) {
+            if ((Math.abs(order - order1) < .0000001)  || (Math.abs(order - order2) < .0000001)) { //(order == order1 || order == order2)
                 Update update = new Update();
                 update.inc(ORDER_FIELD, 1);
                 nextOrderInRelation(uri);
