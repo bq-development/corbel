@@ -18,7 +18,7 @@ import java.util.Optional;
 public class DefaultImageCacheService implements ImageCacheService {
 
     private static final Logger LOG = LoggerFactory.getLogger(DefaultImageCacheService.class);
-    public String cacheCollection;
+    private String cacheCollection;
 
     public DefaultImageCacheService(String cacheCollection) {
         this.cacheCollection = cacheCollection;
