@@ -7,7 +7,7 @@ import io.corbel.lib.ws.digest.Digester;
 
 public class GroupIdGenerator implements IdGenerator<Group> {
 
-    private final static char SEPARATOR = ':';
+    private static final char SEPARATOR = ':';
 
     private final Digester digester;
 

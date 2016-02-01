@@ -15,7 +15,7 @@ import static org.mockito.Mockito.when;
  */
 public class GroupIdGeneratorTest {
 
-    private final static char SEPARATOR = ':';
+    private static final char SEPARATOR = ':';
     private static final String TEST_ID = "hash_id";
     private static final String TEST_DOMAIN = "domain";
     private static final String TEST_NAME = "name";
