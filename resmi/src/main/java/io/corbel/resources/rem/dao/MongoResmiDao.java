@@ -405,8 +405,7 @@ public class MongoResmiDao implements ResmiDao {
         try {
             results = mongoOperations.aggregate(aggregation, getMongoCollectionName(resourceUri), JsonObject.class)
                     .getMappedResults();
-        }
-        catch (SpelParseException spe) {
+        } catch (SpelParseException spe) {
             throw new ResmiAggregationException(spe.getMessage());
         }
 

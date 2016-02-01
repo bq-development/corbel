@@ -161,9 +161,7 @@ public class DefaultAclResourcesService implements AclResourcesService {
 
         try {
             response = getResource(REGISTRY_DOMAIN, adminsCollection, new ResourceId(collection));
-        }
-
-        catch (WebApplicationException e) {
+        } catch (WebApplicationException e) {
             if (e.getResponse().getStatus() == Response.Status.NOT_FOUND.getStatusCode()) {
                 return Optional.empty();
             }
