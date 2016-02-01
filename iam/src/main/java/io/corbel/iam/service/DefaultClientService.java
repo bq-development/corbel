@@ -78,10 +78,10 @@ public class DefaultClientService implements ClientService {
     private String generateRandomKey() {
         byte[] key = new byte[32];
         new SecureRandom().nextBytes(key);
-        String result = "";
+        StringBuilder result = new StringBuilder();
         for (final byte element : key) {
-            result += Integer.toString((element & 0xff) + 0x100, 16).substring(1);
+            result.append(Integer.toString((element & 0xff) + 0x100, 16).substring(1));
         }
-        return result;
+        return result.toString();
     }
 }
