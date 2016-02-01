@@ -23,8 +23,9 @@ public class VersionAuthorizationRule implements AuthorizationRule {
     public void process(AuthorizationRequestContext context) throws UnauthorizedException {
         try {
             String supportedVersions = context.getIssuerClient().getVersion();
-            if (supportedVersions != null && context.hasVersion() && !Version.valueOf(context.getVersion()).satisfies(supportedVersions))
+            if (supportedVersions != null && context.hasVersion() && !Version.valueOf(context.getVersion()).satisfies(supportedVersions)) {
                 throwInvalidVersionException(context);
+            }
         } catch (UnexpectedCharacterException | UnexpectedTokenException e) {
             LOG.error("Client {} request has malformed version: {}", new Object[] {context.getIssuerClient().getId(), context.getVersion()});
             throwInvalidVersionException(context);
