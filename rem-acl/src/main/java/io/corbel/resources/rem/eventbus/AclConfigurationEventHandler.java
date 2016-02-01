@@ -42,7 +42,7 @@ public class AclConfigurationEventHandler implements EventHandler<ResourceEvent>
                 try {
                     aclResourcesService.addAclConfiguration(URLDecoder.decode(onlyId.substring(onlyId.indexOf(":") + 1), "UTF8"));
                 } catch (UnsupportedEncodingException e) {
-                    // Never happends
+                    // Never happens
                 }
                 break;
             case DELETE:
