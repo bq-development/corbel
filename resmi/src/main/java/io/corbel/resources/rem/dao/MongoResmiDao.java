@@ -51,6 +51,9 @@ public class MongoResmiDao implements ResmiDao {
     private static final String EMPTY_STRING = "";
     private static final String EXPIRE_AT = "_expireAt";
     private static final String CREATED_AT = "_createdAt";
+    private static final String COUNT = "count";
+    private static final String AVERAGE = "average";
+
 
     private final MongoOperations mongoOperations;
     private final JsonObjectMongoWriteConverter jsonObjectMongoWriteConverter;
@@ -347,11 +350,11 @@ public class MongoResmiDao implements ResmiDao {
 
     @Override
     public JsonElement average(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field) {
-        List<DBObject> results = aggregate(resourceUri, resourceQueries, group().avg(field).as("average"));
+        List<DBObject> results = aggregate(resourceUri, resourceQueries, group().avg(field).as(AVERAGE));
 
-        return fieldNotExists(resourceUri, field, results,"average")? aggregationResultsFactory.averageResult(Optional.empty()):
+        return fieldNotExists(resourceUri, field, results,AVERAGE)? aggregationResultsFactory.averageResult(Optional.empty()):
                 aggregationResultsFactory.averageResult(results.isEmpty() ? Optional.empty() : Optional.ofNullable(
-                        (Number) results.get(0).get("average")).map(Number::doubleValue));
+                        (Number) results.get(0).get(AVERAGE)).map(Number::doubleValue));
     }
 
 
@@ -421,11 +424,11 @@ public class MongoResmiDao implements ResmiDao {
             Optional<Sort> sortParam, String field) {
         AggregationOperation[] aggregations = {
                 group(Fields.from(Fields.field(field, field))).push("$_id").as("ids"),
-                new ExposingFieldsCustomAggregationOperation(new BasicDBObject("$project", new BasicDBObject("count", new BasicDBObject(
+                new ExposingFieldsCustomAggregationOperation(new BasicDBObject("$project", new BasicDBObject(COUNT, new BasicDBObject(
                         "$size", "$ids")))) {
                     @Override
                     public ExposedFields getFields() {
-                        return ExposedFields.synthetic(Fields.fields("count"));
+                        return ExposedFields.synthetic(Fields.fields(COUNT));
                     }
                 }};
 
@@ -448,13 +451,13 @@ public class MongoResmiDao implements ResmiDao {
     }
 
     private HistogramEntry toHistogramEntry(DBObject result, String... fields) {
-        long count = ((Number) result.get("count")).longValue();
+        long count = ((Number) result.get(COUNT)).longValue();
         Map<String, Object> values;
         if (fields.length == 1) {
             values = Collections.singletonMap(fields[0], result.get("_id"));
         } else {
             values = new HashMap<>(fields.length);
-            result.keySet().stream().filter(f -> !"count".equals(f)).forEach(f -> values.put(f, result.get(f)));
+            result.keySet().stream().filter(f -> !COUNT.equals(f)).forEach(f -> values.put(f, result.get(f)));
         }
 
         return new HistogramEntry(count, values);

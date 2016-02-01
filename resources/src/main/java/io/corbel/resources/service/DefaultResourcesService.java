@@ -40,7 +40,7 @@ public class DefaultResourcesService implements ResourcesService {
 
     private static final Logger LOG = LoggerFactory.getLogger(DefaultResourcesService.class);
     private static final Annotation[] EMPTY_ANNOTATIONS = new Annotation[] {};
-
+    private static final String UNABLE_TO_READ_ERROR = "Unable to read entity from content of media type {}";
     private final RemService remService;
     private final RemEntityTypeResolver remEntityTypeResolver;
     private final int defaultPageSize;
@@ -88,7 +88,7 @@ public class DefaultResourcesService implements ResourcesService {
         } catch (JsonParseException e) {
             return ErrorResponseFactory.getInstance().invalidEntity(e.getOriginalMessage());
         } catch (IOException e) {
-            LOG.error("Unable to read entity from content of media type {}", contentType, e);
+            LOG.error(UNABLE_TO_READ_ERROR, contentType, e);
             return ErrorResponseFactory.getInstance().serverError(e);
         } catch (ApiRequestException e) {
             return ErrorResponseFactory.getInstance().badRequest(e);
@@ -129,7 +129,7 @@ public class DefaultResourcesService implements ResourcesService {
         } catch (JsonParseException e) {
             return ErrorResponseFactory.getInstance().invalidEntity(e.getOriginalMessage());
         } catch (IOException e) {
-            LOG.error("Unable to read entity from content of media type {}", contentType, e);
+            LOG.error(UNABLE_TO_READ_ERROR, contentType, e);
             result = ErrorResponseFactory.getInstance().serverError(e);
         } catch (ApiRequestException e) {
             result = ErrorResponseFactory.getInstance().badRequest(e);
@@ -167,7 +167,7 @@ public class DefaultResourcesService implements ResourcesService {
         } catch (JsonParseException e) {
             return ErrorResponseFactory.getInstance().invalidEntity(e.getOriginalMessage());
         } catch (IOException e) {
-            LOG.error("Unable to read entity from content of media type {}", contentType, e);
+            LOG.error(UNABLE_TO_READ_ERROR, contentType, e);
             return ErrorResponseFactory.getInstance().serverError(e);
         } catch (ApiRequestException e) {
             return ErrorResponseFactory.getInstance().badRequest(e);
