@@ -20,9 +20,9 @@ public class ImageRemUtilTest {
 
     @Mock
     private RequestParameters<ResourceParameters> params;
-    private final String ORIGINAL_FILENAME = "ORIGINAL_FILENAME";
-    private final String CACHE_COLLECTION = "CACHE:COLLECTION";
-    private final String PREFIX_FIELD_VALUE = "prefix";
+    private static final String ORIGINAL_FILENAME = "ORIGINAL_FILENAME";
+    private static final String CACHE_COLLECTION = "CACHE:COLLECTION";
+    private static final String PREFIX_FIELD_VALUE = "prefix";
     private ImageRemUtil imageRemUtil;
 
     @Before

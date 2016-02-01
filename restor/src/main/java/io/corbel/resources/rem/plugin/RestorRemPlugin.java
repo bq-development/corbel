@@ -22,7 +22,7 @@ import com.codahale.metrics.health.HealthCheck;
 @Component public class RestorRemPlugin extends RemPlugin {
 
     private static final Logger LOG = LoggerFactory.getLogger(RestorRemPlugin.class);
-    private final String ARTIFACT_ID = "restor";
+    private static final String ARTIFACT_ID = "restor";
 
     @Override
     protected void init() {

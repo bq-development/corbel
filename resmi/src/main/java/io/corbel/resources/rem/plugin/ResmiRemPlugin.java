@@ -21,7 +21,7 @@ import org.springframework.stereotype.Component;
 @Component public class ResmiRemPlugin extends RemPlugin {
 
     private static final Logger LOG = LoggerFactory.getLogger(ResmiRemPlugin.class);
-    private final String ARTIFACT_ID = "resmi";
+    private static final String ARTIFACT_ID = "resmi";
 
     @Autowired private ResmiShell shell;
 

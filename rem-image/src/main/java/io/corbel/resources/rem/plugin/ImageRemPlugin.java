@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 public class ImageRemPlugin extends RemPlugin {
 
     private static final Logger LOG = LoggerFactory.getLogger(ImageRemPlugin.class);
-    private final String ARTIFACT_ID = "rem-image";
+    private static final String ARTIFACT_ID = "rem-image";
 
     @Override
     protected void init() {
