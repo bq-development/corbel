@@ -22,10 +22,9 @@ public class TokenUpgradeVerifierProvider implements VerifierProvider {
     public List<Verifier> findVerifier(String issuer, String keyId) {
         if (issuer.equals(ASSETS_ISSUER)) {
             try {
-                List<Verifier> list = Collections.<Verifier>singletonList(new HmacSHA256Verifier(signerKey.getBytes()));
-                return list;
+                return Collections.<Verifier>singletonList(new HmacSHA256Verifier(signerKey.getBytes()));
             } catch (InvalidKeyException e) {
-                // This exeption doesn't occur because the key is fixed
+                // This exception doesn't occur because the key is fixed
             }
         }
         return Collections.emptyList();
