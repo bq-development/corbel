@@ -29,11 +29,11 @@ import io.corbel.iam.service.DomainService;
 import io.corbel.iam.service.ScopeService;
 
 public class ScopeResourceTest {
-    private final static ScopeService scopeService = mock(ScopeService.class);
-    private final static ClientService clientService = mock(ClientService.class);
-    private final static DomainService domainService = mock(DomainService.class);
+    private static final ScopeService scopeService = mock(ScopeService.class);
+    private static final ClientService clientService = mock(ClientService.class);
+    private static final DomainService domainService = mock(DomainService.class);
 
-    private final static String SCOPE_ID = "testId";
+    private static final String SCOPE_ID = "testId";
 
     @ClassRule public static ResourceTestRule RULE = ResourceTestRule.builder().addResource(new ScopeResource(scopeService)).build();
 

@@ -50,8 +50,8 @@ import static org.mockito.Mockito.*;
 
 public class DomainResourceTest {
     protected static final String AUTHORIZATION = "Authorization";
-    private final static ClientService clientService = mock(ClientService.class);
-    private final static DomainService domainService = mock(DomainService.class);
+    private static final ClientService clientService = mock(ClientService.class);
+    private static final DomainService domainService = mock(DomainService.class);
     private static final int DEFAULT_LIMIT = 10;
     private static final int MAX_DEFAULT_LIMIT = 50;
 
@@ -61,9 +61,9 @@ public class DomainResourceTest {
     private static final PaginationParser paginationParserMock = mock(PaginationParser.class);
     private static final QueryParser queryParserMock = mock(QueryParser.class);
     private static final AuthorizationInfo authorizationInfoMock = mock(AuthorizationInfo.class);
-    private final static String ISSUER_DOMAIN_ID = "domain";
-    private final static String DOMAIN_ID = "jksdawqqqqdfjdaslkfj";
-    private final static String CLIENT_ID = "zsdetzerqdfjdaslkfj";
+    private static final String ISSUER_DOMAIN_ID = "domain";
+    private static final String DOMAIN_ID = "jksdawqqqqdfjdaslkfj";
+    private static final String CLIENT_ID = "zsdetzerqdfjdaslkfj";
     private static final String TEST_TOKEN = "xxxx";
 
     private static final Authenticator<String, AuthorizationInfo> authenticator = mock(Authenticator.class);

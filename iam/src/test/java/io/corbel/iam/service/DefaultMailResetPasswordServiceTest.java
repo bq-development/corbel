@@ -19,15 +19,15 @@ import io.corbel.lib.token.factory.TokenFactory;
 
 @RunWith(MockitoJUnitRunner.class) public class DefaultMailResetPasswordServiceTest {
 
-    private final static String CLIENT_ID = "jasdjklrjaskl";
-    private final static String USER_ID = "asdfbieubizr";
-    private final static String EMAIL = "sruiaesrhi@nsjfneira.sdf";
-    private final static String RESET_NOTIFICATION_ID = "nszduirnewaijnfaj";
-    private final static String ACCESS_TOKEN = "nsuirneianrea";
-    private final static long RESET_PASSWORD_TOKEN_DURATION = 300;
-    private final static String RESET_PASSWORD_TOKEN_SCOPE = "iam:user:me";
-    private final static String DOMAIN_ID = "domain_id";
-    private final static String RESET_URL = "resetUrlTest";
+    private static final String CLIENT_ID = "jasdjklrjaskl";
+    private static final String USER_ID = "asdfbieubizr";
+    private static final String EMAIL = "sruiaesrhi@nsjfneira.sdf";
+    private static final String RESET_NOTIFICATION_ID = "nszduirnewaijnfaj";
+    private static final String ACCESS_TOKEN = "nsuirneianrea";
+    private static final long RESET_PASSWORD_TOKEN_DURATION = 300;
+    private static final String RESET_PASSWORD_TOKEN_SCOPE = "iam:user:me";
+    private static final String DOMAIN_ID = "domain_id";
+    private static final String RESET_URL = "resetUrlTest";
 
     @Mock private EventsService eventsService;
     @Mock private ScopeService scopeService;
