@@ -11,6 +11,8 @@ import io.corbel.resources.rem.acl.AclPermission;
  */
 public class AclUtils {
 
+    private AclUtils() {}
+
     public static String buildMessage(AclPermission permission) {
         return permission + " permission is required to perform the operation";
     }

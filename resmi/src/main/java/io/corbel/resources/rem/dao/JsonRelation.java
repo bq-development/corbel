@@ -12,6 +12,8 @@ import com.google.gson.JsonObject;
  */
 public class JsonRelation {
 
+    private JsonRelation() {}
+
     public static final String ID = "id";
     public static final String _DST_ID = "_dst_id";
     public static final String _SRC_ID = "_src_id";
