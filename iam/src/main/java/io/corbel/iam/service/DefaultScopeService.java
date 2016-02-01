@@ -210,8 +210,8 @@ public class DefaultScopeService implements ScopeService {
         }
         Validate.notNull(scopes);
         Validate.noNullElements(scopes);
-        HashSet<Scope> expandedScopes = new HashSet<>();
-        HashSet<String> processedCompositeScopes = new HashSet<>();
+        Set<Scope> expandedScopes = new HashSet<>();
+        Set<String> processedCompositeScopes = new HashSet<>();
         List<Scope> scopesToProcess = new ArrayList<>(scopes.size());
         scopesToProcess.addAll(getScopes(scopes));
         while (!scopesToProcess.isEmpty()) {
