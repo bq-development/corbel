@@ -8,7 +8,7 @@ import io.corbel.oauth.model.User;
  */
 public interface UserRepository extends PartialUpdateRepository<User, String>, UserRepositoryCustom {
 
-    User findByUsername(String Username);
+    User findByUsername(String username);
 
     User findByEmail(String email);
 

@@ -134,7 +134,7 @@ public class DefaultAuthorizationService implements AuthorizationService {
         LOG.warn("Invalid JWT: {}. Reason {}:{}", assertion, e.getClass().getCanonicalName(), e.getMessage());
     }
 
-    private TokenGrant grantAccess(AuthorizationRequestContext context, OauthParams OauthParams) throws SignatureException,
+    private TokenGrant grantAccess(AuthorizationRequestContext context, OauthParams oauthParams) throws SignatureException,
             UnauthorizedException, MissingOAuthParamsException, OauthServerConnectionException {
         Domain domain = context.getRequestedDomain();
         String oAuthService = context.getOAuthService();
@@ -142,7 +142,7 @@ public class DefaultAuthorizationService implements AuthorizationService {
 
         Optional<Identity> identity;
         try {
-            identity = Optional.ofNullable(provider.getIdentity(OauthParams, oAuthService, domain.getId()));
+            identity = Optional.ofNullable(provider.getIdentity(oauthParams, oAuthService, domain.getId()));
         } catch (MissingOAuthParamsException | UnauthorizedException | OauthServerConnectionException e) {
             throw e;
         } catch (Exception e) {
