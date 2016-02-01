@@ -62,16 +62,14 @@ public class EworkerInfoResource {
         List<Properties> buildMetadataProperties = new ArrayList<>();
 
         for (String propertyFile : propertyFiles) {
-            InputStream buildPropertiesStream = EworkerInfoResource.class.getResourceAsStream(propertyFile);
-            if (buildPropertiesStream != null) {
-                Properties prop = new Properties();
-                try {
+            try(InputStream buildPropertiesStream = EworkerInfoResource.class.getResourceAsStream(propertyFile)) {
+                if (buildPropertiesStream != null) {
+                    Properties prop = new Properties();
                     prop.load(buildPropertiesStream);
-                } catch (IOException e) {
-                    LOG.warn("Problem loading metadata file: "+propertyFile, e);
+                    buildMetadataProperties.add(prop);
                 }
-
-                buildMetadataProperties.add(prop);
+            } catch (IOException e) {
+                LOG.warn("Problem loading metadata file: " + propertyFile, e);
             }
         }
 
