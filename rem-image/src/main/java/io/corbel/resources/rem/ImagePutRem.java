@@ -14,20 +14,15 @@ import javax.ws.rs.core.Response;
 import java.io.InputStream;
 import java.util.Optional;
 
-public class ImagePutRem extends BaseRem<InputStream> {
+public class ImagePutRem extends ImageBaseRem {
 
     private static final Logger LOG = LoggerFactory.getLogger(ImagePutRem.class);
     private final String cacheCollection;
     private final ImageRemUtil imageRemUtil;
-    private RemService remService;
 
     public ImagePutRem(String cacheCollection, ImageRemUtil imageRemUtil) {
         this.cacheCollection = cacheCollection;
         this.imageRemUtil = imageRemUtil;
-    }
-
-    public void setRemService(RemService remService) {
-        this.remService = remService;
     }
 
     @Override

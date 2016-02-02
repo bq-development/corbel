@@ -18,20 +18,15 @@ import javax.ws.rs.core.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ImageDeleteRem extends BaseRem<InputStream> {
+public class ImageDeleteRem extends ImageBaseRem {
 
     private static final Logger LOG = LoggerFactory.getLogger(ImageDeleteRem.class);
     private final String cacheCollection;
     private final ImageRemUtil imageRemUtil;
-    private RemService remService;
 
     public ImageDeleteRem(String cacheCollection, ImageRemUtil imageRemUtil) {
         this.cacheCollection = cacheCollection;
         this.imageRemUtil = imageRemUtil;
-    }
-
-    public void setRemService(RemService remService) {
-        this.remService = remService;
     }
 
     @Override
