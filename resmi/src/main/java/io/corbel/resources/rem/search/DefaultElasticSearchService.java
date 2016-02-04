@@ -136,7 +136,7 @@ public class DefaultElasticSearchService implements ElasticSearchService {
         try {
             client.update(updateRequest).get();
         } catch (InterruptedException | ExecutionException e) {
-            LOG.error(e.getMessage());
+            LOG.error("Error indexing document", e);
         }
     }
 

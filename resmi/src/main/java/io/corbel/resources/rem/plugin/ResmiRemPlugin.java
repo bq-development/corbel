@@ -18,6 +18,8 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 
+import com.codahale.metrics.health.HealthCheck;
+
 @Component public class ResmiRemPlugin extends RemPlugin {
 
     private static final Logger LOG = LoggerFactory.getLogger(ResmiRemPlugin.class);
@@ -52,6 +54,12 @@ import org.springframework.stereotype.Component;
     @Override
     protected String getArtifactName() {
         return ARTIFACT_ID;
+    }
+
+    @Override
+    protected void addHealthCheck(HealthCheckRegistry healthCheckRegistry) {
+        healthCheckRegistry.addHealthCheck(ResmiRemNames.ELASTICSEARCH_HEALTHCHECK,
+                context.getBean(ResmiRemNames.ELASTICSEARCH_HEALTHCHECK, HealthCheck.class));
     }
 
 }
