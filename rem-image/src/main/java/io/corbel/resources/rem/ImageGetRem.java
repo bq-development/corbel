@@ -32,7 +32,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 
-public class ImageGetRem extends BaseRem<Void> {
+public class ImageGetRem extends ImageBaseRem {
 
     public static final String FORMAT_PARAMETER = "image:format";
     public static final String OPERATIONS_PARAMETER = "image:operations";
@@ -44,7 +44,7 @@ public class ImageGetRem extends BaseRem<Void> {
     private final ImageOperationsService imageOperationsService;
     private final ImageCacheService imageCacheService;
     private final String imMemoryLimit;
-    private RemService remService;
+
 
     public ImageGetRem(ImageOperationsService imageOperationsService, ImageCacheService imageCacheService, String memoryLimit) {
         this.imageOperationsService = imageOperationsService;
@@ -54,7 +54,7 @@ public class ImageGetRem extends BaseRem<Void> {
 
     @Override
     public Response resource(String collection, ResourceId resourceId, RequestParameters<ResourceParameters> requestParameters,
-                             Optional<Void> entity) {
+                             Optional<InputStream> entity) {
 
         Rem<?> restorGetRem = remService.getRem(RestorRemNames.RESTOR_GET);
 
@@ -118,12 +118,8 @@ public class ImageGetRem extends BaseRem<Void> {
     }
 
     @Override
-    public Class<Void> getType() {
-        return Void.class;
-    }
-
-    public void setRemService(RemService remService) {
-        this.remService = remService;
+    public Class<InputStream> getType() {
+        return InputStream.class;
     }
 
     private String getOperationsChain(RequestParameters<ResourceParameters> parameters) {
