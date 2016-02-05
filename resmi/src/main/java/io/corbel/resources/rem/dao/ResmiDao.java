@@ -3,7 +3,7 @@ package io.corbel.resources.rem.dao;
 import io.corbel.lib.queries.request.*;
 import io.corbel.resources.rem.model.GenericDocument;
 import io.corbel.resources.rem.model.ResourceUri;
-import io.corbel.resources.rem.resmi.exception.ResmiAggregationException;
+import io.corbel.resources.rem.resmi.exception.InvalidApiParamException;
 
 import java.util.List;
 import java.util.Optional;
@@ -24,16 +24,16 @@ public interface ResmiDao {
     JsonObject findResource(ResourceUri uri);
 
     JsonArray findCollection(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries, Optional<Pagination> pagination,
-            Optional<Sort> sort);
+            Optional<Sort> sort) throws InvalidApiParamException;
 
     JsonElement findRelation(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries, Optional<Pagination> pagination,
-            Optional<Sort> sort);
+            Optional<Sort> sort) throws InvalidApiParamException;
 
     JsonArray findCollectionWithGroup(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries, Optional<Pagination> pagination,
-                                      Optional<Sort> sort, List<String> groups, boolean first) throws ResmiAggregationException;
+                                      Optional<Sort> sort, List<String> groups, boolean first) throws InvalidApiParamException;
 
     JsonArray findRelationWithGroup(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries, Optional<Pagination> pagination,
-                                    Optional<Sort> sort, List<String> groups, boolean first) throws ResmiAggregationException;
+                                    Optional<Sort> sort, List<String> groups, boolean first) throws InvalidApiParamException;
 
     void updateCollection(ResourceUri uri, JsonObject jsonObject, List<ResourceQuery> resourceQueries);
 
@@ -62,7 +62,7 @@ public interface ResmiDao {
     JsonElement min(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field);
 
     JsonArray combine(ResourceUri resourceUri, Optional<List<ResourceQuery>> resourceQueries, Optional<Pagination> pagination,
-                      Optional<Sort> sort, String field, String expression) throws ResmiAggregationException;
+                      Optional<Sort> sort, String field, String expression) throws InvalidApiParamException;
 
     JsonElement histogram(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, Optional<Pagination> pagination,
                               Optional<Sort> sort, String field);

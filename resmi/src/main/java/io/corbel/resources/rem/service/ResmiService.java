@@ -6,7 +6,7 @@ import io.corbel.resources.rem.dao.RelationMoveOperation;
 import io.corbel.resources.rem.model.ResourceUri;
 import io.corbel.resources.rem.request.CollectionParameters;
 import io.corbel.resources.rem.request.RelationParameters;
-import io.corbel.resources.rem.resmi.exception.ResmiAggregationException;
+import io.corbel.resources.rem.resmi.exception.InvalidApiParamException;
 import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
 
 import java.util.List;
@@ -26,19 +26,19 @@ public interface ResmiService {
     String ID = "id";
     String _ID = "_id";
 
-    JsonArray findCollection(ResourceUri uri, Optional<CollectionParameters> apiParameters) throws BadConfigurationException;
+    JsonArray findCollection(ResourceUri uri, Optional<CollectionParameters> apiParameters) throws BadConfigurationException, InvalidApiParamException;
 
     JsonArray findCollectionDistinct(ResourceUri uri, Optional<CollectionParameters> apiParameters, List<String> fields, boolean first)
-            throws BadConfigurationException, ResmiAggregationException;
+            throws BadConfigurationException, InvalidApiParamException;
 
     JsonObject findResource(ResourceUri uri);
 
-    JsonElement findRelation(ResourceUri uri, Optional<RelationParameters> apiParameters) throws BadConfigurationException;
+    JsonElement findRelation(ResourceUri uri, Optional<RelationParameters> apiParameters) throws BadConfigurationException, InvalidApiParamException;
 
-    JsonElement aggregate(ResourceUri uri, CollectionParameters apiParameters) throws BadConfigurationException, ResmiAggregationException;
+    JsonElement aggregate(ResourceUri uri, CollectionParameters apiParameters) throws BadConfigurationException, InvalidApiParamException;
 
     JsonArray findRelationDistinct(ResourceUri uri, Optional<RelationParameters> apiParameters, List<String> fields, boolean first)
-    throws BadConfigurationException, ResmiAggregationException;
+    throws BadConfigurationException, InvalidApiParamException;
 
     JsonObject saveResource(ResourceUri uri, JsonObject object, Optional<String> userId) throws StartsWithUnderscoreException;
 
