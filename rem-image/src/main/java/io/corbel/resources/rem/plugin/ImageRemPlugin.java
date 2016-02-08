@@ -17,7 +17,7 @@ public class ImageRemPlugin extends RemPlugin {
     private static final Logger LOG = LoggerFactory.getLogger(ImageRemPlugin.class);
     private static final String IMAGE_CACHE_COLLECTION = "image.cache.collection";
     private static final String IMAGE_PATH = "image/*";
-    private final String ARTIFACT_ID = "rem-image";
+    private static final String ARTIFACT_ID = "rem-image";
 
     @Override
     protected void init() {
@@ -30,13 +30,13 @@ public class ImageRemPlugin extends RemPlugin {
     @Override
     protected void register(RemRegistry registry) {
         String cacheCollection = context.getEnvironment().getProperty(IMAGE_CACHE_COLLECTION);
-        registerRem(RemImageIocNames.REM_GET,HttpMethod.GET, registry, cacheCollection, ImageGetRem.class);
-        registerRem(RemImageIocNames.REM_PUT,HttpMethod.PUT, registry, cacheCollection, ImagePutRem.class);
-        registerRem(RemImageIocNames.REM_DELETE,HttpMethod.DELETE, registry, cacheCollection, ImageDeleteRem.class);
+        registerRem(RemImageIocNames.REM_GET,HttpMethod.GET, registry, cacheCollection);
+        registerRem(RemImageIocNames.REM_PUT,HttpMethod.PUT, registry, cacheCollection);
+        registerRem(RemImageIocNames.REM_DELETE,HttpMethod.DELETE, registry, cacheCollection);
     }
 
-    private <T extends ImageBaseRem> void registerRem(String remImageIocNames, HttpMethod httpMethod, RemRegistry registry, String cacheCollection, Class<T> clazz) {
-        T beanImageRem = (T) context.getBean(remImageIocNames, Rem.class);
+    private void registerRem(String remImageIocNames, HttpMethod httpMethod, RemRegistry registry, String cacheCollection) {
+        ImageBaseRem beanImageRem = (ImageBaseRem) context.getBean(remImageIocNames, Rem.class);
         beanImageRem.setRemService(remService);
         registry.registerRem(beanImageRem, "^(?!" + cacheCollection + "$).*",
                 MediaType.parseMediaType(IMAGE_PATH), httpMethod);
