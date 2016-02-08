@@ -1,20 +1,19 @@
 package io.corbel.resources.rem.search;
 
-import static org.junit.Assert.assertEquals;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.corbel.lib.queries.exception.MalformedJsonQueryException;
 import io.corbel.lib.queries.parser.CustomJsonParser;
 import io.corbel.lib.queries.parser.JacksonQueryParser;
 import io.corbel.lib.queries.request.ResourceQuery;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import org.elasticsearch.index.query.QueryBuilder;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Rubén Carrasco
@@ -38,8 +37,9 @@ public class ElasticSearchResourceQueryBuilderTest {
         QueryBuilder query2 = ElasticSearchResourceQueryBuilder.build(SEARCH, queryParser.parse("[{\"name\":\"Metallica\"}]"));
         assertEquals(query.toString(), query2.toString());
         JsonNode result = jsonParser.readValueAsTree(query.toString());
-        assertEquals("{\"query_string\":{\"query\":\"search string\"}}", result.get("filtered").get("query").toString());
-        assertEquals("{\"term\":{\"name\":\"Metallica\"}}", getAndFilters(result, 0).get(0).toString());
+        JsonNode jsonNode = result.get("bool").get("should");
+        assertEquals("{\"query_string\":{\"query\":\"search string\"}}", jsonNode.get("bool").get("must").toString());
+        assertEquals("{\"term\":{\"name\":\"Metallica\"}}", jsonNode.get("bool").get("filter").toString());
     }
 
     @Test
@@ -48,8 +48,9 @@ public class ElasticSearchResourceQueryBuilderTest {
         resourceQueries.add(queryParser.parse("[{\"$ne\":{\"name\":\"Metallica\"}}]"));
         QueryBuilder builder = ElasticSearchResourceQueryBuilder.build(SEARCH, resourceQueries);
         JsonNode result = jsonParser.readValueAsTree(builder.toString());
-        assertEquals("{\"query_string\":{\"query\":\"search string\"}}", result.get("filtered").get("query").toString());
-        assertEquals("{\"not\":{\"filter\":{\"term\":{\"name\":\"Metallica\"}}}}", getAndFilters(result, 0).get(0).toString());
+        JsonNode jsonNode = result.get("bool").get("should");
+        assertEquals("{\"query_string\":{\"query\":\"search string\"}}", jsonNode.get("bool").get("must").toString());
+        assertEquals("{\"term\":{\"name\":\"Metallica\"}}", jsonNode.get("bool").get("must_not").toString());
     }
 
     @Test
@@ -59,15 +60,24 @@ public class ElasticSearchResourceQueryBuilderTest {
         resourceQueries.add(queryParser.parse("[{\"$lte\":{\"duration\":245.0}},{\"$gt\":{\"duration\":245.0}}]"));
         QueryBuilder builder = ElasticSearchResourceQueryBuilder.build(SEARCH, resourceQueries);
         JsonNode result = jsonParser.readValueAsTree(builder.toString());
-        assertEquals("{\"query_string\":{\"query\":\"search string\"}}", result.get("filtered").get("query").toString());
+        JsonNode jsonNode = result.get("bool").get("should");
+
+        assertEquals("{\"query_string\":{\"query\":\"search string\"}}", jsonNode.get(0).get("bool").get("must").toString());
+        assertEquals("{\"query_string\":{\"query\":\"search string\"}}", jsonNode.get(1).get("bool").get("must").toString());
+
+
+        JsonNode ranges = jsonNode.get(0).get("bool").get("filter");
+
         assertEquals("{\"range\":{\"duration\":{\"from\":null,\"to\":238.0,\"include_lower\":true,\"include_upper\":false}}}",
-                getAndFilters(result, 0).get(0).toString());
+                ranges.get(0).toString());
         assertEquals("{\"range\":{\"duration\":{\"from\":238.0,\"to\":null,\"include_lower\":true,\"include_upper\":true}}}",
-                getAndFilters(result, 0).get(1).toString());
+                ranges.get(1).toString());
+
+        ranges = jsonNode.get(1).get("bool").get("filter");
         assertEquals("{\"range\":{\"duration\":{\"from\":null,\"to\":245.0,\"include_lower\":true,\"include_upper\":true}}}",
-                getAndFilters(result, 1).get(0).toString());
+                ranges.get(0).toString());
         assertEquals("{\"range\":{\"duration\":{\"from\":245.0,\"to\":null,\"include_lower\":false,\"include_upper\":true}}}",
-                getAndFilters(result, 1).get(1).toString());
+                ranges.get(1).toString());
     }
 
     @Test
@@ -75,8 +85,9 @@ public class ElasticSearchResourceQueryBuilderTest {
         ResourceQuery resourceQuery = queryParser.parse("[{\"$in\":{\"categories\":[\"Metallica\"]}}]");
         QueryBuilder builder = ElasticSearchResourceQueryBuilder.build(SEARCH, resourceQuery);
         JsonNode result = jsonParser.readValueAsTree(builder.toString());
-        assertEquals("{\"query_string\":{\"query\":\"search string\"}}", result.get("filtered").get("query").toString());
-        assertEquals("{\"terms\":{\"categories\":[\"Metallica\"]}}", getAndFilters(result, 0).get(0).toString());
+        JsonNode jsonNode = result.get("bool").get("should");
+        assertEquals("{\"query_string\":{\"query\":\"search string\"}}", jsonNode.get("bool").get("must").toString());
+        assertEquals("{\"terms\":{\"categories\":[\"Metallica\"]}}", jsonNode.get("bool").get("filter").toString());
     }
 
     @Test
@@ -84,8 +95,9 @@ public class ElasticSearchResourceQueryBuilderTest {
         ResourceQuery resourceQuery = queryParser.parse("[{\"$nin\":{\"categories\":[\"Metallica\"]}}]");
         QueryBuilder builder = ElasticSearchResourceQueryBuilder.build(SEARCH, resourceQuery);
         JsonNode result = jsonParser.readValueAsTree(builder.toString());
-        assertEquals("{\"query_string\":{\"query\":\"search string\"}}", result.get("filtered").get("query").toString());
-        assertEquals("{\"not\":{\"filter\":{\"terms\":{\"categories\":[\"Metallica\"]}}}}", getAndFilters(result, 0).get(0).toString());
+        JsonNode jsonNode = result.get("bool").get("should");
+        assertEquals("{\"query_string\":{\"query\":\"search string\"}}", jsonNode.get("bool").get("must").toString());
+        assertEquals("{\"terms\":{\"categories\":[\"Metallica\"]}}", jsonNode.get("bool").get("must_not").toString());
     }
 
     @Test
@@ -93,8 +105,9 @@ public class ElasticSearchResourceQueryBuilderTest {
         ResourceQuery resourceQuery = queryParser.parse("[{\"$exists\":{\"categories\":true}}]");
         QueryBuilder builder = ElasticSearchResourceQueryBuilder.build(SEARCH, resourceQuery);
         JsonNode result = jsonParser.readValueAsTree(builder.toString());
-        assertEquals("{\"query_string\":{\"query\":\"search string\"}}", result.get("filtered").get("query").toString());
-        assertEquals("{\"exists\":{\"field\":\"categories\"}}", getAndFilters(result, 0).get(0).toString());
+        JsonNode jsonNode = result.get("bool").get("should");
+        assertEquals("{\"query_string\":{\"query\":\"search string\"}}", jsonNode.get("bool").get("must").toString());
+        assertEquals("{\"exists\":{\"field\":\"categories\"}}", jsonNode.get("bool").get("filter").toString());
     }
 
     @Test
@@ -102,8 +115,9 @@ public class ElasticSearchResourceQueryBuilderTest {
         ResourceQuery resourceQuery = queryParser.parse("[{\"$exists\":{\"categories\":false}}]");
         QueryBuilder builder = ElasticSearchResourceQueryBuilder.build(SEARCH, resourceQuery);
         JsonNode result = jsonParser.readValueAsTree(builder.toString());
-        assertEquals("{\"query_string\":{\"query\":\"search string\"}}", result.get("filtered").get("query").toString());
-        assertEquals("{\"not\":{\"filter\":{\"exists\":{\"field\":\"categories\"}}}}", getAndFilters(result, 0).get(0).toString());
+        JsonNode jsonNode = result.get("bool").get("should");
+        assertEquals("{\"query_string\":{\"query\":\"search string\"}}", jsonNode.get("bool").get("must").toString());
+        assertEquals("{\"exists\":{\"field\":\"categories\"}}", jsonNode.get("bool").get("must_not").toString());
     }
 
     @Test
@@ -112,8 +126,8 @@ public class ElasticSearchResourceQueryBuilderTest {
         ResourceQuery resourceQuery = queryParser.parse(queryString);
         QueryBuilder builder = ElasticSearchResourceQueryBuilder.build(SEARCH, resourceQuery);
         JsonNode result = jsonParser.readValueAsTree(builder.toString());
-        assertEquals("{\"query_string\":{\"query\":\"search string\"}}", result.get("filtered").get("query").toString());
-        assertEquals("[{\"and\":{\"filters\":[]}}]", getOrFilters(result).toString());
+        JsonNode jsonNode = result.get("bool").get("should");
+        assertEquals("{\"query_string\":{\"query\":\"search string\"}}", jsonNode.get("bool").get("must").toString());
     }
 
     @Test
@@ -123,13 +137,4 @@ public class ElasticSearchResourceQueryBuilderTest {
         JsonNode result = jsonParser.readValueAsTree(builder.toString());
         assertEquals("{\"query_string\":{\"query\":\"search string\"}}", result.toString());
     }
-
-    private JsonNode getAndFilters(JsonNode result, int orIndex) {
-        return getOrFilters(result).get(orIndex).get("and").get("filters");
-    }
-
-    private JsonNode getOrFilters(JsonNode result) {
-        return result.get("filtered").get("filter").get("or").get("filters");
-    }
-
 }

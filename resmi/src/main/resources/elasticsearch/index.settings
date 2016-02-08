@@ -26,7 +26,7 @@
             "lowercase",
             "asciifolding",
             "spanish_stop_words",
-            "nGram_filter", 
+            "nGram_filter",
             "icu_collation"
           ]
         },
@@ -36,7 +36,7 @@
           "filter": [
             "lowercase",
             "asciifolding",
-            "spanish_stop_words", 
+            "spanish_stop_words",
             "icu_collation"
           ]
         }
