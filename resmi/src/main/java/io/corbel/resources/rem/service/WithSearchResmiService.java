@@ -81,7 +81,7 @@ public class WithSearchResmiService extends DefaultResmiService implements Searc
     }
 
     private JsonElement countWithSearchService(ResourceUri resourceUri, CollectionParameters apiParameters)
-            throws BadConfigurationException {
+            throws BadConfigurationException, InvalidApiParamException {
         Search searchObject = apiParameters.getSearch().get();
         if (searchObject.getText().isPresent()) {
             List<ResourceQuery> queries = apiParameters.getQueries().orElseGet(ArrayList::new);

@@ -17,6 +17,7 @@ import io.corbel.lib.queries.request.ResourceQuery;
 import io.corbel.lib.queries.request.Sort;
 import io.corbel.resources.rem.dao.NamespaceNormalizer;
 import io.corbel.resources.rem.model.ResourceUri;
+import io.corbel.resources.rem.resmi.exception.InvalidApiParamException;
 
 /**
  * @author Francisco Sanchez
@@ -75,7 +76,7 @@ public class DefaultResmiSearch implements ResmiSearch {
     }
 
     @Override
-    public JsonArray search(ResourceUri uri, String templateName, Map<String, Object> templateParams, int page, int size) {
+    public JsonArray search(ResourceUri uri, String templateName, Map<String, Object> templateParams, int page, int size) throws InvalidApiParamException {
         if (upsertResmiIndex(uri)) {
             return elasticSearchService.search(getIndexName(uri), getElasticSearchType(uri), templateName, templateParams, page, size);
         } else {
@@ -84,7 +85,7 @@ public class DefaultResmiSearch implements ResmiSearch {
     }
 
     @Override
-    public JsonArray search(ResourceUri uri, String search, List<ResourceQuery> queries, Pagination pagination, Optional<Sort> sort) {
+    public JsonArray search(ResourceUri uri, String search, List<ResourceQuery> queries, Pagination pagination, Optional<Sort> sort) throws InvalidApiParamException {
         if (upsertResmiIndex(uri)) {
             return elasticSearchService
                     .search(getIndexName(uri), getElasticSearchType(uri), search, queries, pagination, sort);
@@ -94,7 +95,7 @@ public class DefaultResmiSearch implements ResmiSearch {
     }
 
     @Override
-    public JsonElement count(ResourceUri uri, String templateName, Map<String, Object> templateParams) {
+    public JsonElement count(ResourceUri uri, String templateName, Map<String, Object> templateParams) throws InvalidApiParamException {
         if (upsertResmiIndex(uri)) {
             return aggregationResultsFactory.countResult(elasticSearchService.count(getIndexName(uri), getElasticSearchType(uri), templateName, templateParams));
         } else {

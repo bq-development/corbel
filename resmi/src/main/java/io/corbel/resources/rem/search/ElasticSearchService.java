@@ -9,6 +9,7 @@ import com.google.gson.JsonArray;
 import io.corbel.lib.queries.request.Pagination;
 import io.corbel.lib.queries.request.ResourceQuery;
 import io.corbel.lib.queries.request.Sort;
+import io.corbel.resources.rem.resmi.exception.InvalidApiParamException;
 
 /**
  * Created by Francisco Sanchez on 18/12/15.
@@ -26,13 +27,13 @@ public interface ElasticSearchService {
 
     void addTemplate(String index, String source);
 
-    JsonArray search(String index, String type, String search, List<ResourceQuery> queries, Pagination pagination, Optional<Sort> sort);
+    JsonArray search(String index, String type, String search, List<ResourceQuery> queries, Pagination pagination, Optional<Sort> sort) throws InvalidApiParamException;
 
-    JsonArray search(String index, String type, String templateName, Map<String, Object> templateParams, int page, int size);
+    JsonArray search(String index, String type, String templateName, Map<String, Object> templateParams, int page, int size) throws InvalidApiParamException;
 
     long count(String index, String type, String search, List<ResourceQuery> queries);
 
-    long count(String index, String type, String templateName, Map<String, Object> templateParams);
+    long count(String index, String type, String templateName, Map<String, Object> templateParams) throws InvalidApiParamException;
 
     void indexDocument(String index, String type, String id, String source);
 
