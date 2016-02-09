@@ -63,6 +63,7 @@
     <module>oauth-server</module>
     <module>oauth-filter-api</module>
     <module>rem-acl</module>
+    <module>notifications</module>
   </modules>
   <dependencies>
     <dependency>
