@@ -8,6 +8,7 @@ import io.corbel.resources.rem.model.RestorResourceUri;
  */
 public class DefaultKeyNormalizer implements KeyNormalizer {
 
+    @Override
     public String normalize(RestorResourceUri resourceUri) {
         String normalizedMediaType = resourceUri.getMediaType().replace("/", "_");
         String collection = resourceUri.getType();
@@ -19,4 +20,10 @@ public class DefaultKeyNormalizer implements KeyNormalizer {
             return Joiner.on("/").join(resourceUri.getDomain(), collection, Joiner.on(".").join(resource, normalizedMediaType));
         }
     }
+
+    @Override
+    public String normalize(RestorResourceUri uri, String prefix) {
+        return Joiner.on('/').join(uri.getDomain(), uri.getType(), prefix);
+    }
+
 }
