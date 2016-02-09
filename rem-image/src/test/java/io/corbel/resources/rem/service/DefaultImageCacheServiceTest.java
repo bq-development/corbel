@@ -1,11 +1,17 @@
 package io.corbel.resources.rem.service;
 
-import io.corbel.resources.rem.Rem;
-import io.corbel.resources.rem.exception.ImageOperationsException;
-import io.corbel.resources.rem.format.ImageFormat;
-import io.corbel.resources.rem.request.RequestParameters;
-import io.corbel.resources.rem.request.ResourceId;
-import io.corbel.resources.rem.request.ResourceParameters;
+import static org.fest.assertions.api.Assertions.assertThat;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.*;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.util.Optional;
+
+import javax.ws.rs.core.Response;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -13,16 +19,12 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import javax.ws.rs.core.Response;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
-import java.util.Optional;
-
-import static org.fest.assertions.api.Assertions.assertThat;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.*;
+import io.corbel.resources.rem.Rem;
+import io.corbel.resources.rem.exception.ImageOperationsException;
+import io.corbel.resources.rem.format.ImageFormat;
+import io.corbel.resources.rem.request.RequestParameters;
+import io.corbel.resources.rem.request.ResourceId;
+import io.corbel.resources.rem.request.ResourceParameters;
 
 @RunWith(MockitoJUnitRunner.class)
 public class DefaultImageCacheServiceTest {
@@ -51,7 +53,7 @@ public class DefaultImageCacheServiceTest {
 
         when(responseMock.getStatus()).thenReturn(200);
         when(responseMock.getEntity()).thenReturn(mockStreamResponse);
-        when(remMock.resource("images:ImageCache", new ResourceId(RESOURCE_ID.getId() + "." + COLLECTION_TEST + "."
+        when(remMock.resource("images:ImageCache", new ResourceId(COLLECTION_TEST + "." + RESOURCE_ID.getId() + "."
                 + "resize=(150, 100)" + "." + imageFormat.get()), parameters, Optional.empty())).thenReturn(responseMock);
 
         DefaultImageCacheService defaultImageCacheService = new DefaultImageCacheService("images:ImageCache");
@@ -66,7 +68,7 @@ public class DefaultImageCacheServiceTest {
 
         when(responseMock.getStatus()).thenReturn(200);
         when(responseMock.getEntity()).thenReturn(mockStreamResponse);
-        when(remMock.resource("images:ImageCache", new ResourceId(RESOURCE_ID.getId() + "." + COLLECTION_TEST + "."
+        when(remMock.resource("images:ImageCache", new ResourceId(COLLECTION_TEST + "." + RESOURCE_ID.getId() + "."
                 + "resize=(150, 100)"), parameters, Optional.empty())).thenReturn(responseMock);
 
         DefaultImageCacheService defaultImageCacheService = new DefaultImageCacheService("images:ImageCache");
@@ -78,7 +80,7 @@ public class DefaultImageCacheServiceTest {
     public void getFromCacheNotFoundTest() {
         Response responseMock = mock(Response.class);
         when(responseMock.getEntity()).thenReturn(null);
-        when(remMock.resource("images:ImageCache", new ResourceId(RESOURCE_ID.getId() + "." + COLLECTION_TEST + "."
+        when(remMock.resource("images:ImageCache", new ResourceId(COLLECTION_TEST + "." + RESOURCE_ID.getId() + "."
                 + "resize=(150, 100)" + "." + imageFormat.get()), parameters, Optional.empty())).thenReturn(responseMock);
 
         DefaultImageCacheService defaultImageCacheService = new DefaultImageCacheService("images:ImageCache");
@@ -95,7 +97,7 @@ public class DefaultImageCacheServiceTest {
                 .saveInCacheAsync(remMock, RESOURCE_ID, "resize=(150, 100)", imageFormat, 123123l, COLLECTION_TEST, parameters, mockFile);
         ArgumentCaptor<RequestParameters> argument = ArgumentCaptor.forClass(RequestParameters.class);
         verify(remMock).resource(eq("images:ImageCache"),
-                eq(new ResourceId(RESOURCE_ID.getId() + "." + COLLECTION_TEST + "." + "resize=(150, 100)" + "." + imageFormat.get())), argument.capture(),
+                eq(new ResourceId(COLLECTION_TEST + "." + RESOURCE_ID.getId() + "." + "resize=(150, 100)" + "." + imageFormat.get())), argument.capture(),
                 eq(Optional.of(mockStream)));
 
         assertThat(argument.getValue().getContentLength()).isEqualTo(123123l);
@@ -111,7 +113,7 @@ public class DefaultImageCacheServiceTest {
                 .saveInCacheAsync(remMock, RESOURCE_ID, "resize=(150, 100)", imageFormatNull, 123123l, COLLECTION_TEST, parameters, mockFile);
         ArgumentCaptor<RequestParameters> argument = ArgumentCaptor.forClass(RequestParameters.class);
         verify(remMock).resource(eq("images:ImageCache"),
-                eq(new ResourceId(RESOURCE_ID.getId() + "." + COLLECTION_TEST + "." + "resize=(150, 100)")), argument.capture(),
+                eq(new ResourceId(COLLECTION_TEST + "." + RESOURCE_ID.getId() + "." + "resize=(150, 100)")), argument.capture(),
                 eq(Optional.of(mockStream)));
 
         assertThat(argument.getValue().getContentLength()).isEqualTo(123123l);
