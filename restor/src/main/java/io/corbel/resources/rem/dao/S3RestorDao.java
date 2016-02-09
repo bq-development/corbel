@@ -4,7 +4,6 @@ import org.springframework.http.MediaType;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.*;
-import com.google.common.base.Joiner;
 
 import io.corbel.resources.rem.model.RestorInputStream;
 import io.corbel.resources.rem.model.RestorObject;
@@ -71,7 +70,7 @@ public class S3RestorDao implements RestorDao {
     @Override
     public void deleteObjectWithPrefix(RestorResourceUri resourceUri, String prefix) {
         ObjectListing objectListing = amazonS3Client
-                .listObjects(new ListObjectsRequest().withBucketName(bucket).withPrefix(generatePrefixPath(resourceUri, prefix)));
+                .listObjects(new ListObjectsRequest().withBucketName(bucket).withPrefix(keyNormalizer.normalize(resourceUri, prefix)));
         boolean truncated;
 
         do {
@@ -81,10 +80,6 @@ public class S3RestorDao implements RestorDao {
                 objectListing = amazonS3Client.listNextBatchOfObjects(objectListing);
             }
         } while (truncated);
-    }
-
-    private String generatePrefixPath(RestorResourceUri resourceUri, String prefix) {
-        return Joiner.on('/').join(resourceUri.getDomain(), resourceUri.getType(), prefix);
     }
 
     private void deleteObject(String key, int retryNumber) {
