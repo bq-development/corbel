@@ -87,11 +87,7 @@ import java.util.stream.Collectors;
 
         user.setDomain(domain.getId());
 
-        if (user.getScopes() == null || user.getScopes().isEmpty()) {
-            user.setScopes(domain.getDefaultScopes());
-        } else if (!domainService.scopesAllowedInDomain(user.getScopes(), domain)) {
-            return IamErrorResponseFactory.getInstance().scopesNotAllowed(domain.getId());
-        }
+        user.setScopes(domain.getDefaultScopes());
 
         setTracebleEntity(user, authorizationInfo);
 
