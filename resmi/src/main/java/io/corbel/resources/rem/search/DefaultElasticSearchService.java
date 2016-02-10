@@ -1,17 +1,15 @@
 package io.corbel.resources.rem.search;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import io.corbel.lib.queries.request.Pagination;
 import io.corbel.lib.queries.request.ResourceQuery;
 import io.corbel.lib.queries.request.Sort;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.ExecutionException;
-
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.close.CloseIndexRequest;
+import org.elasticsearch.action.admin.indices.create.CreateIndexAction;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
+import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
 import org.elasticsearch.action.admin.indices.open.OpenIndexRequest;
 import org.elasticsearch.action.search.SearchRequestBuilder;
@@ -19,13 +17,17 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.script.ScriptService.ScriptType;
 import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 
 /**
  * @author Rubén Carrasco
@@ -45,13 +47,17 @@ public class DefaultElasticSearchService implements ElasticSearchService {
 
     @Override
     public boolean indexExists(String index) {
+        client.admin().cluster().prepareHealth(index).setWaitForYellowStatus().execute();
         return client.admin().indices().prepareExists(index).execute().actionGet().isExists();
     }
 
     @Override
     public void createIndex(String index, String settings) {
-        CreateIndexRequest indexRequest = new CreateIndexRequest(index).settings(settings);
-        client.admin().indices().create(indexRequest).actionGet();
+        client.admin().indices().prepareCreate(index).execute().actionGet();
+        client.admin().cluster().prepareHealth(index).setWaitForYellowStatus().execute().actionGet();
+        client.admin().indices().close(new CloseIndexRequest(index)).actionGet();
+        client.admin().indices().prepareUpdateSettings(settings);
+        client.admin().indices().open(new OpenIndexRequest(index)).actionGet();
     }
 
 
@@ -71,7 +77,7 @@ public class DefaultElasticSearchService implements ElasticSearchService {
     public void setupMapping(String index, String type, String source) {
         if (indexExists(index)) {
             client.admin().indices().close(new CloseIndexRequest(index)).actionGet();
-            PutMappingRequest mappingRequest = new PutMappingRequest(index).type(type).source(source).ignoreConflicts(true);
+            PutMappingRequest mappingRequest = new PutMappingRequest(index).type(type).source(source).updateAllTypes(true);
             client.admin().indices().putMapping(mappingRequest).actionGet();
             client.admin().indices().open(new OpenIndexRequest(index)).actionGet();
         }
@@ -84,7 +90,7 @@ public class DefaultElasticSearchService implements ElasticSearchService {
 
     @Override
     public JsonArray search(String index, String type, String search, List<ResourceQuery> queries, Pagination pagination,
-            Optional<Sort> sort) {
+                            Optional<Sort> sort) {
         SearchRequestBuilder request = client.prepareSearch(index).setTypes(type).setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
                 .setQuery(ElasticSearchResourceQueryBuilder.build(search, queries))
                 .setFrom(pagination.getPage() * pagination.getPageSize()).setSize(pagination.getPageSize());
@@ -114,7 +120,7 @@ public class DefaultElasticSearchService implements ElasticSearchService {
     }
 
     private SearchResponse search(String index, String type, String templateName, Map<String, Object> templateParams,
-            Optional<Integer> page, Optional<Integer> size) {
+                                  Optional<Integer> page, Optional<Integer> size) {
         SearchRequestBuilder request = client.prepareSearch(index).setTypes(type).setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
                 .setTemplateName(templateName).setTemplateType(ScriptType.INDEXED).setTemplateParams(templateParams);
         if (page.isPresent() && size.isPresent()) {
