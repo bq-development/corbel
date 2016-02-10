@@ -4,6 +4,7 @@ import io.corbel.lib.queries.request.QueryLiteral;
 import io.corbel.lib.queries.request.QueryNode;
 import io.corbel.lib.queries.request.QueryOperator;
 import io.corbel.lib.queries.request.ResourceQuery;
+import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -68,7 +69,7 @@ public class ElasticSearchResourceQueryBuilder {
             case $NIN:
                 return QueryBuilders.termsQuery(node.getField(), getValues((List<QueryLiteral>) node.getValue().getLiteral()));
             default:
-                return null;
+                throw new ElasticsearchException("Given filter cannot be applied");
         }
     }
 

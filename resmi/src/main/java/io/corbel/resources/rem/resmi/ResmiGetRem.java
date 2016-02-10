@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 
 import javax.ws.rs.core.Response;
 
+import org.elasticsearch.ElasticsearchException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,7 +52,7 @@ public class ResmiGetRem extends AbstractResmiRem {
                 return buildResponse(resmiService.findCollection(resourceUri, parameters.getOptionalApiParameters()));
             }
 
-        } catch (BadConfigurationException | InvalidApiParamException e) {
+        } catch (BadConfigurationException | InvalidApiParamException | ElasticsearchException e) {
             return ErrorResponseFactory.getInstance().badRequest(new Error("bad_request", e.getMessage()));
         } catch (Exception e) {
             LOG.error("Unexpected error: Failed get collection data", e);
@@ -79,8 +80,8 @@ public class ResmiGetRem extends AbstractResmiRem {
             } else {
                 return buildResponse(resmiService.findRelation(resourceUri, parameters.getOptionalApiParameters()));
             }
-        } catch (InvalidApiParamException rae) {
-            return ErrorResponseFactory.getInstance().badRequest(new Error("bad_request", rae.getMessage()));
+        } catch (InvalidApiParamException | ElasticsearchException e) {
+            return ErrorResponseFactory.getInstance().badRequest(new Error("bad_request", e.getMessage()));
         } catch (Exception e) {
             LOG.error("Unexpected error: Failed get relation data", e);
             return ErrorResponseFactory.getInstance().serverError(e);
