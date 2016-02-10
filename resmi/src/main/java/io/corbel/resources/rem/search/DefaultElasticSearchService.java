@@ -53,11 +53,8 @@ public class DefaultElasticSearchService implements ElasticSearchService {
 
     @Override
     public void createIndex(String index, String settings) {
-        client.admin().indices().prepareCreate(index).execute().actionGet();
+        client.admin().indices().prepareCreate(index).setSettings(settings).execute().actionGet();
         client.admin().cluster().prepareHealth(index).setWaitForYellowStatus().execute().actionGet();
-        client.admin().indices().close(new CloseIndexRequest(index)).actionGet();
-        client.admin().indices().prepareUpdateSettings(settings);
-        client.admin().indices().open(new OpenIndexRequest(index)).actionGet();
     }
 
 
