@@ -249,6 +249,16 @@ import java.util.stream.Collectors;
     }
 
     @DELETE
+    @Path("/{id}/sessions")
+    public Response deleteAllSessions(@PathParam("id") String userId, @Auth AuthorizationInfo authorizationInfo) {
+        return resolveMeIdAliases(userId, authorizationInfo).filter(user -> userDomainMatchAuthorizationDomain(user, authorizationInfo))
+                .map(user -> {
+                    userService.invalidateAllTokens(user.getId());
+                    return Response.noContent().build();
+                }).orElseGet(() -> IamErrorResponseFactory.getInstance().notFound());
+    }
+
+    @DELETE
     @Path("/{id}")
     public Response deleteUser(@PathParam("id") String userId, @Auth AuthorizationInfo authorizationInfo) {
         Optional<User> optionalUser = resolveMeIdAliases(userId, authorizationInfo);

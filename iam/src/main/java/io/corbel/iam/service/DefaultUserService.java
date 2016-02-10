@@ -117,24 +117,24 @@ public class DefaultUserService implements UserService {
     @Override
     public void signOut(String userId, Optional<String> accessToken) {
         if (accessToken.isPresent()) {
-            // Only invalidate the given token
-            invalidateToken(userId, accessToken.get(), true);
+            invalidateToken(accessToken.get());
+            refreshTokenService.invalidateRefreshToken(userId, accessToken);
         } else {
-            // Invalidate all tokens
-            List<UserToken> allUserTokens = userTokenRepository.findByUserId(userId);
-            if (allUserTokens != null) {
-                allUserTokens.stream().forEach(token -> invalidateToken(userId, token.getToken(), false));
-            }
-            // Invalidate all refresh tokens
+            invalidateAllTokens(userId);
             refreshTokenService.invalidateRefreshToken(userId);
         }
     }
 
-    private void invalidateToken(String userId, String accessToken, boolean invalidateRefreshToken) {
-        authorizationRulesRepository.deleteByToken(accessToken);
-        if (invalidateRefreshToken) {
-            refreshTokenService.invalidateRefreshToken(userId, Optional.of(accessToken));
+    @Override
+    public void invalidateAllTokens(String userId) {
+        List<UserToken> allUserTokens = userTokenRepository.findByUserId(userId);
+        if (allUserTokens != null) {
+            allUserTokens.stream().forEach(token -> invalidateToken(token.getToken()));
         }
+    }
+
+    private void invalidateToken(String accessToken) {
+        authorizationRulesRepository.deleteByToken(accessToken);
         userTokenRepository.delete(accessToken);
     }
 

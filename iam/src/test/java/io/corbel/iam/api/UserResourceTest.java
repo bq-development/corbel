@@ -549,6 +549,7 @@ public class UserResourceTest extends UserResourceTestBase {
     public void testSignOutMe() {
         when(userServiceMock.findById(TEST_USER_ID)).thenReturn(getTestUser());
         when(userServiceMock.findUserDomain(TEST_USER_ID)).thenReturn(TEST_DOMAIN_ID);
+        when(authorizationInfoMock.getUserId()).thenReturn(TEST_USER_ID);
         when(authorizationInfoMock.getToken()).thenReturn(TEST_TOKEN);
 
         Response response = RULE.client().target("/v1.0/user/me/signout").request(MediaType.APPLICATION_JSON)
@@ -556,6 +557,46 @@ public class UserResourceTest extends UserResourceTestBase {
         assertThat(response.getStatus()).isEqualTo(204);
 
         verify(userServiceMock).signOut(TEST_USER_ID, java.util.Optional.of(TEST_TOKEN));
+    }
+
+    @Test
+    public void testSignOutMeWithoutUser() {
+        when(userServiceMock.findById(TEST_USER_ID)).thenReturn(getTestUser());
+        when(userServiceMock.findUserDomain(TEST_USER_ID)).thenReturn(TEST_DOMAIN_ID);
+        when(authorizationInfoMock.getUserId()).thenReturn(null);
+        when(authorizationInfoMock.getToken()).thenReturn(TEST_TOKEN);
+
+        Response response = RULE.client().target("/v1.0/user/me/signout").request(MediaType.APPLICATION_JSON)
+                .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).put(Entity.json(""), Response.class);
+        assertThat(response.getStatus()).isEqualTo(404);
+
+    }
+
+    @Test
+    public void testDeleteSessionsMe() {
+        when(userServiceMock.findById(TEST_USER_ID)).thenReturn(getTestUser());
+        when(userServiceMock.findUserDomain(TEST_USER_ID)).thenReturn(TEST_DOMAIN_ID);
+        when(authorizationInfoMock.getUserId()).thenReturn(TEST_USER_ID);
+        when(authorizationInfoMock.getToken()).thenReturn(TEST_TOKEN);
+
+        Response response = RULE.client().target("/v1.0/user/me/sessions").request(MediaType.APPLICATION_JSON)
+                .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).delete(Response.class);
+        assertThat(response.getStatus()).isEqualTo(204);
+
+        verify(userServiceMock).invalidateAllTokens(TEST_USER_ID);
+    }
+
+    @Test
+    public void testDeleteSessionsMeWithoutUser() {
+        when(userServiceMock.findById(TEST_USER_ID)).thenReturn(getTestUser());
+        when(userServiceMock.findUserDomain(TEST_USER_ID)).thenReturn(TEST_DOMAIN_ID);
+        when(authorizationInfoMock.getUserId()).thenReturn(null);
+        when(authorizationInfoMock.getToken()).thenReturn(TEST_TOKEN);
+
+        Response response = RULE.client().target("/v1.0/user/me/sessions").request(MediaType.APPLICATION_JSON)
+                .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).delete(Response.class);
+        assertThat(response.getStatus()).isEqualTo(404);
+
     }
 
     @Test
