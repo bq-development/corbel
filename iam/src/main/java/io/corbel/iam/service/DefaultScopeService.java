@@ -109,11 +109,7 @@ public class DefaultScopeService implements ScopeService {
                 String value = parameters.get(entry.getKey());
                 if (Pattern.matches(entry.getValue().getAsString(), value)) {
                     resultScope.getParameters().add(entry.getKey(), new JsonPrimitive(value));
-                } else {
-                    throw new IllegalStateException("Custom parameter " + entry.getKey() + " doesn't match with any asset parameter");
                 }
-            } else {
-                throw new IllegalStateException("Asset doesn't contain parameter " + entry.getKey() + " value");
             }
         });
         return resultScope;
@@ -218,7 +214,7 @@ public class DefaultScopeService implements ScopeService {
             Scope scope = scopesToProcess.remove(0);
             if (scope.isComposed()) {
                 if (processedCompositeScopes.add(scope.getId())) {
-                    scopesToProcess.addAll(getScopes(scope.getScopes()));
+                    scopesToProcess.addAll(getScopes(addParams(scope.getScopes(), Optional.ofNullable(scope.getParameters()))));
                 }
             } else {
                 expandedScopes.add(scope);
@@ -226,6 +222,20 @@ public class DefaultScopeService implements ScopeService {
         }
         return expandedScopes;
     }
+
+    private Set<String> addParams(Set<String> scopes, Optional<JsonObject> parameters) {
+        if (parameters.isPresent()) {
+            String params = "";
+            for (Map.Entry<String, JsonElement> entry : parameters.get().entrySet()) {
+                params += ";" + entry.getKey() + "=" + entry.getValue().getAsString();
+            }
+            final String finalParams = params;
+            return scopes.stream().map(s -> s + finalParams).collect(Collectors.toSet());
+        } else {
+            return scopes;
+        }
+    }
+
 
     @Override
     public void create(Scope scope) throws ScopeNameException, ScopeAbsentIdException {
