@@ -11,6 +11,8 @@ import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.core.MediaType;
 import java.util.Set;
 
+import static org.mockito.Mockito.mock;
+
 /**
  * @author Alexander De Leon
  */
@@ -19,7 +21,7 @@ public abstract class UserResourceTestBase {
     protected static final String TEST_CLIENT_ID = "client_id";
     protected static final String TEST_USER_ID = "id";
     protected static final String TEST_DOMAIN_ID = "domain";
-    protected static final Domain TEST_DOMAIN = new Domain();
+    protected static final Domain TEST_DOMAIN = mock(Domain.class);
     protected static final String TEST_OTHER_DOMAIN = "other_domain";
     protected static final String TEST_USER_EMAIL = "some@email.com";
     protected static final String TEST_USER_FIRST_NAME = "firstname";
