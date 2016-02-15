@@ -225,11 +225,11 @@ public class DefaultScopeService implements ScopeService {
 
     private Set<String> addParams(Set<String> scopes, Optional<JsonObject> parameters) {
         if (parameters.isPresent()) {
-            String params = "";
+            StringBuilder params = new StringBuilder();
             for (Map.Entry<String, JsonElement> entry : parameters.get().entrySet()) {
-                params += ";" + entry.getKey() + "=" + entry.getValue().getAsString();
+                params.append( ";" + entry.getKey() + "=" + entry.getValue().getAsString());
             }
-            final String finalParams = params;
+            final String finalParams = params.toString();
             return scopes.stream().map(s -> s + finalParams).collect(Collectors.toSet());
         } else {
             return scopes;
