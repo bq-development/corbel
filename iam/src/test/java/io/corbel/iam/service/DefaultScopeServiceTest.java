@@ -49,12 +49,12 @@ import io.corbel.lib.ws.auth.repository.AuthorizationRulesRepository;
     private static final String TEST_SCOPE_2 = "test_scope2";
     private static final String TEST_COMPOSITE_SCOPE = "test_composite_scope";
     private static final String IAM_AUDIENCE = "iamAudience";
-    private static final String CUSTOM_PARAM_VALUE = ";testId=custom";
-    private static final String TEST_SCOPE_1_WITH_PARAMS = "test_scope1" + CUSTOM_PARAM_VALUE;
-    private static final String TEST_SCOPE_1_WITH_PARAMS_AND_ERRORS = "test_scope1;error" + CUSTOM_PARAM_VALUE;
+    private static final String CUSTOM_PARAM_VALUE = "custom";
+    private static final String TEST_ID_CUSTOM = ";testId="+ CUSTOM_PARAM_VALUE;
+    private static final String TEST_SCOPE_1_WITH_PARAMS = "test_scope1;testId=" + CUSTOM_PARAM_VALUE;
+    private static final String TEST_SCOPE_1_WITH_PARAMS_AND_ERRORS = "test_scope1;error;testId=" + CUSTOM_PARAM_VALUE;
     private static final String TEST_SCOPE_1_WITHOUT_PARAMS = "test_scope1";
     private static final String TEST_SCOPE_1_WITH_NOT_EXIST_PARAMS = "test_scope1;testId=123456";
-    private static final String TEST_SCOPE_1_WITH_WRONG_PARAMS = "test_scope1;testId";
     private static final JsonObject RULE_WITH_PARAMS = JSON_PARSER.parse("{\"uri\" : \"{{testId}}\"}").getAsJsonObject();
     private static final JsonObject RULE_PARAMS = JSON_PARSER.parse("{\"testId\" : \"cus.*\"}").getAsJsonObject();
     private static final JsonObject RULE_WITH_PARAMS_FILLED = JSON_PARSER.parse("{\"testId\" : \"custom\"}").getAsJsonObject();
@@ -224,7 +224,7 @@ import io.corbel.lib.ws.auth.repository.AuthorizationRulesRepository;
     @SuppressWarnings("unchecked")
     @Test
     public void testComposedScopesWithParam() {
-        Set<String> requestScopes = new HashSet<>(Collections.singletonList(TEST_COMPOSITE_SCOPE + CUSTOM_PARAM_VALUE));
+        Set<String> requestScopes = new HashSet<>(Collections.singletonList(TEST_COMPOSITE_SCOPE + TEST_ID_CUSTOM));
 
         Scope scope1 = new Scope(TEST_SCOPE_1, null, IAM_AUDIENCE, null, RULES_3, RULE_PARAMS);
         Scope scope2 = new Scope(TEST_SCOPE_2, null, IAM_AUDIENCE, null, RULES_3, null);
