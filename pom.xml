@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.corbel</groupId>
   <artifactId>corbel</artifactId>
@@ -38,7 +39,7 @@
     <buildmetadata-maven-plugin.version>1.5.2</buildmetadata-maven-plugin.version>
     <lib-config.version>0.3.0</lib-config.version>
     <lib-cli.version>0.4.0</lib-cli.version>
-    <lib-mongodb.version>0.6.0</lib-mongodb.version>
+      <lib-mongodb.version>0.7.0-SNAPSHOT</lib-mongodb.version>
     <lib-token.version>0.8.0</lib-token.version>
     <lib-queries.version>0.14.0</lib-queries.version>
     <lib-ws.version>0.17.0</lib-ws.version>

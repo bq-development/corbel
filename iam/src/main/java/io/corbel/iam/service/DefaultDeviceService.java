@@ -1,5 +1,7 @@
 package io.corbel.iam.service;
 
+import java.time.Clock;
+import java.util.Date;
 import java.util.List;
 
 import io.corbel.iam.model.Device;
@@ -15,11 +17,14 @@ public class DefaultDeviceService implements DeviceService {
     private final DeviceRepository deviceRepository;
     private final IdGenerator<Device> deviceIdGenerator;
     private final EventsService eventsService;
+    private final Clock clock;
 
-    public DefaultDeviceService(DeviceRepository deviceRepository, IdGenerator<Device> deviceIdGenerator, EventsService eventsService) {
+    public DefaultDeviceService(DeviceRepository deviceRepository, IdGenerator<Device> deviceIdGenerator, EventsService eventsService,
+            Clock clock) {
         this.deviceRepository = deviceRepository;
         this.deviceIdGenerator = deviceIdGenerator;
         this.eventsService = eventsService;
+        this.clock = clock;
     }
 
     @Override
@@ -40,10 +45,14 @@ public class DefaultDeviceService implements DeviceService {
     @Override
     public Device update(Device device) {
         device.setId(deviceIdGenerator.generateId(device));
+        device.set_createdAt(null);
+        device.set_updatedAt(Date.from(clock.instant()));
         boolean isPartialUpdate = deviceRepository.upsert(device.getId(), device);
         if (isPartialUpdate) {
             eventsService.sendDeviceUpdateEvent(device);
         } else {
+            device.set_createdAt(device.get_updatedAt());
+            deviceRepository.upsert(device.getId(), new Device().set_createdAt(device.get_updatedAt()));
             eventsService.sendDeviceCreateEvent(device);
         }
         return device;
