@@ -31,8 +31,9 @@ import io.corbel.lib.ws.auth.repository.AuthorizationRulesRepository;
  */
 public class DefaultScopeService implements ScopeService {
     private static final Logger LOG = LoggerFactory.getLogger(DefaultScopeService.class);
-    private static final int SCOPE_ID_POSITION = 0;
-    private static final int FIRST_PARAM_POSITION = 1;
+    static final int SCOPE_ID_POSITION = 0;
+    static final int FIRST_PARAM_POSITION = 1;
+    static final String SCOPE_PARAMS_SEPARATOR = ";";
 
     private final ScopeRepository scopeRepository;
     private final AuthorizationRulesRepository authorizationRulesRepository;
@@ -73,7 +74,7 @@ public class DefaultScopeService implements ScopeService {
         List<Scope> fetchedScopes = new ArrayList<>();
         if (scopes.length > 0) {
             for (String scopeId : scopes) {
-                String[] scopeIdAndParams = scopeId.split(";");
+                String[] scopeIdAndParams = scopeId.split(SCOPE_PARAMS_SEPARATOR);
                 Optional.ofNullable(getScope(scopeIdAndParams[SCOPE_ID_POSITION])).ifPresent(scope -> {
                     if (scopeHasCustomParameters(scope)) {
                         scope = fillScopeCustomParameters(scope, scopeIdAndParams);

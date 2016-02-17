@@ -145,7 +145,7 @@ import io.corbel.lib.ws.auth.repository.AuthorizationRulesRepository;
         params.put("userId", TEST_USER_ID);
         params.put("clientId", TEST_CLIENT_ID);
         params.put("domainId", TEST_DOMAIN);
-        params.put("testId", CUSTOM_PARAM_VALUE);
+        params.put("testId", "custom");
         verify(fillStrategyMock).fillScope(Mockito.same(scope1), Mockito.eq(params));
     }
 
