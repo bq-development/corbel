@@ -180,18 +180,24 @@ import java.util.stream.Collectors;
     public Response getDevices(@PathParam("userId") String userId, @Auth AuthorizationInfo authorizationInfo) {
         User user = getUserResolvingMeAndUserDomainVerifying(userId, authorizationInfo);
         return Optional.ofNullable(deviceService.getByUserId(user.getId()))
-                .map(devices -> Response.ok().type(MediaType.APPLICATION_JSON).entity(devices).build())
+                .map(devices -> {
+                    devices.stream().forEach(device -> device.setId(device.getUid()));
+                    return Response.ok().type(MediaType.APPLICATION_JSON).entity(devices).build();
+                })
                 .orElseGet(() -> IamErrorResponseFactory.getInstance().notFound());
     }
 
     @GET
     @Path("/{userId}/devices/{deviceId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getDevice(@PathParam("userId") String userId, @PathParam("deviceId") String deviceId,
+    public Response getDevice(@PathParam("userId") String userId, @PathParam("deviceId") String deviceUid,
             @Auth AuthorizationInfo authorizationInfo) {
         User user = getUserResolvingMeAndUserDomainVerifying(userId, authorizationInfo);
-        return Optional.ofNullable(deviceService.getByIdAndUserId(deviceId, user.getId()))
-                .map(device -> Response.ok().type(MediaType.APPLICATION_JSON).entity(device).build())
+        return Optional.ofNullable(deviceService.getByUidAndUserId(deviceUid, user.getId(), user.getDomain()))
+                .map(device -> {
+                    device.setId(deviceUid);
+                    return Response.ok().type(MediaType.APPLICATION_JSON).entity(device).build();
+                })
                 .orElseGet(() -> IamErrorResponseFactory.getInstance().notFound());
     }
 
@@ -205,15 +211,15 @@ import java.util.stream.Collectors;
         deviceData.setUserId(user.getId());
         deviceData.setDomain(authorizationInfo.getDomainId());
         Device storeDevice = deviceService.update(deviceData);
-        return Response.created(uriInfo.getAbsolutePathBuilder().path(storeDevice.getId()).build()).build();
+        return Response.created(uriInfo.getAbsolutePathBuilder().path(storeDevice.getUid()).build()).build();
     }
 
     @DELETE
     @Path("/{userId}/devices/{deviceId}")
-    public Response deleteDevice(@PathParam("userId") String userId, @PathParam("deviceId") final String deviceId,
+    public Response deleteDevice(@PathParam("userId") String userId, @PathParam("deviceId") final String deviceUid,
             @Auth AuthorizationInfo authorizationInfo) {
         User user = getUserResolvingMeAndUserDomainVerifying(userId, authorizationInfo);
-        deviceService.deleteByIdAndUserId(deviceId, user.getId(), authorizationInfo.getDomainId());
+        deviceService.deleteByUidAndUserId(deviceUid, user.getId(), authorizationInfo.getDomainId());
         return Response.status(Status.NO_CONTENT).build();
     }
 
