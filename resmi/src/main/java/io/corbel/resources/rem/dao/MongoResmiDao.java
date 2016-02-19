@@ -16,6 +16,7 @@ import io.corbel.resources.rem.model.ResourceUri;
 import io.corbel.resources.rem.resmi.exception.ResmiAggregationException;
 import io.corbel.resources.rem.utils.JsonUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Sort.Direction;
@@ -26,6 +27,7 @@ import org.springframework.data.mongodb.core.aggregation.*;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.expression.spel.SpelParseException;
 
@@ -78,16 +80,19 @@ public class MongoResmiDao implements ResmiDao {
     }
 
     @Override
-    public JsonArray findCollection(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries, Optional<Pagination> pagination,
-            Optional<Sort> sort) {
-        Query query = new MongoResmiQueryBuilder().query(resourceQueries.orElse(null)).pagination(pagination.orElse(null))
-                .sort(sort.orElse(null)).build();
+    public JsonArray findCollection(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries, Optional<String> textSearch, Optional<Pagination> pagination, Optional<Sort> sort) {
+        Query query = new MongoResmiQueryBuilder().query(resourceQueries.orElse(null)).pagination(pagination.orElse(null)).sort(sort.orElse(null)).build();
+        if (textSearch.isPresent())
+        {
+            final TextCriteria textCriteria = TextCriteria.forDefaultLanguage().matching(textSearch.get());
+            query.addCriteria(textCriteria);
+        }
         LOG.debug("findCollection Query executed : " + query.getQueryObject().toString());
         return JsonUtils.convertToArray(mongoOperations.find(query, JsonObject.class, getMongoCollectionName(uri)));
     }
 
     @Override
-    public JsonElement findRelation(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries, Optional<Pagination> pagination,
+    public JsonElement findRelation(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries, Optional<String> textSearch, Optional<Pagination> pagination,
             Optional<Sort> sort) {
         MongoResmiQueryBuilder mongoResmiQueryBuilder = new MongoResmiQueryBuilder();
 
@@ -95,9 +100,14 @@ public class MongoResmiDao implements ResmiDao {
             mongoResmiQueryBuilder.relationDestinationId(uri.getRelationId());
         }
 
-        Query query = mongoResmiQueryBuilder.relationSubjectId(uri).query(resourceQueries.orElse(null)).pagination(pagination.orElse(null))
-                .sort(sort.orElse(null)).build();
+        Query query = mongoResmiQueryBuilder.relationSubjectId(uri).query(resourceQueries.orElse(null)).pagination(pagination.orElse(null)).sort(sort.orElse(null)).build();
         query.fields().exclude(_ID);
+
+        if (textSearch.isPresent() && StringUtils.isNoneEmpty(textSearch.get()))
+        {
+            final TextCriteria textCriteria = TextCriteria.forDefaultLanguage().matching(textSearch.get());
+            query.addCriteria(textCriteria);
+        }
 
         LOG.debug("findRelation Query executed : " + query.getQueryObject().toString());
         JsonArray result = renameIds(JsonUtils.convertToArray(mongoOperations.find(query, JsonObject.class, getMongoCollectionName(uri))), uri.isTypeWildcard());
@@ -114,26 +124,24 @@ public class MongoResmiDao implements ResmiDao {
     }
 
     @Override
-    public JsonArray findCollectionWithGroup(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries,
-            Optional<Pagination> pagination, Optional<Sort> sort, List<String> groups, boolean first) throws ResmiAggregationException {
-        Aggregation aggregation = buildGroupAggregation(uri, resourceQueries, pagination, sort, groups, first);
+    public JsonArray findCollectionWithGroup(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries, Optional<String> textSearch, Optional<Pagination> pagination, Optional<Sort> sort, List<String> groups, boolean first) throws ResmiAggregationException {
+        Aggregation aggregation = buildGroupAggregation(uri, resourceQueries, textSearch, pagination, sort, groups, first);
         List<JsonObject> result = mongoOperations.aggregate(aggregation, getMongoCollectionName(uri), JsonObject.class).getMappedResults();
         return JsonUtils.convertToArray(first ? extractDocuments(result) : result);
     }
 
     @Override
-    public JsonArray findRelationWithGroup(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries, Optional<Pagination> pagination,
-            Optional<Sort> sort, List<String> groups, boolean first) throws ResmiAggregationException {
-        Aggregation aggregation = buildGroupAggregation(uri, resourceQueries, pagination, sort, groups, first);
+    public JsonArray findRelationWithGroup(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries, Optional<String> textSearch, Optional<Pagination> pagination, Optional<Sort> sort, List<String> groups, boolean first) throws ResmiAggregationException {
+        Aggregation aggregation = buildGroupAggregation(uri, resourceQueries, textSearch, pagination, sort, groups, first);
+
         List<JsonObject> result = mongoOperations.aggregate(aggregation, getMongoCollectionName(uri), JsonObject.class).getMappedResults();
         return renameIds(JsonUtils.convertToArray(first ? extractDocuments(result) : result), uri.isTypeWildcard());
     }
 
-    private Aggregation buildGroupAggregation(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries,
-            Optional<Pagination> pagination, Optional<Sort> sort, List<String> fields, boolean first) throws ResmiAggregationException {
+    private Aggregation buildGroupAggregation(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries, Optional<String> textSearch, Optional<Pagination> pagination, Optional<Sort> sort, List<String> fields, boolean first) throws ResmiAggregationException {
 
         MongoAggregationBuilder builder = new MongoAggregationBuilder();
-        builder.match(uri, resourceQueries);
+        builder.match(uri, resourceQueries, textSearch);
 
         builder.group(fields, first);
 

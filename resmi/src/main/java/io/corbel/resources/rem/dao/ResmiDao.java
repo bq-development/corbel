@@ -1,18 +1,18 @@
 package io.corbel.resources.rem.dao;
 
-import io.corbel.lib.queries.request.*;
-import io.corbel.resources.rem.model.GenericDocument;
-import io.corbel.resources.rem.model.ResourceUri;
-import io.corbel.resources.rem.resmi.exception.ResmiAggregationException;
-
-import java.util.List;
-import java.util.Optional;
-
-import org.springframework.data.mongodb.core.index.Index;
-
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import io.corbel.lib.queries.request.Pagination;
+import io.corbel.lib.queries.request.ResourceQuery;
+import io.corbel.lib.queries.request.Sort;
+import io.corbel.resources.rem.model.GenericDocument;
+import io.corbel.resources.rem.model.ResourceUri;
+import io.corbel.resources.rem.resmi.exception.ResmiAggregationException;
+import org.springframework.data.mongodb.core.index.Index;
+
+import java.util.List;
+import java.util.Optional;
 
 /**
  * @author Francisco Sánchez - Rubén Carrasco
@@ -23,17 +23,13 @@ public interface ResmiDao {
 
     JsonObject findResource(ResourceUri uri);
 
-    JsonArray findCollection(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries, Optional<Pagination> pagination,
-            Optional<Sort> sort);
+    JsonArray findCollection(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries, Optional<String> textSearch, Optional<Pagination> pagination, Optional<Sort> sort);
 
-    JsonElement findRelation(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries, Optional<Pagination> pagination,
-            Optional<Sort> sort);
+    JsonElement findRelation(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries, Optional<String> textSearch, Optional<Pagination> pagination, Optional<Sort> sort);
 
-    JsonArray findCollectionWithGroup(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries, Optional<Pagination> pagination,
-                                      Optional<Sort> sort, List<String> groups, boolean first) throws ResmiAggregationException;
+    JsonArray findCollectionWithGroup(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries, Optional<String> textSearch, Optional<Pagination> pagination, Optional<Sort> sort, List<String> groups, boolean first) throws ResmiAggregationException;
 
-    JsonArray findRelationWithGroup(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries, Optional<Pagination> pagination,
-                                    Optional<Sort> sort, List<String> groups, boolean first) throws ResmiAggregationException;
+    JsonArray findRelationWithGroup(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries, Optional<String> textSearch, Optional<Pagination> pagination, Optional<Sort> sort, List<String> groups, boolean first) throws ResmiAggregationException;
 
     void updateCollection(ResourceUri uri, JsonObject jsonObject, List<ResourceQuery> resourceQueries);
 
