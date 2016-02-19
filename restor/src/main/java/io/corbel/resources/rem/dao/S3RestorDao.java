@@ -1,13 +1,21 @@
 package io.corbel.resources.rem.dao;
 
-import org.springframework.http.MediaType;
-
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.*;
-
 import io.corbel.resources.rem.model.RestorInputStream;
 import io.corbel.resources.rem.model.RestorObject;
 import io.corbel.resources.rem.model.RestorResourceUri;
+
+import org.springframework.http.MediaType;
+
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.AmazonS3Exception;
+import com.amazonaws.services.s3.model.DeleteObjectRequest;
+import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.ListObjectsRequest;
+import com.amazonaws.services.s3.model.ObjectListing;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.S3ObjectSummary;
 
 /**
  * @author Alberto J. Rubio
@@ -36,7 +44,8 @@ public class S3RestorDao implements RestorDao {
         try {
             S3Object s3Object = amazonS3Client.getObject(objectRequest);
             String objectType = MediaType.parseMediaType(s3Object.getObjectMetadata().getContentType()).toString();
-            return new RestorObject(objectType, new RestorInputStream(s3Object), s3Object.getObjectMetadata().getContentLength());
+            return new RestorObject(objectType, new RestorInputStream(s3Object), s3Object.getObjectMetadata().getContentLength(), s3Object
+                    .getObjectMetadata().getETag());
         } catch (AmazonS3Exception e) {
             switch (e.getStatusCode()) {
                 case 404:
@@ -69,8 +78,8 @@ public class S3RestorDao implements RestorDao {
 
     @Override
     public void deleteObjectWithPrefix(RestorResourceUri resourceUri, String prefix) {
-        ObjectListing objectListing = amazonS3Client
-                .listObjects(new ListObjectsRequest().withBucketName(bucket).withPrefix(keyNormalizer.normalize(resourceUri, prefix)));
+        ObjectListing objectListing = amazonS3Client.listObjects(new ListObjectsRequest().withBucketName(bucket).withPrefix(
+                keyNormalizer.normalize(resourceUri, prefix)));
         boolean truncated;
 
         do {
