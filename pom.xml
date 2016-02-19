@@ -50,6 +50,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <docker.files>${project.basedir}/../src/docker/service</docker.files>
     <docker.organization>corbel</docker.organization>
+    <docker.name.prefix></docker.name.prefix>
   </properties>
   <modules>
     <module>eworker-api</module>
@@ -407,7 +408,7 @@
           <artifactId>docker-maven-plugin</artifactId>
           <version>0.2.9</version>
           <configuration>
-            <imageName>${docker.organization}/${project.name}</imageName>
+            <imageName>${docker.organization}/${docker.name.prefix}${project.name}</imageName>
             <imageTags>
               <imageTag>${project.version}</imageTag>
             </imageTags>
