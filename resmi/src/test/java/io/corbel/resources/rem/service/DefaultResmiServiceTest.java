@@ -1,28 +1,9 @@
 package io.corbel.resources.rem.service;
 
-import static org.fest.assertions.api.Assertions.assertThat;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.*;
-
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.Clock;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.data.mongodb.core.index.Index;
-
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-
 import io.corbel.lib.queries.request.*;
 import io.corbel.resources.rem.dao.NotFoundException;
 import io.corbel.resources.rem.dao.RelationMoveOperation;
@@ -32,6 +13,23 @@ import io.corbel.resources.rem.request.CollectionParameters;
 import io.corbel.resources.rem.request.RelationParameters;
 import io.corbel.resources.rem.resmi.exception.InvalidApiParamException;
 import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.data.mongodb.core.index.Index;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.Clock;
+import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
+
+import static org.fest.assertions.api.Assertions.assertThat;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.*;
 
 /**
  * @author Francisco Sanchez
@@ -80,8 +78,7 @@ import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
         ResourceUri resourceUri = new ResourceUri(DOMAIN, TYPE);
         JsonArray fakeResult = new JsonArray();
         when(
-                resmiDao.findCollection(eq(resourceUri), eq(Optional.of(resourceQueriesMock)), eq(Optional.of(paginationMock)),
-                        eq(Optional.of(sortMock)))).thenReturn(fakeResult);
+                resmiDao.findCollection(eq(resourceUri), eq(Optional.of(resourceQueriesMock)), any(), eq(Optional.of(paginationMock)), eq(Optional.of(sortMock)))).thenReturn(fakeResult);
         when(collectionParametersMock.getSearch()).thenReturn(Optional.empty());
         JsonArray result = defaultResmiService.findCollection(resourceUri, Optional.of(collectionParametersMock));
         assertThat(fakeResult).isEqualTo(result);
@@ -105,8 +102,7 @@ import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
         ResourceUri resourceUri = new ResourceUri(DOMAIN, TYPE, ID, RELATION_TYPE, "test");
 
         when(
-                resmiDao.findRelation(eq(resourceUri), eq(Optional.of(resourceQueriesMock)), eq(Optional.of(paginationMock)),
-                        eq(Optional.of(sortMock)))).thenReturn(fakeResult);
+                resmiDao.findRelation(eq(resourceUri), eq(Optional.of(resourceQueriesMock)), any(), eq(Optional.of(paginationMock)), eq(Optional.of(sortMock)))).thenReturn(fakeResult);
         when(collectionParametersMock.getSearch()).thenReturn(Optional.empty());
         when(relationParametersMock.getPredicateResource()).thenReturn(Optional.of("test"));
 

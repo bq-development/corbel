@@ -1,23 +1,22 @@
 package io.corbel.resources.rem.dao.builder;
 
-import static org.junit.Assert.assertEquals;
 import io.corbel.lib.queries.builder.ResourceQueryBuilder;
 import io.corbel.lib.queries.request.Pagination;
 import io.corbel.lib.queries.request.ResourceQuery;
 import io.corbel.resources.rem.model.ResourceUri;
 import io.corbel.resources.rem.resmi.exception.InvalidApiParamException;
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Rubén Carrasco
- *
  */
 public class MongoAggregationBuilderTest {
 
@@ -26,6 +25,7 @@ public class MongoAggregationBuilderTest {
     private static final String ASC = "ASC";
     private static final String VALUE = "value";
     private static final String DOMAIN = "DOMAIN";
+    private static final String TEXT_SEARCH_QUERY = "textSearchQuery";
     MongoAggregationBuilder builder;
 
     @Before
@@ -42,6 +42,29 @@ public class MongoAggregationBuilderTest {
                 "{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"field_1\" : \"value\" , \"_src_id\" : \"testRes\"}}]}",
                 agg.toString());
     }
+
+    @Test
+    public void testMatchWithTextSearch() throws InvalidApiParamException {
+        List<ResourceQuery> resourceQueries = new ArrayList<>();
+        resourceQueries.add(new ResourceQueryBuilder().add(FIELD_1, VALUE).build());
+        Aggregation agg = builder.match(new ResourceUri(DOMAIN, "testType", "testRes", "testRel"), Optional.of(resourceQueries), Optional.of(TEXT_SEARCH_QUERY)).build();
+        assertEquals(
+                "{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"field_1\" : \"value\" , \"_src_id\" : \"testRes\" , \"$text\" : { \"$search\" : \"" + TEXT_SEARCH_QUERY + "\"}}}]}",
+                agg.toString());
+    }
+
+
+    @Test
+    public void testMatchWithEmptyTextSearch() throws InvalidApiParamException {
+        List<ResourceQuery> resourceQueries = new ArrayList<>();
+        resourceQueries.add(new ResourceQueryBuilder().add(FIELD_1, VALUE).build());
+        Aggregation agg = builder.match(new ResourceUri(DOMAIN, "testType", "testRes", "testRel"), Optional.of(resourceQueries), Optional.of("")).build();
+        // empty text "" should not result in text search
+        assertEquals(
+                "{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"field_1\" : \"value\" , \"_src_id\" : \"testRes\"}}]}",
+                agg.toString());
+    }
+
 
     @Test
     public void testSort() throws InvalidApiParamException {
