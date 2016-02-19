@@ -71,8 +71,8 @@ import io.corbel.iam.repository.DeviceRepository;
         Device device = deviceService.update(deviceToAdd);
 
         assertThat(deviceToAdd).isEqualTo(device);
-        assertThat(deviceToAdd.get_createdAt()).isEqualTo(new Date(now.toEpochMilli()));
-        assertThat(deviceToAdd.get_updatedAt()).isEqualTo(new Date(now.toEpochMilli()));
+        assertThat(deviceToAdd.getCreatedAt()).isEqualTo(new Date(now.toEpochMilli()));
+        assertThat(deviceToAdd.getUpdatedAt()).isEqualTo(new Date(now.toEpochMilli()));
         verify(eventsServiceMock).sendDeviceCreateEvent(device);
     }
 
@@ -86,8 +86,8 @@ import io.corbel.iam.repository.DeviceRepository;
         Device device = deviceService.update(deviceToUpdate);
 
         assertThat(deviceToUpdate).isEqualTo(device);
-        assertThat(deviceToUpdate.get_createdAt()).isNull();
-        assertThat(deviceToUpdate.get_updatedAt()).isEqualTo(new Date(now.toEpochMilli()));
+        assertThat(deviceToUpdate.getCreatedAt()).isNull();
+        assertThat(deviceToUpdate.getUpdatedAt()).isEqualTo(new Date(now.toEpochMilli()));
         verify(eventsServiceMock).sendDeviceUpdateEvent(device);
     }
 

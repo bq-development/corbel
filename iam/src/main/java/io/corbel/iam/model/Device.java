@@ -4,6 +4,8 @@ import java.util.Date;
 
 import javax.validation.constraints.NotNull;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * @author Francisco Sanchez
  */
@@ -16,8 +18,8 @@ public class Device extends Entity {
     private String name;
     private Type type;
     private Boolean notificationEnabled;
-    private Date _createdAt;
-    private Date _updatedAt;
+    @JsonProperty("_createdAt") private Date createdAt;
+    @JsonProperty("_updatedAt") private Date updatedAt;
 
     public String getDomain() {
         return domain;
@@ -82,21 +84,21 @@ public class Device extends Entity {
         return this;
     }
 
-    public Date get_createdAt() {
-        return _createdAt;
+    public Date getCreatedAt() {
+        return createdAt;
     }
 
-    public Device set_createdAt(Date _createdAt) {
-        this._createdAt = _createdAt;
+    public Device setCreatedAt(Date createdAt) {
+        this.createdAt = createdAt;
         return this;
     }
 
-    public Date get_updatedAt() {
-        return _updatedAt;
+    public Date getUpdatedAt() {
+        return updatedAt;
     }
 
-    public Device set_updatedAt(Date _updatedAt) {
-        this._updatedAt = _updatedAt;
+    public Device setUpdatedAt(Date updatedAt) {
+        this.updatedAt = updatedAt;
         return this;
     }
 
