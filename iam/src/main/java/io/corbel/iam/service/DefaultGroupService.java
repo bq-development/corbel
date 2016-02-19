@@ -82,7 +82,7 @@ public class DefaultGroupService implements GroupService {
             return;
         }
 
-        String notExistentScopes = scopes.stream().filter(scope -> scopeRepository.findOne(scope) == null)
+        String notExistentScopes = scopes.stream().filter(scope -> scopeRepository.findOne(scope.split(DefaultScopeService.SCOPE_PARAMS_SEPARATOR)[DefaultScopeService.SCOPE_ID_POSITION]) == null)
                 .collect(Collectors.joining(", "));
 
         if (!notExistentScopes.isEmpty()) {
