@@ -59,16 +59,14 @@ import io.corbel.resources.rem.plugin.PluginArtifactIdRegistry;
         List<Properties> buildMetadataProperties = new ArrayList<>();
 
         for (String propertyFile : propertyFiles) {
-            InputStream buildPropertiesStream = PluginInfoResource.class.getResourceAsStream(propertyFile);
-            if (buildPropertiesStream != null) {
-                Properties prop = new Properties();
-                try {
+            try(InputStream buildPropertiesStream = PluginInfoResource.class.getResourceAsStream(propertyFile)) {
+                if (buildPropertiesStream != null) {
+                    Properties prop = new Properties();
                     prop.load(buildPropertiesStream);
-                } catch (IOException e) {
-                    LOG.warn("Problem loading metadata file: " + propertyFile, e);
+                    buildMetadataProperties.add(prop);
                 }
-
-                buildMetadataProperties.add(prop);
+            } catch (IOException e) {
+                LOG.warn("Problem loading metadata file: " + propertyFile, e);
             }
         }
 

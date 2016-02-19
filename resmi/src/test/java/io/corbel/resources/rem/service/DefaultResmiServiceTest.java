@@ -30,7 +30,7 @@ import io.corbel.resources.rem.dao.ResmiDao;
 import io.corbel.resources.rem.model.ResourceUri;
 import io.corbel.resources.rem.request.CollectionParameters;
 import io.corbel.resources.rem.request.RelationParameters;
-import io.corbel.resources.rem.resmi.exception.ResmiAggregationException;
+import io.corbel.resources.rem.resmi.exception.InvalidApiParamException;
 import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
 
 /**
@@ -76,7 +76,7 @@ import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
     }
 
     @Test
-    public void findTest() throws BadConfigurationException {
+    public void findTest() throws BadConfigurationException, InvalidApiParamException {
         ResourceUri resourceUri = new ResourceUri(DOMAIN, TYPE);
         JsonArray fakeResult = new JsonArray();
         when(
@@ -100,7 +100,7 @@ import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
     }
 
     @Test
-    public void findRelationTest() throws BadConfigurationException {
+    public void findRelationTest() throws BadConfigurationException, InvalidApiParamException {
         JsonElement fakeResult = new JsonObject();
         ResourceUri resourceUri = new ResourceUri(DOMAIN, TYPE, ID, RELATION_TYPE, "test");
 
@@ -115,7 +115,7 @@ import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
     }
 
     @Test
-    public void countCollectionTest() throws BadConfigurationException, ResmiAggregationException {
+    public void countCollectionTest() throws BadConfigurationException, InvalidApiParamException {
         JsonElement fakeResult = new JsonObject();
         when(resmiDao.count(eq(new ResourceUri(DOMAIN, TYPE)), eq(resourceQueriesMock))).thenReturn(fakeResult);
         when(collectionParametersMock.getAggregation()).thenReturn(Optional.of(new Count("*")));
@@ -125,7 +125,7 @@ import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
     }
 
     @Test
-    public void countRelationTest() throws BadConfigurationException, ResmiAggregationException {
+    public void countRelationTest() throws BadConfigurationException, InvalidApiParamException {
         JsonElement fakeResult = new JsonObject();
         ResourceUri resourceUri = new ResourceUri(DOMAIN, TYPE, ID, RELATION_TYPE);
         when(resmiDao.count(eq(resourceUri), eq(resourceQueriesMock))).thenReturn(fakeResult);
@@ -254,7 +254,7 @@ import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
     }
 
     @Test
-    public void averageTest() throws BadConfigurationException, ResmiAggregationException {
+    public void averageTest() throws BadConfigurationException, InvalidApiParamException {
         JsonElement fakeResult = new JsonObject();
         ResourceUri resourceUri = new ResourceUri(DOMAIN, TYPE);
         when(resmiDao.average(eq(resourceUri), eq(resourceQueriesMock), eq("testField"))).thenReturn(fakeResult);
@@ -265,7 +265,7 @@ import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
     }
 
     @Test
-    public void maxTest() throws BadConfigurationException, ResmiAggregationException {
+    public void maxTest() throws BadConfigurationException, InvalidApiParamException {
         JsonElement fakeResult = new JsonObject();
         ResourceUri resourceUri = new ResourceUri(DOMAIN, TYPE);
         when(resmiDao.max(eq(resourceUri), eq(resourceQueriesMock), eq("testField"))).thenReturn(fakeResult);
@@ -276,7 +276,7 @@ import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
     }
 
     @Test
-    public void minTest() throws BadConfigurationException, ResmiAggregationException {
+    public void minTest() throws BadConfigurationException, InvalidApiParamException {
         JsonElement fakeResult = new JsonObject();
         ResourceUri resourceUri = new ResourceUri(DOMAIN, TYPE);
         when(resmiDao.min(eq(resourceUri), eq(resourceQueriesMock), eq("testField"))).thenReturn(fakeResult);

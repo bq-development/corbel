@@ -1,14 +1,5 @@
 package io.corbel.resources.rem;
 
-import io.corbel.lib.ws.api.error.ErrorResponseFactory;
-import io.corbel.resources.rem.plugin.RestorRemNames;
-import io.corbel.resources.rem.request.CollectionParameters;
-import io.corbel.resources.rem.request.RequestParameters;
-import io.corbel.resources.rem.request.ResourceId;
-import io.corbel.resources.rem.request.ResourceParameters;
-import io.corbel.resources.rem.service.RemService;
-import io.corbel.resources.rem.util.ImageRemUtil;
-
 import java.io.InputStream;
 import java.net.URI;
 import java.util.Optional;
@@ -18,20 +9,21 @@ import javax.ws.rs.core.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ImageDeleteRem extends BaseRem<InputStream> {
+import io.corbel.lib.ws.api.error.ErrorResponseFactory;
+import io.corbel.resources.rem.plugin.RestorRemNames;
+import io.corbel.resources.rem.request.CollectionParameters;
+import io.corbel.resources.rem.request.RequestParameters;
+import io.corbel.resources.rem.request.ResourceId;
+import io.corbel.resources.rem.request.ResourceParameters;
+import io.corbel.resources.rem.service.ImageCacheService;
+
+public class ImageDeleteRem extends ImageBaseRem {
 
     private static final Logger LOG = LoggerFactory.getLogger(ImageDeleteRem.class);
-    private final String cacheCollection;
-    private final ImageRemUtil imageRemUtil;
-    private RemService remService;
+    private final ImageCacheService imageCacheService;
 
-    public ImageDeleteRem(String cacheCollection, ImageRemUtil imageRemUtil) {
-        this.cacheCollection = cacheCollection;
-        this.imageRemUtil = imageRemUtil;
-    }
-
-    public void setRemService(RemService remService) {
-        this.remService = remService;
+    public ImageDeleteRem(ImageCacheService imageCacheService) {
+        this.imageCacheService = imageCacheService;
     }
 
     @Override
@@ -46,6 +38,7 @@ public class ImageDeleteRem extends BaseRem<InputStream> {
             return ErrorResponseFactory.getInstance().notFound();
         }
 
+        imageCacheService.removeFromCollectionCache(restorDeleteRem, requestParameters, collection);
         restorDeleteRem.collection(collection, requestParameters, uri, Optional.empty());
 
         return Response.noContent().build();
@@ -63,9 +56,7 @@ public class ImageDeleteRem extends BaseRem<InputStream> {
             return ErrorResponseFactory.getInstance().notFound();
         }
 
-        restorDeleteRem.collection(cacheCollection,
-                imageRemUtil.getCollectionParametersWithPrefix(resourceId.getId(), requestParameters, cacheCollection), null,
-                Optional.empty());
+        imageCacheService.removeFromCache(restorDeleteRem, requestParameters, resourceId, collection);
         restorDeleteRem.resource(collection, resourceId, requestParameters, Optional.empty());
 
         return Response.noContent().build();

@@ -28,6 +28,9 @@ import io.corbel.resources.rem.service.ResmiService;
  */
 public class ResmiPutRem extends AbstractResmiRem {
 
+    private static final String INVALID_ATTRIBUTE_NAME = "Invalid attribute name \"";
+    private static final String BAD_REQUEST = "bad_request";
+
     public ResmiPutRem(ResmiService resmiService) {
         super(resmiService);
     }
@@ -46,7 +49,7 @@ public class ResmiPutRem extends AbstractResmiRem {
                     resmiService.updateCollection(resourceUri, object, new ArrayList<>());
                 }
             } catch (StartsWithUnderscoreException e) {
-                return ErrorResponseFactory.getInstance().invalidEntity("Invalid attribute name \"" + e.getMessage() + "\"");
+                return ErrorResponseFactory.getInstance().invalidEntity(INVALID_ATTRIBUTE_NAME + e.getMessage() + "\"");
             }
 
             return noContent();
@@ -70,7 +73,7 @@ public class ResmiPutRem extends AbstractResmiRem {
                     resmiService.updateResource(resourceUri, object);
                 }
             } catch (StartsWithUnderscoreException e) {
-                return ErrorResponseFactory.getInstance().invalidEntity("Invalid attribute name \"" + e.getMessage() + "\"");
+                return ErrorResponseFactory.getInstance().invalidEntity(INVALID_ATTRIBUTE_NAME + e.getMessage() + "\"");
             }
 
             return noContent();
@@ -88,14 +91,14 @@ public class ResmiPutRem extends AbstractResmiRem {
         }
 
         if (!parameters.getOptionalApiParameters().flatMap(RelationParameters::getPredicateResource).isPresent()) {
-            return ErrorResponseFactory.getInstance().badRequest(new Error("bad_request", "Resource URI not present"));
+            return ErrorResponseFactory.getInstance().badRequest(new Error(BAD_REQUEST, "Resource URI not present"));
         }
 
         try {
             String uri = URLDecoder.decode(parameters.getOptionalApiParameters().get().getPredicateResource().get(), "UTF-8");
 
             if (!JsonRelation.validateUri(uri)) {
-                return ErrorResponseFactory.getInstance().badRequest(new Error("bad_request", "Resource URI not valid"));
+                return ErrorResponseFactory.getInstance().badRequest(new Error(BAD_REQUEST, "Resource URI not valid"));
             }
 
             if (entity.filter(requestEntity -> requestEntity.has("_order")).isPresent()) {
@@ -107,9 +110,9 @@ public class ResmiPutRem extends AbstractResmiRem {
             return created();
         } catch (NotFoundException | UnsupportedEncodingException | IllegalArgumentException e) {
             return ErrorResponseFactory.getInstance()
-                    .badRequest(new Error("bad_request", e.getClass().getSimpleName() + ": " + e.getMessage()));
+                    .badRequest(new Error(BAD_REQUEST, e.getClass().getSimpleName() + ": " + e.getMessage()));
         } catch (StartsWithUnderscoreException e) {
-            return ErrorResponseFactory.getInstance().invalidEntity("Invalid attribute name \"" + e.getMessage() + "\"");
+            return ErrorResponseFactory.getInstance().invalidEntity(INVALID_ATTRIBUTE_NAME + e.getMessage() + "\"");
         }
     }
 }

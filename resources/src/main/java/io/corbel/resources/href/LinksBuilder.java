@@ -42,7 +42,7 @@ public class LinksBuilder {
     }
 
     public void appendLinks(JsonObject object) {
-        if (links.size() == 0) {
+        if (links.isEmpty()) {
             return;
         }
         JsonArray objectLinks = new JsonArray();

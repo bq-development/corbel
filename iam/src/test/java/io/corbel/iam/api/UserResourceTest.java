@@ -1,6 +1,7 @@
 package io.corbel.iam.api;
 
 import static org.fest.assertions.api.Assertions.assertThat;
+import static org.mockito.ArgumentCaptor.forClass;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
@@ -17,7 +18,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableSet;
 import com.google.gson.JsonElement;
 import io.corbel.lib.ws.gson.GsonMessageReaderWriterProvider;
 import org.glassfish.jersey.client.ClientProperties;
@@ -76,6 +77,7 @@ public class UserResourceTest extends UserResourceTestBase {
     private static final AuthorizationInfo authorizationInfoMock = mock(AuthorizationInfo.class);
     private static final QueryParser queryParserMock = mock(QueryParser.class);
     private static final DeviceService devicesServiceMock = mock(DeviceService.class);
+    public static final String NOT_ALLOWED_SCOPE = "notAllowedScope";
     private static AggregationResultsFactory<JsonElement> aggregationResultsFactory = new JsonAggregationResultsFactory();
 
     @SuppressWarnings("unchecked")
@@ -119,15 +121,17 @@ public class UserResourceTest extends UserResourceTestBase {
     @Before
     public void setUp() {
         reset(userServiceMock, domainServiceMock, identityServiceMock);
-
+        when(TEST_DOMAIN.getDefaultScopes()).thenReturn(ImmutableSet.of("defaultScope1", "defaultScope2"));
         when(domainServiceMock.getDomain(TEST_DOMAIN_ID)).thenReturn(Optional.ofNullable(TEST_DOMAIN));
     }
 
     @Test
     public void testAddUser() throws CreateUserException {
-        when(domainServiceMock.scopesAllowedInDomain(TEST_SCOPES, TEST_DOMAIN)).thenReturn(true);
+        ArgumentCaptor<User> userCaptor = forClass(User.class);
 
         User user = getTestUser();
+        user.setScopes(ImmutableSet.of(NOT_ALLOWED_SCOPE));
+
         User userWithCreationDate = getTestUser();
         userWithCreationDate.setCreatedDate(new Date());
         when(userServiceMock.create(Mockito.any(User.class))).thenReturn(userWithCreationDate);
@@ -135,6 +139,26 @@ public class UserResourceTest extends UserResourceTestBase {
         Response response = addUserClient().post(Entity.json(user), Response.class);
         assertThat(response.getStatus()).isEqualTo(201);
         assertThat(response.getHeaderString("Location")).contains(TEST_USER_ID);
+        verify(userServiceMock).create(userCaptor.capture());
+        User storeUser = userCaptor.getValue();
+        assertThat(storeUser.getScopes()).isEqualTo(TEST_DOMAIN.getDefaultScopes());
+        assertThat(storeUser.getScopes()).doesNotContain(NOT_ALLOWED_SCOPE);
+    }
+
+    @Test
+    public void testAddUserWithNullScopes() throws CreateUserException {
+        ArgumentCaptor<User> userCaptor = forClass(User.class);
+
+        User user = getTestUser();
+        user.setScopes(null);
+        when(userServiceMock.create(Mockito.any(User.class))).thenReturn(user);
+
+        Response response = addUserClient().post(Entity.json(user), Response.class);
+        assertThat(response.getStatus()).isEqualTo(201);
+        assertThat(response.getHeaderString("Location")).contains(TEST_USER_ID);
+        verify(userServiceMock).create(userCaptor.capture());
+        User storeUser = userCaptor.getValue();
+        assertThat(storeUser.getScopes()).isEqualTo(TEST_DOMAIN.getDefaultScopes());
     }
 
     @Test
@@ -341,7 +365,7 @@ public class UserResourceTest extends UserResourceTestBase {
         Response response = getUserClient(TEST_USER_ID).put(Entity.json(user), Response.class);
         assertThat(response.getStatus()).isEqualTo(204);
 
-        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        ArgumentCaptor<User> userCaptor = forClass(User.class);
         verify(userServiceMock).update(userCaptor.capture());
 
         assertThat(userCaptor.getValue().getEmail()).isEqualTo(newEmail);
@@ -384,7 +408,7 @@ public class UserResourceTest extends UserResourceTestBase {
         Response response = getUserClient(TEST_USER_ID).put(Entity.json(user), Response.class);
         assertThat(response.getStatus()).isEqualTo(204);
 
-        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        ArgumentCaptor<User> userCaptor = forClass(User.class);
         verify(userServiceMock).update(userCaptor.capture());
 
         assertThat(userCaptor.getValue().getUsername()).isEqualTo(newUsername);
@@ -419,7 +443,7 @@ public class UserResourceTest extends UserResourceTestBase {
         Response response = getUserClient(TEST_USER_ID).put(Entity.json(user), Response.class);
         assertThat(response.getStatus()).isEqualTo(204);
 
-        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        ArgumentCaptor<User> userCaptor = forClass(User.class);
         verify(userServiceMock).update(userCaptor.capture());
 
         assertThat(userCaptor.getValue().getUsername()).isEqualTo(newUsername);
@@ -485,7 +509,7 @@ public class UserResourceTest extends UserResourceTestBase {
         Response response = getUserClient(TEST_USER_ID).put(Entity.json(user), Response.class);
         assertThat(response.getStatus()).isEqualTo(204);
 
-        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        ArgumentCaptor<User> userCaptor = forClass(User.class);
         verify(userServiceMock).update(userCaptor.capture());
 
         assertThat(userCaptor.getValue().getFirstName()).isEqualTo(newFirstName);
@@ -504,7 +528,7 @@ public class UserResourceTest extends UserResourceTestBase {
         Response response = getUserClient(TEST_USER_ID).put(Entity.json(user), Response.class);
         assertThat(response.getStatus()).isEqualTo(204);
 
-        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        ArgumentCaptor<User> userCaptor = forClass(User.class);
         verify(userServiceMock).update(userCaptor.capture());
 
         assertThat(userCaptor.getValue().getPhoneNumber()).isEqualTo(newPhone);
@@ -524,7 +548,7 @@ public class UserResourceTest extends UserResourceTestBase {
         Response response = getUserClient(TEST_USER_ID).put(Entity.json(user), Response.class);
         assertThat(response.getStatus()).isEqualTo(204);
 
-        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        ArgumentCaptor<User> userCaptor = forClass(User.class);
         verify(userServiceMock).update(userCaptor.capture());
 
         assertThat(userCaptor.getValue().getScopes()).isEqualTo(newScopes);
@@ -549,6 +573,7 @@ public class UserResourceTest extends UserResourceTestBase {
     public void testSignOutMe() {
         when(userServiceMock.findById(TEST_USER_ID)).thenReturn(getTestUser());
         when(userServiceMock.findUserDomain(TEST_USER_ID)).thenReturn(TEST_DOMAIN_ID);
+        when(authorizationInfoMock.getUserId()).thenReturn(TEST_USER_ID);
         when(authorizationInfoMock.getToken()).thenReturn(TEST_TOKEN);
 
         Response response = RULE.client().target("/v1.0/user/me/signout").request(MediaType.APPLICATION_JSON)
@@ -556,6 +581,46 @@ public class UserResourceTest extends UserResourceTestBase {
         assertThat(response.getStatus()).isEqualTo(204);
 
         verify(userServiceMock).signOut(TEST_USER_ID, java.util.Optional.of(TEST_TOKEN));
+    }
+
+    @Test
+    public void testSignOutMeWithoutUser() {
+        when(userServiceMock.findById(TEST_USER_ID)).thenReturn(getTestUser());
+        when(userServiceMock.findUserDomain(TEST_USER_ID)).thenReturn(TEST_DOMAIN_ID);
+        when(authorizationInfoMock.getUserId()).thenReturn(null);
+        when(authorizationInfoMock.getToken()).thenReturn(TEST_TOKEN);
+
+        Response response = RULE.client().target("/v1.0/user/me/signout").request(MediaType.APPLICATION_JSON)
+                .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).put(Entity.json(""), Response.class);
+        assertThat(response.getStatus()).isEqualTo(404);
+
+    }
+
+    @Test
+    public void testDeleteSessionsMe() {
+        when(userServiceMock.findById(TEST_USER_ID)).thenReturn(getTestUser());
+        when(userServiceMock.findUserDomain(TEST_USER_ID)).thenReturn(TEST_DOMAIN_ID);
+        when(authorizationInfoMock.getUserId()).thenReturn(TEST_USER_ID);
+        when(authorizationInfoMock.getToken()).thenReturn(TEST_TOKEN);
+
+        Response response = RULE.client().target("/v1.0/user/me/sessions").request(MediaType.APPLICATION_JSON)
+                .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).delete(Response.class);
+        assertThat(response.getStatus()).isEqualTo(204);
+
+        verify(userServiceMock).invalidateAllTokens(TEST_USER_ID);
+    }
+
+    @Test
+    public void testDeleteSessionsMeWithoutUser() {
+        when(userServiceMock.findById(TEST_USER_ID)).thenReturn(getTestUser());
+        when(userServiceMock.findUserDomain(TEST_USER_ID)).thenReturn(TEST_DOMAIN_ID);
+        when(authorizationInfoMock.getUserId()).thenReturn(null);
+        when(authorizationInfoMock.getToken()).thenReturn(TEST_TOKEN);
+
+        Response response = RULE.client().target("/v1.0/user/me/sessions").request(MediaType.APPLICATION_JSON)
+                .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).delete(Response.class);
+        assertThat(response.getStatus()).isEqualTo(404);
+
     }
 
     @Test
@@ -605,7 +670,7 @@ public class UserResourceTest extends UserResourceTestBase {
         Response response = getUserClient(TEST_USER_ID).put(Entity.json(user), Response.class);
         assertThat(response.getStatus()).isEqualTo(204);
 
-        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        ArgumentCaptor<User> userCaptor = forClass(User.class);
         verify(userServiceMock).update(userCaptor.capture());
 
         assertThat(userCaptor.getValue().getProperties().get(TEST_PROPERTY)).isEqualTo(TEST_PROPERTY_VAL);
@@ -623,7 +688,7 @@ public class UserResourceTest extends UserResourceTestBase {
         Response response = getUserClient(TEST_USER_ID).put(Entity.json(user), Response.class);
         assertThat(response.getStatus()).isEqualTo(204);
 
-        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        ArgumentCaptor<User> userCaptor = forClass(User.class);
         verify(userServiceMock).update(userCaptor.capture());
 
         assertThat(userCaptor.getValue().getProperties().isEmpty()).isTrue();
@@ -646,7 +711,7 @@ public class UserResourceTest extends UserResourceTestBase {
 
         assertThat(response.getStatus()).isEqualTo(201);
 
-        ArgumentCaptor<Identity> captor = ArgumentCaptor.forClass(Identity.class);
+        ArgumentCaptor<Identity> captor = forClass(Identity.class);
         verify(identityServiceMock).addIdentity(captor.capture());
 
         assertThat(captor.getValue().getOauthId()).isEqualTo(oAuthId);
@@ -672,7 +737,7 @@ public class UserResourceTest extends UserResourceTestBase {
 
         assertThat(response.getStatus()).isEqualTo(201);
 
-        ArgumentCaptor<Identity> captor = ArgumentCaptor.forClass(Identity.class);
+        ArgumentCaptor<Identity> captor = forClass(Identity.class);
         verify(identityServiceMock).addIdentity(captor.capture());
 
         assertThat(captor.getValue().getOauthId()).isEqualTo(oAuthId);
@@ -1060,7 +1125,7 @@ public class UserResourceTest extends UserResourceTestBase {
                 .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(Response.class);
 
         assertThat(response.getStatus()).isEqualTo(200);
-        ArgumentCaptor<ResourceQuery> argument = ArgumentCaptor.forClass(ResourceQuery.class);
+        ArgumentCaptor<ResourceQuery> argument = forClass(ResourceQuery.class);
         verify(userServiceMock).findUserProfilesByDomain(eq(UserResourceTestBase.TEST_DOMAIN), argument.capture(), any(), any());
 
         assertThat(argument.getValue().iterator().next().getField()).isEqualTo("_notExistent");
@@ -1069,7 +1134,7 @@ public class UserResourceTest extends UserResourceTestBase {
     @Test
     public void testGetProfilesWithValidQuery() throws MalformedJsonQueryException, UnsupportedEncodingException,
             UserProfileConfigurationException {
-        TEST_DOMAIN.setUserProfileFields(Sets.newHashSet("field1"));
+        when(TEST_DOMAIN.getUserProfileFields()).thenReturn(Sets.newHashSet("field1"));
 
         String queryString = "queryString";
         ResourceQuery targetQuery = new ResourceQueryBuilder().add("field1", "value1").build();
@@ -1080,7 +1145,7 @@ public class UserResourceTest extends UserResourceTestBase {
                 .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(Response.class);
 
         assertThat(response.getStatus()).isEqualTo(200);
-        ArgumentCaptor<ResourceQuery> argument = ArgumentCaptor.forClass(ResourceQuery.class);
+        ArgumentCaptor<ResourceQuery> argument = forClass(ResourceQuery.class);
         verify(userServiceMock).findUserProfilesByDomain(eq(UserResourceTestBase.TEST_DOMAIN), argument.capture(), any(), any());
 
         assertThat(argument.getValue().iterator().next().getField()).isEqualTo("field1");

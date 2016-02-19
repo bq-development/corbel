@@ -8,7 +8,7 @@ import io.corbel.resources.rem.request.RelationParameters;
 import io.corbel.resources.rem.request.RequestParameters;
 import io.corbel.resources.rem.request.ResourceId;
 import io.corbel.resources.rem.request.ResourceParameters;
-import io.corbel.resources.rem.resmi.exception.ResmiAggregationException;
+import io.corbel.resources.rem.resmi.exception.InvalidApiParamException;
 import io.corbel.resources.rem.service.BadConfigurationException;
 import io.corbel.resources.rem.service.ResmiService;
 
@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 
 import javax.ws.rs.core.Response;
 
+import org.elasticsearch.ElasticsearchException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,10 +52,8 @@ public class ResmiGetRem extends AbstractResmiRem {
                 return buildResponse(resmiService.findCollection(resourceUri, parameters.getOptionalApiParameters()));
             }
 
-        } catch (BadConfigurationException bce) {
-            return ErrorResponseFactory.getInstance().badRequest(new Error("bad_request", bce.getMessage()));
-        } catch (ResmiAggregationException rae) {
-            return ErrorResponseFactory.getInstance().badRequest();
+        } catch (BadConfigurationException | InvalidApiParamException | ElasticsearchException e) {
+            return ErrorResponseFactory.getInstance().badRequest(new Error("bad_request", e.getMessage()));
         } catch (Exception e) {
             LOG.error("Unexpected error: Failed get collection data", e);
             return ErrorResponseFactory.getInstance().serverError(e);
@@ -81,8 +80,8 @@ public class ResmiGetRem extends AbstractResmiRem {
             } else {
                 return buildResponse(resmiService.findRelation(resourceUri, parameters.getOptionalApiParameters()));
             }
-        } catch (ResmiAggregationException rae) {
-            return ErrorResponseFactory.getInstance().badRequest();
+        } catch (InvalidApiParamException | ElasticsearchException e) {
+            return ErrorResponseFactory.getInstance().badRequest(new Error("bad_request", e.getMessage()));
         } catch (Exception e) {
             LOG.error("Unexpected error: Failed get relation data", e);
             return ErrorResponseFactory.getInstance().serverError(e);

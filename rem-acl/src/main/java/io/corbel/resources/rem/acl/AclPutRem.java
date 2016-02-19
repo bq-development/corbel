@@ -59,9 +59,7 @@ public class AclPutRem extends AclBaseRem {
             originalObject = aclResourcesService.getResourceIfIsAuthorized(parameters.getRequestedDomain(),tokenInfo, type, id, AclPermission.WRITE);
         } catch (AclFieldNotPresentException e) {
             return ErrorResponseFactory.getInstance().forbidden();
-        }
-
-        catch (WebApplicationException exception) {
+        } catch (WebApplicationException exception) {
             if (exception.getResponse().getStatus() != Status.NOT_FOUND.getStatusCode()) {
                 return exception.getResponse();
             }

@@ -31,8 +31,8 @@ public class AmqpEworkerRegistryTest {
     private AmqpConfigurer configurer;
 
     private Eworker<?> eworker;
-    private final String QUEUE_TEST = "test";
-    private final String ROUTING_PATTERN_TEST = "test.routing.pattern";
+    private static final String QUEUE_TEST = "test";
+    private static final String ROUTING_PATTERN_TEST = "test.routing.pattern";
 
     @Before
     public void setup() {

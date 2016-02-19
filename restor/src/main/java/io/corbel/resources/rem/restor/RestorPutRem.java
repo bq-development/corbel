@@ -19,38 +19,34 @@ import io.corbel.resources.rem.model.RestorObject;
  */
 public class RestorPutRem extends AbstractRestorRem {
 
-	public RestorPutRem(RestorDao dao) {
-		super(dao);
-	}
+    public RestorPutRem(RestorDao dao) {
+        super(dao);
+    }
 
-	@Override
-	public Response resource(String collection, ResourceId resource, RequestParameters<ResourceParameters> parameters,
-			Optional<InputStream> entity) {
-		if (!entity.isPresent()) {
-			return ErrorResponseFactory.getInstance().badRequest();
-		}
-		try {
-			String encoding = parameters.getCustomParameterValue("resource:encoding");
-			InputStream stream = entity.get();
-			Long contentLength = parameters.getContentLength();
-			if (encoding != null) {
-				switch (encoding) {
-					case "base64":
-						String length = parameters.getCustomParameterValue("resource:length");
-						if (length == null) {
-							return ErrorResponseFactory.getInstance().badRequest();
-						}
-						contentLength = Long.valueOf(length);
-						stream = Base64.getDecoder().wrap(entity.get());
-						break;
-				}
-			}
+    @Override
+    public Response resource(String collection, ResourceId resource, RequestParameters<ResourceParameters> parameters,
+            Optional<InputStream> entity) {
+        if (!entity.isPresent()) {
+            return ErrorResponseFactory.getInstance().badRequest();
+        }
+        try {
+            String encoding = parameters.getCustomParameterValue("resource:encoding");
+            InputStream stream = entity.get();
+            Long contentLength = parameters.getContentLength();
+            if (encoding != null && "base64".equals(encoding)) {
+                String length = parameters.getCustomParameterValue("resource:length");
+                if (length == null) {
+                    return ErrorResponseFactory.getInstance().badRequest();
+                }
+                contentLength = Long.valueOf(length);
+                stream = Base64.getDecoder().wrap(entity.get());
+            }
             RestorResourceUri resourceUri = new RestorResourceUri(parameters.getRequestedDomain(), getMediaType(parameters), collection, resource.getId());
 
             dao.uploadObject(resourceUri, new RestorObject(getMediaType(parameters), stream, contentLength));
-			return Response.noContent().build();
-		} catch (NumberFormatException e) {
-			return ErrorResponseFactory.getInstance().badRequest();
-		}
-	}
+            return Response.noContent().build();
+        } catch (NumberFormatException e) {
+            return ErrorResponseFactory.getInstance().badRequest();
+        }
+    }
 }

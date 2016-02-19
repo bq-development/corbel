@@ -45,9 +45,9 @@ public class ResmiJsonObjectMongoWriteConverter extends JsonObjectMongoWriteConv
     private void tryToConvertExpireToDate(DBObject dbo) {
         Optional<Object> expireAtOption = Optional.ofNullable(dbo.get("_expireAt"));
 
-        if (!expireAtOption.isPresent())
+        if (!expireAtOption.isPresent()){
             return;
-
+        }
         Date expireAt = expireAtOption.map(expireAtWithoutCast -> {
             try {
                 return Long.parseLong(expireAtWithoutCast.toString());

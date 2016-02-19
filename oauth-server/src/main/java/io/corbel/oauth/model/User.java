@@ -192,10 +192,12 @@ public class User {
         }
 
         Optional.ofNullable(updateUser.getAvatarUri()).ifPresent(newAvatar -> {
-            if (newAvatar.isEmpty())
+            if (newAvatar.isEmpty()){
                 setAvatarUri(null);
-            else
+            }
+            else {
                 setAvatarUri(newAvatar);
+            }
         });
     }
 

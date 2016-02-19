@@ -28,7 +28,7 @@ public class ResmiDeleteRemTest extends ResmiRemTest {
 
     private AbstractResmiRem deleteRem;
 
-    private final String TEST_RELATION = "relationtest";
+    private static final String TEST_RELATION = "relationtest";
     private static final String TEST_URI = "testUri/123";
 
     @Override

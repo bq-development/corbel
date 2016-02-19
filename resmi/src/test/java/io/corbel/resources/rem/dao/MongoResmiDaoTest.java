@@ -12,6 +12,7 @@ import io.corbel.lib.queries.StringQueryLiteral;
 import io.corbel.lib.queries.request.*;
 import io.corbel.resources.rem.model.ResourceUri;
 import io.corbel.resources.rem.request.ResourceId;
+import io.corbel.resources.rem.resmi.exception.InvalidApiParamException;
 import io.corbel.resources.rem.service.DefaultNamespaceNormalizer;
 import org.junit.Before;
 import org.junit.Test;
@@ -93,7 +94,7 @@ import static org.mockito.Mockito.*;
 
 
     @Test
-    public void testFindRelation() {
+    public void testFindRelation() throws InvalidApiParamException {
         JsonObject json = new JsonObject();
         json.add("a", new JsonPrimitive("1"));
         json.add("_id", new JsonPrimitive("456"));
@@ -121,7 +122,7 @@ import static org.mockito.Mockito.*;
     }
 
     @Test
-    public void testFindRelationWithWildcard() {
+    public void testFindRelationWithWildcard() throws InvalidApiParamException {
         JsonObject json = new JsonObject();
         json.add("a", new JsonPrimitive("1"));
         json.add("_id", new JsonPrimitive("456"));

@@ -1,5 +1,7 @@
 package io.corbel.iam.model;
 
+import java.util.Date;
+
 import javax.validation.constraints.NotNull;
 
 /**
@@ -13,7 +15,9 @@ public class Device extends Entity {
     private String notificationUri;
     private String name;
     private Type type;
-    private boolean notificationEnabled;
+    private Boolean notificationEnabled;
+    private Date _createdAt;
+    private Date _updatedAt;
 
     public String getDomain() {
         return domain;
@@ -60,11 +64,11 @@ public class Device extends Entity {
         return this;
     }
 
-    public boolean isNotificationEnabled() {
+    public Boolean isNotificationEnabled() {
         return notificationEnabled;
     }
 
-    public Device setNotificationEnabled(boolean notificationEnabled) {
+    public Device setNotificationEnabled(Boolean notificationEnabled) {
         this.notificationEnabled = notificationEnabled;
         return this;
     }
@@ -75,6 +79,24 @@ public class Device extends Entity {
 
     public Device setUid(String uid) {
         this.uid = uid;
+        return this;
+    }
+
+    public Date get_createdAt() {
+        return _createdAt;
+    }
+
+    public Device set_createdAt(Date _createdAt) {
+        this._createdAt = _createdAt;
+        return this;
+    }
+
+    public Date get_updatedAt() {
+        return _updatedAt;
+    }
+
+    public Device set_updatedAt(Date _updatedAt) {
+        this._updatedAt = _updatedAt;
         return this;
     }
 

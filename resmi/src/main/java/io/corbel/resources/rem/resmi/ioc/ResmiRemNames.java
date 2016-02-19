@@ -9,4 +9,6 @@ public interface ResmiRemNames {
     String RESMI_POST = "resmi_post";
     String RESMI_PUT = "resmi_put";
     String RESMI_DELETE = "resmi_delete";
+
+    String ELASTICSEARCH_HEALTHCHECK = "elasticsearch";
 }

@@ -5,7 +5,7 @@ import java.util.regex.Pattern;
 
 public class RelationMoveOperation {
 
-    private final static Pattern OPERATION_PATTERN = Pattern.compile("\\$pos\\((\\d+)\\)");
+    private static final Pattern OPERATION_PATTERN = Pattern.compile("\\$pos\\((\\d+)\\)");
 
     private final long value;
 

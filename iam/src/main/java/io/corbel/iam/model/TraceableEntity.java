@@ -16,7 +16,7 @@ public class TraceableEntity extends Entity {
 
     public TraceableEntity(TraceableEntity traceableEntity) {
         super(traceableEntity);
-        this.createdBy = traceableEntity.getCreatedBy();
+        this.createdDate = traceableEntity.createdDate;
         this.createdBy = traceableEntity.createdBy;
 
     }

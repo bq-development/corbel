@@ -10,6 +10,7 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.google.gson.JsonObject;
 import io.corbel.iam.exception.ScopeAbsentIdException;
 import io.dropwizard.testing.junit.ResourceTestRule;
 
@@ -28,12 +29,14 @@ import io.corbel.iam.service.ClientService;
 import io.corbel.iam.service.DomainService;
 import io.corbel.iam.service.ScopeService;
 
-public class ScopeResourceTest {
-    private final static ScopeService scopeService = mock(ScopeService.class);
-    private final static ClientService clientService = mock(ClientService.class);
-    private final static DomainService domainService = mock(DomainService.class);
+import java.util.HashSet;
 
-    private final static String SCOPE_ID = "testId";
+public class ScopeResourceTest {
+    private static final ScopeService scopeService = mock(ScopeService.class);
+    private static final ClientService clientService = mock(ClientService.class);
+    private static final DomainService domainService = mock(DomainService.class);
+
+    private static final String SCOPE_ID = "testId";
 
     @ClassRule public static ResourceTestRule RULE = ResourceTestRule.builder().addResource(new ScopeResource(scopeService)).build();
 

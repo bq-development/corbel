@@ -15,6 +15,7 @@ import com.google.gson.JsonObject;
 
 public class DefaultUpgradeTokenService implements UpgradeTokenService {
 
+    private static final String SCOPE = "scope";
     private final JsonTokenParser jsonTokenParser;
     private final ScopeService scopeService;
 
@@ -29,8 +30,8 @@ public class DefaultUpgradeTokenService implements UpgradeTokenService {
             JsonToken jwt = jsonTokenParser.verifyAndDeserialize(assertion);
             JsonObject payload = jwt.getPayloadAsJsonObject();
             String[] scopesToAdd = new String[0];
-            if (payload.has("scope") && payload.get("scope").isJsonPrimitive()) {
-                String scopesToAddFromToken = payload.get("scope").getAsString();
+            if (payload.has(SCOPE) && payload.get(SCOPE).isJsonPrimitive()) {
+                String scopesToAddFromToken = payload.get(SCOPE).getAsString();
                 if (!scopesToAddFromToken.isEmpty()) {
                     scopesToAdd = scopesToAddFromToken.split(" ");
                 }

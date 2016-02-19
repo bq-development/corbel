@@ -10,7 +10,6 @@ import io.corbel.resources.rem.search.ElasticSearchService;
 import io.corbel.resources.rem.search.ResmiSearch;
 import io.corbel.resources.rem.service.ResmiService;
 
-import io.corbel.resources.rem.service.SearchableFieldsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,10 +18,12 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 
+import com.codahale.metrics.health.HealthCheck;
+
 @Component public class ResmiRemPlugin extends RemPlugin {
 
     private static final Logger LOG = LoggerFactory.getLogger(ResmiRemPlugin.class);
-    private final String ARTIFACT_ID = "resmi";
+    private static final String ARTIFACT_ID = "resmi";
 
     @Autowired private ResmiShell shell;
 
@@ -53,6 +54,12 @@ import org.springframework.stereotype.Component;
     @Override
     protected String getArtifactName() {
         return ARTIFACT_ID;
+    }
+
+    @Override
+    protected void addHealthCheck(HealthCheckRegistry healthCheckRegistry) {
+        healthCheckRegistry.addHealthCheck(ResmiRemNames.ELASTICSEARCH_HEALTHCHECK,
+                context.getBean(ResmiRemNames.ELASTICSEARCH_HEALTHCHECK, HealthCheck.class));
     }
 
 }

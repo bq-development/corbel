@@ -49,12 +49,12 @@ import io.corbel.lib.ws.auth.repository.AuthorizationRulesRepository;
     private static final String TEST_SCOPE_2 = "test_scope2";
     private static final String TEST_COMPOSITE_SCOPE = "test_composite_scope";
     private static final String IAM_AUDIENCE = "iamAudience";
-    private static final String SCOPE_1_CUSTOM_PARAM_VALUE = "custom";
-    private static final String TEST_SCOPE_1_WITH_PARAMS = "test_scope1;testId=" + SCOPE_1_CUSTOM_PARAM_VALUE;
-    private static final String TEST_SCOPE_1_WITH_PARAMS_AND_ERRORS = "test_scope1;error;testId=" + SCOPE_1_CUSTOM_PARAM_VALUE;
+    private static final String CUSTOM_PARAM_VALUE = "custom";
+    private static final String TEST_ID_CUSTOM = ";testId="+ CUSTOM_PARAM_VALUE;
+    private static final String TEST_SCOPE_1_WITH_PARAMS = "test_scope1;testId=" + CUSTOM_PARAM_VALUE;
+    private static final String TEST_SCOPE_1_WITH_PARAMS_AND_ERRORS = "test_scope1;error;testId=" + CUSTOM_PARAM_VALUE;
     private static final String TEST_SCOPE_1_WITHOUT_PARAMS = "test_scope1";
     private static final String TEST_SCOPE_1_WITH_NOT_EXIST_PARAMS = "test_scope1;testId=123456";
-    private static final String TEST_SCOPE_1_WITH_WRONG_PARAMS = "test_scope1;testId";
     private static final JsonObject RULE_WITH_PARAMS = JSON_PARSER.parse("{\"uri\" : \"{{testId}}\"}").getAsJsonObject();
     private static final JsonObject RULE_PARAMS = JSON_PARSER.parse("{\"testId\" : \"cus.*\"}").getAsJsonObject();
     private static final JsonObject RULE_WITH_PARAMS_FILLED = JSON_PARSER.parse("{\"testId\" : \"custom\"}").getAsJsonObject();
@@ -145,7 +145,7 @@ import io.corbel.lib.ws.auth.repository.AuthorizationRulesRepository;
         params.put("userId", TEST_USER_ID);
         params.put("clientId", TEST_CLIENT_ID);
         params.put("domainId", TEST_DOMAIN);
-        params.put("testId", SCOPE_1_CUSTOM_PARAM_VALUE);
+        params.put("testId", "custom");
         verify(fillStrategyMock).fillScope(Mockito.same(scope1), Mockito.eq(params));
     }
 
@@ -223,6 +223,31 @@ import io.corbel.lib.ws.auth.repository.AuthorizationRulesRepository;
 
     @SuppressWarnings("unchecked")
     @Test
+    public void testComposedScopesWithParam() {
+        Set<String> requestScopes = new HashSet<>(Collections.singletonList(TEST_COMPOSITE_SCOPE + TEST_ID_CUSTOM));
+
+        Scope scope1 = new Scope(TEST_SCOPE_1, null, IAM_AUDIENCE, null, RULES_3, RULE_PARAMS);
+        Scope scope2 = new Scope(TEST_SCOPE_2, null, IAM_AUDIENCE, null, RULES_3, null);
+        HashSet<String> scopesFromCompositScopes = new HashSet<>(Arrays.asList(TEST_SCOPE_1, TEST_SCOPE_2));
+        Scope compositeScope = new Scope(TEST_COMPOSITE_SCOPE, Scope.COMPOSITE_SCOPE_TYPE, IAM_AUDIENCE, scopesFromCompositScopes, null,
+                RULE_PARAMS);
+
+        when(scopeRepositoryMock.findOne(Mockito.eq(TEST_COMPOSITE_SCOPE))).thenReturn(compositeScope);
+        when(scopeRepositoryMock.findOne(Mockito.eq(TEST_SCOPE_1))).thenReturn(scope1);
+        when(scopeRepositoryMock.findOne(Mockito.eq(TEST_SCOPE_2))).thenReturn(scope2);
+
+        doAnswer(returnsFirstArg()).when(fillStrategyMock).fillScope(Matchers.<Scope>any(), anyMap());
+
+        Set<Scope> expandedScopes = defaultScopeService.expandScopes(requestScopes);
+
+        assertThat(expandedScopes).contains(scope2);
+        Scope res = expandedScopes.iterator().next();
+        assertThat(res.getParameters()).isEqualTo(RULE_WITH_PARAMS_FILLED);
+        assertThat(scope1).isNotEqualTo(res);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
     public void testScopeWithCustomParameters() {
         Scope scope1 = new Scope(TEST_SCOPE_1, null, IAM_AUDIENCE, null, RULES_3, RULE_PARAMS);
 
@@ -248,7 +273,6 @@ import io.corbel.lib.ws.auth.repository.AuthorizationRulesRepository;
     }
 
     @SuppressWarnings("unchecked")
-    @Test(expected = IllegalStateException.class)
     public void testScopeWithoutCustomParametersDefined() {
         Scope scope1 = new Scope(TEST_SCOPE_1, null, IAM_AUDIENCE, null, RULES_3, RULE_PARAMS);
 
@@ -256,11 +280,10 @@ import io.corbel.lib.ws.auth.repository.AuthorizationRulesRepository;
         when(scopeRepositoryMock.findOne(Mockito.eq(TEST_SCOPE_1))).thenReturn(scope1);
         doAnswer(returnsFirstArg()).when(fillStrategyMock).fillScope(Matchers.<Scope>any(), anyMap());
         Set<Scope> scopes = defaultScopeService.getScopes(requestScopes);
-        assertThat(scopes.iterator().next().getParameters()).isEqualTo(RULE_WITH_PARAMS_FILLED);
+        assertThat(scopes.iterator().next().getParameters()).isEqualTo(null);
     }
 
     @SuppressWarnings("unchecked")
-    @Test(expected = IllegalStateException.class)
     public void testScopeWithNotExistCustomParameters() {
         Scope scope1 = new Scope(TEST_SCOPE_1, null, IAM_AUDIENCE, null, RULES_3, RULE_PARAMS);
 
@@ -268,20 +291,7 @@ import io.corbel.lib.ws.auth.repository.AuthorizationRulesRepository;
         when(scopeRepositoryMock.findOne(Mockito.eq(TEST_SCOPE_1))).thenReturn(scope1);
         doAnswer(returnsFirstArg()).when(fillStrategyMock).fillScope(Matchers.<Scope>any(), anyMap());
         Set<Scope> scopes = defaultScopeService.getScopes(requestScopes);
-        assertThat(scopes.iterator().next().getParameters()).isEqualTo(RULE_WITH_PARAMS_FILLED);
-    }
-
-    @SuppressWarnings("unchecked")
-    @Test(expected = IllegalStateException.class)
-    public void testScopeWithWrongCustomParameters() {
-        Scope scope1 = new Scope(TEST_SCOPE_1, null, IAM_AUDIENCE, null, RULES_3, RULE_PARAMS);
-
-        Set<String> requestScopes = new HashSet<>(Collections.singletonList(TEST_SCOPE_1_WITH_WRONG_PARAMS));
-        when(scopeRepositoryMock.findOne(Mockito.eq(TEST_SCOPE_1))).thenReturn(scope1);
-        doAnswer(returnsFirstArg()).when(fillStrategyMock).fillScope(Matchers.<Scope>any(), anyMap());
-
-        Set<Scope> scopes = defaultScopeService.getScopes(requestScopes);
-        assertThat(scopes.iterator().next().getParameters()).isEqualTo(RULE_WITH_PARAMS_FILLED);
+        assertThat(scopes.iterator().next().getParameters()).isEqualTo(null);
     }
 
     @Test

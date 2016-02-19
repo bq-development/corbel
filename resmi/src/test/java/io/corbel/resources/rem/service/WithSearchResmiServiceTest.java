@@ -16,6 +16,7 @@ import io.corbel.resources.rem.dao.ResmiDao;
 import io.corbel.resources.rem.model.ResourceUri;
 import io.corbel.resources.rem.request.CollectionParameters;
 import io.corbel.resources.rem.request.RelationParameters;
+import io.corbel.resources.rem.resmi.exception.InvalidApiParamException;
 import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
 import io.corbel.resources.rem.search.ResmiSearch;
 
@@ -76,7 +77,7 @@ import com.google.gson.JsonObject;
     }
 
     @Test
-    public void findWithSearchTest() throws BadConfigurationException {
+    public void findWithSearchTest() throws BadConfigurationException, InvalidApiParamException {
         ResourceUri resourceUri = new ResourceUri(DOMAIN, TYPE);
 
         JsonArray fakeResult = new JsonArray();
@@ -128,7 +129,7 @@ import com.google.gson.JsonObject;
     }
 
     @Test
-    public void findInRelationWithSearchTest() throws BadConfigurationException {
+    public void findInRelationWithSearchTest() throws BadConfigurationException, InvalidApiParamException {
         ResourceUri resourceUri = new ResourceUri(DOMAIN, TYPE, ID, RELATION);
 
         JsonArray fakeResult = new JsonArray();

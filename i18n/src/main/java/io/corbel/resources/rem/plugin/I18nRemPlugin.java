@@ -19,7 +19,7 @@ import com.google.common.collect.ImmutableMap;
 @Component public class I18nRemPlugin extends RemPlugin {
 
     private static final Logger LOG = LoggerFactory.getLogger(I18nRemPlugin.class);
-    private final String ARTIFACT_ID = "i18n";
+    private static final String ARTIFACT_ID = "i18n";
 
     @Override
     protected void init() {

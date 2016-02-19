@@ -13,7 +13,7 @@ import io.corbel.lib.queries.request.*;
 import io.corbel.resources.rem.dao.builder.MongoAggregationBuilder;
 import io.corbel.resources.rem.model.GenericDocument;
 import io.corbel.resources.rem.model.ResourceUri;
-import io.corbel.resources.rem.resmi.exception.ResmiAggregationException;
+import io.corbel.resources.rem.resmi.exception.InvalidApiParamException;
 import io.corbel.resources.rem.utils.JsonUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
@@ -30,6 +30,7 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.expression.spel.SpelParseException;
 
 import java.util.*;
+import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
@@ -51,6 +52,9 @@ public class MongoResmiDao implements ResmiDao {
     private static final String EMPTY_STRING = "";
     private static final String EXPIRE_AT = "_expireAt";
     private static final String CREATED_AT = "_createdAt";
+    private static final String COUNT = "count";
+    private static final String AVERAGE = "average";
+
 
     private final MongoOperations mongoOperations;
     private final JsonObjectMongoWriteConverter jsonObjectMongoWriteConverter;
@@ -79,24 +83,37 @@ public class MongoResmiDao implements ResmiDao {
 
     @Override
     public JsonArray findCollection(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries, Optional<Pagination> pagination,
-            Optional<Sort> sort) {
-        Query query = new MongoResmiQueryBuilder().query(resourceQueries.orElse(null)).pagination(pagination.orElse(null))
-                .sort(sort.orElse(null)).build();
+            Optional<Sort> sort) throws InvalidApiParamException {
+
+        Query query;
+        try {
+            query = new MongoResmiQueryBuilder().query(resourceQueries.orElse(null)).pagination(pagination.orElse(null))
+                    .sort(sort.orElse(null)).build();
+        }
+        catch (PatternSyntaxException pse) {
+            throw new InvalidApiParamException(pse.getMessage());
+        }
         LOG.debug("findCollection Query executed : " + query.getQueryObject().toString());
         return JsonUtils.convertToArray(mongoOperations.find(query, JsonObject.class, getMongoCollectionName(uri)));
     }
 
     @Override
     public JsonElement findRelation(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries, Optional<Pagination> pagination,
-            Optional<Sort> sort) {
+            Optional<Sort> sort) throws InvalidApiParamException {
         MongoResmiQueryBuilder mongoResmiQueryBuilder = new MongoResmiQueryBuilder();
 
         if (uri.getRelationId() != null) {
             mongoResmiQueryBuilder.relationDestinationId(uri.getRelationId());
         }
 
-        Query query = mongoResmiQueryBuilder.relationSubjectId(uri).query(resourceQueries.orElse(null)).pagination(pagination.orElse(null))
-                .sort(sort.orElse(null)).build();
+        Query query;
+        try {
+            query = mongoResmiQueryBuilder.relationSubjectId(uri).query(resourceQueries.orElse(null)).pagination(pagination.orElse(null))
+                    .sort(sort.orElse(null)).build();
+        }
+        catch (PatternSyntaxException pse) {
+            throw new InvalidApiParamException(pse.getMessage());
+        }
         query.fields().exclude(_ID);
 
         LOG.debug("findRelation Query executed : " + query.getQueryObject().toString());
@@ -115,7 +132,7 @@ public class MongoResmiDao implements ResmiDao {
 
     @Override
     public JsonArray findCollectionWithGroup(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries,
-            Optional<Pagination> pagination, Optional<Sort> sort, List<String> groups, boolean first) throws ResmiAggregationException {
+            Optional<Pagination> pagination, Optional<Sort> sort, List<String> groups, boolean first) throws InvalidApiParamException {
         Aggregation aggregation = buildGroupAggregation(uri, resourceQueries, pagination, sort, groups, first);
         List<JsonObject> result = mongoOperations.aggregate(aggregation, getMongoCollectionName(uri), JsonObject.class).getMappedResults();
         return JsonUtils.convertToArray(first ? extractDocuments(result) : result);
@@ -123,14 +140,14 @@ public class MongoResmiDao implements ResmiDao {
 
     @Override
     public JsonArray findRelationWithGroup(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries, Optional<Pagination> pagination,
-            Optional<Sort> sort, List<String> groups, boolean first) throws ResmiAggregationException {
+            Optional<Sort> sort, List<String> groups, boolean first) throws InvalidApiParamException {
         Aggregation aggregation = buildGroupAggregation(uri, resourceQueries, pagination, sort, groups, first);
         List<JsonObject> result = mongoOperations.aggregate(aggregation, getMongoCollectionName(uri), JsonObject.class).getMappedResults();
         return renameIds(JsonUtils.convertToArray(first ? extractDocuments(result) : result), uri.isTypeWildcard());
     }
 
     private Aggregation buildGroupAggregation(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries,
-            Optional<Pagination> pagination, Optional<Sort> sort, List<String> fields, boolean first) throws ResmiAggregationException {
+            Optional<Pagination> pagination, Optional<Sort> sort, List<String> fields, boolean first) throws InvalidApiParamException {
 
         MongoAggregationBuilder builder = new MongoAggregationBuilder();
         builder.match(uri, resourceQueries);
@@ -347,11 +364,11 @@ public class MongoResmiDao implements ResmiDao {
 
     @Override
     public JsonElement average(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field) {
-        List<DBObject> results = aggregate(resourceUri, resourceQueries, group().avg(field).as("average"));
+        List<DBObject> results = aggregate(resourceUri, resourceQueries, group().avg(field).as(AVERAGE));
 
-        return fieldNotExists(resourceUri, field, results,"average")? aggregationResultsFactory.averageResult(Optional.empty()):
+        return fieldNotExists(resourceUri, field, results,AVERAGE)? aggregationResultsFactory.averageResult(Optional.empty()):
                 aggregationResultsFactory.averageResult(results.isEmpty() ? Optional.empty() : Optional.ofNullable(
-                        (Number) results.get(0).get("average")).map(Number::doubleValue));
+                        (Number) results.get(0).get(AVERAGE)).map(Number::doubleValue));
     }
 
 
@@ -384,7 +401,7 @@ public class MongoResmiDao implements ResmiDao {
 
     @Override
     public JsonArray combine(ResourceUri resourceUri, Optional<List<ResourceQuery>> resourceQueries, Optional<Pagination> pagination,
-            Optional<Sort> sort, String field, String expression) throws ResmiAggregationException {
+            Optional<Sort> sort, String field, String expression) throws InvalidApiParamException {
 
         MongoAggregationBuilder builder = new MongoAggregationBuilder();
         builder.match(resourceUri, resourceQueries);
@@ -407,7 +424,7 @@ public class MongoResmiDao implements ResmiDao {
                     .getMappedResults();
         }
         catch (SpelParseException spe) {
-            throw new ResmiAggregationException(spe.getMessage());
+            throw new InvalidApiParamException(spe.getMessage());
         }
 
         return JsonUtils.convertToArray(results.stream().map(result -> {
@@ -422,11 +439,11 @@ public class MongoResmiDao implements ResmiDao {
             Optional<Sort> sortParam, String field) {
         AggregationOperation[] aggregations = {
                 group(Fields.from(Fields.field(field, field))).push("$_id").as("ids"),
-                new ExposingFieldsCustomAggregationOperation(new BasicDBObject("$project", new BasicDBObject("count", new BasicDBObject(
+                new ExposingFieldsCustomAggregationOperation(new BasicDBObject("$project", new BasicDBObject(COUNT, new BasicDBObject(
                         "$size", "$ids")))) {
                     @Override
                     public ExposedFields getFields() {
-                        return ExposedFields.synthetic(Fields.fields("count"));
+                        return ExposedFields.synthetic(Fields.fields(COUNT));
                     }
                 }};
 
@@ -449,13 +466,13 @@ public class MongoResmiDao implements ResmiDao {
     }
 
     private HistogramEntry toHistogramEntry(DBObject result, String... fields) {
-        long count = ((Number) result.get("count")).longValue();
+        long count = ((Number) result.get(COUNT)).longValue();
         Map<String, Object> values;
         if (fields.length == 1) {
             values = Collections.singletonMap(fields[0], result.get("_id"));
         } else {
             values = new HashMap<>(fields.length);
-            result.keySet().stream().filter(f -> !f.equals("count")).forEach(f -> values.put(f, result.get(f)));
+            result.keySet().stream().filter(f -> !COUNT.equals(f)).forEach(f -> values.put(f, result.get(f)));
         }
 
         return new HistogramEntry(count, values);

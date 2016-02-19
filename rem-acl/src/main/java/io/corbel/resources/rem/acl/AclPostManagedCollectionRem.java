@@ -12,8 +12,6 @@ import io.corbel.resources.rem.model.ManagedCollection;
 import io.corbel.resources.rem.request.CollectionParameters;
 import io.corbel.resources.rem.request.RequestParameters;
 import io.corbel.resources.rem.request.ResourceId;
-import io.corbel.resources.rem.request.ResourceParameters;
-import io.corbel.resources.rem.request.builder.RequestParametersBuilder;
 import io.corbel.resources.rem.service.AclResourcesService;
 
 public class AclPostManagedCollectionRem extends BaseRem<ManagedCollection> {

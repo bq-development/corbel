@@ -31,8 +31,9 @@ import io.corbel.lib.ws.auth.repository.AuthorizationRulesRepository;
  */
 public class DefaultScopeService implements ScopeService {
     private static final Logger LOG = LoggerFactory.getLogger(DefaultScopeService.class);
-    private static final int SCOPE_ID_POSITION = 0;
-    private static final int FIRST_PARAM_POSITION = 1;
+    static final int SCOPE_ID_POSITION = 0;
+    static final int FIRST_PARAM_POSITION = 1;
+    static final String SCOPE_PARAMS_SEPARATOR = ";";
 
     private final ScopeRepository scopeRepository;
     private final AuthorizationRulesRepository authorizationRulesRepository;
@@ -73,7 +74,7 @@ public class DefaultScopeService implements ScopeService {
         List<Scope> fetchedScopes = new ArrayList<>();
         if (scopes.length > 0) {
             for (String scopeId : scopes) {
-                String[] scopeIdAndParams = scopeId.split(";");
+                String[] scopeIdAndParams = scopeId.split(SCOPE_PARAMS_SEPARATOR);
                 Optional.ofNullable(getScope(scopeIdAndParams[SCOPE_ID_POSITION])).ifPresent(scope -> {
                     if (scopeHasCustomParameters(scope)) {
                         scope = fillScopeCustomParameters(scope, scopeIdAndParams);
@@ -109,11 +110,7 @@ public class DefaultScopeService implements ScopeService {
                 String value = parameters.get(entry.getKey());
                 if (Pattern.matches(entry.getValue().getAsString(), value)) {
                     resultScope.getParameters().add(entry.getKey(), new JsonPrimitive(value));
-                } else {
-                    throw new IllegalStateException("Custom parameter " + entry.getKey() + " doesn't match with any asset parameter");
                 }
-            } else {
-                throw new IllegalStateException("Asset doesn't contain parameter " + entry.getKey() + " value");
             }
         });
         return resultScope;
@@ -210,15 +207,15 @@ public class DefaultScopeService implements ScopeService {
         }
         Validate.notNull(scopes);
         Validate.noNullElements(scopes);
-        HashSet<Scope> expandedScopes = new HashSet<>();
-        HashSet<String> processedCompositeScopes = new HashSet<>();
+        Set<Scope> expandedScopes = new HashSet<>();
+        Set<String> processedCompositeScopes = new HashSet<>();
         List<Scope> scopesToProcess = new ArrayList<>(scopes.size());
         scopesToProcess.addAll(getScopes(scopes));
         while (!scopesToProcess.isEmpty()) {
             Scope scope = scopesToProcess.remove(0);
             if (scope.isComposed()) {
                 if (processedCompositeScopes.add(scope.getId())) {
-                    scopesToProcess.addAll(getScopes(scope.getScopes()));
+                    scopesToProcess.addAll(getScopes(addParams(scope.getScopes(), Optional.ofNullable(scope.getParameters()))));
                 }
             } else {
                 expandedScopes.add(scope);
@@ -226,6 +223,20 @@ public class DefaultScopeService implements ScopeService {
         }
         return expandedScopes;
     }
+
+    private Set<String> addParams(Set<String> scopes, Optional<JsonObject> parameters) {
+        if (parameters.isPresent()) {
+            StringBuilder params = new StringBuilder();
+            for (Map.Entry<String, JsonElement> entry : parameters.get().entrySet()) {
+                params.append( ";" + entry.getKey() + "=" + entry.getValue().getAsString());
+            }
+            final String finalParams = params.toString();
+            return scopes.stream().map(s -> s + finalParams).collect(Collectors.toSet());
+        } else {
+            return scopes;
+        }
+    }
+
 
     @Override
     public void create(Scope scope) throws ScopeNameException, ScopeAbsentIdException {

@@ -10,6 +10,8 @@ import io.corbel.resources.rem.model.RestorResourceUri;
  */
 public interface KeyNormalizer {
 
-	String normalize(RestorResourceUri uri);
+    String normalize(RestorResourceUri uri);
+
+    String normalize(RestorResourceUri uri, String prefix);
 
 }

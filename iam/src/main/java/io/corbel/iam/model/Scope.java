@@ -1,20 +1,20 @@
 package io.corbel.iam.model;
 
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import org.hibernate.validator.constraints.NotEmpty;
-
-import io.corbel.lib.ws.json.serialization.JsonArrayToSetDeserializer;
-import io.corbel.lib.ws.json.serialization.JsonObjectDeserializer;
-import io.corbel.lib.ws.json.serialization.JsonObjectSerializer;
-import io.corbel.lib.ws.json.serialization.JsonObjectSetToJsonArraySerializer;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.gson.JsonObject;
+import io.corbel.lib.ws.json.serialization.JsonArrayToSetDeserializer;
+import io.corbel.lib.ws.json.serialization.JsonObjectDeserializer;
+import io.corbel.lib.ws.json.serialization.JsonObjectSerializer;
+import io.corbel.lib.ws.json.serialization.JsonObjectSetToJsonArraySerializer;
+import io.dropwizard.validation.ValidationMethod;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
+
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author Alexander De Leon
@@ -24,12 +24,13 @@ public class Scope extends Entity {
     public static final String COMPOSITE_SCOPE_TYPE = "composite_scope";
 
     private String type;
-    @NotEmpty private String audience;
-    @NotEmpty @JsonDeserialize(using = JsonArrayToSetDeserializer.class) private Set<JsonObject> rules;
+    private String audience;
+    @JsonDeserialize(using = JsonArrayToSetDeserializer.class) private Set<JsonObject> rules;
     private Set<String> scopes;
     @JsonDeserialize(using = JsonObjectDeserializer.class) private JsonObject parameters;
 
-    private Scope() {}
+    private Scope() {
+    }
 
     public Scope(String id, String type, String audience, Set<String> scopes, Set<JsonObject> rules, JsonObject parameters) {
         super(id);
@@ -75,6 +76,12 @@ public class Scope extends Entity {
                         .map(parameters -> parameters.entrySet().stream()
                                 .map(entry -> ";" + entry.getKey() + "=" + entry.getValue().getAsString()).collect(Collectors.joining()))
                         .orElse("");
+    }
+
+    @JsonIgnore
+    @ValidationMethod(message = "Both audience and rules fields can't be empty while creating a non-composed scope")
+    public boolean isAValidScope(){
+        return isComposed() || !CollectionUtils.isEmpty(getRules()) && !StringUtils.isEmpty(getAudience());
     }
 
     @Override

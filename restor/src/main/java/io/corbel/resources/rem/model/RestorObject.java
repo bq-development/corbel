@@ -2,33 +2,45 @@ package io.corbel.resources.rem.model;
 
 import java.io.InputStream;
 
-import org.springframework.http.MediaType;
-
 /**
  * @author Alberto J. Rubio
  */
 public class RestorObject {
 
-	private final String mediaType;
-	private final InputStream inputStream;
-	private final Long contentLength;
+    private final String mediaType;
+    private final InputStream inputStream;
+    private final Long contentLength;
+    private final String etag;
 
-	public RestorObject(String mediaType, InputStream inputStream, Long contentLength) {
-		this.mediaType = mediaType;
-		this.inputStream = inputStream;
-		this.contentLength = contentLength;
-	}
+    public RestorObject(String mediaType, InputStream inputStream, Long contentLength, String etag) {
+        this.mediaType = mediaType;
+        this.inputStream = inputStream;
+        this.contentLength = contentLength;
+        this.etag = etag;
+    }
 
-	public String getMediaType() {
-		return mediaType;
-	}
 
-	public InputStream getInputStream() {
-		return inputStream;
-	}
+    public RestorObject(String mediaType, InputStream inputStream, Long contentLength) {
+        this.mediaType = mediaType;
+        this.inputStream = inputStream;
+        this.contentLength = contentLength;
+        this.etag = null;
+    }
 
-	public Long getContentLength() {
-		return contentLength;
-	}
+    public String getMediaType() {
+        return mediaType;
+    }
+
+    public InputStream getInputStream() {
+        return inputStream;
+    }
+
+    public Long getContentLength() {
+        return contentLength;
+    }
+
+    public String getEtag() {
+        return etag;
+    }
 
 }

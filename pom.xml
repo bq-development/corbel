@@ -1,8 +1,9 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.corbel</groupId>
   <artifactId>corbel</artifactId>
-  <version>1.28.0-SNAPSHOT</version>
+  <version>1.29.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>corbel</name>
   <description>Corbel Platform</description>
@@ -38,10 +39,10 @@
     <buildmetadata-maven-plugin.version>1.5.2</buildmetadata-maven-plugin.version>
     <lib-config.version>0.3.0</lib-config.version>
     <lib-cli.version>0.4.0</lib-cli.version>
-    <lib-mongodb.version>0.6.0</lib-mongodb.version>
+      <lib-mongodb.version>0.7.0-SNAPSHOT</lib-mongodb.version>
     <lib-token.version>0.8.0</lib-token.version>
     <lib-queries.version>0.14.0</lib-queries.version>
-    <lib-ws.version>0.16.0</lib-ws.version>
+    <lib-ws.version>0.17.0</lib-ws.version>
     <lib-rabbitmq.version>0.9.0</lib-rabbitmq.version>
     <events.version>1.27.0</events.version>
     <spring.version>4.1.7.RELEASE</spring.version>
@@ -63,6 +64,7 @@
     <module>oauth-server</module>
     <module>oauth-filter-api</module>
     <module>rem-acl</module>
+    <module>notifications</module>
   </modules>
   <dependencies>
     <dependency>

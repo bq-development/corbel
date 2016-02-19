@@ -87,11 +87,7 @@ import java.util.stream.Collectors;
 
         user.setDomain(domain.getId());
 
-        if (user.getScopes() == null || user.getScopes().isEmpty()) {
-            user.setScopes(domain.getDefaultScopes());
-        } else if (!domainService.scopesAllowedInDomain(user.getScopes(), domain)) {
-            return IamErrorResponseFactory.getInstance().scopesNotAllowed(domain.getId());
-        }
+        user.setScopes(domain.getDefaultScopes());
 
         setTracebleEntity(user, authorizationInfo);
 
@@ -244,6 +240,16 @@ import java.util.stream.Collectors;
         return resolveMeIdAliases(userId, authorizationInfo).filter(user -> userDomainMatchAuthorizationDomain(user, authorizationInfo))
                 .map(user -> {
                     userService.signOut(user.getId()); // invalidate all user tokens
+                    return Response.noContent().build();
+                }).orElseGet(() -> IamErrorResponseFactory.getInstance().notFound());
+    }
+
+    @DELETE
+    @Path("/{id}/sessions")
+    public Response deleteAllSessions(@PathParam("id") String userId, @Auth AuthorizationInfo authorizationInfo) {
+        return resolveMeIdAliases(userId, authorizationInfo).filter(user -> userDomainMatchAuthorizationDomain(user, authorizationInfo))
+                .map(user -> {
+                    userService.invalidateAllTokens(user.getId());
                     return Response.noContent().build();
                 }).orElseGet(() -> IamErrorResponseFactory.getInstance().notFound());
     }
