@@ -26,6 +26,7 @@ import com.fasterxml.jackson.datatype.jsr310.JSR310Module;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 
+import io.corbel.event.DeviceEvent;
 import io.corbel.event.DomainDeletedEvent;
 import io.corbel.event.DomainPublicScopesNotPublishedEvent;
 import io.corbel.event.ScopeUpdateEvent;
@@ -38,6 +39,7 @@ import io.corbel.iam.auth.AuthorizationRule;
 import io.corbel.iam.auth.provider.*;
 import io.corbel.iam.auth.rule.*;
 import io.corbel.iam.cli.dsl.IamShell;
+import io.corbel.iam.eventbus.DeviceDeletedEventHandler;
 import io.corbel.iam.eventbus.DomainDeletedEventHandler;
 import io.corbel.iam.eventbus.DomainPublicScopesNotPublishedEventHandler;
 import io.corbel.iam.eventbus.ScopeModifiedEventHandler;
@@ -112,6 +114,11 @@ public class IamIoc {
     @Bean
     public EventHandler<DomainDeletedEvent> domainDeletedEventHandler() {
         return new DomainDeletedEventHandler(clientRepository, userRepository);
+    }
+
+    @Bean
+    public EventHandler<DeviceEvent> getDeviceDeletedEventHandler() {
+        return new DeviceDeletedEventHandler(authorizationRulesRepository, userTokenRepository);
     }
 
     @Bean
