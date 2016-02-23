@@ -69,5 +69,5 @@ public interface ResmiDao {
 
     void ensureExpireIndex(ResourceUri uri);
 
-    void ensureIndex(ResourceUri uri, Index index);
+    void ensureIndex(ResourceUri uri, IndexDefinition indexDefinition);
 }

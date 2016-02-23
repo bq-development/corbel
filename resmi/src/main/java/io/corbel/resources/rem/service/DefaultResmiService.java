@@ -14,7 +14,7 @@ import io.corbel.resources.rem.request.CollectionParameters;
 import io.corbel.resources.rem.request.RelationParameters;
 import io.corbel.resources.rem.resmi.exception.InvalidApiParamException;
 import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
-import org.springframework.data.mongodb.core.index.Index;
+import org.springframework.data.mongodb.core.index.IndexDefinition;
 
 import java.time.Clock;
 import java.util.*;
@@ -177,8 +177,8 @@ public class DefaultResmiService implements ResmiService {
     }
 
     @Override
-    public void ensureIndex(ResourceUri uri, Index index) {
-        resmiDao.ensureIndex(uri, index);
+    public void ensureIndex(ResourceUri uri, IndexDefinition indexDefinition) {
+        resmiDao.ensureIndex(uri, indexDefinition);
     }
 
     @Override
