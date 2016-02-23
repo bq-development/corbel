@@ -105,17 +105,12 @@ public class AclGetRem extends AclBaseRem {
 
         Optional<CollectionParameters> collectionParameters = parameters.getOptionalApiParameters();
 
-        List<ResourceQuery> aclQueryParams = new AclQueryBuilder(Optional.ofNullable(tokenInfo.getUserId()), tokenInfo.getGroups())
-                .build(collectionParameters.flatMap(CollectionParameters::getQueries).orElse(Collections.emptyList()));
-
         if (collectionParameters.isPresent()) {
-            collectionParameters.get().setQueries(Optional.of(aclQueryParams));
-        } else {
-            CollectionParametersImpl collectionParametersImpl = new CollectionParametersImpl(null, Optional.empty(),
-                    Optional.of(aclQueryParams), Optional.empty(), Optional.empty(), Optional.empty());
-            collectionParameters = Optional.of(collectionParametersImpl);
-        }
+            List<ResourceQuery> aclQueryParams = new AclQueryBuilder(Optional.ofNullable(tokenInfo.getUserId()), tokenInfo.getGroups())
+                    .build(collectionParameters.flatMap(CollectionParameters::getQueries).orElse(Collections.emptyList()));
 
+            collectionParameters.get().setQueries(Optional.of(aclQueryParams));
+        }
     }
 
 }
