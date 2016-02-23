@@ -10,6 +10,7 @@ import io.corbel.resources.rem.request.ResourceId;
 import java.util.List;
 
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.TextCriteria;
 
 /**
  * @author Alberto J. Rubio
@@ -40,6 +41,13 @@ public class MongoResmiQueryBuilder extends MongoQueryBuilder {
 
     public MongoResmiQueryBuilder relationDestinationId(String id) {
         query.addCriteria(Criteria.where(JsonRelation._DST_ID).is(id));
+        return this;
+    }
+
+    public MongoResmiQueryBuilder textSearch(String textSearchQuery)
+    {
+        final TextCriteria textCriteria = TextCriteria.forDefaultLanguage().matching(textSearchQuery);
+        query.addCriteria(textCriteria);
         return this;
     }
 

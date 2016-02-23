@@ -92,8 +92,7 @@ public class MongoResmiDao implements ResmiDao {
     }
 
     @Override
-    public JsonElement findRelation(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries, Optional<String> textSearch, Optional<Pagination> pagination,
-            Optional<Sort> sort) {
+    public JsonElement findRelation(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries, Optional<String> textSearch, Optional<Pagination> pagination, Optional<Sort> sort) {
         MongoResmiQueryBuilder mongoResmiQueryBuilder = new MongoResmiQueryBuilder();
 
         if (uri.getRelationId() != null) {
@@ -105,8 +104,7 @@ public class MongoResmiDao implements ResmiDao {
 
         if (textSearch.isPresent() && StringUtils.isNoneEmpty(textSearch.get()))
         {
-            final TextCriteria textCriteria = TextCriteria.forDefaultLanguage().matching(textSearch.get());
-            query.addCriteria(textCriteria);
+            mongoResmiQueryBuilder.textSearch(textSearch.get());
         }
 
         LOG.debug("findRelation Query executed : " + query.getQueryObject().toString());
