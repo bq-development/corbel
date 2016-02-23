@@ -9,7 +9,7 @@ import io.corbel.lib.queries.request.Sort;
 import io.corbel.resources.rem.model.GenericDocument;
 import io.corbel.resources.rem.model.ResourceUri;
 import io.corbel.resources.rem.resmi.exception.ResmiAggregationException;
-import org.springframework.data.mongodb.core.index.Index;
+import org.springframework.data.mongodb.core.index.IndexDefinition;
 
 import java.util.List;
 import java.util.Optional;
@@ -69,5 +69,5 @@ public interface ResmiDao {
 
     void ensureExpireIndex(ResourceUri uri);
 
-    void ensureIndex(ResourceUri uri, Index index);
+    void ensureIndex(ResourceUri uri, IndexDefinition indexDefinition);
 }

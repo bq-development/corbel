@@ -9,7 +9,7 @@ import io.corbel.resources.rem.model.SearchResource
 import io.corbel.resources.rem.search.ElasticSearchService
 import io.corbel.resources.rem.search.ResmiSearch
 import io.corbel.resources.rem.service.ResmiService
-import org.springframework.data.mongodb.core.index.Index
+import org.springframework.data.mongodb.core.index.IndexDefinition
 
 @Shell("resmi")
 class ResmiShell {
@@ -26,20 +26,20 @@ class ResmiShell {
     }
 
     @Description("Creates a mongo index on the specified collection. See <> for documentation on index syntax")
-    def ensureIndex(String domain, String collection, Index index) {
+    def ensureIndex(String domain, String collection, IndexDefinition indexDefinition) {
         assert domain: "domain is required"
         assert collection: "collection is required"
-        assert index: "index is required"
-        resmiService.ensureIndex(new ResourceUri(domain, collection), index)
+        assert indexDefinition: "indexDefinition is required"
+        resmiService.ensureIndex(new ResourceUri(domain, collection), indexDefinition)
     }
 
     @Description("Creates a mongo index on the specified relation. See <> for documentation on index syntax")
-    def ensureIndex(String domain, String collection, String relation, Index index) {
+    def ensureIndex(String domain, String collection, String relation, IndexDefinition indexDefinition) {
         assert domain: "domain is required"
         assert collection: "collection is required"
-        assert index: "relation is required"
-        assert index: "index is required"
-        resmiService.ensureIndex(new ResourceUri(domain, collection).setRelation(relation), index)
+        assert relation: "relation is required"
+        assert indexDefinition: "indexDefinition is required"
+        resmiService.ensureIndex(new ResourceUri(domain, collection).setRelation(relation), indexDefinition)
     }
 
     @Description("Upsert a resource in RESMI.")
