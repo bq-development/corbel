@@ -46,8 +46,11 @@ public class MongoResmiQueryBuilder extends MongoQueryBuilder {
 
     public MongoResmiQueryBuilder textSearch(String textSearchQuery)
     {
-        final TextCriteria textCriteria = TextCriteria.forDefaultLanguage().matching(textSearchQuery);
-        query.addCriteria(textCriteria);
+        if (textSearchQuery != null)
+        {
+            final TextCriteria textCriteria = TextCriteria.forDefaultLanguage().matching(textSearchQuery);
+            query.addCriteria(textCriteria);
+        }
         return this;
     }
 

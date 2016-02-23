@@ -99,14 +99,15 @@ public class MongoResmiDao implements ResmiDao {
             mongoResmiQueryBuilder.relationDestinationId(uri.getRelationId());
         }
 
-        Query query = mongoResmiQueryBuilder.relationSubjectId(uri).query(resourceQueries.orElse(null)).pagination(pagination.orElse(null)).sort(sort.orElse(null)).build();
-        query.fields().exclude(_ID);
+        mongoResmiQueryBuilder.relationSubjectId(uri).query(resourceQueries.orElse(null)).pagination(pagination.orElse(null)).sort(sort.orElse(null));
 
         if (textSearch.isPresent() && StringUtils.isNoneEmpty(textSearch.get()))
         {
             mongoResmiQueryBuilder.textSearch(textSearch.get());
         }
 
+        final Query query = mongoResmiQueryBuilder.build();
+        query.fields().exclude(_ID);
         LOG.debug("findRelation Query executed : " + query.getQueryObject().toString());
         JsonArray result = renameIds(JsonUtils.convertToArray(mongoOperations.find(query, JsonObject.class, getMongoCollectionName(uri))), uri.isTypeWildcard());
 
