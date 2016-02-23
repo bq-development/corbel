@@ -39,6 +39,7 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
 /**
  * @author Alberto J. Rubio
+ *
  */
 public class MongoResmiDao implements ResmiDao {
 
