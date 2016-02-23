@@ -27,7 +27,6 @@ import org.springframework.data.mongodb.core.aggregation.*;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.expression.spel.SpelParseException;
 
@@ -81,19 +80,20 @@ public class MongoResmiDao implements ResmiDao {
 
     @Override
     public JsonArray findCollection(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries, Optional<String> textSearch, Optional<Pagination> pagination, Optional<Sort> sort) {
-        Query query = new MongoResmiQueryBuilder().query(resourceQueries.orElse(null)).pagination(pagination.orElse(null)).sort(sort.orElse(null)).build();
-        if (textSearch.isPresent())
+        final MongoResmiQueryBuilder mongoResmiQueryBuilder = new MongoResmiQueryBuilder();
+        mongoResmiQueryBuilder.query(resourceQueries.orElse(null)).pagination(pagination.orElse(null)).sort(sort.orElse(null));
+        if (textSearch.isPresent() && StringUtils.isNoneEmpty(textSearch.get()))
         {
-            final TextCriteria textCriteria = TextCriteria.forDefaultLanguage().matching(textSearch.get());
-            query.addCriteria(textCriteria);
+            mongoResmiQueryBuilder.textSearch(textSearch.get());
         }
+        final Query query = mongoResmiQueryBuilder.build();
         LOG.debug("findCollection Query executed : " + query.getQueryObject().toString());
         return JsonUtils.convertToArray(mongoOperations.find(query, JsonObject.class, getMongoCollectionName(uri)));
     }
 
     @Override
     public JsonElement findRelation(ResourceUri uri, Optional<List<ResourceQuery>> resourceQueries, Optional<String> textSearch, Optional<Pagination> pagination, Optional<Sort> sort) {
-        MongoResmiQueryBuilder mongoResmiQueryBuilder = new MongoResmiQueryBuilder();
+        final MongoResmiQueryBuilder mongoResmiQueryBuilder = new MongoResmiQueryBuilder();
 
         if (uri.getRelationId() != null) {
             mongoResmiQueryBuilder.relationDestinationId(uri.getRelationId());
