@@ -9,16 +9,70 @@
         "nGram_filter": {
           "type": "nGram",
           "min_gram": 2,
-          "max_gram": 25,
-          "token_chars": [
-            "letter",
-            "digit",
-            "punctuation",
-            "symbol"
-          ]
+          "max_gram": 25
         }
       },
       "analyzer": {
+        "international_fine_grain_analyzer_index": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": [
+            "lowercase",
+            "asciifolding",
+            "nGram_filter",
+            "icu_collation"
+          ]
+        },
+        "international_fine_grain_analyzer_search": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": [
+            "lowercase",
+            "asciifolding",
+            "icu_collation"
+          ]
+        },
+        "spanish_coarse_grain_analyzer_index": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": [
+            "lowercase",
+            "asciifolding",
+            "spanish_stop_words",
+            "icu_collation"
+          ]
+        },
+        "spanish_coarse_grain_analyzer_search": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": [
+            "lowercase",
+            "asciifolding",
+            "spanish_stop_words",
+            "icu_collation"
+          ]
+        },
+        "spanish_fine_grain_analyzer_index": {
+          "type": "custom",
+          "tokenizer": "whitespace",
+          "filter": [
+            "lowercase",
+            "asciifolding",
+            "spanish_stop_words",
+            "nGram_filter",
+            "icu_collation"
+          ]
+        },
+        "spanish_fine_grain_analyzer_search": {
+          "type": "custom",
+          "tokenizer": "whitespace",
+          "filter": [
+            "lowercase",
+            "asciifolding",
+            "spanish_stop_words",
+            "icu_collation"
+          ]
+        },
         "default_index": {
           "type": "custom",
           "tokenizer": "whitespace",
