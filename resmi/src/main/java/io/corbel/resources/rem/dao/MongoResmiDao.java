@@ -385,14 +385,14 @@ public class MongoResmiDao implements ResmiDao {
     private Optional<Double> getAggregationResultValue(String operator, List<DBObject> results, ResourceUri resourceUri, String field) {
         if(!results.isEmpty()) {
             DBObject result = results.get(0);
-            if(checkFields(result, resourceUri, field, operator)) {
+            if(isValidAggregationResult(result, resourceUri, field, operator)) {
                 return Optional.ofNullable((Number) result.get(operator)).map(Number::doubleValue);
             }
         }
         return Optional.empty();
     }
 
-    private boolean checkFields (DBObject result, ResourceUri resourceUri, String field, String operator) {
+    private boolean isValidAggregationResult(DBObject result, ResourceUri resourceUri, String field, String operator) {
         Object aggregation = result.get(operator);
         int count = (int) result.get(COUNT);
 
