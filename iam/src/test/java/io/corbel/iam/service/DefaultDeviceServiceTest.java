@@ -99,7 +99,7 @@ import io.corbel.iam.repository.DeviceRepository;
         deviceService.deleteByUidAndUserId(TEST_UID, TEST_USER_ID, TEST_DOMAIN);
 
         verify(deviceRepositoryMock).deleteById(TEST_DEVICE_ID);
-        verify(eventsServiceMock).sendDeviceDeleteEvent(TEST_DEVICE_ID, TEST_USER_ID, TEST_DOMAIN);
+        verify(eventsServiceMock).sendDeviceDeleteEvent(TEST_UID, TEST_USER_ID, TEST_DOMAIN);
     }
 
     @Test
