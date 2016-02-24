@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.*;
 import com.mongodb.BasicDBObject;
+import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBObject;
 import com.mongodb.WriteResult;
 import io.corbel.lib.mongo.JsonObjectMongoWriteConverter;
@@ -282,7 +283,6 @@ import static org.mockito.Mockito.*;
         String field = "field";
         String value = "value";
         String testField = "test";
-        long countField = 2;
 
         ResourceUri resourceUri = new ResourceUri(DOMAIN, TEST_COLLECTION);
 
@@ -290,16 +290,14 @@ import static org.mockito.Mockito.*;
         query.addQueryNode(new QueryNodeImpl(QueryOperator.$EQ, field, new StringQueryLiteral(value)));
 
         Mockito.when(mongoOperations.aggregate(argument.capture(), eq(TEST_COLLECTION_NAME_IN_DB), eq(DBObject.class))).thenReturn(
-                new AggregationResults<>(Collections.singletonList(new BasicDBObject("average", 10d)), new BasicDBObject()));
-        Mockito.when(mongoOperations.count(any(Query.class), anyString())).thenReturn(countField);
-        doReturn(false).when(mongoResmiDao).fieldNotExists(any(ResourceUri.class),anyString(),any(List.class),anyString());
+                new AggregationResults<>(Collections.singletonList(new BasicDBObjectBuilder().add("average", 10d).add("count", 99).get()), new BasicDBObject()));
 
         JsonElement result = mongoResmiDao.average(resourceUri, Collections.singletonList(query), testField);
 
         assertThat(result.getAsJsonObject().get("average").getAsInt()).isEqualTo(10);
         assertThat(argument.getValue().toString()).isEqualTo(
                 "{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"" + field + "\" : \"" + value
-                        + "\"}} , { \"$group\" : { \"_id\" :  null  , \"average\" : { \"$avg\" : \"$" + testField + "\"}}}]}");
+                        + "\"}} , { \"$group\" : { \"_id\" :  null  , \"average\" : { \"$avg\" : \"$" + testField + "\"} , \"count\" : { \"$sum\" : 1}}}]}");
     }
 
     @Test
@@ -316,15 +314,40 @@ import static org.mockito.Mockito.*;
         query.addQueryNode(new QueryNodeImpl(QueryOperator.$EQ, field, new StringQueryLiteral(value)));
 
         Mockito.when(mongoOperations.aggregate(argument.capture(), eq(TEST_COLLECTION_NAME_IN_DB), eq(DBObject.class))).thenReturn(
-                new AggregationResults<>(Collections.singletonList(new BasicDBObject("average", 0)), new BasicDBObject()));
+                new AggregationResults<>(Collections.singletonList(new BasicDBObjectBuilder().add("average", 0).add("count", 0).get()), new BasicDBObject()));
         Mockito.when(mongoOperations.count(any(Query.class), anyString())).thenReturn(countField);
         Mockito.when(aggregationResultsFactory.averageResult(Optional.empty())).thenReturn(null);
-        doReturn(true).when(mongoResmiDao).fieldNotExists(any(ResourceUri.class),anyString(),any(List.class),anyString());
+        doReturn(true).when(mongoResmiDao).collectionHasAtLeastOneEntryWithNumericInField(any(ResourceUri.class), anyString());
 
         assertTrue((mongoResmiDao.average(resourceUri, Collections.singletonList(query), testField)).getAsJsonObject().get("average").isJsonNull());
         assertThat(argument.getValue().toString()).isEqualTo(
                 "{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"" + field + "\" : \"" + value
-                        + "\"}} , { \"$group\" : { \"_id\" :  null  , \"average\" : { \"$avg\" : \"$" + testField + "\"}}}]}");
+                        + "\"}} , { \"$group\" : { \"_id\" :  null  , \"average\" : { \"$avg\" : \"$" + testField + "\"} , \"count\" : { \"$sum\" : 1}}}]}");
+    }
+
+    @Test
+    public void averageFieldIsNotNumericTest() {
+        ResourceQuery query = new ResourceQuery();
+        String field = "field";
+        String value = "value";
+        String testField = "test";
+        long countField = 0;
+
+        ResourceUri resourceUri = new ResourceUri(DOMAIN, TEST_COLLECTION);
+
+        ArgumentCaptor<Aggregation> argument = ArgumentCaptor.forClass(Aggregation.class);
+        query.addQueryNode(new QueryNodeImpl(QueryOperator.$EQ, field, new StringQueryLiteral(value)));
+
+        Mockito.when(mongoOperations.aggregate(argument.capture(), eq(TEST_COLLECTION_NAME_IN_DB), eq(DBObject.class))).thenReturn(
+                new AggregationResults<>(Collections.singletonList(new BasicDBObjectBuilder().add("average", 0).add("count", 99).get()), new BasicDBObject()));
+        Mockito.when(mongoOperations.count(any(Query.class), anyString())).thenReturn(countField);
+        Mockito.when(aggregationResultsFactory.averageResult(Optional.empty())).thenReturn(null);
+        doReturn(false).when(mongoResmiDao).collectionHasAtLeastOneEntryWithNumericInField(any(ResourceUri.class), anyString());
+
+        assertTrue((mongoResmiDao.average(resourceUri, Collections.singletonList(query), testField)).getAsJsonObject().get("average").isJsonNull());
+        assertThat(argument.getValue().toString()).isEqualTo(
+                "{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"" + field + "\" : \"" + value
+                        + "\"}} , { \"$group\" : { \"_id\" :  null  , \"average\" : { \"$avg\" : \"$" + testField + "\"} , \"count\" : { \"$sum\" : 1}}}]}");
     }
 
     @Test
@@ -340,17 +363,16 @@ import static org.mockito.Mockito.*;
         query.addQueryNode(new QueryNodeImpl(QueryOperator.$EQ, field, new StringQueryLiteral(value)));
 
         Mockito.when(mongoOperations.aggregate(argument.capture(), eq(TEST_COLLECTION_NAME_IN_DB), eq(DBObject.class))).thenReturn(
-                new AggregationResults<>(Collections.singletonList(new BasicDBObject("average", 0)), new BasicDBObject()));
+                new AggregationResults<>(Collections.singletonList(new BasicDBObjectBuilder().add("average", 0).add("count", 99).get()), new BasicDBObject()));
         Mockito.when(mongoOperations.count(any(Query.class), anyString())).thenReturn(countField);
         Mockito.when(aggregationResultsFactory.averageResult(Optional.empty())).thenReturn(null);
-        doReturn(false).when(mongoResmiDao).fieldNotExists(any(ResourceUri.class),anyString(),any(List.class),anyString());
-
+        doReturn(true).when(mongoResmiDao).collectionHasAtLeastOneEntryWithNumericInField(any(ResourceUri.class), anyString());
         JsonElement result = mongoResmiDao.average(resourceUri, Collections.singletonList(query), testField);
 
         assertThat(result.getAsJsonObject().get("average").getAsInt()).isEqualTo(0);
         assertThat(argument.getValue().toString()).isEqualTo(
                 "{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"" + field + "\" : \"" + value
-                        + "\"}} , { \"$group\" : { \"_id\" :  null  , \"average\" : { \"$avg\" : \"$" + testField + "\"}}}]}");
+                        + "\"}} , { \"$group\" : { \"_id\" :  null  , \"average\" : { \"$avg\" : \"$" + testField + "\"} , \"count\" : { \"$sum\" : 1}}}]}");
 
     }
 
@@ -360,7 +382,6 @@ import static org.mockito.Mockito.*;
         String testField = "test";
         String field = "field";
         String value = "value";
-        long countField = 2;
 
         ResourceUri resourceUri = new ResourceUri(DOMAIN, TEST_COLLECTION, TEST_ID, TEST_REL);
 
@@ -368,9 +389,7 @@ import static org.mockito.Mockito.*;
         query.addQueryNode(new QueryNodeImpl(QueryOperator.$EQ, field, new StringQueryLiteral(value)));
 
         Mockito.when(mongoOperations.aggregate(argument.capture(), eq(RELATION_COLLECTION_NAME), eq(DBObject.class))).thenReturn(
-                new AggregationResults<>(Collections.singletonList(new BasicDBObject("average", 10d)), new BasicDBObject()));
-        Mockito.when(mongoOperations.count(any(Query.class), anyString())).thenReturn(countField);
-        doReturn(false).when(mongoResmiDao).fieldNotExists(any(ResourceUri.class),anyString(),any(List.class),anyString());
+                new AggregationResults<>(Collections.singletonList(new BasicDBObjectBuilder().add("average", 10d).add("count", 99).get()), new BasicDBObject()));
 
         JsonElement result = mongoResmiDao.average(resourceUri, Collections.singletonList(query), testField);
 
@@ -378,7 +397,7 @@ import static org.mockito.Mockito.*;
         assertThat(argument.getValue().toString()).isEqualTo(
                 "{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"" + field + "\" : \"" + value
                         + "\" , \"_src_id\" : \"" + TEST_ID + "\"}} , { \"$group\" : { \"_id\" :  null  , \"average\" : { \"$avg\" : \"$"
-                        + testField + "\"}}}]}");
+                        + testField + "\"} , \"count\" : { \"$sum\" : 1}}}]}");
     }
 
     @Test
@@ -394,16 +413,42 @@ import static org.mockito.Mockito.*;
         query.addQueryNode(new QueryNodeImpl(QueryOperator.$EQ, field, new StringQueryLiteral(value)));
 
         Mockito.when(mongoOperations.aggregate(argument.capture(), eq(RELATION_COLLECTION_NAME), eq(DBObject.class))).thenReturn(
-                new AggregationResults<>(Collections.singletonList(new BasicDBObject("average", 0)), new BasicDBObject()));
+                new AggregationResults<>(Collections.singletonList(new BasicDBObjectBuilder().add("average", 0).add("count", 0).get()), new BasicDBObject()));
         Mockito.when(mongoOperations.count(any(Query.class), anyString())).thenReturn(countField);
         Mockito.when(aggregationResultsFactory.averageResult(Optional.empty())).thenReturn(null);
-        doReturn(true).when(mongoResmiDao).fieldNotExists(any(ResourceUri.class),anyString(),any(List.class),anyString());
+        doReturn(true).when(mongoResmiDao).collectionHasAtLeastOneEntryWithNumericInField(any(ResourceUri.class), anyString());
 
         assertTrue((mongoResmiDao.average(resourceUri, Collections.singletonList(query), testField)).getAsJsonObject().get("average").isJsonNull());
         assertThat(argument.getValue().toString()).isEqualTo(
                 "{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"" + field + "\" : \"" + value
                         + "\" , \"_src_id\" : \"" + TEST_ID + "\"}} , { \"$group\" : { \"_id\" :  null  , \"average\" : { \"$avg\" : \"$"
-                        + testField + "\"}}}]}");
+                        + testField + "\"} , \"count\" : { \"$sum\" : 1}}}]}");
+    }
+
+
+    @Test
+    public void averageRelationIsNotNumericFieldTest() {
+        ResourceQuery query = new ResourceQuery();
+        String field = "field";
+        String value = "value";
+        String testField = "test";
+        long countField = 0;
+
+        ResourceUri resourceUri = new ResourceUri(DOMAIN, TEST_COLLECTION, TEST_ID, TEST_REL);
+        ArgumentCaptor<Aggregation> argument = ArgumentCaptor.forClass(Aggregation.class);
+        query.addQueryNode(new QueryNodeImpl(QueryOperator.$EQ, field, new StringQueryLiteral(value)));
+
+        Mockito.when(mongoOperations.aggregate(argument.capture(), eq(RELATION_COLLECTION_NAME), eq(DBObject.class))).thenReturn(
+                new AggregationResults<>(Collections.singletonList(new BasicDBObjectBuilder().add("average", 0).add("count", 99).get()), new BasicDBObject()));
+        Mockito.when(mongoOperations.count(any(Query.class), anyString())).thenReturn(countField);
+        Mockito.when(aggregationResultsFactory.averageResult(Optional.empty())).thenReturn(null);
+        doReturn(false).when(mongoResmiDao).collectionHasAtLeastOneEntryWithNumericInField(any(ResourceUri.class), anyString());
+
+        assertTrue((mongoResmiDao.average(resourceUri, Collections.singletonList(query), testField)).getAsJsonObject().get("average").isJsonNull());
+        assertThat(argument.getValue().toString()).isEqualTo(
+                "{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"" + field + "\" : \"" + value
+                        + "\" , \"_src_id\" : \"" + TEST_ID + "\"}} , { \"$group\" : { \"_id\" :  null  , \"average\" : { \"$avg\" : \"$"
+                        + testField + "\"} , \"count\" : { \"$sum\" : 1}}}]}");
     }
 
     @Test
@@ -419,10 +464,10 @@ import static org.mockito.Mockito.*;
         query.addQueryNode(new QueryNodeImpl(QueryOperator.$EQ, field, new StringQueryLiteral(value)));
 
         Mockito.when(mongoOperations.aggregate(argument.capture(), eq(RELATION_COLLECTION_NAME), eq(DBObject.class))).thenReturn(
-                new AggregationResults<>(Collections.singletonList(new BasicDBObject("average", 0)), new BasicDBObject()));
+                new AggregationResults<>(Collections.singletonList(new BasicDBObjectBuilder().add("average", 0).add("count", 99).get()), new BasicDBObject()));
         Mockito.when(mongoOperations.count(any(Query.class), anyString())).thenReturn(countField);
         Mockito.when(aggregationResultsFactory.averageResult(Optional.empty())).thenReturn(null);
-        doReturn(false).when(mongoResmiDao).fieldNotExists(any(ResourceUri.class),anyString(),any(List.class),anyString());
+        doReturn(true).when(mongoResmiDao).collectionHasAtLeastOneEntryWithNumericInField(any(ResourceUri.class), anyString());
 
         JsonElement result = mongoResmiDao.average(resourceUri, Collections.singletonList(query), testField);
 
@@ -430,7 +475,7 @@ import static org.mockito.Mockito.*;
         assertThat(argument.getValue().toString()).isEqualTo(
                 "{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"" + field + "\" : \"" + value
                         + "\" , \"_src_id\" : \"" + TEST_ID + "\"}} , { \"$group\" : { \"_id\" :  null  , \"average\" : { \"$avg\" : \"$"
-                        + testField + "\"}}}]}");
+                        + testField + "\"} , \"count\" : { \"$sum\" : 1}}}]}");
     }
 
 
@@ -441,7 +486,6 @@ import static org.mockito.Mockito.*;
         String field = "field";
         String value = "value";
         String testField = "test";
-        long countField = 2;
 
         ResourceUri resourceUri = new ResourceUri(DOMAIN, TEST_COLLECTION);
 
@@ -449,16 +493,14 @@ import static org.mockito.Mockito.*;
         query.addQueryNode(new QueryNodeImpl(QueryOperator.$EQ, field, new StringQueryLiteral(value)));
 
         Mockito.when(mongoOperations.aggregate(argument.capture(), eq(TEST_COLLECTION_NAME_IN_DB), eq(DBObject.class))).thenReturn(
-                new AggregationResults<>(Collections.singletonList(new BasicDBObject("sum", 10d)), new BasicDBObject()));
-        Mockito.when(mongoOperations.count(any(Query.class), anyString())).thenReturn(countField);
-        doReturn(false).when(mongoResmiDao).fieldNotExists(any(ResourceUri.class),anyString(),any(List.class),anyString());
+                new AggregationResults<>(Collections.singletonList(new BasicDBObjectBuilder().add("sum", 10d).add("count", 99).get()), new BasicDBObject()));
 
         JsonElement result = mongoResmiDao.sum(resourceUri, Collections.singletonList(query), testField);
 
         assertThat(result.getAsJsonObject().get("sum").getAsInt()).isEqualTo(10);
         assertThat(argument.getValue().toString()).isEqualTo(
                 "{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"" + field + "\" : \"" + value
-                        + "\"}} , { \"$group\" : { \"_id\" :  null  , \"sum\" : { \"$sum\" : \"$" + testField + "\"}}}]}");
+                        + "\"}} , { \"$group\" : { \"_id\" :  null  , \"sum\" : { \"$sum\" : \"$" + testField + "\"} , \"count\" : { \"$sum\" : 1}}}]}");
     }
 
     @Test
@@ -475,15 +517,40 @@ import static org.mockito.Mockito.*;
         query.addQueryNode(new QueryNodeImpl(QueryOperator.$EQ, field, new StringQueryLiteral(value)));
 
         Mockito.when(mongoOperations.aggregate(argument.capture(), eq(TEST_COLLECTION_NAME_IN_DB), eq(DBObject.class))).thenReturn(
-             new AggregationResults<>(Collections.singletonList(new BasicDBObject("sum", 0)), new BasicDBObject()));
+             new AggregationResults<>(Collections.singletonList(new BasicDBObjectBuilder().add("sum", 10d).add("count", 0).get()), new BasicDBObject()));
         Mockito.when(mongoOperations.count(any(Query.class), anyString())).thenReturn(countField);
         Mockito.when(aggregationResultsFactory.sumResult(Optional.empty())).thenReturn(null);
-        doReturn(true).when(mongoResmiDao).fieldNotExists(any(ResourceUri.class),anyString(),any(List.class),anyString());
+        doReturn(true).when(mongoResmiDao).collectionHasAtLeastOneEntryWithNumericInField(any(ResourceUri.class), anyString());
 
         assertTrue((mongoResmiDao.sum(resourceUri, Collections.singletonList(query), testField)).getAsJsonObject().get("sum").isJsonNull());
         assertThat(argument.getValue().toString()).isEqualTo(
                 "{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"" + field + "\" : \"" + value
-                        + "\"}} , { \"$group\" : { \"_id\" :  null  , \"sum\" : { \"$sum\" : \"$" + testField + "\"}}}]}");
+                        + "\"}} , { \"$group\" : { \"_id\" :  null  , \"sum\" : { \"$sum\" : \"$" + testField + "\"} , \"count\" : { \"$sum\" : 1}}}]}");
+    }
+
+    @Test
+    public void sumIsNotNumericFieldTest() {
+        ResourceQuery query = new ResourceQuery();
+        String field = "field";
+        String value = "value";
+        String testField = "test";
+        long countField = 0;
+
+        ResourceUri resourceUri = new ResourceUri(DOMAIN, TEST_COLLECTION);
+
+        ArgumentCaptor<Aggregation> argument = ArgumentCaptor.forClass(Aggregation.class);
+        query.addQueryNode(new QueryNodeImpl(QueryOperator.$EQ, field, new StringQueryLiteral(value)));
+
+        Mockito.when(mongoOperations.aggregate(argument.capture(), eq(TEST_COLLECTION_NAME_IN_DB), eq(DBObject.class))).thenReturn(
+                new AggregationResults<>(Collections.singletonList(new BasicDBObjectBuilder().add("sum", 0).add("count", 99).get()), new BasicDBObject()));
+        Mockito.when(mongoOperations.count(any(Query.class), anyString())).thenReturn(countField);
+        Mockito.when(aggregationResultsFactory.sumResult(Optional.empty())).thenReturn(null);
+        doReturn(false).when(mongoResmiDao).collectionHasAtLeastOneEntryWithNumericInField(any(ResourceUri.class), anyString());
+
+        assertTrue((mongoResmiDao.sum(resourceUri, Collections.singletonList(query), testField)).getAsJsonObject().get("sum").isJsonNull());
+        assertThat(argument.getValue().toString()).isEqualTo(
+                "{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"" + field + "\" : \"" + value
+                        + "\"}} , { \"$group\" : { \"_id\" :  null  , \"sum\" : { \"$sum\" : \"$" + testField + "\"} , \"count\" : { \"$sum\" : 1}}}]}");
     }
 
     @Test
@@ -500,17 +567,17 @@ import static org.mockito.Mockito.*;
         query.addQueryNode(new QueryNodeImpl(QueryOperator.$EQ, field, new StringQueryLiteral(value)));
 
         Mockito.when(mongoOperations.aggregate(argument.capture(), eq(TEST_COLLECTION_NAME_IN_DB), eq(DBObject.class))).thenReturn(
-                new AggregationResults<>(Collections.singletonList(new BasicDBObject("sum", 0)), new BasicDBObject()));
+                new AggregationResults<>(Collections.singletonList(new BasicDBObjectBuilder().add("sum", 0).add("count", 99).get()), new BasicDBObject()));
         Mockito.when(mongoOperations.count(any(Query.class), anyString())).thenReturn(countField);
         Mockito.when(aggregationResultsFactory.sumResult(Optional.empty())).thenReturn(null);
-        doReturn(false).when(mongoResmiDao).fieldNotExists(any(ResourceUri.class),anyString(),any(List.class),anyString());
+        doReturn(true).when(mongoResmiDao).collectionHasAtLeastOneEntryWithNumericInField(any(ResourceUri.class), anyString());
 
         JsonElement result = mongoResmiDao.sum(resourceUri, Collections.singletonList(query), testField);
 
         assertThat(result.getAsJsonObject().get("sum").getAsInt()).isEqualTo(0);
         assertThat(argument.getValue().toString()).isEqualTo(
                 "{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"" + field + "\" : \"" + value
-                        + "\"}} , { \"$group\" : { \"_id\" :  null  , \"sum\" : { \"$sum\" : \"$" + testField + "\"}}}]}");
+                        + "\"}} , { \"$group\" : { \"_id\" :  null  , \"sum\" : { \"$sum\" : \"$" + testField + "\"} , \"count\" : { \"$sum\" : 1}}}]}");
     }
 
     @Test
@@ -519,7 +586,6 @@ import static org.mockito.Mockito.*;
         String field = "field";
         String value = "value";
         String testField = "test";
-        long countField = 2;
 
         ResourceUri resourceUri = new ResourceUri(DOMAIN, TEST_COLLECTION, TEST_ID, TEST_REL);
 
@@ -527,10 +593,8 @@ import static org.mockito.Mockito.*;
         query.addQueryNode(new QueryNodeImpl(QueryOperator.$EQ, field, new StringQueryLiteral(value)));
 
         Mockito.when(mongoOperations.aggregate(argument.capture(), eq(RELATION_COLLECTION_NAME), eq(DBObject.class))).thenReturn(
-                new AggregationResults<>(Collections.singletonList(new BasicDBObject("sum", 10d)), new BasicDBObject()));
-        Mockito.when(mongoOperations.count(any(Query.class), anyString())).thenReturn(countField);
+                new AggregationResults<>(Collections.singletonList(new BasicDBObjectBuilder().add("sum", 10d).add("count", 99).get()), new BasicDBObject()));
         Mockito.when(aggregationResultsFactory.averageResult(Optional.empty())).thenReturn(null);
-        doReturn(false).when(mongoResmiDao).fieldNotExists(any(ResourceUri.class),anyString(),any(List.class),anyString());
 
         JsonElement result = mongoResmiDao.sum(resourceUri, Collections.singletonList(query), testField);
 
@@ -538,7 +602,7 @@ import static org.mockito.Mockito.*;
         assertThat(argument.getValue().toString()).isEqualTo(
                 "{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"" + field + "\" : \"" + value
                         + "\" , \"_src_id\" : \"" + TEST_ID + "\"}} , { \"$group\" : { \"_id\" :  null  , \"sum\" : { \"$sum\" : \"$"
-                        + testField + "\"}}}]}");
+                        + testField + "\"} , \"count\" : { \"$sum\" : 1}}}]}");
     }
 
     @Test
@@ -554,16 +618,40 @@ import static org.mockito.Mockito.*;
         query.addQueryNode(new QueryNodeImpl(QueryOperator.$EQ, field, new StringQueryLiteral(value)));
 
         Mockito.when(mongoOperations.aggregate(argument.capture(), eq(RELATION_COLLECTION_NAME), eq(DBObject.class))).thenReturn(
-                new AggregationResults<>(Collections.singletonList(new BasicDBObject("sum", 0)), new BasicDBObject()));
+                new AggregationResults<>(Collections.singletonList(new BasicDBObjectBuilder().add("sum", 0).add("count", 0).get()), new BasicDBObject()));
         Mockito.when(mongoOperations.count(any(Query.class), anyString())).thenReturn(countField);
         Mockito.when(aggregationResultsFactory.sumResult(Optional.empty())).thenReturn(null);
-        doReturn(true).when(mongoResmiDao).fieldNotExists(any(ResourceUri.class),anyString(),any(List.class),anyString());
 
         assertTrue((mongoResmiDao.sum(resourceUri, Collections.singletonList(query), testField)).getAsJsonObject().get("sum").isJsonNull());
         assertThat(argument.getValue().toString()).isEqualTo(
                 "{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"" + field + "\" : \"" + value
                         + "\" , \"_src_id\" : \"" + TEST_ID + "\"}} , { \"$group\" : { \"_id\" :  null  , \"sum\" : { \"$sum\" : \"$"
-                        + testField + "\"}}}]}");
+                        + testField + "\"} , \"count\" : { \"$sum\" : 1}}}]}");
+    }
+
+    @Test
+    public void sumRelationIsNotNumericFieldTest() {
+        ResourceQuery query = new ResourceQuery();
+        String field = "field";
+        String value = "value";
+        String testField = "test";
+        long countField = 0;
+
+        ResourceUri resourceUri = new ResourceUri(DOMAIN, TEST_COLLECTION, TEST_ID, TEST_REL);
+        ArgumentCaptor<Aggregation> argument = ArgumentCaptor.forClass(Aggregation.class);
+        query.addQueryNode(new QueryNodeImpl(QueryOperator.$EQ, field, new StringQueryLiteral(value)));
+
+        Mockito.when(mongoOperations.aggregate(argument.capture(), eq(RELATION_COLLECTION_NAME), eq(DBObject.class))).thenReturn(
+                new AggregationResults<>(Collections.singletonList(new BasicDBObjectBuilder().add("sum", 0).add("count", 99).get()), new BasicDBObject()));
+        Mockito.when(mongoOperations.count(any(Query.class), anyString())).thenReturn(countField);
+        Mockito.when(aggregationResultsFactory.sumResult(Optional.empty())).thenReturn(null);
+        doReturn(false).when(mongoResmiDao).collectionHasAtLeastOneEntryWithNumericInField(any(ResourceUri.class), anyString());
+
+        assertTrue((mongoResmiDao.sum(resourceUri, Collections.singletonList(query), testField)).getAsJsonObject().get("sum").isJsonNull());
+        assertThat(argument.getValue().toString()).isEqualTo(
+                "{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"" + field + "\" : \"" + value
+                        + "\" , \"_src_id\" : \"" + TEST_ID + "\"}} , { \"$group\" : { \"_id\" :  null  , \"sum\" : { \"$sum\" : \"$"
+                        + testField + "\"} , \"count\" : { \"$sum\" : 1}}}]}");
     }
 
     @Test
@@ -579,10 +667,10 @@ import static org.mockito.Mockito.*;
         query.addQueryNode(new QueryNodeImpl(QueryOperator.$EQ, field, new StringQueryLiteral(value)));
 
         Mockito.when(mongoOperations.aggregate(argument.capture(), eq(RELATION_COLLECTION_NAME), eq(DBObject.class))).thenReturn(
-                new AggregationResults<>(Collections.singletonList(new BasicDBObject("sum", 0)), new BasicDBObject()));
+                new AggregationResults<>(Collections.singletonList(new BasicDBObjectBuilder().add("sum", 0).add("count", 99).get()), new BasicDBObject()));
         Mockito.when(mongoOperations.count(any(Query.class), anyString())).thenReturn(countField);
         Mockito.when(aggregationResultsFactory.sumResult(Optional.empty())).thenReturn(null);
-        doReturn(false).when(mongoResmiDao).fieldNotExists(any(ResourceUri.class),anyString(),any(List.class),anyString());
+        doReturn(true).when(mongoResmiDao).collectionHasAtLeastOneEntryWithNumericInField(any(ResourceUri.class), anyString());
 
         JsonElement result = mongoResmiDao.sum(resourceUri, Collections.singletonList(query), testField);
         assertThat(result.getAsJsonObject().get("sum").getAsInt()).isEqualTo(0);
@@ -590,7 +678,7 @@ import static org.mockito.Mockito.*;
         assertThat(argument.getValue().toString()).isEqualTo(
                 "{ \"aggregate\" : \"__collection__\" , \"pipeline\" : [ { \"$match\" : { \"" + field + "\" : \"" + value
                         + "\" , \"_src_id\" : \"" + TEST_ID + "\"}} , { \"$group\" : { \"_id\" :  null  , \"sum\" : { \"$sum\" : \"$"
-                        + testField + "\"}}}]}");
+                        + testField + "\"} , \"count\" : { \"$sum\" : 1}}}]}");
     }
 
     @Test
