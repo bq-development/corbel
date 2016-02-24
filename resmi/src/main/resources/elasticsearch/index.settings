@@ -73,24 +73,24 @@
             "icu_collation"
           ]
         },
+        /*international_fine_grain_analyzer_index*/
         "default_index": {
           "type": "custom",
-          "tokenizer": "whitespace",
+          "tokenizer": "standard",
           "filter": [
             "lowercase",
             "asciifolding",
-            "spanish_stop_words",
             "nGram_filter",
             "icu_collation"
           ]
         },
+        /*international_fine_grain_analyzer_search*/
         "default_search": {
           "type": "custom",
-          "tokenizer": "whitespace",
+          "tokenizer": "standard",
           "filter": [
             "lowercase",
             "asciifolding",
-            "spanish_stop_words",
             "icu_collation"
           ]
         }
