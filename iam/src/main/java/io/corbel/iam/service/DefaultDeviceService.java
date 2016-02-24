@@ -65,7 +65,7 @@ public class DefaultDeviceService implements DeviceService {
         String deviceId = UserDomainIdGenerator.generateDeviceId(domainId, userId, deviceUid);
         long result = deviceRepository.deleteById(deviceId);
         if ( result > 0 ) {
-            eventsService.sendDeviceDeleteEvent(deviceId, userId, domainId);
+            eventsService.sendDeviceDeleteEvent(deviceUid, userId, domainId);
         }
     }
 

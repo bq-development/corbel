@@ -1,9 +1,9 @@
 package io.corbel.iam.service;
 
+import java.util.Map;
+
 import io.corbel.iam.model.Device;
 import io.corbel.iam.model.User;
-
-import java.util.Map;
 
 /**
  * @author Alberto J. Rubio
@@ -32,7 +32,7 @@ public interface EventsService {
 
     void sendDeviceUpdateEvent(Device device);
 
-    void sendDeviceDeleteEvent(String deviceId, String userId, String domainId);
+    void sendDeviceDeleteEvent(String deviceUid, String userId, String domainId);
 
     void sendUpdateDomainPublicScopesEvent(String domainId);
 }
