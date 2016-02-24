@@ -22,12 +22,7 @@ import io.corbel.resources.rem.search.DefaultElasticSearchService;
 import io.corbel.resources.rem.search.DefaultResmiSearch;
 import io.corbel.resources.rem.search.ElasticSearchService;
 import io.corbel.resources.rem.search.ResmiSearch;
-import io.corbel.resources.rem.service.DefaultNamespaceNormalizer;
-import io.corbel.resources.rem.service.DefaultResmiService;
-import io.corbel.resources.rem.service.InMemorySearchableFieldsRegistry;
-import io.corbel.resources.rem.service.ResmiService;
-import io.corbel.resources.rem.service.SearchableFieldsRegistry;
-import io.corbel.resources.rem.service.WithSearchResmiService;
+import io.corbel.resources.rem.service.*;
 import io.corbel.resources.rem.utils.ResmiJsonObjectMongoWriteConverter;
 
 import java.time.Clock;
@@ -51,13 +46,18 @@ import com.google.gson.JsonElement;
  * @author Cristian del Cerro
  */
 @Configuration// Import configuration mechanism
-@Import({ConfigurationIoC.class, DefaultElasticSearchConfiguration.class}) public class ResmiIoc extends DefaultMongoConfiguration {
+@Import({ConfigurationIoC.class, DefaultElasticSearchConfiguration.class})
+public class ResmiIoc extends DefaultMongoConfiguration {
 
-    @Value("${resmi.elasticsearch.index.settings:/elasticsearch/index.settings}") private String elasticSearchIndexSettings;
-    @Value("${resmi.elasticsearch.defaultMapping.settings:/elasticsearch/defaultMapping.settings}") private String elasticSearchDefaultMappingSettings;
+    @Value("${resmi.elasticsearch.index.settings:/elasticsearch/index.settings}")
+    private String elasticSearchIndexSettings;
+    @Value("${resmi.elasticsearch.defaultMapping.settings:/elasticsearch/defaultMapping.settings}")
+    private String elasticSearchDefaultMappingSettings;
 
-    @Autowired private Environment env;
-    @Autowired private ApplicationContext applicationContext;
+    @Autowired
+    private Environment env;
+    @Autowired
+    private ApplicationContext applicationContext;
 
     @Override
     protected String getDatabaseName() {
@@ -121,11 +121,11 @@ import com.google.gson.JsonElement;
     }
 
     @Bean
-    public ResmiService resmiService(@Value("${resmi.elasticsearch.enabled:false}") boolean elasticSearchEnabled,
-            AggregationResultsFactory<JsonElement> aggregationResultsFactory, ResmiDao resmiDao) throws Exception {
-        if (elasticSearchEnabled) {
-            return new WithSearchResmiService(resmiDao, resmiSearch(aggregationResultsFactory), getSearchableFieldsRegistry(), getGson(),
-                    getClock());
+    public ResmiService resmiService(@Value("${resmi.elasticsearch.enabled:false}") boolean elasticSearchEnabled, @Value("${resmi.textsearch.mode:disabled}") String textSearchMode, AggregationResultsFactory<JsonElement> aggregationResultsFactory, ResmiDao resmiDao) throws Exception {
+        if (elasticSearchEnabled || textSearchMode.equalsIgnoreCase("elasticsearch")) {
+            return new WithSearchResmiService(resmiDao, resmiSearch(aggregationResultsFactory), getSearchableFieldsRegistry(), getGson(), getClock());
+        } else if (textSearchMode.equalsIgnoreCase("mongo")) {
+            return new TextSearchResmiService(resmiDao, getClock());
         } else {
             return new DefaultResmiService(resmiDao, getClock());
         }

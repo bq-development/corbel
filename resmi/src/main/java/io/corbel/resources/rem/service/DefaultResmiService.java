@@ -71,14 +71,13 @@ public class DefaultResmiService implements ResmiService {
 
     @Override
     public JsonArray findCollection(ResourceUri uri, Optional<CollectionParameters> apiParameters) throws BadConfigurationException, InvalidApiParamException {
-        return resmiDao.findCollection(uri, apiParameters.flatMap(CollectionParameters::getQueries), apiParameters.flatMap(CollectionParameters::getSearch).flatMap(Search::getText), apiParameters.map(CollectionParameters::getPagination), apiParameters.flatMap(CollectionParameters::getSort));
+        return resmiDao.findCollection(uri, apiParameters.flatMap(CollectionParameters::getQueries), Optional.empty(), apiParameters.map(CollectionParameters::getPagination), apiParameters.flatMap(CollectionParameters::getSort));
     }
 
     @Override
     public JsonArray findCollectionDistinct(ResourceUri uri, Optional<CollectionParameters> apiParameters, List<String> fields,
             boolean first) throws BadConfigurationException, InvalidApiParamException {
-        return resmiDao.findCollectionWithGroup(uri, apiParameters.flatMap(CollectionParameters::getQueries), apiParameters.flatMap(CollectionParameters::getSearch).flatMap(Search::getText), apiParameters.map(CollectionParameters::getPagination), apiParameters.flatMap(CollectionParameters::getSort), fields,
-                first);
+        return resmiDao.findCollectionWithGroup(uri, apiParameters.flatMap(CollectionParameters::getQueries), Optional.empty(), apiParameters.map(CollectionParameters::getPagination), apiParameters.flatMap(CollectionParameters::getSort), fields, first);
     }
 
     @Override
@@ -88,13 +87,13 @@ public class DefaultResmiService implements ResmiService {
 
     @Override
     public JsonElement findRelation(ResourceUri uri, Optional<RelationParameters> apiParameters) throws BadConfigurationException, InvalidApiParamException {
-        return resmiDao.findRelation(uri, apiParameters.flatMap(RelationParameters::getQueries), apiParameters.flatMap(CollectionParameters::getSearch).flatMap(Search::getText), apiParameters.map(RelationParameters::getPagination), apiParameters.flatMap(RelationParameters::getSort));
+        return resmiDao.findRelation(uri, apiParameters.flatMap(RelationParameters::getQueries), Optional.empty(), apiParameters.map(RelationParameters::getPagination), apiParameters.flatMap(RelationParameters::getSort));
     }
 
     @Override
     public JsonArray findRelationDistinct(ResourceUri uri, Optional<RelationParameters> apiParameters, List<String> fields, boolean first)
             throws BadConfigurationException, InvalidApiParamException {
-        return resmiDao.findRelationWithGroup(uri, apiParameters.flatMap(RelationParameters::getQueries), apiParameters.flatMap(CollectionParameters::getSearch).flatMap(Search::getText), apiParameters.map(RelationParameters::getPagination), apiParameters.flatMap(RelationParameters::getSort), fields, first);
+        return resmiDao.findRelationWithGroup(uri, apiParameters.flatMap(RelationParameters::getQueries), Optional.empty(), apiParameters.map(RelationParameters::getPagination), apiParameters.flatMap(RelationParameters::getSort), fields, first);
     }
 
     @Override
