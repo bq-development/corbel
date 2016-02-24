@@ -1,5 +1,10 @@
 package io.corbel.resources.rem.service;
 
+import com.google.common.collect.Sets;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import io.corbel.lib.queries.request.*;
 import io.corbel.resources.rem.dao.NotFoundException;
 import io.corbel.resources.rem.dao.RelationMoveOperation;
@@ -9,22 +14,10 @@ import io.corbel.resources.rem.request.CollectionParameters;
 import io.corbel.resources.rem.request.RelationParameters;
 import io.corbel.resources.rem.resmi.exception.InvalidApiParamException;
 import io.corbel.resources.rem.resmi.exception.StartsWithUnderscoreException;
-
-import java.time.Clock;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-
 import org.springframework.data.mongodb.core.index.Index;
 
-import com.google.common.collect.Sets;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
+import java.time.Clock;
+import java.util.*;
 
 /**
  * @author Francisco Sanchez
@@ -78,15 +71,13 @@ public class DefaultResmiService implements ResmiService {
 
     @Override
     public JsonArray findCollection(ResourceUri uri, Optional<CollectionParameters> apiParameters) throws BadConfigurationException, InvalidApiParamException {
-        return resmiDao.findCollection(uri, apiParameters.flatMap(CollectionParameters::getQueries),
-                apiParameters.map(CollectionParameters::getPagination), apiParameters.flatMap(CollectionParameters::getSort));
+        return resmiDao.findCollection(uri, apiParameters.flatMap(CollectionParameters::getQueries), apiParameters.flatMap(CollectionParameters::getSearch).flatMap(Search::getText), apiParameters.map(CollectionParameters::getPagination), apiParameters.flatMap(CollectionParameters::getSort));
     }
 
     @Override
     public JsonArray findCollectionDistinct(ResourceUri uri, Optional<CollectionParameters> apiParameters, List<String> fields,
             boolean first) throws BadConfigurationException, InvalidApiParamException {
-        return resmiDao.findCollectionWithGroup(uri, apiParameters.flatMap(CollectionParameters::getQueries),
-                apiParameters.map(CollectionParameters::getPagination), apiParameters.flatMap(CollectionParameters::getSort), fields,
+        return resmiDao.findCollectionWithGroup(uri, apiParameters.flatMap(CollectionParameters::getQueries), apiParameters.flatMap(CollectionParameters::getSearch).flatMap(Search::getText), apiParameters.map(CollectionParameters::getPagination), apiParameters.flatMap(CollectionParameters::getSort), fields,
                 first);
     }
 
@@ -97,15 +88,13 @@ public class DefaultResmiService implements ResmiService {
 
     @Override
     public JsonElement findRelation(ResourceUri uri, Optional<RelationParameters> apiParameters) throws BadConfigurationException, InvalidApiParamException {
-        return resmiDao.findRelation(uri, apiParameters.flatMap(RelationParameters::getQueries),
-                apiParameters.map(RelationParameters::getPagination), apiParameters.flatMap(RelationParameters::getSort));
+        return resmiDao.findRelation(uri, apiParameters.flatMap(RelationParameters::getQueries), apiParameters.flatMap(CollectionParameters::getSearch).flatMap(Search::getText), apiParameters.map(RelationParameters::getPagination), apiParameters.flatMap(RelationParameters::getSort));
     }
 
     @Override
     public JsonArray findRelationDistinct(ResourceUri uri, Optional<RelationParameters> apiParameters, List<String> fields, boolean first)
             throws BadConfigurationException, InvalidApiParamException {
-        return resmiDao.findRelationWithGroup(uri, apiParameters.flatMap(RelationParameters::getQueries),
-                apiParameters.map(RelationParameters::getPagination), apiParameters.flatMap(RelationParameters::getSort), fields, first);
+        return resmiDao.findRelationWithGroup(uri, apiParameters.flatMap(RelationParameters::getQueries), apiParameters.flatMap(CollectionParameters::getSearch).flatMap(Search::getText), apiParameters.map(RelationParameters::getPagination), apiParameters.flatMap(RelationParameters::getSort), fields, first);
     }
 
     @Override
