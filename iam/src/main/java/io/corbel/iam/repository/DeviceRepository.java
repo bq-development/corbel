@@ -14,9 +14,9 @@ public interface DeviceRepository extends CrudRepository<Device, String>, Partia
 
     List<Device> findByUserId(String userId);
 
-    Device findByIdAndUserId(String id, String userId);
+    Device findById(String id);
 
-    Long deleteByIdAndUserId(String deviceId, String userId);
+    Long deleteById(String id);
 
     List<Device> deleteByUserId(String id);
 

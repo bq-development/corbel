@@ -12,13 +12,13 @@ public interface DeviceService {
 
     Device get(String deviceId);
 
-    Device getByIdAndUserId(String deviceId, String userId);
+    Device getByUidAndUserId(String deviceId, String userId, String domain);
 
     List<Device> getByUserId(String userId);
 
     Device update(Device deviceId);
 
-    void deleteByIdAndUserId(String deviceId, String userId, String domainId);
+    void deleteByUidAndUserId(String deviceId, String userId, String domainId);
 
     List<Device> deleteByUserId(User user);
 }
