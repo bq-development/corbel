@@ -31,5 +31,9 @@
             <groupId>com.github.zafarkhaja</groupId>
             <artifactId>java-semver</artifactId>
         </dependency>
+        <dependency>
+	        <groupId>io.dropwizard</groupId>
+	        <artifactId>dropwizard-core</artifactId>
+        </dependency>
     </dependencies>
 </project>
