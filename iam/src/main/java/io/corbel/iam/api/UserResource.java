@@ -1,6 +1,22 @@
 package io.corbel.iam.api;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.time.Clock;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import javax.validation.Valid;
+import javax.ws.rs.*;
+import javax.ws.rs.core.*;
+import javax.ws.rs.core.Response.Status;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DuplicateKeyException;
+
 import com.google.gson.JsonElement;
+
 import io.corbel.iam.exception.DuplicatedOauthServiceIdentityException;
 import io.corbel.iam.exception.IdentityAlreadyExistsException;
 import io.corbel.iam.exception.UserProfileConfigurationException;
@@ -18,19 +34,6 @@ import io.corbel.lib.ws.annotation.Rest;
 import io.corbel.lib.ws.auth.AuthorizationInfo;
 import io.corbel.lib.ws.model.Error;
 import io.dropwizard.auth.Auth;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.dao.DuplicateKeyException;
-
-import javax.validation.Valid;
-import javax.ws.rs.*;
-import javax.ws.rs.core.*;
-import javax.ws.rs.core.Response.Status;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.time.Clock;
-import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * @author Alexander De Leon
@@ -177,9 +180,10 @@ import java.util.stream.Collectors;
     @GET
     @Path("/{userId}/devices")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getDevices(@PathParam("userId") String userId, @Auth AuthorizationInfo authorizationInfo) {
+    public Response getDevices(@Rest QueryParameters queryParameters, @PathParam("userId") String userId,
+            @Auth AuthorizationInfo authorizationInfo) {
         User user = getUserResolvingMeAndUserDomainVerifying(userId, authorizationInfo);
-        return Optional.ofNullable(deviceService.getByUserId(user.getId()))
+        return Optional.ofNullable(deviceService.getByUserId(user.getId(), queryParameters))
                 .map(devices -> {
                     devices.stream().forEach(device -> device.setId(device.getUid()));
                     return Response.ok().type(MediaType.APPLICATION_JSON).entity(devices).build();

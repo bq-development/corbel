@@ -6,9 +6,7 @@ import static org.mockito.Mockito.*;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -20,6 +18,11 @@ import io.corbel.iam.model.Device;
 import io.corbel.iam.model.DeviceIdGenerator;
 import io.corbel.iam.model.User;
 import io.corbel.iam.repository.DeviceRepository;
+import io.corbel.lib.queries.builder.ResourceQueryBuilder;
+import io.corbel.lib.queries.jaxrs.QueryParameters;
+import io.corbel.lib.queries.request.Pagination;
+import io.corbel.lib.queries.request.ResourceQuery;
+import io.corbel.lib.queries.request.Sort;
 
 /**
  * Created by Francisco Sanchez on 15/02/16.
@@ -29,6 +32,7 @@ import io.corbel.iam.repository.DeviceRepository;
     private static final String TEST_USER_ID = "TEST_USER_ID";
     private static final String TEST_UID = "TEST_UID";
     private static final String TEST_DOMAIN = "TEST_DOMAIN";
+    private static final String TEST_OTHER_USER_ID = "TEST_OTHER_USER_ID";
 
     private DefaultDeviceService deviceService;
 
@@ -60,6 +64,97 @@ import io.corbel.iam.repository.DeviceRepository;
         Device device = deviceService.getByUidAndUserId(TEST_UID, TEST_USER_ID, TEST_DOMAIN);
 
         assertThat(deviceMock).isEqualTo(device);
+    }
+
+    @Test
+    public void testGetDeviceByUserIdWithNullQuery() {
+        QueryParameters queryParametersMock = mock(QueryParameters.class);
+        List<ResourceQuery> resourceQueriesSended = null;
+        Pagination paginationMock = mock(Pagination.class);
+        Sort sortMock = mock(Sort.class);
+        when(queryParametersMock.getQueries()).thenReturn(Optional.ofNullable(resourceQueriesSended));
+        when(queryParametersMock.getPagination()).thenReturn(paginationMock);
+        when(queryParametersMock.getSort()).thenReturn(Optional.of(sortMock));
+        List<Device> devicesMockList = new LinkedList<>();
+        devicesMockList.add(mock(Device.class));
+
+        List<ResourceQuery> resourceQueriesTransformed = new LinkedList<>();
+        resourceQueriesTransformed.add(new ResourceQueryBuilder().add(Device.USERID_FIELD, TEST_USER_ID).build());
+        when(deviceRepositoryMock.find(resourceQueriesTransformed, paginationMock, sortMock)).thenReturn(devicesMockList);
+
+        List<Device> device = deviceService.getByUserId(TEST_USER_ID, queryParametersMock);
+
+        assertThat(device).isEqualTo(devicesMockList);
+    }
+
+
+    @Test
+    public void testGetDeviceByUserIdWithTypeQuery() {
+        QueryParameters queryParametersMock = mock(QueryParameters.class);
+        List<ResourceQuery> resourceQueriesSend = new LinkedList<>();
+        resourceQueriesSend.add(new ResourceQueryBuilder().add("type", "ANDROID").build());
+        Pagination paginationMock = mock(Pagination.class);
+        Sort sortMock = mock(Sort.class);
+        when(queryParametersMock.getQueries()).thenReturn(Optional.ofNullable(resourceQueriesSend));
+        when(queryParametersMock.getPagination()).thenReturn(paginationMock);
+        when(queryParametersMock.getSort()).thenReturn(Optional.of(sortMock));
+        List<Device> devicesMockList = new LinkedList<>();
+        devicesMockList.add(mock(Device.class));
+
+        List<ResourceQuery> resourceQueriesTransformed = new LinkedList<>();
+        resourceQueriesTransformed.add(new ResourceQueryBuilder().add("type", "ANDROID").add(Device.USERID_FIELD, TEST_USER_ID).build());
+        when(deviceRepositoryMock.find(resourceQueriesTransformed, paginationMock, sortMock)).thenReturn(devicesMockList);
+
+        List<Device> device = deviceService.getByUserId(TEST_USER_ID, queryParametersMock);
+
+        assertThat(device).isEqualTo(devicesMockList);
+    }
+
+    @Test
+    public void testGetDeviceByUserIdWithOtherUserSearch() {
+        QueryParameters queryParametersMock = mock(QueryParameters.class);
+        List<ResourceQuery> resourceQueriesSended = new LinkedList<>();
+        resourceQueriesSended.add(new ResourceQueryBuilder().add(Device.USERID_FIELD, TEST_OTHER_USER_ID).build());
+        Pagination paginationMock = mock(Pagination.class);
+        Sort sortMock = mock(Sort.class);
+        when(queryParametersMock.getQueries()).thenReturn(Optional.ofNullable(resourceQueriesSended));
+        when(queryParametersMock.getPagination()).thenReturn(paginationMock);
+        when(queryParametersMock.getSort()).thenReturn(Optional.of(sortMock));
+        List<Device> devicesMockList = new LinkedList<>();
+        devicesMockList.add(mock(Device.class));
+
+        List<ResourceQuery> resourceQueriesTransformed = new LinkedList<>();
+        resourceQueriesTransformed.add(new ResourceQueryBuilder().add(Device.USERID_FIELD, TEST_USER_ID).build());
+        when(deviceRepositoryMock.find(resourceQueriesTransformed, paginationMock, sortMock)).thenReturn(devicesMockList);
+
+        List<Device> device = deviceService.getByUserId(TEST_USER_ID, queryParametersMock);
+
+        assertThat(device).isEqualTo(devicesMockList);
+    }
+
+
+    @Test
+    public void testGetDeviceByMultipleUserIdWithOtherUserSearch() {
+        QueryParameters queryParametersMock = mock(QueryParameters.class);
+        List<ResourceQuery> resourceQueriesSended = new LinkedList<>();
+        resourceQueriesSended.add(new ResourceQueryBuilder().add(Device.USERID_FIELD, TEST_OTHER_USER_ID).build());
+        resourceQueriesSended.add(new ResourceQueryBuilder().add(Device.USERID_FIELD, TEST_OTHER_USER_ID).build());
+        Pagination paginationMock = mock(Pagination.class);
+        Sort sortMock = mock(Sort.class);
+        when(queryParametersMock.getQueries()).thenReturn(Optional.ofNullable(resourceQueriesSended));
+        when(queryParametersMock.getPagination()).thenReturn(paginationMock);
+        when(queryParametersMock.getSort()).thenReturn(Optional.of(sortMock));
+        List<Device> devicesMockList = new LinkedList<>();
+        devicesMockList.add(mock(Device.class));
+
+        List<ResourceQuery> resourceQueriesTransformed = new LinkedList<>();
+        resourceQueriesTransformed.add(new ResourceQueryBuilder().add(Device.USERID_FIELD, TEST_USER_ID).build());
+        resourceQueriesTransformed.add(new ResourceQueryBuilder().add(Device.USERID_FIELD, TEST_USER_ID).build());
+        when(deviceRepositoryMock.find(resourceQueriesTransformed, paginationMock, sortMock)).thenReturn(devicesMockList);
+
+        List<Device> device = deviceService.getByUserId(TEST_USER_ID, queryParametersMock);
+
+        assertThat(device).isEqualTo(devicesMockList);
     }
 
     @Test

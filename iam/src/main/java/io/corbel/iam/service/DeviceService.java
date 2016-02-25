@@ -4,6 +4,7 @@ import java.util.List;
 
 import io.corbel.iam.model.Device;
 import io.corbel.iam.model.User;
+import io.corbel.lib.queries.jaxrs.QueryParameters;
 
 /**
  * @author Francisco Sanchez
@@ -14,7 +15,7 @@ public interface DeviceService {
 
     Device getByUidAndUserId(String deviceId, String userId, String domain);
 
-    List<Device> getByUserId(String userId);
+    List<Device> getByUserId(String userId, QueryParameters queryParameters);
 
     Device update(Device deviceId);
 

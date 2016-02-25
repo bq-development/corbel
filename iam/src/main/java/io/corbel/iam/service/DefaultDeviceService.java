@@ -1,20 +1,28 @@
 package io.corbel.iam.service;
 
 import java.time.Clock;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import io.corbel.iam.model.Device;
 import io.corbel.iam.model.User;
 import io.corbel.iam.repository.DeviceRepository;
 import io.corbel.iam.utils.UserDomainIdGenerator;
 import io.corbel.lib.mongo.IdGenerator;
+import io.corbel.lib.queries.builder.ResourceQueryBuilder;
+import io.corbel.lib.queries.jaxrs.QueryParameters;
+import io.corbel.lib.queries.request.Pagination;
+import io.corbel.lib.queries.request.ResourceQuery;
+import io.corbel.lib.queries.request.Sort;
+
 
 /**
  * @author Francisco Sanchez
  */
 public class DefaultDeviceService implements DeviceService {
-
     private final DeviceRepository deviceRepository;
     private final IdGenerator<Device> deviceIdGenerator;
     private final EventsService eventsService;
@@ -40,8 +48,18 @@ public class DefaultDeviceService implements DeviceService {
     }
 
     @Override
-    public List<Device> getByUserId(String userId) {
-        return deviceRepository.findByUserId(userId);
+    public List<Device> getByUserId(String userId, QueryParameters queryParameters) {
+        Optional<List<ResourceQuery>> optionalQueries = queryParameters.getQueries();
+        Pagination pagination = queryParameters.getPagination();
+        Optional<Sort> sort = queryParameters.getSort();
+        List<ResourceQuery> userIdIsolatedQueries = addUserIdToQueries(userId, optionalQueries);
+        return deviceRepository.find(userIdIsolatedQueries, pagination, sort.orElse(null));
+    }
+
+    private List<ResourceQuery> addUserIdToQueries(String userId, Optional<List<ResourceQuery>> optionalQueries) {
+        List<ResourceQuery> queries = optionalQueries.orElseGet(() -> Arrays.asList(new ResourceQuery()));
+        return queries.stream().map(ResourceQueryBuilder::new).map(builder -> builder.remove(Device.USERID_FIELD))
+                .map(builder -> builder.add(Device.USERID_FIELD, userId)).map(ResourceQueryBuilder::build).collect(Collectors.toList());
     }
 
     @Override

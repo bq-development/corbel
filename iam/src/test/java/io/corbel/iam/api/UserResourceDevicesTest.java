@@ -3,22 +3,7 @@ package io.corbel.iam.api;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.only;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
-
-import com.google.gson.JsonElement;
-import io.corbel.lib.queries.request.AggregationResultsFactory;
-import io.corbel.lib.queries.request.JsonAggregationResultsFactory;
-import io.dropwizard.auth.Authenticator;
-import io.dropwizard.auth.oauth.OAuthFactory;
-import io.dropwizard.testing.junit.ResourceTestRule;
+import static org.mockito.Mockito.*;
 
 import java.time.Clock;
 import java.util.Arrays;
@@ -35,22 +20,25 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 
+import com.google.gson.JsonElement;
+
 import io.corbel.iam.model.Device;
 import io.corbel.iam.service.DeviceService;
 import io.corbel.iam.service.DomainService;
 import io.corbel.iam.service.IdentityService;
 import io.corbel.iam.service.UserService;
-import io.corbel.lib.queries.parser.AggregationParser;
-import io.corbel.lib.queries.parser.PaginationParser;
-import io.corbel.lib.queries.parser.QueryParametersParser;
-import io.corbel.lib.queries.parser.QueryParser;
-import io.corbel.lib.queries.parser.SearchParser;
-import io.corbel.lib.queries.parser.SortParser;
+import io.corbel.lib.queries.exception.MalformedJsonQueryException;
+import io.corbel.lib.queries.parser.*;
+import io.corbel.lib.queries.request.AggregationResultsFactory;
+import io.corbel.lib.queries.request.JsonAggregationResultsFactory;
 import io.corbel.lib.ws.api.error.GenericExceptionMapper;
 import io.corbel.lib.ws.auth.AuthorizationInfo;
 import io.corbel.lib.ws.auth.AuthorizationInfoProvider;
 import io.corbel.lib.ws.auth.AuthorizationRequestFilter;
 import io.corbel.lib.ws.queries.QueryParametersProvider;
+import io.dropwizard.auth.Authenticator;
+import io.dropwizard.auth.oauth.OAuthFactory;
+import io.dropwizard.testing.junit.ResourceTestRule;
 
 /**
  * @author Alexander De Leon
@@ -66,11 +54,12 @@ public class UserResourceDevicesTest extends UserResourceTestBase {
     private static final SearchParser searchParserMock = mock(SearchParser.class);
     private static final AggregationParser aggregationParserMock = mock(AggregationParser.class);
     private static final PaginationParser paginationParserMock = mock(PaginationParser.class);
+    private static final QueryParser queryParserMock = mock(QueryParser.class);
+
     private static final UserService userServiceMock = mock(UserService.class);
     private static final DomainService domainServiceMock = mock(DomainService.class);
     private static final IdentityService identityServiceMock = mock(IdentityService.class);
     private static final AuthorizationInfo authorizationInfoMock = mock(AuthorizationInfo.class);
-    private static final QueryParser queryParserMock = mock(QueryParser.class);
     private static final DeviceService devicesServiceMock = mock(DeviceService.class);
     private static final AuthorizationInfoProvider authorizationInfoProvider = new AuthorizationInfoProvider();
     private static final String TEST_DEVICE_NAME = "My device name";
@@ -205,19 +194,19 @@ public class UserResourceDevicesTest extends UserResourceTestBase {
 
 
     @Test
-    public void testGetUserDevices() {
+    public void testGetUserDevices() throws MalformedJsonQueryException {
         // CONFIGURE
         Device device = new Device().setDomain(TEST_DOMAIN_ID).setName(TEST_DEVICE_NAME).setType(Device.Type.Android)
                 .setNotificationEnabled(true).setNotificationUri(TEST_DEVICE_URI);
         List<Device> devicesList = Arrays.asList(device);
         when(userServiceMock.findById(TEST_USER_ID)).thenReturn(createTestUser());
-        when(devicesServiceMock.getByUserId(TEST_USER_ID)).thenReturn(devicesList);
+        when(devicesServiceMock.getByUserId(eq(TEST_USER_ID), any())).thenReturn(devicesList);
         // LAUNCH
         Response response = apiCall("Bearer " + TEST_TOKEN, "/v1.0/user/me/devices").get(Response.class);
         // VERIFY
         assertThat(response.getStatus()).isEqualTo(200);
         assertThat(response.readEntity(new GenericType<List<Device>>() {})).isEqualTo(devicesList);
-        verify(devicesServiceMock, only()).getByUserId(TEST_USER_ID);
+        verify(devicesServiceMock, only()).getByUserId(eq(TEST_USER_ID), any());
     }
 
     @Test
