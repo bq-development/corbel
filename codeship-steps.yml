@@ -1,3 +1,7 @@
 - service: maven
-  command: mvn clean install -DdockerBuild=true -DpushImage -Ddocker.organization=devialab -Ddocker.name.prefix=corbel-
+  command: mvn clean test
+  encrypted_dockercfg_path: dockercfg.encrypted
+- service: maven
+  tag: master
+  command: mvn install -DdockerBuild=true -DpushImage -Ddocker.organization=devialab -Ddocker.name.prefix=corbel-
   encrypted_dockercfg_path: dockercfg.encrypted
