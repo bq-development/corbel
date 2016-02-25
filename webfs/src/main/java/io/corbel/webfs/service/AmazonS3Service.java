@@ -10,4 +10,5 @@ public interface AmazonS3Service {
 
     public S3Object getObject(String uri);
 
+    public void deleteFolder(String path);
 }
