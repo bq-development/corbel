@@ -3,10 +3,20 @@ package io.corbel.resources.rem.service;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+import io.corbel.lib.token.TokenInfo;
+import io.corbel.resources.rem.Rem;
+import io.corbel.resources.rem.acl.AclPermission;
+import io.corbel.resources.rem.acl.exception.AclFieldNotPresentException;
+import io.corbel.resources.rem.model.ManagedCollection;
+import io.corbel.resources.rem.request.RequestParameters;
+import io.corbel.resources.rem.request.RequestParametersImpl;
+import io.corbel.resources.rem.request.ResourceId;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Optional;
@@ -14,9 +24,6 @@ import java.util.Optional;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
-import io.corbel.lib.token.TokenInfo;
-import io.corbel.resources.rem.request.RequestParameters;
-import io.corbel.resources.rem.request.RequestParametersImpl;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -25,12 +32,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonParser;
-
-import io.corbel.resources.rem.Rem;
-import io.corbel.resources.rem.acl.AclPermission;
-import io.corbel.resources.rem.acl.exception.AclFieldNotPresentException;
-import io.corbel.resources.rem.model.ManagedCollection;
-import io.corbel.resources.rem.request.ResourceId;
 
 /**
  * @author Rubén Carrasco
@@ -56,15 +57,15 @@ import io.corbel.resources.rem.request.ResourceId;
     @Mock private RemService remService;
     @Mock private Rem resmiGetRem;
     @Mock private Rem resmiPutRem;
-    private JsonParser parser = new JsonParser();
-    private Gson gson = new Gson();
+    private final JsonParser parser = new JsonParser();
+    private final Gson gson = new Gson();
 
-    private DefaultAclResourcesService aclService = new DefaultAclResourcesService(gson, ADMINS_COLLECTION);
+    private final DefaultAclResourcesService aclService = new DefaultAclResourcesService(gson, ADMINS_COLLECTION);
 
-     @Before
+    @Before
     public void setUp() throws Exception {
         when(remService.getRem(DefaultAclResourcesService.RESMI_GET)).thenReturn(resmiGetRem);
-        when(remService.getRem(DefaultAclResourcesService.RESMI_PUT)).thenReturn(resmiPutRem);
+        when(remService.getRem(DefaultAclConfigurationService.RESMI_PUT)).thenReturn(resmiPutRem);
         aclService.setRemService(remService);
         when(tokenInfoMock.getUserId()).thenReturn(USER_ID);
         when(tokenInfoMock.getGroups()).thenReturn(GROUPS);
@@ -86,7 +87,7 @@ import io.corbel.resources.rem.request.ResourceId;
         Response managedResponse = mockNotFoundResponse();
         when(resmiGetRem.resource(eq(ADMINS_COLLECTION), any(), any(), eq(Optional.empty()))).thenReturn(managedResponse);
         when(resmiGetRem.resource(eq(TYPE), eq(RESOURCE_ID), any(), any())).thenReturn(response);
-        assertThat(aclService.isAuthorized(REQUESTED_DOMAIN_ID,tokenInfoMock, TYPE, RESOURCE_ID, AclPermission.READ)).isTrue();
+        assertThat(aclService.isAuthorized(REQUESTED_DOMAIN_ID, tokenInfoMock, TYPE, RESOURCE_ID, AclPermission.READ)).isTrue();
     }
 
     @Test(expected = AclFieldNotPresentException.class)
@@ -166,8 +167,8 @@ import io.corbel.resources.rem.request.ResourceId;
     }
 
     private Response mockResponseWithAcl(String scope) {
-        return mockResponse(
-                "{ \"_acl\": { \"" + scope + "\": { \"permission\": \"READ\", \"properties\": {\"email\": \"asdf@funkifake.com\"} } } }");
+        return mockResponse("{ \"_acl\": { \"" + scope
+                + "\": { \"permission\": \"READ\", \"properties\": {\"email\": \"asdf@funkifake.com\"} } } }");
     }
 
     private Response mockResponseWithBadAcl(String scope) {
@@ -247,8 +248,7 @@ import io.corbel.resources.rem.request.ResourceId;
 
     @Test
     public void testManagedCollectionNotByUser() {
-        ManagedCollection managedCollection = new ManagedCollection(MANAGED_COLLECTION_ID, Collections.emptyList(),
-                Collections.emptyList());
+        ManagedCollection managedCollection = new ManagedCollection(MANAGED_COLLECTION_ID, Collections.emptyList(), Collections.emptyList());
         Response responseMock = mock(Response.class);
         when(responseMock.getStatus()).thenReturn(Response.Status.OK.getStatusCode());
         when(responseMock.getEntity()).thenReturn(gson.toJsonTree(managedCollection));
@@ -259,8 +259,10 @@ import io.corbel.resources.rem.request.ResourceId;
 
 
         RequestParameters requestParameters = new RequestParametersImpl<>(null, null, "_silkroad", null, null, null, null);
-        when(resmiGetRem.resource(eq(ADMINS_COLLECTION), eq(MANAGED_COLLECTION_RESOURCE), eq(requestParameters), any())).thenReturn(responseMock);
-        when(resmiGetRem.resource(eq(ADMINS_COLLECTION), eq(MANAGED_DOMAIN_RESOURCE), eq(requestParameters), any())).thenReturn(domainResponseMock);
+        when(resmiGetRem.resource(eq(ADMINS_COLLECTION), eq(MANAGED_COLLECTION_RESOURCE), eq(requestParameters), any())).thenReturn(
+                responseMock);
+        when(resmiGetRem.resource(eq(ADMINS_COLLECTION), eq(MANAGED_DOMAIN_RESOURCE), eq(requestParameters), any())).thenReturn(
+                domainResponseMock);
 
         assertThat(aclService.isManagedBy(REQUESTED_DOMAIN_ID, tokenInfoMock, TYPE)).isFalse();
 
@@ -272,8 +274,7 @@ import io.corbel.resources.rem.request.ResourceId;
 
     @Test
     public void testManagedCollectionByDomainAdmin() {
-        ManagedCollection managedCollection = new ManagedCollection(MANAGED_COLLECTION_ID, Collections.emptyList(),
-                Collections.emptyList());
+        ManagedCollection managedCollection = new ManagedCollection(MANAGED_COLLECTION_ID, Collections.emptyList(), Collections.emptyList());
         Response responseMock = mock(Response.class);
         when(responseMock.getStatus()).thenReturn(Response.Status.OK.getStatusCode());
         when(responseMock.getEntity()).thenReturn(gson.toJsonTree(managedCollection));
@@ -297,8 +298,7 @@ import io.corbel.resources.rem.request.ResourceId;
 
     @Test
     public void testManagedCollectionByGroupDomainAdmin() {
-        ManagedCollection managedCollection = new ManagedCollection(MANAGED_COLLECTION_ID, Collections.emptyList(),
-                Collections.emptyList());
+        ManagedCollection managedCollection = new ManagedCollection(MANAGED_COLLECTION_ID, Collections.emptyList(), Collections.emptyList());
         Response responseMock = mock(Response.class);
         when(responseMock.getStatus()).thenReturn(Response.Status.OK.getStatusCode());
         when(responseMock.getEntity()).thenReturn(gson.toJsonTree(managedCollection));

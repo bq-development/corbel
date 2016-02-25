@@ -11,6 +11,7 @@ import io.corbel.resources.rem.acl.SetUpAclPutRem;
 import io.corbel.resources.rem.eventbus.AclConfigurationEventHandler;
 import io.corbel.resources.rem.ioc.AclRemNames;
 import io.corbel.resources.rem.ioc.RemAclIoc;
+import io.corbel.resources.rem.service.AclConfigurationService;
 import io.corbel.resources.rem.service.AclResourcesService;
 
 import java.util.Arrays;
@@ -62,12 +63,15 @@ import org.springframework.stereotype.Component;
 
         AclResourcesService aclResourcesService = context.getBean(AclResourcesService.class);
         aclResourcesService.setRemService(remService);
-        aclResourcesService.setRemsAndMethods(remsAndMethods);
 
-        context.getBean(AclConfigurationEventHandler.class).setAclResourcesService(aclResourcesService);
+        AclConfigurationService aclConfigurationService = context.getBean(AclConfigurationService.class);
+        aclConfigurationService.setRemService(remService);
+        aclConfigurationService.setRemsAndMethods(remsAndMethods);
+
+        context.getBean(AclConfigurationEventHandler.class).setAclConfigurationService(aclConfigurationService);
         aclConfigurationCollection = context.getEnvironment().getProperty("rem.acl.configuration.collection", ACL_CONFIGURATION_COLLECTION);
 
-        context.getBean(AclResourcesService.class).refreshRegistry();
+        aclConfigurationService.refreshRegistry();
     }
 
     @Override
