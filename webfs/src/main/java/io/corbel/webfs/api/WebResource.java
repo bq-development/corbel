@@ -1,9 +1,6 @@
 package io.corbel.webfs.api;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 
 import com.amazonaws.services.s3.model.S3Object;
@@ -37,5 +34,12 @@ import io.corbel.lib.ws.api.error.ErrorResponseFactory;
         }
 
         return ErrorResponseFactory.getInstance().notFound();
+    }
+
+    @DELETE
+    @Path("/{path: .*}")
+    public Response deleteFolder(@PathParam("path") String path){
+        amazonS3Service.deleteFolder(path);
+        return Response.noContent().build();
     }
 }
