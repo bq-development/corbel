@@ -2,6 +2,12 @@ package io.corbel.notifications.ioc;
 
 import java.io.InputStream;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import io.corbel.lib.queries.request.AggregationResultsFactory;
+import io.corbel.lib.queries.request.JsonAggregationResultsFactory;
+import io.corbel.notifications.api.DomainResource;
+import io.corbel.notifications.repository.DomainRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Bean;
@@ -52,8 +58,9 @@ import com.notnoop.apns.ApnsServiceBuilder;
     @Autowired private Environment env;
 
     @Bean
-    public NotificationsShell getNotificationsShell(NotificationRepository notificationRepository) {
-        return new NotificationsShell(notificationRepository);
+    public NotificationsShell getNotificationsShell(NotificationRepository notificationRepository,
+                                                    DomainRepository domainRepository) {
+        return new NotificationsShell(notificationRepository, domainRepository);
     }
 
     @Bean
@@ -63,14 +70,21 @@ import com.notnoop.apns.ApnsServiceBuilder;
     }
 
     @Bean
+    public DomainResource getDomainResource(DomainRepository domainRepository,
+                                                                    AggregationResultsFactory aggregationResultsFactory) {
+        return new DomainResource(domainRepository, aggregationResultsFactory);
+    }
+
+    @Bean
     public MongoRepositoryFactory getMongoRepositoryFactory(MongoOperations mongoOperations) {
         return new MongoRepositoryFactory(mongoOperations);
     }
 
     @Bean
     public SenderNotificationsService getNotificationsEventService(NotificationRepository notificationRepository,
-            NotificationsDispatcher notificationsDispatcher) {
-        return new DefaultSenderNotificationsService(getTemplateFiller(), notificationsDispatcher, notificationRepository);
+            NotificationsDispatcher notificationsDispatcher, DomainRepository domainRepository) {
+        return new DefaultSenderNotificationsService(getTemplateFiller(), notificationsDispatcher, notificationRepository,
+                domainRepository);
     }
 
     @Bean
@@ -115,6 +129,16 @@ import com.notnoop.apns.ApnsServiceBuilder;
             apnsServiceBuilder.withSandboxDestination();
         }
         return apnsServiceBuilder.build();
+    }
+
+    @Bean
+    public Gson getGson() {
+        return new Gson();
+    }
+
+    @Bean
+    public AggregationResultsFactory<JsonElement> aggregationResultsFactory(Gson gson){
+        return new JsonAggregationResultsFactory(gson);
     }
 
     @Override

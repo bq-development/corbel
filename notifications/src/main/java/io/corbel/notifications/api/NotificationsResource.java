@@ -13,15 +13,17 @@ import javax.ws.rs.core.UriInfo;
 import io.corbel.lib.queries.jaxrs.QueryParameters;
 import io.corbel.lib.ws.annotation.Rest;
 import io.corbel.lib.ws.api.error.ErrorResponseFactory;
+import io.corbel.lib.ws.auth.AuthorizationInfo;
 import io.corbel.notifications.model.Notification;
 import io.corbel.notifications.model.NotificationTemplate;
 import io.corbel.notifications.repository.NotificationRepository;
 import io.corbel.notifications.service.SenderNotificationsService;
+import io.dropwizard.auth.Auth;
 
 /**
  * @author Francisco Sanchez
  */
-@Path(ApiVersion.CURRENT + "/notification")
+@Path(ApiVersion.CURRENT + "/{domain}/notification")
 public class NotificationsResource {
 
 	private final NotificationRepository notificationRepository;
@@ -83,8 +85,8 @@ public class NotificationsResource {
 
 	@POST
 	@Path("/send")
-	public Response postNotification(@Valid Notification notification) {
-		senderNotificationsService.sendNotification(notification.getNotificationId(), notification.getProperties(),
+	public Response postNotification(@Valid Notification notification, @PathParam("domain") String domainId) {
+		senderNotificationsService.sendNotification(domainId, notification.getNotificationId(), notification.getProperties(),
 				notification.getRecipient());
 		return Response.ok().build();
 	}
