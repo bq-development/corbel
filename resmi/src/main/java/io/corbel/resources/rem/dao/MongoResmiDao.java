@@ -25,6 +25,7 @@ import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.*;
 import org.springframework.data.mongodb.core.index.Index;
+import org.springframework.data.mongodb.core.index.IndexDefinition;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -279,8 +280,8 @@ public class MongoResmiDao implements ResmiDao {
     }
 
     @Override
-    public void ensureIndex(ResourceUri uri, Index index) {
-        mongoOperations.indexOps(getMongoCollectionName(uri)).ensureIndex(index);
+    public void ensureIndex(ResourceUri uri, IndexDefinition indexDefinition) {
+        mongoOperations.indexOps(getMongoCollectionName(uri)).ensureIndex(indexDefinition);
     }
 
     /*
