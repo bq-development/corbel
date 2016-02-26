@@ -70,9 +70,8 @@ import com.notnoop.apns.ApnsServiceBuilder;
     }
 
     @Bean
-    public DomainResource getDomainResource(DomainRepository domainRepository,
-                                                                    AggregationResultsFactory aggregationResultsFactory) {
-        return new DomainResource(domainRepository, aggregationResultsFactory);
+    public DomainResource getDomainResource(DomainRepository domainRepository) {
+        return new DomainResource(domainRepository);
     }
 
     @Bean
