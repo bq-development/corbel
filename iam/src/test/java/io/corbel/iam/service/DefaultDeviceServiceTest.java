@@ -167,8 +167,7 @@ import io.corbel.lib.queries.request.Sort;
         Device device = deviceService.update(deviceToAdd);
 
         assertThat(deviceToAdd).isEqualTo(device);
-        assertThat(deviceToAdd.getCreatedAt()).isEqualTo(new Date(now.toEpochMilli()));
-        assertThat(deviceToAdd.getUpdatedAt()).isEqualTo(new Date(now.toEpochMilli()));
+        assertThat(deviceToAdd.getFirstConnection()).isEqualTo(new Date(now.toEpochMilli()));
         verify(eventsServiceMock).sendDeviceCreateEvent(device);
     }
 
@@ -182,8 +181,7 @@ import io.corbel.lib.queries.request.Sort;
         Device device = deviceService.update(deviceToUpdate);
 
         assertThat(deviceToUpdate).isEqualTo(device);
-        assertThat(deviceToUpdate.getCreatedAt()).isNull();
-        assertThat(deviceToUpdate.getUpdatedAt()).isEqualTo(new Date(now.toEpochMilli()));
+        assertThat(deviceToUpdate.getFirstConnection()).isNull();
         verify(eventsServiceMock).sendDeviceUpdateEvent(device);
     }
 

@@ -68,6 +68,7 @@ public class UserResourceDevicesTest extends UserResourceTestBase {
     private static final String TEST_DEVICE_UID = "TestDeviceUID";
 
     private static final Authenticator<String, AuthorizationInfo> authenticator = mock(Authenticator.class);
+    private static final String TEST_DEVICE_TYPE = "Android";
     private static OAuthFactory oAuthFactory = new OAuthFactory<>(authenticator, "realm", AuthorizationInfo.class);
     private static final AuthorizationRequestFilter filter = spy(new AuthorizationRequestFilter(oAuthFactory, null, "",false));
     private static  AggregationResultsFactory<JsonElement> aggregationResultsFactory = new JsonAggregationResultsFactory();
@@ -109,7 +110,7 @@ public class UserResourceDevicesTest extends UserResourceTestBase {
     @Test
     public void testPutDevice() {
         // CONFIGURE
-        Device device = new Device().setDomain(TEST_DOMAIN_ID).setName(TEST_DEVICE_NAME).setType(Device.Type.Android)
+        Device device = new Device().setDomain(TEST_DOMAIN_ID).setName(TEST_DEVICE_NAME).setType(TEST_DEVICE_TYPE)
                 .setNotificationEnabled(true).setNotificationUri(TEST_DEVICE_URI).setUid(TEST_DEVICE_UID).setUid(TEST_DEVICE_UID);
         Device createdDevice = new Device();
         createdDevice.setUid(TEST_DEVICE_UID);
@@ -126,7 +127,7 @@ public class UserResourceDevicesTest extends UserResourceTestBase {
     @Test
     public void testPutDeviceAdminInOtherDomain() {
         // CONFIGURE
-        Device device = new Device().setDomain(TEST_DOMAIN_ID).setName(TEST_DEVICE_NAME).setType(Device.Type.Android)
+        Device device = new Device().setDomain(TEST_DOMAIN_ID).setName(TEST_DEVICE_NAME).setType(TEST_DEVICE_TYPE)
                 .setNotificationEnabled(true).setNotificationUri(TEST_DEVICE_URI).setUid(TEST_DEVICE_UID);
         when(authorizationInfoMock.getDomainId()).thenReturn(TEST_DOMAIN_ID + "OTHER");
         when(userServiceMock.findById(TEST_USER_ID)).thenReturn(createTestUser());
@@ -140,7 +141,7 @@ public class UserResourceDevicesTest extends UserResourceTestBase {
     @Test
     public void testPutDeviceNotUserExist() {
         // CONFIGURE
-        Device device = new Device().setDomain(TEST_DOMAIN_ID).setName(TEST_DEVICE_NAME).setType(Device.Type.Android)
+        Device device = new Device().setDomain(TEST_DOMAIN_ID).setName(TEST_DEVICE_NAME).setType(TEST_DEVICE_TYPE)
                 .setNotificationEnabled(true).setNotificationUri(TEST_DEVICE_URI).setUid(TEST_DEVICE_UID);
         when(userServiceMock.findById(TEST_USER_ID)).thenReturn(null);
         // LAUNCH
@@ -154,7 +155,7 @@ public class UserResourceDevicesTest extends UserResourceTestBase {
     @Test
     public void testGetDevice() {
         // CONFIGURE
-        Device device = new Device().setDomain(TEST_DOMAIN_ID).setName(TEST_DEVICE_NAME).setType(Device.Type.Android)
+        Device device = new Device().setDomain(TEST_DOMAIN_ID).setName(TEST_DEVICE_NAME).setType(TEST_DEVICE_TYPE)
                 .setNotificationEnabled(true).setNotificationUri(TEST_DEVICE_URI);
         when(userServiceMock.findById(TEST_USER_ID)).thenReturn(createTestUser());
         when(devicesServiceMock.getByUidAndUserId(TEST_DEVICE_ID, TEST_USER_ID, TEST_DOMAIN_ID)).thenReturn(device);
@@ -169,7 +170,7 @@ public class UserResourceDevicesTest extends UserResourceTestBase {
     @Test
     public void testGetDeviceInOtherDomain() {
         // CONFIGURE
-        Device device = new Device().setDomain(TEST_DOMAIN_ID).setName(TEST_DEVICE_NAME).setType(Device.Type.Android)
+        Device device = new Device().setDomain(TEST_DOMAIN_ID).setName(TEST_DEVICE_NAME).setType(TEST_DEVICE_TYPE)
                 .setNotificationEnabled(true).setNotificationUri(TEST_DEVICE_URI);
         when(userServiceMock.findById(TEST_USER_ID)).thenReturn(createTestUser());
         when(authorizationInfoMock.getDomainId()).thenReturn(TEST_DOMAIN_ID + "OTHER");
@@ -196,7 +197,7 @@ public class UserResourceDevicesTest extends UserResourceTestBase {
     @Test
     public void testGetUserDevices() throws MalformedJsonQueryException {
         // CONFIGURE
-        Device device = new Device().setDomain(TEST_DOMAIN_ID).setName(TEST_DEVICE_NAME).setType(Device.Type.Android)
+        Device device = new Device().setDomain(TEST_DOMAIN_ID).setName(TEST_DEVICE_NAME).setType(TEST_DEVICE_TYPE)
                 .setNotificationEnabled(true).setNotificationUri(TEST_DEVICE_URI);
         List<Device> devicesList = Arrays.asList(device);
         when(userServiceMock.findById(TEST_USER_ID)).thenReturn(createTestUser());
@@ -212,7 +213,7 @@ public class UserResourceDevicesTest extends UserResourceTestBase {
     @Test
     public void testGetUserDevicesInOtherDomain() {
         // CONFIGURE
-        Device device = new Device().setDomain(TEST_DOMAIN_ID).setName(TEST_DEVICE_NAME).setType(Device.Type.Android)
+        Device device = new Device().setDomain(TEST_DOMAIN_ID).setName(TEST_DEVICE_NAME).setType(TEST_DEVICE_TYPE)
                 .setNotificationEnabled(true).setNotificationUri(TEST_DEVICE_URI);
         when(authorizationInfoMock.getDomainId()).thenReturn(TEST_DOMAIN_ID + "OTHER");
         when(userServiceMock.findById(TEST_USER_ID)).thenReturn(createTestUser());

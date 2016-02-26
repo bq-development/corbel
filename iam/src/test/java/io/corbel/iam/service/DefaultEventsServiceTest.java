@@ -2,18 +2,6 @@ package io.corbel.iam.service;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import io.corbel.event.AuthorizationEvent;
-import io.corbel.event.DeviceEvent;
-import io.corbel.event.DomainDeletedEvent;
-import io.corbel.event.NotificationEvent;
-import io.corbel.event.ScopeUpdateEvent;
-import io.corbel.event.UserAuthenticationEvent;
-import io.corbel.event.UserCreatedEvent;
-import io.corbel.event.UserDeletedEvent;
-import io.corbel.event.UserModifiedEvent;
-import io.corbel.eventbus.service.EventBus;
-import io.corbel.iam.model.Device;
-import io.corbel.iam.model.User;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -25,6 +13,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+
+import io.corbel.event.*;
+import io.corbel.eventbus.service.EventBus;
+import io.corbel.iam.model.Device;
+import io.corbel.iam.model.User;
 
 /**
  * @author Rubén Carrasco
@@ -50,7 +43,7 @@ import org.mockito.runners.MockitoJUnitRunner;
     private static final String UID = "uid";
     private static final String NOTIFICATIONURI = "notificationuri";
     private static final String NAME = "name";
-    private static final Device.Type TYPE = Device.Type.Android;
+    private static final String TYPE = "Android";
     private static final Boolean NOTIFICATIONENABLED = true;
 
     private @Mock EventBus eventBus;
@@ -154,13 +147,13 @@ import org.mockito.runners.MockitoJUnitRunner;
     @Test
     public void testSendDeviceCreateEvent() {
         service.sendDeviceCreateEvent(device);
-        verify(eventBus).dispatch(new DeviceEvent(DeviceEvent.Type.CREATED, DOMAIN, ID, USERID, TYPE.name(), NAME));
+        verify(eventBus).dispatch(new DeviceEvent(DeviceEvent.Type.CREATED, DOMAIN, ID, USERID, TYPE, NAME));
     }
 
     @Test
     public void testSendDeviceUpdateEvent() {
         service.sendDeviceUpdateEvent(device);
-        verify(eventBus).dispatch(new DeviceEvent(DeviceEvent.Type.UPDATED, DOMAIN, ID, USERID, TYPE.name(), NAME));
+        verify(eventBus).dispatch(new DeviceEvent(DeviceEvent.Type.UPDATED, DOMAIN, ID, USERID, TYPE, NAME));
     }
 
     @Test

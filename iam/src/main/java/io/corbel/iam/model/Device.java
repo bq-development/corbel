@@ -1,10 +1,9 @@
 package io.corbel.iam.model;
 
 import java.util.Date;
+import java.util.Optional;
 
 import javax.validation.constraints.NotNull;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * @author Francisco Sanchez
@@ -18,10 +17,10 @@ public class Device extends Entity {
     @NotNull private String uid;
     private String notificationUri;
     private String name;
-    private Type type;
+    private String type;
     private Boolean notificationEnabled;
-    @JsonProperty("_createdAt") private Date createdAt;
-    @JsonProperty("_updatedAt") private Date updatedAt;
+    private Date firstConnection;
+    private Date lastConnection;
 
     public String getDomain() {
         return domain;
@@ -59,12 +58,12 @@ public class Device extends Entity {
         return this;
     }
 
-    public Type getType() {
+    public String getType() {
         return type;
     }
 
-    public Device setType(Type type) {
-        this.type = type;
+    public Device setType(String type) {
+        this.type = Optional.ofNullable(type).map(String::toUpperCase).orElse(type);
         return this;
     }
 
@@ -86,26 +85,21 @@ public class Device extends Entity {
         return this;
     }
 
-    public Date getCreatedAt() {
-        return createdAt;
+    public Date getFirstConnection() {
+        return firstConnection;
     }
 
-    public Device setCreatedAt(Date createdAt) {
-        this.createdAt = createdAt;
+    public Device setFirstConnection(Date firstConnection) {
+        this.firstConnection = firstConnection;
         return this;
     }
 
-    public Date getUpdatedAt() {
-        return updatedAt;
+    public Date getLastConnection() {
+        return lastConnection;
     }
 
-    public Device setUpdatedAt(Date updatedAt) {
-        this.updatedAt = updatedAt;
+    public Device setLastConnection(Date lastConnection) {
+        this.lastConnection = lastConnection;
         return this;
     }
-
-    public enum Type {
-        Android, Apple
-    }
-
 }
