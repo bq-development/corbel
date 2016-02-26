@@ -46,6 +46,7 @@ public class IamRunner extends ServiceRunnerWithVersionResource<IamIoc> {
         environment.jersey().register(context.getBean(UserResource.class));
         environment.jersey().register(context.getBean(UsernameResource.class));
         environment.jersey().register(context.getBean(DomainResource.class));
+        environment.jersey().register(context.getBean(ClientResource.class));
         environment.jersey().register(context.getBean(ScopeResource.class));
         environment.jersey().register(context.getBean(GroupResource.class));
         environment.healthChecks().register("basic", new BasicHealthCheck());

@@ -1,10 +1,7 @@
 package io.corbel.iam.service;
 
 import java.time.Clock;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import io.corbel.iam.model.Device;
@@ -23,6 +20,7 @@ import io.corbel.lib.queries.request.Sort;
  * @author Francisco Sanchez
  */
 public class DefaultDeviceService implements DeviceService {
+
     private final DeviceRepository deviceRepository;
     private final IdGenerator<Device> deviceIdGenerator;
     private final EventsService eventsService;
@@ -57,9 +55,9 @@ public class DefaultDeviceService implements DeviceService {
     }
 
     private List<ResourceQuery> addUserIdToQueries(String userId, Optional<List<ResourceQuery>> optionalQueries) {
-        List<ResourceQuery> queries = optionalQueries.orElseGet(() -> Arrays.asList(new ResourceQuery()));
-        return queries.stream().map(ResourceQueryBuilder::new).map(builder -> builder.remove(Device.USERID_FIELD))
-                .map(builder -> builder.add(Device.USERID_FIELD, userId)).map(ResourceQueryBuilder::build).collect(Collectors.toList());
+        List<ResourceQuery> queries = optionalQueries.orElseGet(() -> Collections.singletonList(new ResourceQuery()));
+        return queries.stream().map(ResourceQueryBuilder::new).map(builder -> builder.remove(Device.USER_ID_FIELD))
+                .map(builder -> builder.add(Device.USER_ID_FIELD, userId)).map(ResourceQueryBuilder::build).collect(Collectors.toList());
     }
 
     @Override

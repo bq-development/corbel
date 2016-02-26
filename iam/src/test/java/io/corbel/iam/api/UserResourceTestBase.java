@@ -100,21 +100,27 @@ public abstract class UserResourceTestBase {
     }
 
     protected Builder addUserClient() {
-        return getTestRule().client().target("/v1.0/user").request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN);
+        return getTestRule().client().target("/v1.0/" + TEST_DOMAIN_ID + "/user").request()
+                .header(AUTHORIZATION, "Bearer " + TEST_TOKEN);
     }
 
     protected Builder getUserClient(String id) {
-        return getTestRule().client().target("/v1.0/user/" + id).request(MediaType.APPLICATION_JSON)
+        return getTestRule().client().target("/v1.0/" + TEST_DOMAIN_ID + "/user/" + id).request(MediaType.APPLICATION_JSON)
+                .header(AUTHORIZATION, "Bearer " + TEST_TOKEN);
+    }
+
+    protected Builder getUserClientInOtherEmail(String id) {
+        return getTestRule().client().target("/v1.0/" + TEST_OTHER_DOMAIN + "/user/" + id).request(MediaType.APPLICATION_JSON)
                 .header(AUTHORIZATION, "Bearer " + TEST_TOKEN);
     }
 
     protected Builder getUserProfile(String id) {
-        return getTestRule().client().target("/v1.0/user/" + id + "/profile").request(MediaType.APPLICATION_JSON)
-                .header(AUTHORIZATION, "Bearer " + TEST_TOKEN);
+        return getTestRule().client().target("/v1.0/" + TEST_DOMAIN_ID + "/user/" + id + "/profile")
+                .request(MediaType.APPLICATION_JSON).header(AUTHORIZATION, "Bearer " + TEST_TOKEN);
     }
 
     protected Builder getUserClientMe() {
-        return getTestRule().client().target("/v1.0/user/me").request(MediaType.APPLICATION_JSON)
+        return getTestRule().client().target("/v1.0/" + TEST_DOMAIN_ID + "/user/me").request(MediaType.APPLICATION_JSON)
                 .header(AUTHORIZATION, "Bearer " + TEST_TOKEN);
     }
 

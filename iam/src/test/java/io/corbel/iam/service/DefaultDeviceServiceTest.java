@@ -25,9 +25,10 @@ import io.corbel.lib.queries.request.ResourceQuery;
 import io.corbel.lib.queries.request.Sort;
 
 /**
- * Created by Francisco Sanchez on 15/02/16.
+ * @author Francisco Sánchez
  */
 @RunWith(MockitoJUnitRunner.class) public class DefaultDeviceServiceTest {
+
     private static final String TEST_DEVICE_ID = "TEST_DOMAIN:TEST_USER_ID:TEST_UID";
     private static final String TEST_USER_ID = "TEST_USER_ID";
     private static final String TEST_UID = "TEST_UID";
@@ -69,17 +70,16 @@ import io.corbel.lib.queries.request.Sort;
     @Test
     public void testGetDeviceByUserIdWithNullQuery() {
         QueryParameters queryParametersMock = mock(QueryParameters.class);
-        List<ResourceQuery> resourceQueriesSended = null;
         Pagination paginationMock = mock(Pagination.class);
         Sort sortMock = mock(Sort.class);
-        when(queryParametersMock.getQueries()).thenReturn(Optional.ofNullable(resourceQueriesSended));
+        when(queryParametersMock.getQueries()).thenReturn(Optional.empty());
         when(queryParametersMock.getPagination()).thenReturn(paginationMock);
         when(queryParametersMock.getSort()).thenReturn(Optional.of(sortMock));
         List<Device> devicesMockList = new LinkedList<>();
         devicesMockList.add(mock(Device.class));
 
         List<ResourceQuery> resourceQueriesTransformed = new LinkedList<>();
-        resourceQueriesTransformed.add(new ResourceQueryBuilder().add(Device.USERID_FIELD, TEST_USER_ID).build());
+        resourceQueriesTransformed.add(new ResourceQueryBuilder().add(Device.USER_ID_FIELD, TEST_USER_ID).build());
         when(deviceRepositoryMock.find(resourceQueriesTransformed, paginationMock, sortMock)).thenReturn(devicesMockList);
 
         List<Device> device = deviceService.getByUserId(TEST_USER_ID, queryParametersMock);
@@ -95,14 +95,14 @@ import io.corbel.lib.queries.request.Sort;
         resourceQueriesSend.add(new ResourceQueryBuilder().add("type", "ANDROID").build());
         Pagination paginationMock = mock(Pagination.class);
         Sort sortMock = mock(Sort.class);
-        when(queryParametersMock.getQueries()).thenReturn(Optional.ofNullable(resourceQueriesSend));
+        when(queryParametersMock.getQueries()).thenReturn(Optional.of(resourceQueriesSend));
         when(queryParametersMock.getPagination()).thenReturn(paginationMock);
         when(queryParametersMock.getSort()).thenReturn(Optional.of(sortMock));
         List<Device> devicesMockList = new LinkedList<>();
         devicesMockList.add(mock(Device.class));
 
         List<ResourceQuery> resourceQueriesTransformed = new LinkedList<>();
-        resourceQueriesTransformed.add(new ResourceQueryBuilder().add("type", "ANDROID").add(Device.USERID_FIELD, TEST_USER_ID).build());
+        resourceQueriesTransformed.add(new ResourceQueryBuilder().add("type", "ANDROID").add(Device.USER_ID_FIELD, TEST_USER_ID).build());
         when(deviceRepositoryMock.find(resourceQueriesTransformed, paginationMock, sortMock)).thenReturn(devicesMockList);
 
         List<Device> device = deviceService.getByUserId(TEST_USER_ID, queryParametersMock);
@@ -114,17 +114,17 @@ import io.corbel.lib.queries.request.Sort;
     public void testGetDeviceByUserIdWithOtherUserSearch() {
         QueryParameters queryParametersMock = mock(QueryParameters.class);
         List<ResourceQuery> resourceQueriesSended = new LinkedList<>();
-        resourceQueriesSended.add(new ResourceQueryBuilder().add(Device.USERID_FIELD, TEST_OTHER_USER_ID).build());
+        resourceQueriesSended.add(new ResourceQueryBuilder().add(Device.USER_ID_FIELD, TEST_OTHER_USER_ID).build());
         Pagination paginationMock = mock(Pagination.class);
         Sort sortMock = mock(Sort.class);
-        when(queryParametersMock.getQueries()).thenReturn(Optional.ofNullable(resourceQueriesSended));
+        when(queryParametersMock.getQueries()).thenReturn(Optional.of(resourceQueriesSended));
         when(queryParametersMock.getPagination()).thenReturn(paginationMock);
         when(queryParametersMock.getSort()).thenReturn(Optional.of(sortMock));
         List<Device> devicesMockList = new LinkedList<>();
         devicesMockList.add(mock(Device.class));
 
         List<ResourceQuery> resourceQueriesTransformed = new LinkedList<>();
-        resourceQueriesTransformed.add(new ResourceQueryBuilder().add(Device.USERID_FIELD, TEST_USER_ID).build());
+        resourceQueriesTransformed.add(new ResourceQueryBuilder().add(Device.USER_ID_FIELD, TEST_USER_ID).build());
         when(deviceRepositoryMock.find(resourceQueriesTransformed, paginationMock, sortMock)).thenReturn(devicesMockList);
 
         List<Device> device = deviceService.getByUserId(TEST_USER_ID, queryParametersMock);
@@ -137,19 +137,19 @@ import io.corbel.lib.queries.request.Sort;
     public void testGetDeviceByMultipleUserIdWithOtherUserSearch() {
         QueryParameters queryParametersMock = mock(QueryParameters.class);
         List<ResourceQuery> resourceQueriesSended = new LinkedList<>();
-        resourceQueriesSended.add(new ResourceQueryBuilder().add(Device.USERID_FIELD, TEST_OTHER_USER_ID).build());
-        resourceQueriesSended.add(new ResourceQueryBuilder().add(Device.USERID_FIELD, TEST_OTHER_USER_ID).build());
+        resourceQueriesSended.add(new ResourceQueryBuilder().add(Device.USER_ID_FIELD, TEST_OTHER_USER_ID).build());
+        resourceQueriesSended.add(new ResourceQueryBuilder().add(Device.USER_ID_FIELD, TEST_OTHER_USER_ID).build());
         Pagination paginationMock = mock(Pagination.class);
         Sort sortMock = mock(Sort.class);
-        when(queryParametersMock.getQueries()).thenReturn(Optional.ofNullable(resourceQueriesSended));
+        when(queryParametersMock.getQueries()).thenReturn(Optional.of(resourceQueriesSended));
         when(queryParametersMock.getPagination()).thenReturn(paginationMock);
         when(queryParametersMock.getSort()).thenReturn(Optional.of(sortMock));
         List<Device> devicesMockList = new LinkedList<>();
         devicesMockList.add(mock(Device.class));
 
         List<ResourceQuery> resourceQueriesTransformed = new LinkedList<>();
-        resourceQueriesTransformed.add(new ResourceQueryBuilder().add(Device.USERID_FIELD, TEST_USER_ID).build());
-        resourceQueriesTransformed.add(new ResourceQueryBuilder().add(Device.USERID_FIELD, TEST_USER_ID).build());
+        resourceQueriesTransformed.add(new ResourceQueryBuilder().add(Device.USER_ID_FIELD, TEST_USER_ID).build());
+        resourceQueriesTransformed.add(new ResourceQueryBuilder().add(Device.USER_ID_FIELD, TEST_USER_ID).build());
         when(deviceRepositoryMock.find(resourceQueriesTransformed, paginationMock, sortMock)).thenReturn(devicesMockList);
 
         List<Device> device = deviceService.getByUserId(TEST_USER_ID, queryParametersMock);
@@ -207,7 +207,7 @@ import io.corbel.lib.queries.request.Sort;
 
     @Test
     public void testDeleteByUserId() {
-        List<Device> deviceMocks = Arrays.asList(deviceMock);
+        List<Device> deviceMocks = Collections.singletonList(deviceMock);
         when(deviceRepositoryMock.deleteByUserId(TEST_USER_ID)).thenReturn(deviceMocks);
 
         User user = new User();

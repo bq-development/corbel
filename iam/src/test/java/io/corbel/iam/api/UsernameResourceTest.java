@@ -39,7 +39,7 @@ public class UsernameResourceTest extends UserResourceTestBase {
     private static OAuthFactory oAuthFactory = new OAuthFactory<>(authenticatorMock, "realm", AuthorizationInfo.class);
     private static final AuthorizationRequestFilter filter = spy(new AuthorizationRequestFilter(oAuthFactory, null, "", false));
 
-    private static final String URL_PREFIX = "/" + ApiVersion.CURRENT + "/username/";
+    private static final String URL_PREFIX = "/" + ApiVersion.CURRENT + "/" + TEST_DOMAIN_ID + "/username/";
 
     @ClassRule
     public static ResourceTestRule RULE = ResourceTestRule.builder().addResource(new UsernameResource(userServiceMock))

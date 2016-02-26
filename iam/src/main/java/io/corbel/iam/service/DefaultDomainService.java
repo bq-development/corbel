@@ -97,7 +97,8 @@ public class DefaultDomainService implements DomainService {
     }
 
     @Override
-    public JsonElement getDomainsAggregation(ResourceQuery query, Aggregation aggregation) throws InvalidAggregationException {
+    public JsonElement getDomainsAggregation(ResourceQuery query, Aggregation aggregation)
+            throws InvalidAggregationException {
 
         if (!AggregationOperator.$COUNT.equals(aggregation.getOperator())) {
             throw new InvalidAggregationException();

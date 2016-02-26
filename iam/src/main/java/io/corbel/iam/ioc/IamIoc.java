@@ -183,8 +183,13 @@ public class IamIoc {
     }
 
     @Bean
-    public DomainResource getDomainResource(ClientService clientService, DomainService domainService) {
-        return new DomainResource(clientService, domainService);
+    public DomainResource getDomainResource(DomainService domainService) {
+        return new DomainResource(domainService);
+    }
+
+    @Bean
+    public ClientResource getClientResource(ClientService clientService, DomainService domainService) {
+        return new ClientResource(clientService, domainService);
     }
 
     @Bean

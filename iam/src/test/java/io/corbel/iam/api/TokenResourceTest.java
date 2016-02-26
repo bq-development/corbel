@@ -37,8 +37,8 @@ import static org.mockito.Mockito.*;
 public class TokenResourceTest {
 
     private static final String REQUEST_COOKIE = "RequestCookie";
-    private static final String OAUTH_TOKEN_ENDPOINT = "/v1.0/oauth/token";
-    private static final String UPGRADE_TOKEN_ENDPOINT = "/v1.0/oauth/token/upgrade";
+    private static final String OAUTH_TOKEN_ENDPOINT = "/v1.0/unauthenticated/oauth/token";
+    private static final String UPGRADE_TOKEN_ENDPOINT = "/v1.0/unauthenticated/oauth/token/upgrade";
     private static final String ASSERTION = "assertion";
     private static final String ACCESS_TOKEN = "access_token";
     private static final String GRANT_TYPE = "grant_type";
