@@ -38,8 +38,8 @@ class NotificationsShell {
         notificationRepository.save(notification)
     }
 
-    @Description("Creates a new notification Config by Domain on the DB. The input parameter is a map containing the notification config data.")
-    def createNotificationConfig(domainFields) {
+    @Description("Creates a new notification domain on the DB. The input parameter is a map containing the notification config data.")
+    def createNotificationDomain(domainFields) {
         assert domainFields.id : 'Domain id is required'
         Domain domain = new Domain()
         domain.id = domainFields.id

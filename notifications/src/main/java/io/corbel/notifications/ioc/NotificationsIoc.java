@@ -130,16 +130,6 @@ import com.notnoop.apns.ApnsServiceBuilder;
         return apnsServiceBuilder.build();
     }
 
-    @Bean
-    public Gson getGson() {
-        return new Gson();
-    }
-
-    @Bean
-    public AggregationResultsFactory<JsonElement> aggregationResultsFactory(Gson gson){
-        return new JsonAggregationResultsFactory(gson);
-    }
-
     @Override
     protected Environment getEnvironment() {
         return env;
