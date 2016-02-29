@@ -12,6 +12,7 @@ import io.corbel.lib.queries.mongo.builder.CriteriaBuilder;
 import io.corbel.lib.queries.request.*;
 import io.corbel.resources.rem.dao.builder.MongoAggregationBuilder;
 import io.corbel.resources.rem.model.GenericDocument;
+import io.corbel.resources.rem.model.RelationDocument;
 import io.corbel.resources.rem.model.ResourceUri;
 import io.corbel.resources.rem.resmi.exception.InvalidApiParamException;
 import io.corbel.resources.rem.utils.JsonUtils;
@@ -325,7 +326,7 @@ public class MongoResmiDao implements ResmiDao {
     public List<GenericDocument> deleteCollection(ResourceUri uri, Optional<List<ResourceQuery>> queries) {
         List<ResourceQuery> resourceQueries = queries.orElse(Collections.<ResourceQuery>emptyList());
         Criteria criteria = CriteriaBuilder.buildFromResourceQueries(resourceQueries);
-        return findAllAndRemove(uri, criteria);
+        return findAllAndRemove(uri, criteria, GenericDocument.class);
     }
 
     @Override
@@ -339,11 +340,13 @@ public class MongoResmiDao implements ResmiDao {
             criteria = criteria.and(JsonRelation._DST_ID).is(uri.getRelationId());
         }
 
-        return findAllAndRemove(uri, criteria);
+        return findAllAndRemove(uri, criteria, RelationDocument.class).stream().map(document -> {
+            return new GenericDocument().setId(document.get_dst_id());
+        }).collect(Collectors.<GenericDocument>toList());
     }
 
-    private List<GenericDocument> findAllAndRemove(ResourceUri resourceUri, Criteria criteria) {
-        return mongoOperations.findAllAndRemove(new Query(criteria), GenericDocument.class, getMongoCollectionName(resourceUri));
+    private <T extends GenericDocument> List<T> findAllAndRemove(ResourceUri resourceUri, Criteria criteria, Class<T> clazz) {
+        return mongoOperations.findAllAndRemove(new Query(criteria), clazz, getMongoCollectionName(resourceUri));
     }
 
     private JsonObject findAndRemove(ResourceUri resourceUri, Criteria criteria) {
