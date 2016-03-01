@@ -84,14 +84,14 @@ public class DefaultEventsService implements EventsService {
     public void sendDeviceCreateEvent(Device device) {
         eventBus.dispatch(new DeviceEvent(DeviceEvent.Type.CREATED, device.getDomain(), device.getUid(), device.getUserId(),
                 device
-                .getType().name(), device.getName()));
+.getType(), device.getName()));
     }
 
     @Override
     public void sendDeviceUpdateEvent(Device device) {
         eventBus.dispatch(new DeviceEvent(DeviceEvent.Type.UPDATED, device.getDomain(), device.getUid(), device.getUserId(),
                 device
-                .getType().name(), device.getName()));
+.getType(), device.getName()));
 
     }
 

@@ -2,36 +2,10 @@ package io.corbel.iam.service;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import io.corbel.iam.auth.AuthorizationRequestContext;
-import io.corbel.iam.auth.AuthorizationRequestContextFactory;
-import io.corbel.iam.auth.AuthorizationRule;
-import io.corbel.iam.auth.provider.AuthorizationProviderFactory;
-import io.corbel.iam.exception.MissingBasicParamsException;
-import io.corbel.iam.exception.MissingOAuthParamsException;
-import io.corbel.iam.exception.OauthServerConnectionException;
-import io.corbel.iam.exception.UnauthorizedException;
-import io.corbel.iam.exception.UnauthorizedTimeException;
-import io.corbel.iam.model.Client;
-import io.corbel.iam.model.Domain;
-import io.corbel.iam.model.Scope;
-import io.corbel.iam.model.TokenGrant;
-import io.corbel.iam.model.User;
-import io.corbel.iam.repository.UserTokenRepository;
-import io.corbel.lib.token.TokenInfo;
-import io.corbel.lib.token.exception.TokenVerificationException;
-import io.corbel.lib.token.factory.TokenFactory;
-import io.corbel.lib.token.model.TokenType;
+import static org.mockito.Mockito.*;
 
 import java.security.SignatureException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import net.oauth.jsontoken.JsonToken;
 import net.oauth.jsontoken.JsonTokenParser;
@@ -43,6 +17,18 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
+
+import io.corbel.iam.auth.AuthorizationRequestContext;
+import io.corbel.iam.auth.AuthorizationRequestContextFactory;
+import io.corbel.iam.auth.AuthorizationRule;
+import io.corbel.iam.auth.provider.AuthorizationProviderFactory;
+import io.corbel.iam.exception.*;
+import io.corbel.iam.model.*;
+import io.corbel.iam.repository.UserTokenRepository;
+import io.corbel.lib.token.TokenInfo;
+import io.corbel.lib.token.exception.TokenVerificationException;
+import io.corbel.lib.token.factory.TokenFactory;
+import io.corbel.lib.token.model.TokenType;
 
 /**
  * @author Alexander De Leon
@@ -67,41 +53,32 @@ import org.mockito.runners.MockitoJUnitRunner;
 
     private static final Set<String> TEST_USER_GROUPS = new HashSet<String>(Arrays.asList("Admins", "Users"));
 
-    private JsonTokenParser jsonTokenParserMock;
-    private DefaultAuthorizationService authorizationService;
-    private AuthorizationRule authorizationProcessorMock;
     private TokenInfo tokenInfo;
-    private TokenFactory accessTokenFactoryMock;
-    private AuthorizationRequestContext contextMock;
-    private ScopeService scopeServiceMock;
-    private AuthorizationProviderFactory authorizationProviderFactoryMock;
-    private RefreshTokenService refreshTokenServiceMock;
     private io.corbel.lib.token.TokenGrant tokenGrant;
-    private UserTokenRepository userTokenRepository;
-    private EventsService eventsService;
-    private final User userMock = mock(User.class);
+    private DefaultAuthorizationService authorizationService;
 
-    @Mock private UserService userService;
-    private final net.oauth.jsontoken.JsonToken jsonTokenMock = mock(JsonToken.class);
+    @Mock private JsonTokenParser jsonTokenParserMock;
+    @Mock private AuthorizationRule authorizationProcessorMock;
+    @Mock private TokenFactory accessTokenFactoryMock;
+    @Mock private AuthorizationRequestContext contextMock;
+    @Mock private ScopeService scopeServiceMock;
+    @Mock private AuthorizationProviderFactory authorizationProviderFactoryMock;
+    @Mock private RefreshTokenService refreshTokenServiceMock;
+    @Mock private UserTokenRepository userTokenRepositoryMock;
+    @Mock private EventsService eventsServiceMock;
+    @Mock private User userMock;
+    @Mock private DeviceService deviceServiceMock;
+    @Mock private UserService userServiceMock;
+    @Mock private net.oauth.jsontoken.JsonToken jsonTokenMock;
 
 
     @Before
     public void setUp() {
-        jsonTokenParserMock = mock(JsonTokenParser.class);
-        accessTokenFactoryMock = mock(TokenFactory.class);
-        authorizationProcessorMock = mock(AuthorizationRule.class);
-        contextMock = mock(AuthorizationRequestContext.class);
-        scopeServiceMock = mock(ScopeService.class);
-        authorizationProviderFactoryMock = mock(AuthorizationProviderFactory.class);
-        refreshTokenServiceMock = mock(RefreshTokenService.class);
-        userTokenRepository = mock(UserTokenRepository.class);
-        eventsService = mock(EventsService.class);
-
         AuthorizationRequestContextFactory factory = mock(AuthorizationRequestContextFactory.class);
         when(factory.fromJsonToken(Mockito.any(JsonToken.class))).thenReturn(contextMock);
         authorizationService = new DefaultAuthorizationService(jsonTokenParserMock, Arrays.asList(authorizationProcessorMock),
                 accessTokenFactoryMock, factory, scopeServiceMock, authorizationProviderFactoryMock, refreshTokenServiceMock,
-                userTokenRepository, userService, eventsService);
+                userTokenRepositoryMock, userServiceMock, eventsServiceMock, deviceServiceMock);
 
         tokenGrant = new io.corbel.lib.token.TokenGrant(TEST_TOKEN, TEST_EXPIRATION);
 
@@ -121,7 +98,7 @@ import org.mockito.runners.MockitoJUnitRunner;
         when(scopeServiceMock.getScope(TEST_SCOPE_1)).thenReturn(mock(Scope.class));
         TokenGrant grant = authorizationService.authorize(TEST_JWT);
         assertThat(grant).isNotNull();
-        verify(eventsService).sendClientAuthenticationEvent(TEST_DOMAIN_ID, TEST_CLIENT_ID);
+        verify(eventsServiceMock).sendClientAuthenticationEvent(TEST_DOMAIN_ID, TEST_CLIENT_ID);
     }
 
     @Test
@@ -135,7 +112,7 @@ import org.mockito.runners.MockitoJUnitRunner;
         when(accessTokenFactoryMock.createToken(tokenInfo, TEST_EXPIRATION)).thenReturn(tokenGrant);
 
         TokenGrant grant = authorizationService.authorize(TEST_JWT);
-        verify(eventsService).sendUserAuthenticationEvent(userMock);
+        verify(eventsServiceMock).sendUserAuthenticationEvent(userMock);
         verify(scopeServiceMock).publishAuthorizationRules(TEST_TOKEN, TEST_EXPIRATION, filledScopes);
         assertThat(grant).isNotNull();
     }
@@ -156,7 +133,7 @@ import org.mockito.runners.MockitoJUnitRunner;
         TokenGrant grant = authorizationService.authorize(TEST_JWT);
         verify(scopeServiceMock).publishAuthorizationRules(TEST_TOKEN, TEST_EXPIRATION, filledScopes);
         assertThat(grant).isNotNull();
-        verify(eventsService).sendUserAuthenticationEvent(userMock);
+        verify(eventsServiceMock).sendUserAuthenticationEvent(userMock);
     }
 
     @Test(expected = UnauthorizedException.class)

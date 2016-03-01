@@ -133,11 +133,11 @@ public class IamIoc {
 
     @Bean
     public AuthorizationService getAuthorizationService(RefreshTokenService refreshTokenService, TokenFactory tokenFactory,
-                                                        ScopeService scopeService, ScopesAuthorizationRule scopesAuthorizationRule, UserService userService, EventsService eventsService) {
+            ScopeService scopeService, ScopesAuthorizationRule scopesAuthorizationRule, UserService userService,
+            EventsService eventsService, DeviceService deviceService) {
         return new DefaultAuthorizationService(getJsonTokenParser(), getAuthorizationRules(scopesAuthorizationRule), tokenFactory,
                 getAuthorizationRequestContextFactory(scopeService), scopeService, getAuthorizationProviderFactory(), refreshTokenService,
-                userTokenRepository, userService, eventsService);
-
+                userTokenRepository, userService, eventsService, deviceService);
     }
 
     @Bean

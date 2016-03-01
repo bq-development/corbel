@@ -65,14 +65,34 @@ public class DefaultDeviceService implements DeviceService {
     @Override
     public Device update(Device device) {
         device.setId(deviceIdGenerator.generateId(device));
-        device.setCreatedAt(null);
-        device.setUpdatedAt(Date.from(clock.instant()));
+        device.setFirstConnection(null);
+        device.setLastConnection(null);
+        boolean notify = true;
+        return upsertDevice(device, notify);
+    }
+
+    @Override
+    public void deviceConnect(String domain, String userId, String uid) {
+        Device device = new Device();
+        device.setId(UserDomainIdGenerator.generateDeviceId(domain, userId, uid));
+        device.setUid(uid);
+        boolean notify = false;
+        device.setLastConnection(Date.from(clock.instant()));
+        upsertDevice(device, notify);
+    }
+
+    private Device upsertDevice(Device device, boolean notify) {
         boolean isPartialUpdate = deviceRepository.upsert(device.getId(), device);
         if (isPartialUpdate) {
-            eventsService.sendDeviceUpdateEvent(device);
+            if (notify) {
+                eventsService.sendDeviceUpdateEvent(device);
+            }
         } else {
-            device.setCreatedAt(device.getUpdatedAt());
-            deviceRepository.upsert(device.getId(), new Device().setCreatedAt(device.getUpdatedAt()));
+            device.setFirstConnection(Date.from(clock.instant()));
+            device.setLastConnection(device.getFirstConnection());
+            deviceRepository.upsert(device.getId(), new Device()
+                    .setFirstConnection(device.getFirstConnection())
+                    .setLastConnection(device.getLastConnection()));
             eventsService.sendDeviceCreateEvent(device);
         }
         return device;
