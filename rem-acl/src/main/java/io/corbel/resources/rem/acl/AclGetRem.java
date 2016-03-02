@@ -5,10 +5,12 @@ import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+
 import io.corbel.lib.queries.request.ResourceQuery;
 import io.corbel.lib.ws.api.error.ErrorResponseFactory;
 import io.corbel.resources.rem.Rem;
 import io.corbel.resources.rem.acl.query.AclQueryBuilder;
+import io.corbel.resources.rem.model.AclPermission;
 import io.corbel.resources.rem.request.CollectionParameters;
 import io.corbel.resources.rem.request.CollectionParametersImpl;
 import io.corbel.resources.rem.request.RelationParameters;
@@ -22,6 +24,7 @@ import javax.ws.rs.core.Response;
 
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+
 import io.corbel.lib.token.TokenInfo;
 import io.corbel.resources.rem.acl.exception.AclFieldNotPresentException;
 

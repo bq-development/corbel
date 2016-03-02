@@ -3,9 +3,13 @@ package io.corbel.resources.rem.eventbus;
 import io.corbel.event.ResourceEvent;
 import io.corbel.eventbus.EventHandler;
 import io.corbel.resources.rem.service.AclConfigurationService;
+import io.corbel.resources.rem.service.DefaultAclConfigurationService;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
+import javax.ws.rs.core.Response;
+
+import org.springframework.http.HttpStatus;
+
+import com.google.gson.JsonObject;
 
 public class AclConfigurationEventHandler implements EventHandler<ResourceEvent> {
 
@@ -34,21 +38,36 @@ public class AclConfigurationEventHandler implements EventHandler<ResourceEvent>
             return;
         }
         String id = event.getResourceId();
-
+        JsonObject collectionConfiguration = null;
         switch (event.getAction()) {
             case CREATE:
-                // Why id contains entire url in event? @see DefaultResourcesService line 98
-                String onlyId = id.substring(id.lastIndexOf("/") + 1);
-                try {
-                    aclConfigurationService.addAclConfiguration(URLDecoder.decode(onlyId.substring(onlyId.indexOf(":") + 1), "UTF8"));
-                } catch (UnsupportedEncodingException e) {
-                    // Never happens
+                // Why id contains entire url in event when Create Event? @see DefaultResourcesService line 98
+                id = id.substring(id.lastIndexOf("/") + 1);
+                collectionConfiguration = getCollectionConfiguration(id);
+                aclConfigurationService.addAclConfiguration(collectionConfiguration.get(
+                        DefaultAclConfigurationService.COLLECTION_NAME_FIELD).getAsString());
+                String defaultPermission = "";
+                if (collectionConfiguration.has(DefaultAclConfigurationService.DEFAULT_PERMISSION_FIELD)) {
+                    defaultPermission = collectionConfiguration.get(DefaultAclConfigurationService.DEFAULT_PERMISSION_FIELD).getAsString();
                 }
+                aclConfigurationService.setResourcesWithDefaultPermission(
+                        collectionConfiguration.get(DefaultAclConfigurationService.COLLECTION_NAME_FIELD).getAsString(),
+                        collectionConfiguration.get(DefaultAclConfigurationService.DOMAIN_FIELD).getAsString(), defaultPermission);
                 break;
             case DELETE:
-                aclConfigurationService.removeAclConfiguration(id.substring(id.indexOf(":") + 1));
+                collectionConfiguration = getCollectionConfiguration(id);
+                aclConfigurationService.removeAclConfiguration(id,
+                        collectionConfiguration.get(DefaultAclConfigurationService.COLLECTION_NAME_FIELD).getAsString());
         }
 
+    }
+
+    private JsonObject getCollectionConfiguration(String onlyId) {
+        Response response = aclConfigurationService.getConfiguration(onlyId);
+        if (response.getStatus() == HttpStatus.OK.value()) {
+            return (JsonObject) response.getEntity();
+        }
+        return null;
     }
 
     @Override

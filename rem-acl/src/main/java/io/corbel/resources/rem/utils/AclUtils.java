@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Optional;
 
-import io.corbel.resources.rem.acl.AclPermission;
+import io.corbel.resources.rem.model.AclPermission;
 
 /**
  * @author Cristian del Cerro

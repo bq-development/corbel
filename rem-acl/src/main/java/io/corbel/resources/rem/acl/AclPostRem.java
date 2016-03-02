@@ -16,6 +16,7 @@ import com.google.gson.stream.JsonReader;
 
 import io.corbel.lib.ws.api.error.ErrorResponseFactory;
 import io.corbel.resources.rem.Rem;
+import io.corbel.resources.rem.model.AclPermission;
 import io.corbel.resources.rem.request.*;
 import io.corbel.resources.rem.service.AclResourcesService;
 import io.corbel.resources.rem.service.DefaultAclResourcesService;
