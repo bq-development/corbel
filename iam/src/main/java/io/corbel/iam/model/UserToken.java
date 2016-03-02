@@ -1,8 +1,9 @@
 package io.corbel.iam.model;
 
-import java.util.Date;
-
 import org.springframework.data.annotation.Id;
+
+import java.util.Date;
+import java.util.Set;
 
 /**
  * @author Cristian del Cerro
@@ -15,18 +16,16 @@ public class UserToken {
     private String userId;
     private String deviceId;
     private Date expireAt;
+    private Set<Scope> scopes;
 
     public UserToken() {}
 
-    public UserToken(String token, String userId, Date expireAt) {
-        this(token, userId, null, expireAt);
-    }
-
-    public UserToken(String token, String userId, String deviceId, Date expireAt) {
+    public UserToken(String token, String userId, String deviceId, Date expireAt, Set<Scope> scopes) {
         this.token = token;
         this.userId = userId;
         this.deviceId = deviceId;
         this.expireAt = expireAt;
+        this.scopes = scopes;
     }
 
     public String getToken() {
@@ -65,6 +64,14 @@ public class UserToken {
         return this;
     }
 
+    public Set<Scope> getScopes() {
+        return scopes;
+    }
+
+    public void setScopes(Set<Scope> scopes) {
+        this.scopes = scopes;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -75,8 +82,10 @@ public class UserToken {
         if (token != null ? !token.equals(userToken.token) : userToken.token != null) return false;
         if (userId != null ? !userId.equals(userToken.userId) : userToken.userId != null) return false;
         if (deviceId != null ? !deviceId.equals(userToken.deviceId) : userToken.deviceId != null) return false;
-        return expireAt != null ? expireAt.equals(userToken.expireAt) : userToken.expireAt == null;
+        if (expireAt != null ? !expireAt.equals(userToken.expireAt) : userToken.expireAt != null) return false;
+        if (scopes != null ? !scopes.equals(userToken.scopes) : userToken.scopes != null) return false;
 
+        return true;
     }
 
     @Override
@@ -85,6 +94,7 @@ public class UserToken {
         result = 31 * result + (userId != null ? userId.hashCode() : 0);
         result = 31 * result + (deviceId != null ? deviceId.hashCode() : 0);
         result = 31 * result + (expireAt != null ? expireAt.hashCode() : 0);
+        result = 31 * result + (scopes != null ? scopes.hashCode() : 0);
         return result;
     }
 }

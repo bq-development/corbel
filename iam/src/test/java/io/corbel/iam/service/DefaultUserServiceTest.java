@@ -104,6 +104,15 @@ import com.google.gson.Gson;
     }
 
     @Test
+    public void testGetSession() {
+        UserToken userToken = new UserToken();
+        userToken.setToken(TEST_TOKEN);
+        when(userTokenRepositoryMock.findByToken(TEST_TOKEN)).thenReturn(userToken);
+        UserToken returnUserToken = service.getSession(TEST_TOKEN);
+        assertThat(returnUserToken).isEqualTo(userToken);
+    }
+
+    @Test
     public void testGetUserProfile() throws UserProfileConfigurationException {
         User user = new User();
         user.setDomain(TEST_DOMAIN);
