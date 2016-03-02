@@ -3,8 +3,6 @@ package io.corbel.iam.model;
 import java.util.Date;
 import java.util.Optional;
 
-import javax.validation.constraints.NotNull;
-
 /**
  * @author Francisco Sanchez
  */
@@ -14,7 +12,7 @@ public class Device extends Entity {
 
     private String domain;
     private String userId;
-    @NotNull private String uid;
+    private String uid;
     private String notificationUri;
     private String name;
     private String type;

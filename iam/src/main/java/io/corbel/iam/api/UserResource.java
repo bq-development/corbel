@@ -178,40 +178,40 @@ import io.dropwizard.auth.Auth;
     }
 
     @GET
-    @Path("/{userId}/devices")
+    @Path("/{userId}/device")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getDevices(@Rest QueryParameters queryParameters, @PathParam("userId") String userId,
             @Auth AuthorizationInfo authorizationInfo) {
         User user = getUserResolvingMeAndUserDomainVerifying(userId, authorizationInfo);
-        return Optional.ofNullable(deviceService.getByUserId(user.getId(), queryParameters))
-                .map(devices -> {
-                    devices.stream().forEach(device -> device.setId(device.getUid()));
-                    return Response.ok().type(MediaType.APPLICATION_JSON).entity(devices).build();
-                })
-                .orElseGet(() -> IamErrorResponseFactory.getInstance().notFound());
+        List<Device> userDevices = Optional.ofNullable(deviceService.getByUserId(user.getId(), queryParameters))
+                .orElse(Collections.emptyList());
+        return Response.ok().type(MediaType.APPLICATION_JSON)
+                .entity(userDevices.stream().map(DeviceResponse::new).collect(Collectors.toList())).build();
     }
 
     @GET
-    @Path("/{userId}/devices/{deviceId}")
+    @Path("/{userId}/device/{deviceId}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response getDevice(@PathParam("userId") String userId, @PathParam("deviceId") String deviceUid,
             @Auth AuthorizationInfo authorizationInfo) {
         User user = getUserResolvingMeAndUserDomainVerifying(userId, authorizationInfo);
-        return Optional.ofNullable(deviceService.getByUidAndUserId(deviceUid, user.getId(), user.getDomain()))
-                .map(device -> {
-                    device.setId(deviceUid);
-                    return Response.ok().type(MediaType.APPLICATION_JSON).entity(device).build();
-                })
-                .orElseGet(() -> IamErrorResponseFactory.getInstance().notFound());
+        Device userDevice = deviceService.getByUidAndUserId(deviceUid, user.getId(), user.getDomain());
+        if (userDevice != null) {
+            return Response.ok().type(MediaType.APPLICATION_JSON).entity(new DeviceResponse(userDevice)).build();
+        } else {
+            return IamErrorResponseFactory.getInstance().notFound();
+        }
     }
 
     @PUT
-    @Path("/{userId}/devices")
+    @Path("/{userId}/device/{deviceId}")
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response updateDevice(@PathParam("userId") String userId, @Valid Device deviceData, @Auth AuthorizationInfo authorizationInfo,
+    public Response updateDevice(@PathParam("userId") String userId, @PathParam("deviceId") String deviceId, @Valid Device deviceData,
+            @Auth AuthorizationInfo authorizationInfo,
             @Context UriInfo uriInfo) {
         User user = getUserResolvingMeAndUserDomainVerifying(userId, authorizationInfo);
         ensureNoId(deviceData);
+        deviceData.setUid(deviceId);
         deviceData.setUserId(user.getId());
         deviceData.setDomain(authorizationInfo.getDomainId());
         Device storeDevice = deviceService.update(deviceData);
@@ -219,7 +219,7 @@ import io.dropwizard.auth.Auth;
     }
 
     @DELETE
-    @Path("/{userId}/devices/{deviceId}")
+    @Path("/{userId}/device/{deviceId}")
     public Response deleteDevice(@PathParam("userId") String userId, @PathParam("deviceId") final String deviceUid,
             @Auth AuthorizationInfo authorizationInfo) {
         User user = getUserResolvingMeAndUserDomainVerifying(userId, authorizationInfo);
