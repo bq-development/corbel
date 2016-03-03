@@ -341,7 +341,7 @@ public class MongoResmiDao implements ResmiDao {
         }
 
         return findAllAndRemove(uri, criteria, RelationDocument.class).stream().map(document -> {
-            return new GenericDocument().setId(document.get_dst_id());
+            return new GenericDocument().setId(document.getDstId());
         }).collect(Collectors.<GenericDocument>toList());
     }
 

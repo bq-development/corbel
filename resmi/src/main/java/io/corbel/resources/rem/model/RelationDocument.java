@@ -1,15 +1,18 @@
 package io.corbel.resources.rem.model;
 
+import org.springframework.data.mongodb.core.mapping.Field;
+
 public class RelationDocument extends GenericDocument {
 
-    private String _dst_id;
+    @Field("_dst_id")
+    private String dstId;
 
-    public String get_dst_id() {
-        return _dst_id;
+    public String getDstId() {
+        return dstId;
     }
 
-    public RelationDocument set_dst_id(String _dst_id) {
-        this._dst_id = _dst_id;
+    public RelationDocument setDstId(String dstId) {
+        this.dstId = dstId;
         return this;
     }
 }
