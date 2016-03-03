@@ -25,12 +25,14 @@ class NotificationsShell {
 
     @Description("Creates a new notification on the DB. The input parameter is a map containing the notification data.")
     def createNotification(notificationFields) {
-        assert notificationFields.id : 'Notification id is required'
+        assert notificationFields.domain : 'Notification domain is required'
+        assert notificationFields.name : 'Notification name is required'
         assert notificationFields.sender : 'Notification sender is required'
         assert notificationFields.type : 'Notification type is required'
         assert notificationFields.text : 'Notification text is required'
         NotificationTemplate notification = new NotificationTemplate()
-        notification.id = notificationFields.id
+        notification.domain = notificationFields.domain
+        notification.name = notificationFields.name
         notification.sender = notificationFields.sender
         notification.type = notificationFields.type
         notification.text = notificationFields.text
