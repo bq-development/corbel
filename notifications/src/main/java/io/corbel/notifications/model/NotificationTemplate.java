@@ -8,37 +8,59 @@ import org.springframework.data.annotation.Id;
  */
 public class NotificationTemplate {
 
-	@Id
-	private String id;
+    @Id
+    private String id;
 
     @NotEmpty
-	private String type;
+    private String name;
+
+    @NotEmpty
+    private String domain;
+
+    @NotEmpty
+    private String type;
 
     @NotEmpty
     private String sender;
 
     @NotEmpty
     @Template
-	private String text;
+    private String text;
 
     @Template
     private String title;
 
-	public String getId() {
-		return id;
-	}
+    public String getId() {
+        return id;
+    }
 
-	public void setId(String id) {
-		this.id = id;
-	}
+    public void setId(String id) {
+        this.id = id;
+    }
 
-	public String getType() {
-		return type;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public void setType(String type) {
-		this.type = type;
-	}
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getDomain() {
+        return domain;
+    }
+
+    public void setDomain(String domain) {
+        this.domain = domain;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
 
     public String getSender() {
         return sender;
@@ -65,17 +87,52 @@ public class NotificationTemplate {
     }
 
     public void updateTemplate(NotificationTemplate updateNotificationTemplate) {
-        if(updateNotificationTemplate.getSender() != null) {
+        if (updateNotificationTemplate.getSender() != null) {
             setSender(updateNotificationTemplate.getSender());
         }
-        if(updateNotificationTemplate.getText() != null) {
+        if (updateNotificationTemplate.getDomain() != null) {
+            setDomain(updateNotificationTemplate.getDomain());
+        }
+        if (updateNotificationTemplate.getName() != null) {
+            setName(updateNotificationTemplate.getName());
+        }
+        if (updateNotificationTemplate.getText() != null) {
             setText(updateNotificationTemplate.getText());
         }
-        if(updateNotificationTemplate.getTitle() != null) {
+        if (updateNotificationTemplate.getTitle() != null) {
             setTitle(updateNotificationTemplate.getTitle());
         }
-        if(updateNotificationTemplate.getType() != null) {
+        if (updateNotificationTemplate.getType() != null) {
             setType(updateNotificationTemplate.getType());
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        NotificationTemplate that = (NotificationTemplate) o;
+
+        if (id != null ? !id.equals(that.id) : that.id != null) return false;
+        if (name != null ? !name.equals(that.name) : that.name != null) return false;
+        if (domain != null ? !domain.equals(that.domain) : that.domain != null) return false;
+        if (type != null ? !type.equals(that.type) : that.type != null) return false;
+        if (sender != null ? !sender.equals(that.sender) : that.sender != null) return false;
+        if (text != null ? !text.equals(that.text) : that.text != null) return false;
+        return !(title != null ? !title.equals(that.title) : that.title != null);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = id != null ? id.hashCode() : 0;
+        result = 31 * result + (name != null ? name.hashCode() : 0);
+        result = 31 * result + (domain != null ? domain.hashCode() : 0);
+        result = 31 * result + (type != null ? type.hashCode() : 0);
+        result = 31 * result + (sender != null ? sender.hashCode() : 0);
+        result = 31 * result + (text != null ? text.hashCode() : 0);
+        result = 31 * result + (title != null ? title.hashCode() : 0);
+        return result;
     }
 }

@@ -4,9 +4,14 @@ import java.io.InputStream;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
+import io.corbel.lib.mongo.IdGenerator;
+import io.corbel.lib.mongo.IdGeneratorMongoEventListener;
 import io.corbel.lib.queries.request.AggregationResultsFactory;
 import io.corbel.lib.queries.request.JsonAggregationResultsFactory;
+import io.corbel.lib.ws.digest.DigesterFactory;
 import io.corbel.notifications.api.DomainResource;
+import io.corbel.notifications.model.NotificationTemplate;
+import io.corbel.notifications.model.NotificationTemplateIdGenerator;
 import io.corbel.notifications.repository.DomainRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -129,6 +134,16 @@ import com.notnoop.apns.ApnsServiceBuilder;
         }
         return apnsServiceBuilder.build();
     }
+
+    @Bean
+    public IdGeneratorMongoEventListener<NotificationTemplate> getNotificationTemplateIdGeneratorMongoEventListener() {
+        return new IdGeneratorMongoEventListener<>(getNotificationTemplateIdGenerator(), NotificationTemplate.class);
+    }
+
+    private IdGenerator<NotificationTemplate> getNotificationTemplateIdGenerator() {
+        return new NotificationTemplateIdGenerator();
+    }
+
 
     @Override
     protected Environment getEnvironment() {
