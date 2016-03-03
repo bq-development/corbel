@@ -13,10 +13,8 @@ import java.util.UUID;
  */
 public class DeviceIdGenerator implements IdGenerator<Device> {
 
-    private final Digester digester;
 
-    public DeviceIdGenerator(Digester digester) {
-        this.digester = digester;
+    public DeviceIdGenerator() {
     }
 
     @Override

@@ -379,7 +379,7 @@ public class IamIoc {
 
     @Bean
     public IdGenerator<Device> getDeviceIdGenerator() {
-        return new DeviceIdGenerator(DigesterFactory.sha1());
+        return new DeviceIdGenerator();
     }
 
     private ScopeFillStrategy getScopeFillStrategy() {
