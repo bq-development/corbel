@@ -151,5 +151,4 @@ public class DefaultResmiSearch implements ResmiSearch {
     private String getElasticSearchId(ResourceUri uri) {
         return Optional.ofNullable(uri.getRelationId()).orElse(Optional.ofNullable(uri.getTypeId()).orElse(EMPTY_STRING));
     }
-
 }
