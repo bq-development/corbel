@@ -1,6 +1,7 @@
 package io.corbel.notifications.api;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 import javax.ws.rs.*;
@@ -41,7 +42,12 @@ public class NotificationsResource {
     public Response getTemplates(@Rest QueryParameters queryParameters) {
         List<NotificationTemplate> notificationTemplates = notificationRepository.find(queryParameters.getQuery()
                 .orElse(null), queryParameters.getPagination(), queryParameters.getSort().orElse(null));
-        return Response.ok().type(MediaType.APPLICATION_JSON).entity(notificationTemplates).build();
+
+        List<NotificationTemplateResponse> notificationTemplateResponses = notificationTemplates.stream()
+                .map(NotificationTemplateResponse::new)
+                .collect(Collectors.toList());
+
+        return Response.ok().type(MediaType.APPLICATION_JSON).entity(notificationTemplateResponses).build();
     }
 
     @POST
