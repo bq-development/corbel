@@ -9,7 +9,7 @@ public class DeviceResponse extends Entity {
     private String notificationUri;
     private String name;
     private String type;
-    private boolean notificationEnabled;
+    private Boolean notificationEnabled;
     private Date firstConnection;
     private Date lastConnection;
 
@@ -52,11 +52,11 @@ public class DeviceResponse extends Entity {
         return this;
     }
 
-    public boolean isNotificationEnabled() {
+    public Boolean isNotificationEnabled() {
         return notificationEnabled;
     }
 
-    public DeviceResponse setNotificationEnabled(boolean notificationEnabled) {
+    public DeviceResponse setNotificationEnabled(Boolean notificationEnabled) {
         this.notificationEnabled = notificationEnabled;
         return this;
     }
