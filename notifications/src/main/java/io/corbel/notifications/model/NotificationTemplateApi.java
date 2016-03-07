@@ -1,22 +1,29 @@
 package io.corbel.notifications.model;
 
 
-public class NotificationTemplateResponse {
+import org.hibernate.validator.constraints.NotEmpty;
 
+public class NotificationTemplateApi {
+
+    @NotEmpty
     private String id;
 
+    @NotEmpty
     private String type;
 
+    @NotEmpty
     private String sender;
 
+    @NotEmpty
     private String text;
 
+    @NotEmpty
     private String title;
 
-    public NotificationTemplateResponse() {
+    public NotificationTemplateApi() {
     }
 
-    public NotificationTemplateResponse(NotificationTemplate notificationTemplate) {
+    public NotificationTemplateApi(NotificationTemplate notificationTemplate) {
         this.id = notificationTemplate.getName();
         this.type = notificationTemplate.getType();
         this.sender = notificationTemplate.getSender();
@@ -69,7 +76,7 @@ public class NotificationTemplateResponse {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        NotificationTemplateResponse that = (NotificationTemplateResponse) o;
+        NotificationTemplateApi that = (NotificationTemplateApi) o;
 
         if (id != null ? !id.equals(that.id) : that.id != null) return false;
         if (type != null ? !type.equals(that.type) : that.type != null) return false;

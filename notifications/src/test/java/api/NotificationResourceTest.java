@@ -8,7 +8,7 @@ import io.corbel.lib.ws.queries.QueryParametersProvider;
 import io.corbel.notifications.api.NotificationsResource;
 import io.corbel.notifications.model.Notification;
 import io.corbel.notifications.model.NotificationTemplate;
-import io.corbel.notifications.model.NotificationTemplateResponse;
+import io.corbel.notifications.model.NotificationTemplateApi;
 import io.corbel.notifications.repository.NotificationRepository;
 import io.corbel.notifications.service.SenderNotificationsService;
 import io.dropwizard.testing.junit.ResourceTestRule;
@@ -70,80 +70,63 @@ public class NotificationResourceTest {
 
     @Test
     public void testAddNotificationTemplate() {
-        NotificationTemplate notificationTemplate = getNotificationTemplate();
+        NotificationTemplateApi notificationTemplateApi = getNotificationTemplateApi();
 
         NotificationTemplate notificationTemplateWithoutId = getNotificationTemplate();
         notificationTemplateWithoutId.setId(null);
 
 
         Response response = RULE.client().target("/v1.0/" + DOMAIN + "/notification").request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
-                .post(Entity.json(notificationTemplate), Response.class);
+                .post(Entity.json(notificationTemplateApi), Response.class);
 
         assertThat(response.getStatus()).isEqualTo(201);
         assertThat(response.getHeaderString("Location")).contains(TEMPLATE_NAME);
     }
 
     @Test
-    public void testAddNotificationTemplateWithoutDomain() {
-        NotificationTemplate notificationTemplate = getNotificationTemplate();
-        notificationTemplate.setDomain(null);
-
-        when(notificationRepositoryMock.save(Mockito.eq(notificationTemplate))).thenReturn(notificationTemplate);
-
-        Response response = RULE.client().target("/v1.0/" + DOMAIN + "/notification").request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
-                .post(Entity.json(notificationTemplate), Response.class);
-
-        assertThat(response.getStatus()).isEqualTo(422);
-    }
-
-    @Test
     public void testAddNotificationTemplateWithoutName() {
-        NotificationTemplate notificationTemplate = getNotificationTemplate();
-        notificationTemplate.setName(null);
+        NotificationTemplateApi notificationTemplateApi = getNotificationTemplateApi();
+        notificationTemplateApi.setId(null);
 
-        when(notificationRepositoryMock.save(Mockito.eq(notificationTemplate))).thenReturn(notificationTemplate);
 
         Response response = RULE.client().target("/v1.0/" + DOMAIN + "/notification").request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
-                .post(Entity.json(notificationTemplate), Response.class);
+                .post(Entity.json(notificationTemplateApi), Response.class);
 
         assertThat(response.getStatus()).isEqualTo(422);
     }
 
     @Test
     public void testAddNotificationTemplateWithoutSender() {
-        NotificationTemplate notificationTemplate = getNotificationTemplate();
-        notificationTemplate.setSender(null);
+        NotificationTemplateApi notificationTemplateApi = getNotificationTemplateApi();
+        notificationTemplateApi.setSender(null);
 
-        when(notificationRepositoryMock.save(Mockito.eq(notificationTemplate))).thenReturn(notificationTemplate);
 
         Response response = RULE.client().target("/v1.0/" + DOMAIN + "/notification").request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
-                .post(Entity.json(notificationTemplate), Response.class);
+                .post(Entity.json(notificationTemplateApi), Response.class);
 
         assertThat(response.getStatus()).isEqualTo(422);
     }
 
     @Test
     public void testAddNotificationTemplateWithoutText() {
-        NotificationTemplate notificationTemplate = getNotificationTemplate();
-        notificationTemplate.setText(null);
+        NotificationTemplateApi notificationTemplateApi = getNotificationTemplateApi();
+        notificationTemplateApi.setText(null);
 
-        when(notificationRepositoryMock.save(Mockito.eq(notificationTemplate))).thenReturn(notificationTemplate);
 
         Response response = RULE.client().target("/v1.0/" + DOMAIN + "/notification").request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
-                .post(Entity.json(notificationTemplate), Response.class);
+                .post(Entity.json(notificationTemplateApi), Response.class);
 
         assertThat(response.getStatus()).isEqualTo(422);
     }
 
     @Test
     public void testAddNotificationTemplateWithoutType() {
-        NotificationTemplate notificationTemplate = getNotificationTemplate();
-        notificationTemplate.setType(null);
+        NotificationTemplateApi notificationTemplateApi = getNotificationTemplateApi();
+        notificationTemplateApi.setType(null);
 
-        when(notificationRepositoryMock.save(Mockito.eq(notificationTemplate))).thenReturn(notificationTemplate);
 
         Response response = RULE.client().target("/v1.0/" + DOMAIN + "/notification").request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
-                .post(Entity.json(notificationTemplate), Response.class);
+                .post(Entity.json(notificationTemplateApi), Response.class);
 
         assertThat(response.getStatus()).isEqualTo(422);
     }
@@ -158,8 +141,8 @@ public class NotificationResourceTest {
                 .get(Response.class);
 
         assertThat(response.getStatus()).isEqualTo(200);
-        NotificationTemplateResponse notificationTemplateResponse = new NotificationTemplateResponse(notificationTemplate);
-        assertThat(response.readEntity(NotificationTemplateResponse.class)).isEqualsToByComparingFields(notificationTemplateResponse);
+        NotificationTemplateApi notificationTemplateApi = new NotificationTemplateApi(notificationTemplate);
+        assertThat(response.readEntity(NotificationTemplateApi.class)).isEqualsToByComparingFields(notificationTemplateApi);
     }
 
     @Test
@@ -174,15 +157,15 @@ public class NotificationResourceTest {
 
     @Test
     public void testUpdateTypeNotificationTemplate() {
-        NotificationTemplate notificationTemplateData = new NotificationTemplate();
-        notificationTemplateData.setType("TYPE_UPDATED");
+        NotificationTemplateApi notificationTemplateApiData = new NotificationTemplateApi();
+        notificationTemplateApiData.setType("TYPE_UPDATED");
 
         NotificationTemplate notificationTemplateGotten = getNotificationTemplate();
 
         when(notificationRepositoryMock.findByDomainAndName(DOMAIN, TEMPLATE_NAME)).thenReturn(notificationTemplateGotten);
 
         Response response = RULE.client().target("/v1.0/" + DOMAIN + "/notification/" + TEMPLATE_NAME).request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
-                .put(Entity.json(notificationTemplateData), Response.class);
+                .put(Entity.json(notificationTemplateApiData), Response.class);
 
         ArgumentCaptor<NotificationTemplate> notificationTemplateCaptor = forClass(NotificationTemplate.class);
         verify(notificationRepositoryMock).save(notificationTemplateCaptor.capture());
@@ -197,15 +180,15 @@ public class NotificationResourceTest {
 
     @Test
     public void testUpdateSenderNotificationTemplate() {
-        NotificationTemplate notificationTemplateData = new NotificationTemplate();
-        notificationTemplateData.setSender("SENDER_UPDATED");
+        NotificationTemplateApi notificationTemplateApiData = new NotificationTemplateApi();
+        notificationTemplateApiData.setSender("SENDER_UPDATED");
 
         NotificationTemplate notificationTemplateGotten = getNotificationTemplate();
 
         when(notificationRepositoryMock.findByDomainAndName(DOMAIN, TEMPLATE_NAME)).thenReturn(notificationTemplateGotten);
 
         Response response = RULE.client().target("/v1.0/" + DOMAIN + "/notification/" + TEMPLATE_NAME).request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
-                .put(Entity.json(notificationTemplateData), Response.class);
+                .put(Entity.json(notificationTemplateApiData), Response.class);
 
         ArgumentCaptor<NotificationTemplate> notificationTemplateCaptor = forClass(NotificationTemplate.class);
         verify(notificationRepositoryMock).save(notificationTemplateCaptor.capture());
@@ -220,15 +203,15 @@ public class NotificationResourceTest {
 
     @Test
     public void testUpdateTextNotificationTemplate() {
-        NotificationTemplate notificationTemplateData = new NotificationTemplate();
-        notificationTemplateData.setText("TEXT_UPDATED");
+        NotificationTemplateApi notificationTemplateApiData = new NotificationTemplateApi();
+        notificationTemplateApiData.setText("TEXT_UPDATED");
 
         NotificationTemplate notificationTemplateGotten = getNotificationTemplate();
 
         when(notificationRepositoryMock.findByDomainAndName(DOMAIN, TEMPLATE_NAME)).thenReturn(notificationTemplateGotten);
 
         Response response = RULE.client().target("/v1.0/" + DOMAIN + "/notification/" + TEMPLATE_NAME).request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
-                .put(Entity.json(notificationTemplateData), Response.class);
+                .put(Entity.json(notificationTemplateApiData), Response.class);
 
         ArgumentCaptor<NotificationTemplate> notificationTemplateCaptor = forClass(NotificationTemplate.class);
         verify(notificationRepositoryMock).save(notificationTemplateCaptor.capture());
@@ -243,15 +226,15 @@ public class NotificationResourceTest {
 
     @Test
     public void testUpdateTitleNotificationTemplate() {
-        NotificationTemplate notificationTemplateData = new NotificationTemplate();
-        notificationTemplateData.setTitle("TITLE_UPDATED");
+        NotificationTemplateApi notificationTemplateApiData = new NotificationTemplateApi();
+        notificationTemplateApiData.setTitle("TITLE_UPDATED");
 
         NotificationTemplate notificationTemplateGotten = getNotificationTemplate();
 
         when(notificationRepositoryMock.findByDomainAndName(DOMAIN, TEMPLATE_NAME)).thenReturn(notificationTemplateGotten);
 
         Response response = RULE.client().target("/v1.0/" + DOMAIN + "/notification/" + TEMPLATE_NAME).request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
-                .put(Entity.json(notificationTemplateData), Response.class);
+                .put(Entity.json(notificationTemplateApiData), Response.class);
 
         ArgumentCaptor<NotificationTemplate> notificationTemplateCaptor = forClass(NotificationTemplate.class);
         verify(notificationRepositoryMock).save(notificationTemplateCaptor.capture());
@@ -266,12 +249,12 @@ public class NotificationResourceTest {
 
     @Test
     public void testUpdateNotExistingNotificationTemplate() {
-        NotificationTemplate notificationTemplateData = new NotificationTemplate();
+        NotificationTemplateApi notificationTemplateApiData = new NotificationTemplateApi();
 
         when(notificationRepositoryMock.findByDomainAndName(DOMAIN, "notExisting")).thenReturn(null);
 
         Response response = RULE.client().target("/v1.0/" + DOMAIN + "/notification/notExisting").request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
-                .put(Entity.json(notificationTemplateData), Response.class);
+                .put(Entity.json(notificationTemplateApiData), Response.class);
 
         assertThat(response.getStatus()).isEqualTo(404);
     }
@@ -309,6 +292,17 @@ public class NotificationResourceTest {
         notificationTemplate.setType(TEMPLATE_TYPE);
 
         return notificationTemplate;
+    }
+
+    private NotificationTemplateApi getNotificationTemplateApi() {
+        NotificationTemplateApi notificationTemplateApi = new NotificationTemplateApi();
+        notificationTemplateApi.setId(TEMPLATE_NAME);
+        notificationTemplateApi.setSender(TEMPLATE_SENDER);
+        notificationTemplateApi.setText(TEMPLATE_TEXT);
+        notificationTemplateApi.setTitle(TEMPLATE_TITLE);
+        notificationTemplateApi.setType(TEMPLATE_TYPE);
+
+        return notificationTemplateApi;
     }
 
 
