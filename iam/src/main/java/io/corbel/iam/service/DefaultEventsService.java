@@ -53,8 +53,8 @@ public class DefaultEventsService implements EventsService {
     }
 
     @Override
-    public void sendNotificationEvent(String notificationId, String recipient, Map<String, String> properties) {
-        NotificationEvent notificationEvent = new NotificationEvent(notificationId, recipient);
+    public void sendNotificationEvent(String domainId, String notificationId, String recipient, Map<String, String> properties) {
+        NotificationEvent notificationEvent = new NotificationEvent(notificationId, recipient, domainId);
         notificationEvent.setProperties(properties);
         eventBus.dispatch(notificationEvent);
         LOG.info("Sending email from IAM with notification: {}", notificationId);

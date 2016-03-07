@@ -113,9 +113,9 @@ import io.corbel.iam.model.User;
     @Test
     public void testSendNotificationEvent() {
         HashMap<String, String> properties = new HashMap<>();
-        service.sendNotificationEvent("notificationId", "recipient", properties);
+        service.sendNotificationEvent("domain", "notificationId", "recipient", properties);
 
-        NotificationEvent notificationEvent = new NotificationEvent("notificationId", "recipient");
+        NotificationEvent notificationEvent = new NotificationEvent("notificationId", "recipient", "domain");
         notificationEvent.setProperties(properties);
         verify(eventBus).dispatch(notificationEvent);
     }
