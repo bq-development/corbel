@@ -14,14 +14,12 @@ import javax.ws.rs.core.UriInfo;
 import io.corbel.lib.queries.jaxrs.QueryParameters;
 import io.corbel.lib.ws.annotation.Rest;
 import io.corbel.lib.ws.api.error.ErrorResponseFactory;
-import io.corbel.lib.ws.auth.AuthorizationInfo;
 import io.corbel.notifications.model.Notification;
 import io.corbel.notifications.model.NotificationTemplate;
-import io.corbel.notifications.model.NotificationTemplateResponse;
+import io.corbel.notifications.model.NotificationTemplateApi;
 import io.corbel.notifications.repository.NotificationRepository;
 import io.corbel.notifications.service.SenderNotificationsService;
 import io.corbel.notifications.utils.DomainNameIdGenerator;
-import io.dropwizard.auth.Auth;
 
 /**
  * @author Francisco Sanchez
@@ -43,17 +41,19 @@ public class NotificationsResource {
         List<NotificationTemplate> notificationTemplates = notificationRepository.find(queryParameters.getQuery()
                 .orElse(null), queryParameters.getPagination(), queryParameters.getSort().orElse(null));
 
-        List<NotificationTemplateResponse> notificationTemplateResponses = notificationTemplates.stream()
-                .map(NotificationTemplateResponse::new)
+        List<NotificationTemplateApi> notificationTemplateApis = notificationTemplates.stream()
+                .map(NotificationTemplateApi::new)
                 .collect(Collectors.toList());
 
-        return Response.ok().type(MediaType.APPLICATION_JSON).entity(notificationTemplateResponses).build();
+        return Response.ok().type(MediaType.APPLICATION_JSON).entity(notificationTemplateApis).build();
     }
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response postTemplate(@Valid NotificationTemplate notificationTemplate, @Context UriInfo uriInfo) {
-        notificationTemplate.setId(null);
+    public Response postTemplate(@Valid NotificationTemplateApi notificationTemplateApi,  @PathParam("domain") String domain,
+                                 @Context UriInfo uriInfo) {
+
+        NotificationTemplate notificationTemplate = new NotificationTemplate(domain, notificationTemplateApi);
         notificationRepository.save(notificationTemplate);
         return Response.created(uriInfo.getAbsolutePathBuilder().path(notificationTemplate.getName()).build()).build();
     }
@@ -62,11 +62,12 @@ public class NotificationsResource {
     @PUT
     @Path("/{name}")
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response updateTemplate(NotificationTemplate notificationTemplateData, @PathParam("domain") String domain,
+    public Response updateTemplate(NotificationTemplateApi notificationTemplateApiData, @PathParam("domain") String domain,
                                    @PathParam("name") String name) {
         NotificationTemplate notificationTemplate = notificationRepository.findByDomainAndName(domain, name);
 
         if (notificationTemplate != null) {
+            NotificationTemplate notificationTemplateData = new NotificationTemplate(domain, notificationTemplateApiData);
             notificationTemplate.updateTemplate(notificationTemplateData);
             notificationRepository.save(notificationTemplate);
             return Response.status(Status.NO_CONTENT).build();
@@ -82,8 +83,8 @@ public class NotificationsResource {
         if (notificationTemplate == null) {
             return NotificationsErrorResponseFactory.getInstance().notFound();
         }
-        NotificationTemplateResponse notificationTemplateResponse = new NotificationTemplateResponse(notificationTemplate);
-        return Response.ok().type(MediaType.APPLICATION_JSON).entity(notificationTemplateResponse).build();
+        NotificationTemplateApi notificationTemplateApi = new NotificationTemplateApi(notificationTemplate);
+        return Response.ok().type(MediaType.APPLICATION_JSON).entity(notificationTemplateApi).build();
     }
 
     @DELETE

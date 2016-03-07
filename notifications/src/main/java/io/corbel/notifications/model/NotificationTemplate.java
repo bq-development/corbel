@@ -1,6 +1,5 @@
 package io.corbel.notifications.model;
 
-import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.data.annotation.Id;
 
 /**
@@ -11,24 +10,30 @@ public class NotificationTemplate {
     @Id
     private String id;
 
-    @NotEmpty
     private String name;
 
-    @NotEmpty
     private String domain;
 
-    @NotEmpty
     private String type;
 
-    @NotEmpty
     private String sender;
 
-    @NotEmpty
     @Template
     private String text;
 
     @Template
     private String title;
+
+    public NotificationTemplate() {}
+
+    public  NotificationTemplate(String domain, NotificationTemplateApi notificationTemplateApi) {
+        this.name = notificationTemplateApi.getId();
+        this.domain = domain;
+        this.type = notificationTemplateApi.getType();
+        this.sender = notificationTemplateApi.getSender();
+        this.text = notificationTemplateApi.getText();
+        this.title = notificationTemplateApi.getTitle();
+    }
 
     public String getId() {
         return id;
