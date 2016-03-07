@@ -17,7 +17,6 @@ public class NotificationTemplateApi {
     @NotEmpty
     private String text;
 
-    @NotEmpty
     private String title;
 
     public NotificationTemplateApi() {
