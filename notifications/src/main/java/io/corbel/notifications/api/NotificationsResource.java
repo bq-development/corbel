@@ -97,8 +97,7 @@ public class NotificationsResource {
     @POST
     @Path("/send")
     public Response postNotification(@Valid Notification notification, @PathParam("domain") String domainId) {
-        String id = DomainNameIdGenerator.generateNotificationTemplateId(domainId, notification.getNotificationId());
-        senderNotificationsService.sendNotification(domainId, id, notification.getProperties(),
+        senderNotificationsService.sendNotification(domainId, notification.getNotificationId(), notification.getProperties(),
                 notification.getRecipient());
         return Response.ok().build();
     }

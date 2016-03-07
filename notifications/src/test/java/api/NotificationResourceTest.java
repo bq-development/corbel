@@ -277,7 +277,7 @@ public class NotificationResourceTest {
         Response response = RULE.client().target("/v1.0/" + DOMAIN + "/notification/send").request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
                 .post(Entity.json(notification), Response.class);
 
-        verify(senderNotificationsServiceMock).sendNotification(DOMAIN, DOMAIN + ":notificationId", Collections.emptyMap(), "emailRecipient");
+        verify(senderNotificationsServiceMock).sendNotification(DOMAIN, "notificationId", Collections.emptyMap(), "emailRecipient");
         assertThat(response.getStatus()).isEqualTo(200);
     }
 

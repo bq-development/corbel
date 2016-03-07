@@ -8,6 +8,7 @@ import io.corbel.notifications.service.DefaultSenderNotificationsService;
 import io.corbel.notifications.service.NotificationsDispatcher;
 import io.corbel.notifications.service.SenderNotificationsService;
 import io.corbel.notifications.template.NotificationFiller;
+import io.corbel.notifications.utils.DomainNameIdGenerator;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -49,13 +50,18 @@ public class DefaultSenderNotificationsServiceTest {
 
 	@Test
 	public void testTreatEvent() {
-		NotificationEvent notificationEvent = new NotificationEvent("id", "recipient");
+		String domain = "domain";
+		String id = "id";
+		String templateId = DomainNameIdGenerator.generateNotificationTemplateId(domain, id);
+
+		NotificationEvent notificationEvent = new NotificationEvent(id, "recipient");
+		notificationEvent.setDomain(domain);
 		notificationEvent.setProperties(properties);
 		NotificationTemplate notificationTemplate = new NotificationTemplate();
-		when(notificationRepository.findOne("id")).thenReturn(notificationTemplate);
+		when(notificationRepository.findOne(templateId)).thenReturn(notificationTemplate);
 		when(notificationFiller.fill(notificationTemplate, properties)).thenReturn(notificationTemplate);
 
-		senderNotificationsService.sendNotification(null, notificationEvent.getNotificationId(),
+		senderNotificationsService.sendNotification(domain, notificationEvent.getNotificationId(),
 				notificationEvent.getProperties(), notificationEvent.getRecipient());
 
 		verify(notificationFiller, times(1)).fill(notificationTemplate, properties);

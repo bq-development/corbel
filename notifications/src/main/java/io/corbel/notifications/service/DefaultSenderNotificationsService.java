@@ -5,6 +5,7 @@ import io.corbel.notifications.model.NotificationTemplate;
 import io.corbel.notifications.repository.DomainRepository;
 import io.corbel.notifications.repository.NotificationRepository;
 import io.corbel.notifications.template.NotificationFiller;
+import io.corbel.notifications.utils.DomainNameIdGenerator;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -33,12 +34,14 @@ public class DefaultSenderNotificationsService implements SenderNotificationsSer
 
     @Override
     public void sendNotification(String domainId, String notificationId, Map<String, String> customProperties, String recipient) {
+        String currentNotificationId = DomainNameIdGenerator.generateNotificationTemplateId(domainId, notificationId);
+
         Domain domain = domainRepository.findOne(domainId);
 
         String notificationTemplateId = Optional.ofNullable(domain)
                 .map(currentDomain -> currentDomain.getTemplates())
-                .map(currentTemplate -> currentTemplate.get(notificationId))
-                .orElse(notificationId);
+                .map(currentTemplate -> currentTemplate.get(currentNotificationId))
+                .orElse(currentNotificationId);
 
         Map<String, String> properties = Optional.ofNullable(domain)
                 .map(currentDomain -> getProperties(currentDomain, customProperties))
