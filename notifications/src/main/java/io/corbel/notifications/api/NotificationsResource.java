@@ -67,6 +67,7 @@ public class NotificationsResource {
         NotificationTemplate notificationTemplate = notificationRepository.findByDomainAndName(domain, name);
 
         if (notificationTemplate != null) {
+            notificationTemplateApiData.setId(null);
             NotificationTemplate notificationTemplateData = new NotificationTemplate(domain, notificationTemplateApiData);
             notificationTemplate.updateTemplate(notificationTemplateData);
             notificationRepository.save(notificationTemplate);
