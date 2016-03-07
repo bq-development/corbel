@@ -1,19 +1,24 @@
 package io.corbel.resources.rem.service;
 
+import io.corbel.lib.queries.builder.ResourceQueryBuilder;
+import io.corbel.lib.queries.jaxrs.QueryParameters;
 import io.corbel.lib.token.TokenInfo;
 import io.corbel.resources.rem.Rem;
-import io.corbel.resources.rem.acl.AclPermission;
 import io.corbel.resources.rem.acl.exception.AclFieldNotPresentException;
+import io.corbel.resources.rem.model.AclPermission;
 import io.corbel.resources.rem.model.ManagedCollection;
 import io.corbel.resources.rem.request.CollectionParameters;
+import io.corbel.resources.rem.request.CollectionParametersImpl;
 import io.corbel.resources.rem.request.RelationParameters;
 import io.corbel.resources.rem.request.RequestParameters;
 import io.corbel.resources.rem.request.ResourceId;
 import io.corbel.resources.rem.request.ResourceParameters;
+import io.corbel.resources.rem.request.builder.QueryParametersBuilder;
 import io.corbel.resources.rem.request.builder.RequestParametersBuilder;
 
 import java.net.URI;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,6 +26,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
@@ -209,7 +215,17 @@ public class DefaultAclResourcesService implements AclResourcesService {
     }
 
     private Optional<ManagedCollection> getManagers(String domainId, String collection) {
-        return getManagers(domainId + SEPARATOR + collection);
+        QueryParameters queryParameters = new QueryParametersBuilder().query(
+                new ResourceQueryBuilder().add(DefaultAclConfigurationService.DOMAIN_FIELD, domainId)
+                        .add(DefaultAclConfigurationService.COLLECTION_NAME_FIELD, collection).build()).build();
+        RequestParameters parameters = new RequestParametersBuilder(REGISTRY_DOMAIN).apiParameters(
+                new CollectionParametersImpl(queryParameters)).build();
+        Response response = getCollection(getResmiGetRem(), adminsCollection, parameters, Collections.EMPTY_LIST);
+
+        if (response.getStatus() == Response.Status.OK.getStatusCode() && ((JsonArray) response.getEntity()).size() == 1) {
+            return objectToManagedCollection(((JsonArray) response.getEntity()).get(0).getAsJsonObject());
+        }
+        return Optional.empty();
     }
 
     private Optional<ManagedCollection> getManagers(String collection) {

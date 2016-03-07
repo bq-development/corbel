@@ -1,12 +1,15 @@
 package io.corbel.resources.rem.service;
 
+import io.corbel.lib.ws.api.error.ErrorResponseFactory;
 import io.corbel.resources.rem.Rem;
+import io.corbel.resources.rem.model.AclPermission;
 import io.corbel.resources.rem.model.ManagedCollection;
 import io.corbel.resources.rem.model.RemDescription;
 import io.corbel.resources.rem.request.RequestParameters;
 import io.corbel.resources.rem.request.ResourceId;
 import io.corbel.resources.rem.request.builder.RequestParametersBuilder;
 
+import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -17,6 +20,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.util.StringUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -26,12 +31,17 @@ import com.google.gson.JsonPrimitive;
 
 public class DefaultAclConfigurationService implements AclConfigurationService {
 
+    public static final String COLLECTION_NAME_FIELD = "collectionName";
+    public static final String DOMAIN_FIELD = "domain";
+    public static final String DEFAULT_PERMISSION_FIELD = "defaultPermission";
     private static final String ALL_URIS_REGEXP = "(/.*)?";
     private static final Logger LOG = LoggerFactory.getLogger(DefaultAclConfigurationService.class);
     public static final char JOIN_CHAR = ':';
     public static final String REGISTRY_DOMAIN = "_silkroad";
     public static final String RESMI_GET = "ResmiGetRem";
     public static final String RESMI_PUT = "ResmiPutRem";
+    public static final String RESMI_POST = "ResmiPostRem";
+    private static final String RESMI_DELETE = "ResmiDeleteRem";
 
     private final Gson gson;
     private final String adminsCollection;
@@ -39,6 +49,8 @@ public class DefaultAclConfigurationService implements AclConfigurationService {
     private RemService remService;
     private Rem resmiGetRem;
     private Rem resmiPutRem;
+    private Rem resmiPostRem;
+    private Rem resmiDeleteRem;
     private final AclResourcesService aclResourcesService;
 
     public DefaultAclConfigurationService(Gson gson, String adminsCollection, AclResourcesService aclResourcesService) {
@@ -53,10 +65,30 @@ public class DefaultAclConfigurationService implements AclConfigurationService {
     }
 
     @Override
-    public Response updateConfiguration(ResourceId id, ManagedCollection managedCollection) {
+    public Response getConfiguration(String id) {
+        return aclResourcesService.getResource(getResmiGetRem(), adminsCollection, new ResourceId(id), new RequestParametersBuilder(
+                REGISTRY_DOMAIN).build(), Collections.emptyList());
+    }
+
+    @Override
+    public Response createConfiguration(URI uri, ManagedCollection managedCollection) {
         JsonObject jsonObject = gson.toJsonTree(managedCollection).getAsJsonObject();
         RequestParameters requestParameters = new RequestParametersBuilder(REGISTRY_DOMAIN).build();
-        return aclResourcesService.updateResource(getResmiPutRem(), adminsCollection, id, requestParameters, jsonObject,
+        return aclResourcesService.saveResource(getResmiPostRem(), requestParameters, adminsCollection, uri, jsonObject,
+                Collections.emptyList());
+    }
+
+    @Override
+    public Response updateConfiguration(String id, ManagedCollection managedCollection) {
+        RequestParameters requestParameters = new RequestParametersBuilder(REGISTRY_DOMAIN).build();
+        ResourceId resourceId = new ResourceId(id);
+        Response response = aclResourcesService.getResource(getResmiGetRem(), adminsCollection, resourceId, requestParameters,
+                Collections.emptyList());
+        if (response.getStatus() == HttpStatus.NOT_FOUND.value()) {
+            return ErrorResponseFactory.getInstance().preconditionFailed("Can't create a acl configuration with PUT method.");
+        }
+        JsonObject jsonObject = gson.toJsonTree(managedCollection).getAsJsonObject();
+        return aclResourcesService.updateResource(getResmiPutRem(), adminsCollection, resourceId, requestParameters, jsonObject,
                 Collections.emptyList());
     }
 
@@ -76,13 +108,36 @@ public class DefaultAclConfigurationService implements AclConfigurationService {
     }
 
     @Override
-    public void removeAclConfiguration(String collectionName) {
+    public void removeAclConfiguration(String id, String collectionName) {
         remsAndMethods.stream().map(Pair::getLeft)
                 .forEach(aclRem -> remService.unregisterRem(aclRem.getClass(), getRemPattern(collectionName)));
+
+        RequestParameters parameters = new RequestParametersBuilder(REGISTRY_DOMAIN).build();
+        aclResourcesService.deleteResource(getResmiDeleteRem(), adminsCollection, new ResourceId(id), parameters, Collections.emptyList());
+
     }
 
     private String getRemPattern(String collectionName) {
         return collectionName + ALL_URIS_REGEXP;
+    }
+
+    @Override
+    public void setResourcesWithDefaultPermission(String collectionName, String domain, String defaultPermission) {
+        JsonObject aclObject = constructAclObjectWithDefaultPermission(defaultPermission);
+        RequestParameters parameters = new RequestParametersBuilder(domain).build();
+        getResmiPutRem().collection(collectionName, parameters, null, Optional.of(aclObject));
+    }
+
+    private JsonObject constructAclObjectWithDefaultPermission(String defaultPermission) {
+        JsonObject aclObject = new JsonObject();
+        JsonObject allObject = new JsonObject();
+        JsonObject allContentObject = new JsonObject();
+        allContentObject.addProperty(DefaultAclResourcesService.PERMISSION,
+                StringUtils.isEmpty(defaultPermission) ? AclPermission.READ.name() : defaultPermission);
+        allContentObject.add(DefaultAclResourcesService.PROPERTIES, new JsonObject());
+        allObject.add(DefaultAclResourcesService.ALL, allContentObject);
+        aclObject.add(DefaultAclResourcesService._ACL, allObject);
+        return aclObject;
     }
 
     @Override
@@ -107,25 +162,24 @@ public class DefaultAclConfigurationService implements AclConfigurationService {
 
         for (JsonElement jsonElement : jsonArray) {
 
-            Optional<JsonObject> idField = Optional.of(jsonElement).filter(JsonElement::isJsonObject).map(JsonElement::getAsJsonObject)
-                    .filter(jsonObject -> jsonObject.has("id"));
+            Optional<JsonObject> collectionName = Optional.of(jsonElement).filter(JsonElement::isJsonObject)
+                    .map(JsonElement::getAsJsonObject).filter(jsonObject -> jsonObject.has(COLLECTION_NAME_FIELD));
 
-            if (!idField.isPresent()) {
-                LOG.error("Document in acl configuration collection has no id field: {}", jsonElement.toString());
+            if (!collectionName.isPresent()) {
+                LOG.error("Document in acl configuration collection has no collectionName field: {}", jsonElement.toString());
                 continue;
             }
 
-            Optional<String> idOptional = idField.map(jsonObject -> jsonObject.get("id")).filter(JsonElement::isJsonPrimitive)
-                    .map(JsonElement::getAsJsonPrimitive).filter(JsonPrimitive::isString).map(JsonPrimitive::getAsString);
+            Optional<String> collectionNameOptional = collectionName.map(jsonObject -> jsonObject.get(COLLECTION_NAME_FIELD))
+                    .filter(JsonElement::isJsonPrimitive).map(JsonElement::getAsJsonPrimitive).filter(JsonPrimitive::isString)
+                    .map(JsonPrimitive::getAsString);
 
-            if (!idOptional.isPresent()) {
-                LOG.error("Unrecognized id: {}", jsonElement.toString());
+            if (!collectionNameOptional.isPresent()) {
+                LOG.error("Unrecognized collectionName: {}", jsonElement.toString());
                 continue;
             }
 
-            String id = idOptional.get();
-            // TODO: Ignoring domain by the moment (rem registration by domain needed)
-            addAclConfiguration(id.substring(id.indexOf(":") + 1));
+            addAclConfiguration(collectionNameOptional.get());
 
         }
 
@@ -143,6 +197,20 @@ public class DefaultAclConfigurationService implements AclConfigurationService {
             resmiPutRem = remService.getRem(RESMI_PUT);
         }
         return resmiPutRem;
+    }
+
+    private Rem getResmiPostRem() {
+        if (resmiPostRem == null) {
+            resmiPostRem = remService.getRem(RESMI_POST);
+        }
+        return resmiPostRem;
+    }
+
+    private Rem getResmiDeleteRem() {
+        if (resmiDeleteRem == null) {
+            resmiDeleteRem = remService.getRem(RESMI_DELETE);
+        }
+        return resmiDeleteRem;
     }
 
     @Override

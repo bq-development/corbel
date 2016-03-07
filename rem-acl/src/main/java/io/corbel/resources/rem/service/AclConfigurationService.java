@@ -2,8 +2,8 @@ package io.corbel.resources.rem.service;
 
 import io.corbel.resources.rem.Rem;
 import io.corbel.resources.rem.model.ManagedCollection;
-import io.corbel.resources.rem.request.ResourceId;
 
+import java.net.URI;
 import java.util.List;
 
 import javax.ws.rs.core.Response;
@@ -15,13 +15,19 @@ public interface AclConfigurationService {
 
     void setRemsAndMethods(List<Pair<Rem, HttpMethod>> remsAndMethods);
 
-    Response updateConfiguration(ResourceId id, ManagedCollection managedCollection);
+    Response updateConfiguration(String id, ManagedCollection managedCollection);
 
     void addAclConfiguration(String collection);
 
-    void removeAclConfiguration(String collection);
+    void removeAclConfiguration(String id, String collection);
 
     void refreshRegistry();
 
     void setRemService(RemService remService);
+
+    Response createConfiguration(URI uri, ManagedCollection managedCollection);
+
+    Response getConfiguration(String id);
+
+    void setResourcesWithDefaultPermission(String collectionName, String domain, String defaultPermission);
 }

@@ -7,11 +7,14 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+import io.corbel.lib.queries.request.QueryNode;
+import io.corbel.lib.queries.request.ResourceQuery;
 import io.corbel.lib.token.TokenInfo;
 import io.corbel.resources.rem.Rem;
-import io.corbel.resources.rem.acl.AclPermission;
 import io.corbel.resources.rem.acl.exception.AclFieldNotPresentException;
+import io.corbel.resources.rem.model.AclPermission;
 import io.corbel.resources.rem.model.ManagedCollection;
+import io.corbel.resources.rem.request.CollectionParameters;
 import io.corbel.resources.rem.request.RequestParameters;
 import io.corbel.resources.rem.request.RequestParametersImpl;
 import io.corbel.resources.rem.request.ResourceId;
@@ -27,10 +30,12 @@ import javax.ws.rs.core.Response;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonParser;
 
 /**
@@ -49,8 +54,7 @@ import com.google.gson.JsonParser;
     private static final String TYPE = "type";
     private static final String ADMINS_COLLECTION = "adminsCollection";
     private static final char JOINER = ':';
-    private static final String MANAGED_COLLECTION_ID = REQUESTED_DOMAIN_ID + JOINER + TYPE;
-    private static final ResourceId MANAGED_COLLECTION_RESOURCE = new ResourceId(MANAGED_COLLECTION_ID);
+    // private static final ResourceId MANAGED_COLLECTION_RESOURCE = new ResourceId(TYPE);
     private static final ResourceId MANAGED_DOMAIN_RESOURCE = new ResourceId(REQUESTED_DOMAIN_ID);
 
     @Mock private TokenInfo tokenInfoMock;
@@ -76,6 +80,7 @@ import com.google.gson.JsonParser;
     public void testAllowedWithUserId() throws AclFieldNotPresentException {
         Response response = mockResponseWithAcl(DefaultAclResourcesService.USER_PREFIX + USER_ID);
         Response managedResponse = mockNotFoundResponse();
+        when(resmiGetRem.collection(eq(ADMINS_COLLECTION), any(), any(), any(), any())).thenReturn(managedResponse);
         when(resmiGetRem.resource(eq(ADMINS_COLLECTION), any(), any(), eq(Optional.empty()))).thenReturn(managedResponse);
         when(resmiGetRem.resource(eq(TYPE), eq(RESOURCE_ID), any(), any())).thenReturn(response);
         assertThat(aclService.isAuthorized(REQUESTED_DOMAIN_ID, tokenInfoMock, TYPE, RESOURCE_ID, AclPermission.READ)).isTrue();
@@ -85,6 +90,7 @@ import com.google.gson.JsonParser;
     public void testAllowedWithAll() throws AclFieldNotPresentException {
         Response response = mockResponseWithAcl(ALL);
         Response managedResponse = mockNotFoundResponse();
+        when(resmiGetRem.collection(eq(ADMINS_COLLECTION), any(), any(), any(), any())).thenReturn(managedResponse);
         when(resmiGetRem.resource(eq(ADMINS_COLLECTION), any(), any(), eq(Optional.empty()))).thenReturn(managedResponse);
         when(resmiGetRem.resource(eq(TYPE), eq(RESOURCE_ID), any(), any())).thenReturn(response);
         assertThat(aclService.isAuthorized(REQUESTED_DOMAIN_ID, tokenInfoMock, TYPE, RESOURCE_ID, AclPermission.READ)).isTrue();
@@ -94,6 +100,7 @@ import com.google.gson.JsonParser;
     public void testNotAllowedWithoutAclObject() throws AclFieldNotPresentException {
         Response response = mockResponse();
         Response managedResponse = mockNotFoundResponse();
+        when(resmiGetRem.collection(eq(ADMINS_COLLECTION), any(), any(), any(), any())).thenReturn(managedResponse);
         when(resmiGetRem.resource(eq(ADMINS_COLLECTION), any(), any(), eq(Optional.empty()))).thenReturn(managedResponse);
         when(resmiGetRem.resource(eq(TYPE), eq(RESOURCE_ID), any(), any())).thenReturn(response);
         aclService.isAuthorized(REQUESTED_DOMAIN_ID, tokenInfoMock, TYPE, RESOURCE_ID, AclPermission.READ);
@@ -103,6 +110,7 @@ import com.google.gson.JsonParser;
     public void testNotAllowedOperationWithUserId() throws AclFieldNotPresentException {
         Response response = mockResponseWithAcl(DefaultAclResourcesService.USER_PREFIX + USER_ID);
         Response managedResponse = mockNotFoundResponse();
+        when(resmiGetRem.collection(eq(ADMINS_COLLECTION), any(), any(), any(), any())).thenReturn(managedResponse);
         when(resmiGetRem.resource(eq(ADMINS_COLLECTION), any(), any(), eq(Optional.empty()))).thenReturn(managedResponse);
         when(resmiGetRem.resource(eq(TYPE), eq(RESOURCE_ID), any(), any())).thenReturn(response);
         assertThat(aclService.isAuthorized(REQUESTED_DOMAIN_ID, tokenInfoMock, TYPE, RESOURCE_ID, AclPermission.WRITE)).isFalse();
@@ -112,6 +120,7 @@ import com.google.gson.JsonParser;
     public void testNotAllowedOperationWithAll() throws AclFieldNotPresentException {
         Response response = mockResponseWithAcl(ALL);
         Response managedResponse = mockNotFoundResponse();
+        when(resmiGetRem.collection(eq(ADMINS_COLLECTION), any(), any(), any(), any())).thenReturn(managedResponse);
         when(resmiGetRem.resource(eq(ADMINS_COLLECTION), any(), any(), eq(Optional.empty()))).thenReturn(managedResponse);
         when(resmiGetRem.resource(eq(TYPE), eq(RESOURCE_ID), any(), any())).thenReturn(response);
         assertThat(aclService.isAuthorized(REQUESTED_DOMAIN_ID, tokenInfoMock, TYPE, RESOURCE_ID, AclPermission.WRITE)).isFalse();
@@ -121,6 +130,7 @@ import com.google.gson.JsonParser;
     public void testNotAllowedWithUserId() throws AclFieldNotPresentException {
         Response response = mockResponseWithAcl(DefaultAclResourcesService.USER_PREFIX + "asdf");
         Response managedResponse = mockNotFoundResponse();
+        when(resmiGetRem.collection(eq(ADMINS_COLLECTION), any(), any(), any(), any())).thenReturn(managedResponse);
         when(resmiGetRem.resource(eq(ADMINS_COLLECTION), any(), any(), eq(Optional.empty()))).thenReturn(managedResponse);
         when(resmiGetRem.resource(eq(TYPE), eq(RESOURCE_ID), any(), any())).thenReturn(response);
         assertThat(aclService.isAuthorized(REQUESTED_DOMAIN_ID, tokenInfoMock, TYPE, RESOURCE_ID, AclPermission.WRITE)).isFalse();
@@ -130,6 +140,7 @@ import com.google.gson.JsonParser;
     public void testNotAllowed() throws AclFieldNotPresentException {
         Response response = mockResponseWithEmptyAcl();
         Response managedResponse = mockNotFoundResponse();
+        when(resmiGetRem.collection(eq(ADMINS_COLLECTION), any(), any(), any(), any())).thenReturn(managedResponse);
         when(resmiGetRem.resource(eq(ADMINS_COLLECTION), any(), any(), eq(Optional.empty()))).thenReturn(managedResponse);
         when(resmiGetRem.resource(eq(TYPE), eq(ID_NOT_ALLOWED), any(), any())).thenReturn(response);
         assertThat(aclService.isAuthorized(REQUESTED_DOMAIN_ID, tokenInfoMock, TYPE, ID_NOT_ALLOWED, AclPermission.READ)).isFalse();
@@ -139,6 +150,7 @@ import com.google.gson.JsonParser;
     public void testAllowedWithGroupId() throws AclFieldNotPresentException {
         Response response = mockResponseWithAcl(DefaultAclResourcesService.GROUP_PREFIX + GROUP_ID);
         Response managedResponse = mockNotFoundResponse();
+        when(resmiGetRem.collection(eq(ADMINS_COLLECTION), any(), any(), any(), any())).thenReturn(managedResponse);
         when(resmiGetRem.resource(eq(ADMINS_COLLECTION), any(), any(), eq(Optional.empty()))).thenReturn(managedResponse);
         when(resmiGetRem.resource(eq(TYPE), eq(RESOURCE_ID), any(), any())).thenReturn(response);
         assertThat(aclService.isAuthorized(REQUESTED_DOMAIN_ID, tokenInfoMock, TYPE, RESOURCE_ID, AclPermission.READ)).isTrue();
@@ -148,6 +160,7 @@ import com.google.gson.JsonParser;
     public void testNotAllowedWithGroupId() throws AclFieldNotPresentException {
         Response response = mockResponseWithAcl(DefaultAclResourcesService.GROUP_PREFIX + GROUP_ID);
         Response managedResponse = mockNotFoundResponse();
+        when(resmiGetRem.collection(eq(ADMINS_COLLECTION), any(), any(), any(), any())).thenReturn(managedResponse);
         when(resmiGetRem.resource(eq(ADMINS_COLLECTION), any(), any(), eq(Optional.empty()))).thenReturn(managedResponse);
         when(resmiGetRem.resource(eq(TYPE), eq(RESOURCE_ID), any(), any())).thenReturn(response);
         assertThat(aclService.isAuthorized(REQUESTED_DOMAIN_ID, tokenInfoMock, TYPE, RESOURCE_ID, AclPermission.WRITE)).isFalse();
@@ -157,6 +170,7 @@ import com.google.gson.JsonParser;
     public void testNotAllowedWithBadAcl() throws AclFieldNotPresentException {
         Response response = mockResponseWithBadAcl(DefaultAclResourcesService.USER_PREFIX + USER_ID);
         Response managedResponse = mockNotFoundResponse();
+        when(resmiGetRem.collection(eq(ADMINS_COLLECTION), any(), any(), any(), any())).thenReturn(managedResponse);
         when(resmiGetRem.resource(eq(ADMINS_COLLECTION), any(), any(), eq(Optional.empty()))).thenReturn(managedResponse);
         when(resmiGetRem.resource(eq(TYPE), eq(RESOURCE_ID), any(), any())).thenReturn(response);
         assertThat(aclService.isAuthorized(REQUESTED_DOMAIN_ID, tokenInfoMock, TYPE, RESOURCE_ID, AclPermission.READ)).isFalse();
@@ -200,58 +214,86 @@ import com.google.gson.JsonParser;
         when(responseMock.getStatus()).thenReturn(Response.Status.BAD_REQUEST.getStatusCode());
         when(responseMock.getStatusInfo()).thenReturn(mock(Response.StatusType.class));
 
-        when(resmiGetRem.resource(eq(ADMINS_COLLECTION), eq(MANAGED_COLLECTION_RESOURCE), any(), any())).thenReturn(responseMock);
+        when(resmiGetRem.resource(eq(ADMINS_COLLECTION), any(), any(), any())).thenReturn(responseMock);
+        when(resmiGetRem.collection(eq(ADMINS_COLLECTION), any(), any(), any(), any())).thenReturn(responseMock);
 
         try {
             assertThat(aclService.isManagedBy(REQUESTED_DOMAIN_ID, tokenInfoMock, TYPE)).isTrue();
         } catch (WebApplicationException e) {
             verify(remService).getRem(DefaultAclResourcesService.RESMI_GET);
-            verify(resmiGetRem).resource(eq(ADMINS_COLLECTION), eq(MANAGED_COLLECTION_RESOURCE), any(), any());
+            ArgumentCaptor<RequestParameters> parameters = ArgumentCaptor.forClass(RequestParameters.class);
+            verify(resmiGetRem).collection(eq(ADMINS_COLLECTION), parameters.capture(), any(), any(), any());
+            verify(resmiGetRem).resource(eq(ADMINS_COLLECTION), any(), any(), any());
             verifyNoMoreInteractions(remService, resmiGetRem);
+            ResourceQuery resourceQuery = ((CollectionParameters) parameters.getValue().getOptionalApiParameters().get()).getQueries()
+                    .get().get(0);
+            assertThat(resourceQuery.getFilters().size()).isEqualTo(2);
+            for (QueryNode queryNode : resourceQuery) {
+                if (queryNode.getField().equals("domain")) {
+                    assertThat(queryNode.getValue().getLiteral().toString()).isEqualTo(REQUESTED_DOMAIN_ID);
+                } else if (queryNode.getField().equals("collectionName")) {
+                    assertThat(queryNode.getValue().getLiteral().toString()).isEqualTo(TYPE);
+                }
+            }
             throw e;
         }
     }
 
     @Test
     public void testManagedCollection() {
-        ManagedCollection managedCollection = new ManagedCollection(MANAGED_COLLECTION_ID, Collections.singletonList(USER_ID),
-                Collections.emptyList());
+        ManagedCollection managedCollection = new ManagedCollection(TYPE, Collections.singletonList(USER_ID), Collections.emptyList());
         Response responseMock = mock(Response.class);
         when(responseMock.getStatus()).thenReturn(Response.Status.OK.getStatusCode());
-        when(responseMock.getEntity()).thenReturn(gson.toJsonTree(managedCollection));
+        JsonArray responseArray = new JsonArray();
+        responseArray.add(gson.toJsonTree(managedCollection));
+        when(responseMock.getEntity()).thenReturn(responseArray);
 
-        when(resmiGetRem.resource(eq(ADMINS_COLLECTION), eq(MANAGED_COLLECTION_RESOURCE), any(), any())).thenReturn(responseMock);
+        when(resmiGetRem.collection(eq(ADMINS_COLLECTION), any(), any(), any(), any())).thenReturn(responseMock);
 
         assertThat(aclService.isManagedBy(REQUESTED_DOMAIN_ID, tokenInfoMock, TYPE)).isTrue();
 
         verify(remService).getRem(DefaultAclResourcesService.RESMI_GET);
-        verify(resmiGetRem).resource(eq(ADMINS_COLLECTION), eq(MANAGED_COLLECTION_RESOURCE), any(), any());
+        ArgumentCaptor<RequestParameters> parameters = ArgumentCaptor.forClass(RequestParameters.class);
+        verify(resmiGetRem).collection(eq(ADMINS_COLLECTION), parameters.capture(), any(), any(), any());
         verifyNoMoreInteractions(remService, resmiGetRem);
+        ResourceQuery resourceQuery = ((CollectionParameters) parameters.getValue().getOptionalApiParameters().get()).getQueries().get()
+                .get(0);
+        assertThat(resourceQuery.getFilters().size()).isEqualTo(2);
+        for (QueryNode queryNode : resourceQuery) {
+            if (queryNode.getField().equals("domain")) {
+                assertThat(queryNode.getValue().getLiteral().toString()).isEqualTo(REQUESTED_DOMAIN_ID);
+            } else if (queryNode.getField().equals("collectionName")) {
+                assertThat(queryNode.getValue().getLiteral().toString()).isEqualTo(TYPE);
+            }
+        }
     }
 
     @Test
     public void testManagedCollectionByGroup() throws IOException {
-        ManagedCollection managedCollection = new ManagedCollection(MANAGED_COLLECTION_ID, Collections.emptyList(),
-                Collections.singletonList(GROUP_ID));
+        ManagedCollection managedCollection = new ManagedCollection(TYPE, Collections.emptyList(), Collections.singletonList(GROUP_ID));
         Response responseMock = mock(Response.class);
         when(responseMock.getStatus()).thenReturn(Response.Status.OK.getStatusCode());
-        when(responseMock.getEntity()).thenReturn(gson.toJsonTree(managedCollection));
+        JsonArray responseArray = new JsonArray();
+        responseArray.add(gson.toJsonTree(managedCollection));
+        when(responseMock.getEntity()).thenReturn(responseArray);
 
-        when(resmiGetRem.resource(eq(ADMINS_COLLECTION), eq(MANAGED_COLLECTION_RESOURCE), any(), any())).thenReturn(responseMock);
+        when(resmiGetRem.collection(eq(ADMINS_COLLECTION), any(), any(), any(), any())).thenReturn(responseMock);
 
         assertThat(aclService.isManagedBy(REQUESTED_DOMAIN_ID, tokenInfoMock, TYPE)).isTrue();
 
         verify(remService).getRem(DefaultAclResourcesService.RESMI_GET);
-        verify(resmiGetRem).resource(eq(ADMINS_COLLECTION), eq(MANAGED_COLLECTION_RESOURCE), any(), any());
+        verify(resmiGetRem).collection(eq(ADMINS_COLLECTION), any(), any(), any(), any());
         verifyNoMoreInteractions(remService, resmiGetRem);
     }
 
     @Test
     public void testManagedCollectionNotByUser() {
-        ManagedCollection managedCollection = new ManagedCollection(MANAGED_COLLECTION_ID, Collections.emptyList(), Collections.emptyList());
+        ManagedCollection managedCollection = new ManagedCollection(TYPE, Collections.emptyList(), Collections.emptyList());
         Response responseMock = mock(Response.class);
         when(responseMock.getStatus()).thenReturn(Response.Status.OK.getStatusCode());
-        when(responseMock.getEntity()).thenReturn(gson.toJsonTree(managedCollection));
+        JsonArray responseArray = new JsonArray();
+        responseArray.add(gson.toJsonTree(managedCollection));
+        when(responseMock.getEntity()).thenReturn(responseArray);
 
         Response domainResponseMock = mock(Response.class);
         when(domainResponseMock.getStatus()).thenReturn(Response.Status.NOT_FOUND.getStatusCode());
@@ -259,25 +301,37 @@ import com.google.gson.JsonParser;
 
 
         RequestParameters requestParameters = new RequestParametersImpl<>(null, null, "_silkroad", null, null, null, null);
-        when(resmiGetRem.resource(eq(ADMINS_COLLECTION), eq(MANAGED_COLLECTION_RESOURCE), eq(requestParameters), any())).thenReturn(
-                responseMock);
+        when(resmiGetRem.collection(eq(ADMINS_COLLECTION), any(), any(), any(), any())).thenReturn(responseMock);
         when(resmiGetRem.resource(eq(ADMINS_COLLECTION), eq(MANAGED_DOMAIN_RESOURCE), eq(requestParameters), any())).thenReturn(
                 domainResponseMock);
 
         assertThat(aclService.isManagedBy(REQUESTED_DOMAIN_ID, tokenInfoMock, TYPE)).isFalse();
 
         verify(remService).getRem(DefaultAclResourcesService.RESMI_GET);
-        verify(resmiGetRem).resource(eq(ADMINS_COLLECTION), eq(MANAGED_COLLECTION_RESOURCE), eq(requestParameters), any());
+        ArgumentCaptor<RequestParameters> parameters = ArgumentCaptor.forClass(RequestParameters.class);
+        verify(resmiGetRem).collection(eq(ADMINS_COLLECTION), parameters.capture(), any(), any(), any());
         verify(resmiGetRem).resource(eq(ADMINS_COLLECTION), eq(MANAGED_DOMAIN_RESOURCE), eq(requestParameters), any());
         verifyNoMoreInteractions(remService, resmiGetRem);
+        ResourceQuery resourceQuery = ((CollectionParameters) parameters.getValue().getOptionalApiParameters().get()).getQueries().get()
+                .get(0);
+        assertThat(resourceQuery.getFilters().size()).isEqualTo(2);
+        for (QueryNode queryNode : resourceQuery) {
+            if (queryNode.getField().equals("domain")) {
+                assertThat(queryNode.getValue().getLiteral().toString()).isEqualTo(REQUESTED_DOMAIN_ID);
+            } else if (queryNode.getField().equals("collectionName")) {
+                assertThat(queryNode.getValue().getLiteral().toString()).isEqualTo(TYPE);
+            }
+        }
     }
 
     @Test
     public void testManagedCollectionByDomainAdmin() {
-        ManagedCollection managedCollection = new ManagedCollection(MANAGED_COLLECTION_ID, Collections.emptyList(), Collections.emptyList());
+        ManagedCollection managedCollection = new ManagedCollection(TYPE, Collections.emptyList(), Collections.emptyList());
         Response responseMock = mock(Response.class);
         when(responseMock.getStatus()).thenReturn(Response.Status.OK.getStatusCode());
-        when(responseMock.getEntity()).thenReturn(gson.toJsonTree(managedCollection));
+        JsonArray responseArray = new JsonArray();
+        responseArray.add(gson.toJsonTree(managedCollection));
+        when(responseMock.getEntity()).thenReturn(responseArray);
 
         ManagedCollection domainManagedCollection = new ManagedCollection(DOMAIN_ID, Collections.singletonList(USER_ID),
                 Collections.emptyList());
@@ -285,23 +339,25 @@ import com.google.gson.JsonParser;
         when(domainResponseMock.getStatus()).thenReturn(Response.Status.OK.getStatusCode());
         when(domainResponseMock.getEntity()).thenReturn(gson.toJsonTree(domainManagedCollection));
 
-        when(resmiGetRem.resource(eq(ADMINS_COLLECTION), eq(MANAGED_COLLECTION_RESOURCE), any(), any())).thenReturn(responseMock);
+        when(resmiGetRem.collection(eq(ADMINS_COLLECTION), any(), any(), any(), any())).thenReturn(responseMock);
         when(resmiGetRem.resource(eq(ADMINS_COLLECTION), eq(MANAGED_DOMAIN_RESOURCE), any(), any())).thenReturn(domainResponseMock);
 
         assertThat(aclService.isManagedBy(REQUESTED_DOMAIN_ID, tokenInfoMock, TYPE)).isTrue();
 
         verify(remService).getRem(DefaultAclResourcesService.RESMI_GET);
-        verify(resmiGetRem).resource(eq(ADMINS_COLLECTION), eq(MANAGED_COLLECTION_RESOURCE), any(), any());
+        verify(resmiGetRem).collection(eq(ADMINS_COLLECTION), any(), any(), any(), any());
         verify(resmiGetRem).resource(eq(ADMINS_COLLECTION), eq(MANAGED_DOMAIN_RESOURCE), any(), any());
         verifyNoMoreInteractions(remService, resmiGetRem);
     }
 
     @Test
     public void testManagedCollectionByGroupDomainAdmin() {
-        ManagedCollection managedCollection = new ManagedCollection(MANAGED_COLLECTION_ID, Collections.emptyList(), Collections.emptyList());
+        ManagedCollection managedCollection = new ManagedCollection(TYPE, Collections.emptyList(), Collections.emptyList());
         Response responseMock = mock(Response.class);
         when(responseMock.getStatus()).thenReturn(Response.Status.OK.getStatusCode());
-        when(responseMock.getEntity()).thenReturn(gson.toJsonTree(managedCollection));
+        JsonArray responseArray = new JsonArray();
+        responseArray.add(gson.toJsonTree(managedCollection));
+        when(responseMock.getEntity()).thenReturn(responseArray);
 
         ManagedCollection domainManagedCollection = new ManagedCollection(DOMAIN_ID, Collections.emptyList(),
                 Collections.singletonList(GROUP_ID));
@@ -309,13 +365,13 @@ import com.google.gson.JsonParser;
         when(domainResponseMock.getStatus()).thenReturn(Response.Status.OK.getStatusCode());
         when(domainResponseMock.getEntity()).thenReturn(gson.toJsonTree(domainManagedCollection));
 
-        when(resmiGetRem.resource(eq(ADMINS_COLLECTION), eq(MANAGED_COLLECTION_RESOURCE), any(), any())).thenReturn(responseMock);
+        when(resmiGetRem.collection(eq(ADMINS_COLLECTION), any(), any(), any(), any())).thenReturn(responseMock);
         when(resmiGetRem.resource(eq(ADMINS_COLLECTION), eq(MANAGED_DOMAIN_RESOURCE), any(), any())).thenReturn(domainResponseMock);
 
         assertThat(aclService.isManagedBy(REQUESTED_DOMAIN_ID, tokenInfoMock, TYPE)).isTrue();
 
         verify(remService).getRem(DefaultAclResourcesService.RESMI_GET);
-        verify(resmiGetRem).resource(eq(ADMINS_COLLECTION), eq(MANAGED_COLLECTION_RESOURCE), any(), any());
+        verify(resmiGetRem).collection(eq(ADMINS_COLLECTION), any(), any(), any(), any());
         verify(resmiGetRem).resource(eq(ADMINS_COLLECTION), eq(MANAGED_DOMAIN_RESOURCE), any(), any());
         verifyNoMoreInteractions(remService, resmiGetRem);
     }
