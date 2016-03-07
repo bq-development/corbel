@@ -31,7 +31,7 @@ public class DefaultMailResetPasswordService implements MailResetPasswordService
         String resetUrl = Optional.ofNullable(client.getResetUrl()).orElse(mailConfiguration.getClientUrl());
         String notificationId = Optional.ofNullable(client.getResetNotificationId()).orElse(mailConfiguration.getNotificationId());
         String clientUrl = resetUrl.replace("{token}", createEmailResetPasswordToken(client.getName(), userId));
-        sendNotificationService.sendNotification(notificationId, email, ImmutableMap.of("clientUrl", clientUrl));
+        sendNotificationService.sendNotification(client.getDomain(), notificationId, email, ImmutableMap.of("clientUrl", clientUrl));
     }
 
     private String createEmailResetPasswordToken(String clientId, String userId) {

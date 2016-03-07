@@ -21,8 +21,8 @@ public class DefaultSendNotificationService implements SendNotificationService {
         this.eventBus = eventBus;
     }
 
-    public void sendNotification(String notificationsId, String recipient, Map<String, String> properties) {
-        NotificationEvent notificationEvent = new NotificationEvent(notificationsId, recipient);
+    public void sendNotification(String domain, String notificationsId, String recipient, Map<String, String> properties) {
+        NotificationEvent notificationEvent = new NotificationEvent(notificationsId, recipient, domain);
         notificationEvent.setProperties(properties);
         eventBus.dispatch(notificationEvent);
         LOG.info("Sending email with notification: {}", notificationsId);

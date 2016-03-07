@@ -21,6 +21,7 @@ public class DefaultMailChangePasswordService implements MailChangePasswordServi
     @Override
     public void sendMailChangePassword(Client client, String username, String email) {
         String changePasswordNotificationId = Optional.ofNullable(client.getChangePasswordNotificationId()).orElse(notificationId);
-        sendNotificationService.sendNotification(changePasswordNotificationId, email, ImmutableMap.of("username", username));
+        sendNotificationService.sendNotification(client.getDomain(), changePasswordNotificationId, email,
+                ImmutableMap.of("username", username));
     }
 }
