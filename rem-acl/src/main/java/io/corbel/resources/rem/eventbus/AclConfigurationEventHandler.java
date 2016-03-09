@@ -56,8 +56,10 @@ public class AclConfigurationEventHandler implements EventHandler<ResourceEvent>
                 break;
             case DELETE:
                 collectionConfiguration = getCollectionConfiguration(id);
-                aclConfigurationService.removeAclConfiguration(id,
-                        collectionConfiguration.get(DefaultAclConfigurationService.COLLECTION_NAME_FIELD).getAsString());
+                if (collectionConfiguration != null) {
+                    aclConfigurationService.removeAclConfiguration(id,
+                            collectionConfiguration.get(DefaultAclConfigurationService.COLLECTION_NAME_FIELD).getAsString());
+                }
         }
 
     }
