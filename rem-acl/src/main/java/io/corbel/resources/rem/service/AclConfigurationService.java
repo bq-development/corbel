@@ -30,4 +30,8 @@ public interface AclConfigurationService {
     Response getConfiguration(String id);
 
     void setResourcesWithDefaultPermission(String collectionName, String domain, String defaultPermission);
+
+    Response getConfigurations(String domain);
+
+    Response getConfiguration(String id, String domain);
 }

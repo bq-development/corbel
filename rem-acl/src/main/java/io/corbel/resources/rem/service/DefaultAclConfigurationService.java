@@ -1,12 +1,16 @@
 package io.corbel.resources.rem.service;
 
+import io.corbel.lib.queries.builder.QueryParametersBuilder;
+import io.corbel.lib.queries.builder.ResourceQueryBuilder;
 import io.corbel.lib.ws.api.error.ErrorResponseFactory;
 import io.corbel.resources.rem.Rem;
 import io.corbel.resources.rem.model.AclPermission;
 import io.corbel.resources.rem.model.ManagedCollection;
 import io.corbel.resources.rem.model.RemDescription;
+import io.corbel.resources.rem.request.CollectionParametersImpl;
 import io.corbel.resources.rem.request.RequestParameters;
 import io.corbel.resources.rem.request.ResourceId;
+import io.corbel.resources.rem.request.ResourceParameters;
 import io.corbel.resources.rem.request.builder.RequestParametersBuilder;
 
 import java.net.URI;
@@ -65,9 +69,31 @@ public class DefaultAclConfigurationService implements AclConfigurationService {
     }
 
     @Override
+    public Response getConfigurations(String domain) {
+        return aclResourcesService.getCollection(
+                getResmiGetRem(),
+                adminsCollection,
+                new RequestParametersBuilder(REGISTRY_DOMAIN).apiParameters(
+                        new CollectionParametersImpl(new QueryParametersBuilder().queries(
+                                new ResourceQueryBuilder().add(DOMAIN_FIELD, domain).build()).build())).build(), Collections.emptyList());
+    }
+
+    @Override
+    public Response getConfiguration(String id, String domain) {
+        return getResourceWithParameters(
+                id,
+                new RequestParametersBuilder(REGISTRY_DOMAIN).apiParameters(
+                        new CollectionParametersImpl(new QueryParametersBuilder().condition(
+                                new ResourceQueryBuilder().add(DOMAIN_FIELD, domain).build()).build())).build());
+    }
+
+    @Override
     public Response getConfiguration(String id) {
-        return aclResourcesService.getResource(getResmiGetRem(), adminsCollection, new ResourceId(id), new RequestParametersBuilder(
-                REGISTRY_DOMAIN).build(), Collections.emptyList());
+        return getResourceWithParameters(id, new RequestParametersBuilder(REGISTRY_DOMAIN).build());
+    }
+
+    private Response getResourceWithParameters(String id, RequestParameters<ResourceParameters> parameters) {
+        return aclResourcesService.getResource(getResmiGetRem(), adminsCollection, new ResourceId(id), parameters, Collections.emptyList());
     }
 
     @Override

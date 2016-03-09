@@ -53,8 +53,6 @@ import com.google.gson.JsonParser;
     private static final String DOMAIN_ID = "domainId";
     private static final String TYPE = "type";
     private static final String ADMINS_COLLECTION = "adminsCollection";
-    private static final char JOINER = ':';
-    // private static final ResourceId MANAGED_COLLECTION_RESOURCE = new ResourceId(TYPE);
     private static final ResourceId MANAGED_DOMAIN_RESOURCE = new ResourceId(REQUESTED_DOMAIN_ID);
 
     @Mock private TokenInfo tokenInfoMock;

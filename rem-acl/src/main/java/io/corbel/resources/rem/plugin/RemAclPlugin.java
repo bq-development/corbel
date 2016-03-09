@@ -79,6 +79,7 @@ import org.springframework.stereotype.Component;
         registry.registerRem(context.getBean(AclRemNames.SETUP_PUT, Rem.class), ".*", MediaType.valueOf(ACL_MEDIA_TYPE), HttpMethod.PUT);
         registry.registerRem(context.getBean(AclRemNames.ADMIN_POST, Rem.class), aclConfigurationCollection, MediaType.ALL, HttpMethod.POST);
         registry.registerRem(context.getBean(AclRemNames.ADMIN_PUT, Rem.class), aclConfigurationCollection, MediaType.ALL, HttpMethod.PUT);
+        registry.registerRem(context.getBean(AclRemNames.ADMIN_GET, Rem.class), aclConfigurationCollection, MediaType.ALL, HttpMethod.GET);
     }
 
     @Override

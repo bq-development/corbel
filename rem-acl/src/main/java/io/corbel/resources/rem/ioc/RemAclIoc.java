@@ -6,6 +6,7 @@ import io.corbel.eventbus.ioc.EventBusListeningIoc;
 import io.corbel.lib.config.ConfigurationIoC;
 import io.corbel.resources.rem.Rem;
 import io.corbel.resources.rem.acl.AclDeleteRem;
+import io.corbel.resources.rem.acl.AclGetManagedCollectionRem;
 import io.corbel.resources.rem.acl.AclGetRem;
 import io.corbel.resources.rem.acl.AclPostManagedCollectionRem;
 import io.corbel.resources.rem.acl.AclPostRem;
@@ -75,6 +76,11 @@ import com.google.gson.Gson;
     @Bean(name = AclRemNames.ADMIN_PUT)
     public Rem getAclPutManagedCollectionRem() {
         return new AclPutManagedCollectionRem(getAclConfigurationService());
+    }
+
+    @Bean(name = AclRemNames.ADMIN_GET)
+    public Rem getAclGetManagedCollectionRem() {
+        return new AclGetManagedCollectionRem(getAclConfigurationService());
     }
 
     @Bean
