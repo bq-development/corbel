@@ -3,9 +3,13 @@ package io.corbel.iam.service;
 import java.security.SignatureException;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
+import com.google.common.collect.Sets;
 import io.corbel.iam.model.Scope;
+import io.corbel.iam.model.UserToken;
+import io.corbel.iam.repository.UserTokenRepository;
 import net.oauth.jsontoken.JsonToken;
 import net.oauth.jsontoken.JsonTokenParser;
 
@@ -18,10 +22,12 @@ public class DefaultUpgradeTokenService implements UpgradeTokenService {
     private static final String SCOPE = "scope";
     private final JsonTokenParser jsonTokenParser;
     private final ScopeService scopeService;
+    private final UserTokenRepository userTokenRepository;
 
-    public DefaultUpgradeTokenService(JsonTokenParser jsonTokenParser, ScopeService scopeService) {
+    public DefaultUpgradeTokenService(JsonTokenParser jsonTokenParser, ScopeService scopeService, UserTokenRepository userTokenRepository) {
         this.jsonTokenParser = jsonTokenParser;
         this.scopeService = scopeService;
+        this.userTokenRepository = userTokenRepository;
     }
 
     @Override
@@ -37,16 +43,27 @@ public class DefaultUpgradeTokenService implements UpgradeTokenService {
                 }
             }
 
-            publishScopes(new HashSet<>(Arrays.asList(scopesToAdd)), tokenReader);
+            Set<Scope> scopes = getUpgradedScopes(new HashSet<>(Arrays.asList(scopesToAdd)), tokenReader);
+            publishScopes(scopes, tokenReader);
+            saveUserToken(tokenReader.getToken(), scopes);
         } catch (IllegalStateException | SignatureException e) {
             throw new UnauthorizedException(e.getMessage());
         }
     }
 
-    private void publishScopes(Set<String> scopesIds, TokenReader tokenReader) {
-        Set<Scope> scopes = scopeService.expandScopes(scopesIds);
-        scopes = scopeService.fillScopes(scopes, tokenReader.getInfo().getUserId(), tokenReader.getInfo().getClientId(),
-                tokenReader.getInfo().getDomainId());
+    private void saveUserToken(String token, Set<Scope> scopes){
+        UserToken userToken = userTokenRepository.findByToken(token);
+        userToken.getScopes().addAll(scopes);
+        userTokenRepository.save(userToken);
+    }
+
+    private void publishScopes(Set<Scope> scopes, TokenReader tokenReader) {
         scopeService.addAuthorizationRules(tokenReader.getToken(), scopes);
+    }
+
+    private Set<Scope> getUpgradedScopes(Set<String> scopesIds, TokenReader tokenReader){
+        Set<Scope> scopes = scopeService.expandScopes(scopesIds);
+        return scopeService.fillScopes(scopes, tokenReader.getInfo().getUserId(), tokenReader.getInfo().getClientId(),
+                tokenReader.getInfo().getDomainId());
     }
 }

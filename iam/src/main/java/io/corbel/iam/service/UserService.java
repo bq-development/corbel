@@ -3,6 +3,7 @@ package io.corbel.iam.service;
 import io.corbel.iam.exception.UserProfileConfigurationException;
 import io.corbel.iam.model.Domain;
 import io.corbel.iam.model.User;
+import io.corbel.iam.model.UserToken;
 import io.corbel.iam.repository.CreateUserException;
 import io.corbel.lib.queries.request.Pagination;
 import io.corbel.lib.queries.request.ResourceQuery;
@@ -41,6 +42,8 @@ public interface UserService {
     boolean existsByEmailAndDomain(String email, String domainId);
 
     void invalidateAllTokens(String userId);
+
+    UserToken getSession(String token);
 
     User getUserProfile(User user, Set<String> userProfileFields) throws UserProfileConfigurationException;
 

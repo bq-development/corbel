@@ -593,7 +593,6 @@ public class UserResourceTest extends UserResourceTestBase {
         Response response = RULE.client().target("/v1.0/user/me/signout").request(MediaType.APPLICATION_JSON)
                 .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).put(Entity.json(""), Response.class);
         assertThat(response.getStatus()).isEqualTo(404);
-
     }
 
     @Test
@@ -621,6 +620,30 @@ public class UserResourceTest extends UserResourceTestBase {
                 .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).delete(Response.class);
         assertThat(response.getStatus()).isEqualTo(404);
 
+    }
+
+    @Test
+    public void testGetSession(){
+        when(userServiceMock.getSession(TEST_TOKEN)).thenReturn(getTestUserToken());
+        when(userServiceMock.findById(TEST_USER_ID)).thenReturn(getTestUser());
+        when(authorizationInfoMock.getToken()).thenReturn(TEST_TOKEN);
+        when(authorizationInfoMock.getUserId()).thenReturn(TEST_USER_ID);
+
+        Response response = RULE.client().target("/v1.0/user/me/session").request(MediaType.APPLICATION_JSON)
+                .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(Response.class);
+        assertThat(response.getStatus()).isEqualTo(200);
+
+        verify(userServiceMock).getSession(TEST_TOKEN);
+    }
+
+    @Test
+    public void testGetSessionWithoutToken(){
+        when(userServiceMock.getSession(TEST_TOKEN)).thenReturn(getTestUserToken());
+        when(authorizationInfoMock.getToken()).thenReturn(null);
+
+        Response response = RULE.client().target("/v1.0/user/me/session").request(MediaType.APPLICATION_JSON)
+                .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(Response.class);
+        assertThat(response.getStatus()).isEqualTo(404);
     }
 
     @Test

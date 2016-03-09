@@ -1,22 +1,6 @@
 package io.corbel.iam.api;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.time.Clock;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import javax.validation.Valid;
-import javax.ws.rs.*;
-import javax.ws.rs.core.*;
-import javax.ws.rs.core.Response.Status;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.dao.DuplicateKeyException;
-
 import com.google.gson.JsonElement;
-
 import io.corbel.iam.exception.DuplicatedOauthServiceIdentityException;
 import io.corbel.iam.exception.IdentityAlreadyExistsException;
 import io.corbel.iam.exception.UserProfileConfigurationException;
@@ -34,6 +18,19 @@ import io.corbel.lib.ws.annotation.Rest;
 import io.corbel.lib.ws.auth.AuthorizationInfo;
 import io.corbel.lib.ws.model.Error;
 import io.dropwizard.auth.Auth;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DuplicateKeyException;
+
+import javax.validation.Valid;
+import javax.ws.rs.*;
+import javax.ws.rs.core.*;
+import javax.ws.rs.core.Response.Status;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.time.Clock;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Alexander De Leon
@@ -242,6 +239,17 @@ import io.dropwizard.auth.Auth;
                     userService.signOut(user.getId(), Optional.of(authorizationInfo.getToken()));
                     return Response.noContent().build();
                 }).orElseGet(() -> IamErrorResponseFactory.getInstance().notFound());
+    }
+
+    @GET
+    @Path("/me/session")
+    public Response getSession(@Auth AuthorizationInfo authorizationInfo){
+        return Optional.ofNullable(authorizationInfo.getToken()).map(token -> {
+            return Response.ok()
+                    .type(MediaType.APPLICATION_JSON)
+                    .entity(userService.getSession(token))
+                    .build();
+        }).orElseGet(() -> IamErrorResponseFactory.getInstance().notFound());
     }
 
     @PUT

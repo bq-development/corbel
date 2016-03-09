@@ -1,14 +1,14 @@
 package io.corbel.iam.api;
 
-import io.corbel.iam.model.Domain;
-import io.corbel.iam.model.Identity;
-import io.corbel.iam.model.User;
-import io.corbel.iam.model.UserWithIdentity;
 import com.google.common.collect.Sets;
+import com.google.gson.JsonObject;
+import io.corbel.iam.model.*;
 import io.dropwizard.testing.junit.ResourceTestRule;
+import org.joda.time.DateTime;
 
 import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.core.MediaType;
+import java.util.Date;
 import java.util.Set;
 
 import static org.mockito.Mockito.mock;
@@ -20,6 +20,7 @@ public abstract class UserResourceTestBase {
 
     protected static final String TEST_CLIENT_ID = "client_id";
     protected static final String TEST_USER_ID = "id";
+    protected static final String TEST_DEVICE_ID = "TEST_DEVICE_ID";
     protected static final String TEST_DOMAIN_ID = "domain";
     protected static final Domain TEST_DOMAIN = mock(Domain.class);
     protected static final String TEST_OTHER_DOMAIN = "other_domain";
@@ -34,6 +35,13 @@ public abstract class UserResourceTestBase {
     protected static final String AUTHORIZATION = "Authorization";
     protected static final String TEST_PROPERTY = "prop";
     protected static final Object TEST_PROPERTY_VAL = "prop_val";
+
+    protected static final String TEST_SCOPE_ID = "TEST_SCOPE_ID";
+    protected static final String TEST_SCOPE_TYPE = "TEST_SCOPE_TYPE";
+    protected static final String TEST_SCOPE_AUDIENCE = "TEST_SCOPE_AUDIENCE";
+    protected static final Set<JsonObject> TEST_SCOPE_RULES = Sets.newHashSet();
+    protected static final JsonObject TEST_SCOPE_PARAMETERS = new JsonObject();
+
 
     protected User createTestUser() {
         return createTestUser(new User());
@@ -53,10 +61,27 @@ public abstract class UserResourceTestBase {
         return user;
     }
 
+    protected Set<Scope> createTestScopes(){
+        Set<Scope> scopes = Sets.newHashSet();
+        Scope scope1 = new Scope(TEST_SCOPE_ID, TEST_SCOPE_TYPE, TEST_SCOPE_AUDIENCE, TEST_SCOPES, TEST_SCOPE_RULES, TEST_SCOPE_PARAMETERS);
+        scopes.add(scope1);
+        return scopes;
+    }
+
     protected User getTestUser() {
         User user = createTestUser(new User());
         user.setScopes(TEST_SCOPES);
         return user;
+    }
+
+    protected UserToken getTestUserToken(){
+        UserToken userToken = new UserToken();
+        userToken.setDeviceId(TEST_DEVICE_ID);
+        userToken.setExpireAt(new Date(DateTime.now().getMillis()));
+        userToken.setScopes(createTestScopes());
+        userToken.setToken(TEST_TOKEN);
+        userToken.setUserId(TEST_USER_ID);
+        return userToken;
     }
 
     protected UserWithIdentity getTestUserWithIdentity() {

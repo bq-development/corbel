@@ -170,7 +170,8 @@ public class DefaultAuthorizationService implements AuthorizationService {
 
         if (userOptional.isPresent()) {
             User user = userOptional.get();
-            storeUserToken(tokenGrant, user, context.getDeviceId());
+            Set<Scope> expandedRequestedScopes = context.getExpandedRequestedScopes();
+            storeUserToken(tokenGrant, user, context.getDeviceId(), expandedRequestedScopes);
             updateDeviceLastConnection(user.getDomain(), user.getId(), context.getDeviceId());
             eventsService.sendUserAuthenticationEvent(userOptional.get().getUserProfile());
         } else {
@@ -228,8 +229,9 @@ public class DefaultAuthorizationService implements AuthorizationService {
         return grantAccess(context, Optional.of(user));
     }
 
-    private void storeUserToken(TokenGrant tokenGrant, User user, String deviceId) {
-        UserToken userToken = new UserToken(tokenGrant.getAccessToken(), user.getId(), deviceId, new Date(tokenGrant.getExpiresAt()));
+    private void storeUserToken(TokenGrant tokenGrant, User user, String deviceId, Set<Scope> expandedRequestedScopes) {
+        UserToken userToken = new UserToken(
+                tokenGrant.getAccessToken(), user.getId(), deviceId, new Date(tokenGrant.getExpiresAt()), expandedRequestedScopes);
         userTokenRepository.save(userToken);
     }
 

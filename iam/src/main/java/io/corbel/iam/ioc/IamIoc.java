@@ -328,7 +328,7 @@ public class IamIoc {
 
     @Bean
     public UpgradeTokenService getUpgradeTokenService(ScopeService scopeService) {
-        return new DefaultUpgradeTokenService(getTokenUpgradeJsonTokenParser(), scopeService);
+        return new DefaultUpgradeTokenService(getTokenUpgradeJsonTokenParser(), scopeService, userTokenRepository);
     }
 
     @Bean
