@@ -39,10 +39,10 @@
     <buildmetadata-maven-plugin.version>1.5.2</buildmetadata-maven-plugin.version>
     <lib-config.version>0.3.0</lib-config.version>
     <lib-cli.version>0.4.0</lib-cli.version>
-    <lib-mongodb.version>0.7.0-SNAPSHOT</lib-mongodb.version>
-    <lib-token.version>0.9.0-SNAPSHOT</lib-token.version>
+    <lib-mongodb.version>0.7.0</lib-mongodb.version>
+    <lib-token.version>0.9.0</lib-token.version>
     <lib-queries.version>0.14.0</lib-queries.version>
-    <lib-ws.version>0.18.0-SNAPSHOT</lib-ws.version>
+    <lib-ws.version>0.18.0</lib-ws.version>
     <lib-rabbitmq.version>0.9.0</lib-rabbitmq.version>
     <events.version>1.27.0</events.version>
     <spring.version>4.1.7.RELEASE</spring.version>
