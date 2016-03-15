@@ -3,7 +3,6 @@ package io.corbel.resources;
 import io.corbel.lib.ws.cli.CommandLineI;
 import io.corbel.lib.ws.cli.GenericConsole;
 import io.corbel.lib.ws.cli.ServiceRunnerWithVersionResource;
-import io.corbel.lib.ws.filter.ETagResponseFilter;
 import io.corbel.lib.ws.health.AuthorizationRedisHealthCheck;
 import io.corbel.lib.ws.health.BasicHealthCheck;
 import io.corbel.lib.ws.health.MongoHealthCheck;
@@ -45,7 +44,7 @@ public class ResourcesRunner extends ServiceRunnerWithVersionResource<ResourcesI
         super.configureService(environment, context);
         environment.jersey().register(context.getBean(RemResource.class));
         environment.jersey().register(context.getBean(PluginInfoResource.class));
-        environment.jersey().register(ETagResponseFilter.class);
+        // environment.jersey().register(ETagResponseFilter.class);
         environment.healthChecks().register("basic", new BasicHealthCheck());
         environment.healthChecks().register("redis", context.getBean(AuthorizationRedisHealthCheck.class));
         environment.healthChecks().register("mongo", context.getBean(MongoHealthCheck.class));
