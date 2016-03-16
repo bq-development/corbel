@@ -24,7 +24,7 @@ import java.net.URLDecoder;
 /**
  * @author Alexander De Leon
  */
-@Path(ApiVersion.CURRENT + "/{domain}/oauth/token")
+@Path(ApiVersion.CURRENT + "/oauth/token")
 public class TokenResource {
 
     private final AuthorizationService authorizationService;
