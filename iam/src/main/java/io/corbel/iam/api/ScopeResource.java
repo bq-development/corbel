@@ -26,10 +26,13 @@ import io.corbel.iam.service.ScopeService;
     @Consumes(MediaType.APPLICATION_JSON)
     public final Response createScope(@PathParam("domain") String domainId, @Context UriInfo uriInfo, @Valid Scope scope) {
         try {
+            /*
+            //TODO: Fix login with scopes
             if (scope.getId().contains(Scope.ID_SEPARATOR)) {
                 return IamErrorResponseFactory.getInstance().scopeIdNotAllowed(scope.getId());
             }
             scope.setId(domainId + Scope.ID_SEPARATOR + scope.getId());
+            */
             scopeService.create(scope);
         } catch (ScopeAbsentIdException e) {
             return IamErrorResponseFactory.getInstance().missingParameter("id");
@@ -43,9 +46,11 @@ import io.corbel.iam.service.ScopeService;
     @Path("/{scopeId}")
     @Produces(MediaType.APPLICATION_JSON)
     public final Response getScope(@PathParam("domain") String domain, @PathParam("scopeId") String scopeId) {
+        /*
+        //TODO: Fix login with scopes
         if(!scopeId.startsWith(domain + Scope.ID_SEPARATOR)){
             throw new WebApplicationException(IamErrorResponseFactory.getInstance().unauthorized("Scope domain mismatch"));
-        }
+        }*/
         return Optional.ofNullable(scopeService.getScope(scopeId)).map(scope -> Response.ok(scope).build())
                 .orElseGet(() -> IamErrorResponseFactory.getInstance().notFound());
     }
@@ -54,9 +59,11 @@ import io.corbel.iam.service.ScopeService;
     @Path("/{scopeId}")
     @Consumes(MediaType.APPLICATION_JSON)
     public final Response deleteScope(@PathParam("domain") String domain, @PathParam("scopeId") String scopeId) {
+        /*
+        //TODO: Fix login with scopes
         if(!scopeId.startsWith(domain + Scope.ID_SEPARATOR)){
             throw new WebApplicationException(IamErrorResponseFactory.getInstance().unauthorized("Scope domain mismatch"));
-        }
+        }*/
         scopeService.delete(scopeId);
         return Response.noContent().build();
     }
