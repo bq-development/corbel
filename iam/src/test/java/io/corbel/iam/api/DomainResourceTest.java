@@ -70,7 +70,7 @@ public class DomainResourceTest {
     private static CookieOAuthFactory<AuthorizationInfo> cookieOAuthProvider = new CookieOAuthFactory<AuthorizationInfo>(authenticator,
             "realm", AuthorizationInfo.class);
     private static final AuthorizationRequestFilter filter = spy(
-            new AuthorizationRequestFilter(oAuthFactory, cookieOAuthProvider, "", false));
+            new AuthorizationRequestFilter(oAuthFactory, cookieOAuthProvider, "", false, "domain"));
 
     @ClassRule public static ResourceTestRule RULE = ResourceTestRule.builder().addResource(new DomainResource(domainService))
             .addProvider(filter).addProvider(new AuthorizationInfoProvider().getBinder())

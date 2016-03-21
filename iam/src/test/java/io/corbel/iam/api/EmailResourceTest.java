@@ -34,7 +34,7 @@ public class EmailResourceTest extends UserResourceTestBase {
     private static final TokenInfo tokenMock = mock(TokenInfo.class);
 
     private static OAuthFactory oAuthFactory = new OAuthFactory<>(authenticatorMock, "realm", AuthorizationInfo.class);
-    private static final AuthorizationRequestFilter filter = spy(new AuthorizationRequestFilter(oAuthFactory, null, "", false));
+    private static final AuthorizationRequestFilter filter = spy(new AuthorizationRequestFilter(oAuthFactory, null, "", false, "email"));
 
     @ClassRule
     public static ResourceTestRule RULE = ResourceTestRule.builder().addResource(new EmailResource(userServiceMock))

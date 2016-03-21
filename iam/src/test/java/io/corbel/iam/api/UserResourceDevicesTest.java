@@ -73,7 +73,7 @@ public class UserResourceDevicesTest extends UserResourceTestBase {
     private static final Authenticator<String, AuthorizationInfo> authenticator = mock(Authenticator.class);
     private static final String TEST_DEVICE_TYPE = "Android";
     private static OAuthFactory oAuthFactory = new OAuthFactory<>(authenticator, "realm", AuthorizationInfo.class);
-    private static final AuthorizationRequestFilter filter = spy(new AuthorizationRequestFilter(oAuthFactory, null, "",false));
+    private static final AuthorizationRequestFilter filter = spy(new AuthorizationRequestFilter(oAuthFactory, null, "", false, "user"));
     private static  AggregationResultsFactory<JsonElement> aggregationResultsFactory = new JsonAggregationResultsFactory();
 
     @ClassRule public static ResourceTestRule RULE = ResourceTestRule

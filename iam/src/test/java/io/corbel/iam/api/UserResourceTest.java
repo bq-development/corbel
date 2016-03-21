@@ -84,8 +84,7 @@ public class UserResourceTest extends UserResourceTestBase {
 
     private static OAuthFactory oAuthFactory = new OAuthFactory<>(authenticator, "realm", AuthorizationInfo.class);
 
-    @SuppressWarnings("unchecked") private static final AuthorizationRequestFilter filter = spy(
-            new AuthorizationRequestFilter(oAuthFactory, null, "", false));
+    @SuppressWarnings("unchecked") private static final AuthorizationRequestFilter filter = spy(new AuthorizationRequestFilter(oAuthFactory, null, "", false, "user"));
 
     @ClassRule public static ResourceTestRule RULE = ResourceTestRule
             .builder()

@@ -56,7 +56,7 @@ public class EventResourceTest {
 
     private static BearerTokenAuthenticator authenticatorMock = mock(BearerTokenAuthenticator.class);
     private static OAuthFactory oAuthFactory = new OAuthFactory<>(authenticatorMock, "realm", AuthorizationInfo.class);
-    private static final AuthorizationRequestFilter filter = spy(new AuthorizationRequestFilter(oAuthFactory, null, "", false));
+    private static final AuthorizationRequestFilter filter = spy(new AuthorizationRequestFilter(oAuthFactory, null, "", false, "evci"));
 
     @ClassRule public static ResourceTestRule RULE;
 

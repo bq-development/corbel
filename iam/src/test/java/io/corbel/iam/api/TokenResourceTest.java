@@ -66,7 +66,7 @@ public class TokenResourceTest {
     private static CookieOAuthFactory<AuthorizationInfo> cookieOAuthProvider = new CookieOAuthFactory<AuthorizationInfo>(authenticator,
             "realm", AuthorizationInfo.class);
     private static final AuthorizationRequestFilter filter = spy(new AuthorizationRequestFilter(oAuthFactory, cookieOAuthProvider,
-            "v.*/oauth/token", false));
+            "v.*/oauth/token", false, ""));
 
     @ClassRule
     public static ResourceTestRule RULE = ResourceTestRule.builder()
