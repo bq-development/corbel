@@ -147,6 +147,20 @@ import java.util.stream.Collectors;
         return Response.ok().type(MediaType.APPLICATION_JSON).entity(user.getUserProfile()).build();
     }
 
+    @DELETE
+    @Path("/{id}")
+    public Response deleteUser(@PathParam("domain") String domainId, @PathParam("id") String userId,
+            @Auth AuthorizationInfo authorizationInfo) {
+        Optional<User> optionalUser = resolveMeIdAliases(userId, authorizationInfo.getUserId());
+        optionalUser.ifPresent(user -> {
+            checkingUserDomain(user, domainId);
+            identityService.deleteUserIdentities(user);
+            userService.delete(user);
+            deviceService.deleteByUserId(user);
+        });
+        return Response.noContent().build();
+    }
+
     @GET
     @Path("/{id}/avatar")
     public Response getAvatar(@PathParam("domain") String domainId, @PathParam("id") String id, @Auth AuthorizationInfo authorizationInfo) {
@@ -156,6 +170,97 @@ import java.util.stream.Collectors;
         } catch (NullPointerException | URISyntaxException ignored) {
             return IamErrorResponseFactory.getInstance().notfound(new Error("not_found", "User " + id + " has no avatar."));
         }
+    }
+
+    @PUT
+    @Path("/{id}/disconnect")
+    public Response disconnect(@PathParam("domain") String domainId, @PathParam("id") String userId,
+            @Auth AuthorizationInfo authorizationInfo) {
+        User user = getUserResolvingMeAndUserDomainVerifying(userId, authorizationInfo.getUserId(), domainId);
+        userService.signOut(user.getId());
+        return Response.noContent().build();
+    }
+
+    @DELETE
+    @Path("/{id}/sessions")
+    public Response deleteAllSessions(@PathParam("domain") String domainId, @PathParam("id") String userId,
+            @Auth AuthorizationInfo authorizationInfo) {
+        User user = getUserResolvingMeAndUserDomainVerifying(userId, authorizationInfo.getUserId(), domainId);
+        userService.invalidateAllTokens(user.getId());
+        return Response.noContent().build();
+    }
+
+    @POST
+    @Path("/{id}/identity")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response postUserIdentity(@PathParam("domain") String domainId, @Valid Identity identity, @PathParam("id") String id,
+            @Auth AuthorizationInfo authorizationInfo) {
+        User user = getUserResolvingMeAndUserDomainVerifying(id, authorizationInfo.getUserId(), domainId);
+        identity.setDomain(domainId);
+        identity.setUserId(user.getId());
+        try {
+            addIdentity(identity);
+            return Response.status(Status.CREATED).build();
+        } catch (Exception e) {
+            return handleIdentityError(e, identity);
+        }
+    }
+
+    @GET
+    @Path("/{id}/identity")
+    public Response getUserIdentity(@PathParam("domain") String domainId, @PathParam("id") String id,
+            @Auth AuthorizationInfo authorizationInfo) {
+        User user = getUserResolvingMeAndUserDomainVerifying(id, authorizationInfo.getUserId(), domainId);
+        return Response.ok().type(MediaType.APPLICATION_JSON).entity(identityService.findUserIdentities(user)).build();
+    }
+
+    @GET
+    @Path("/{id}/profile")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getUserProfile(@PathParam("domain") String domainId, @PathParam("id") String id,
+            @Auth AuthorizationInfo authorizationInfo) {
+        User user = getUserResolvingMeAndUserDomainVerifying(id, authorizationInfo.getUserId(), domainId);
+        Optional<Domain> domain = domainService.getDomain(domainId);
+        if (!domain.isPresent()) {
+            return IamErrorResponseFactory.getInstance().notFound();
+        }
+        try {
+            return Optional.ofNullable(userService.getUserProfile(user, domain.get().getUserProfileFields()))
+                    .map(userProfile -> Response.ok().type(MediaType.APPLICATION_JSON).entity(userProfile).build())
+                    .orElseGet(() -> IamErrorResponseFactory.getInstance().notFound());
+        } catch (UserProfileConfigurationException e) {
+            return IamErrorResponseFactory.getInstance().serverError(new Error("misconfiguration", e.getMessage()));
+        }
+    }
+
+    @PUT
+    @Path("/{id}/groups")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response addGroupsToUser(@PathParam("domain") String domainId, @PathParam("id") String id, Set<String> groups,
+            @Auth AuthorizationInfo authorizationInfo) {
+        User user = getUserResolvingMeAndUserDomainVerifying(id, authorizationInfo.getUserId(), domainId);
+        Optional<Domain> domain = domainService.getDomain(domainId);
+        if (!domain.isPresent()) {
+            return IamErrorResponseFactory.getInstance().notFound();
+        }
+        user.addGroups(groups);
+        userService.update(user);
+        return Response.noContent().build();
+    }
+
+    @DELETE
+    @Path("/{id}/groups/{groupId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response deleteGroupsToUser(@PathParam("domain") String domainId, @PathParam("id") String id,
+            @PathParam("groupId") String groupId, @Auth AuthorizationInfo authorizationInfo) {
+        User user = getUserResolvingMeAndUserDomainVerifying(id, authorizationInfo.getUserId(), domainId);
+        Optional<Domain> domain = domainService.getDomain(domainId);
+        if (!domain.isPresent()) {
+            return IamErrorResponseFactory.getInstance().notFound();
+        }
+        user.deleteGroup(groupId);
+        userService.update(user);
+        return Response.noContent().build();
     }
 
     @GET
@@ -208,14 +313,6 @@ import java.util.stream.Collectors;
         return Response.status(Status.NO_CONTENT).build();
     }
 
-    @Path("/resetPassword")
-    @GET
-    public Response generateResetPasswordEmail(@PathParam("domain") String domainId, @QueryParam("email") String email,
-            @Auth AuthorizationInfo authorizationInfo) {
-        userService.sendMailResetPassword(email, authorizationInfo.getClientId(), domainId);
-        return Response.noContent().build();
-    }
-
     @PUT
     @Path("/me/signout")
     public Response signOut(@Auth AuthorizationInfo authorizationInfo) {
@@ -232,62 +329,6 @@ import java.util.stream.Collectors;
         return Optional.ofNullable(authorizationInfo.getToken())
                 .map(token -> Response.ok().type(MediaType.APPLICATION_JSON).entity(userService.getSession(token)).build())
                 .orElseGet(() -> IamErrorResponseFactory.getInstance().notFound());
-    }
-
-    @PUT
-    @Path("/{id}/disconnect")
-    public Response disconnect(@PathParam("domain") String domainId, @PathParam("id") String userId,
-            @Auth AuthorizationInfo authorizationInfo) {
-        User user = getUserResolvingMeAndUserDomainVerifying(userId, authorizationInfo.getUserId(), domainId);
-        userService.signOut(user.getId());
-        return Response.noContent().build();
-    }
-
-    @DELETE
-    @Path("/{id}/sessions")
-    public Response deleteAllSessions(@PathParam("domain") String domainId, @PathParam("id") String userId,
-            @Auth AuthorizationInfo authorizationInfo) {
-        User user = getUserResolvingMeAndUserDomainVerifying(userId, authorizationInfo.getUserId(), domainId);
-        userService.invalidateAllTokens(user.getId());
-        return Response.noContent().build();
-    }
-
-    @DELETE
-    @Path("/{id}")
-    public Response deleteUser(@PathParam("domain") String domainId, @PathParam("id") String userId,
-            @Auth AuthorizationInfo authorizationInfo) {
-        Optional<User> optionalUser = resolveMeIdAliases(userId, authorizationInfo.getUserId());
-        optionalUser.ifPresent(user -> {
-            checkingUserDomain(user, domainId);
-            identityService.deleteUserIdentities(user);
-            userService.delete(user);
-            deviceService.deleteByUserId(user);
-        });
-        return Response.noContent().build();
-    }
-
-    @POST
-    @Path("/{id}/identity")
-    @Consumes(MediaType.APPLICATION_JSON)
-    public Response postUserIdentity(@PathParam("domain") String domainId, @Valid Identity identity, @PathParam("id") String id,
-            @Auth AuthorizationInfo authorizationInfo) {
-        User user = getUserResolvingMeAndUserDomainVerifying(id, authorizationInfo.getUserId(), domainId);
-        identity.setDomain(domainId);
-        identity.setUserId(user.getId());
-        try {
-            addIdentity(identity);
-            return Response.status(Status.CREATED).build();
-        } catch (Exception e) {
-            return handleIdentityError(e, identity);
-        }
-    }
-
-    @GET
-    @Path("/{id}/identity")
-    public Response getUserIdentity(@PathParam("domain") String domainId, @PathParam("id") String id,
-            @Auth AuthorizationInfo authorizationInfo) {
-        User user = getUserResolvingMeAndUserDomainVerifying(id, authorizationInfo.getUserId(), domainId);
-        return Response.ok().type(MediaType.APPLICATION_JSON).entity(identityService.findUserIdentities(user)).build();
     }
 
     @GET
@@ -319,54 +360,14 @@ import java.util.stream.Collectors;
         return Response.ok(profiles).type(MediaType.APPLICATION_JSON).build();
     }
 
+    @Path("/resetPassword")
     @GET
-    @Path("/{id}/profile")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getUserProfile(@PathParam("domain") String domainId, @PathParam("id") String id,
+    public Response generateResetPasswordEmail(@PathParam("domain") String domainId, @QueryParam("email") String email,
             @Auth AuthorizationInfo authorizationInfo) {
-        User user = getUserResolvingMeAndUserDomainVerifying(id, authorizationInfo.getUserId(), domainId);
-        Optional<Domain> domain = domainService.getDomain(domainId);
-        if (!domain.isPresent()) {
-            return IamErrorResponseFactory.getInstance().notFound();
-        }
-        try {
-            return Optional.ofNullable(userService.getUserProfile(user, domain.get().getUserProfileFields()))
-                    .map(userProfile -> Response.ok().type(MediaType.APPLICATION_JSON).entity(userProfile).build())
-                    .orElseGet(() -> IamErrorResponseFactory.getInstance().notFound());
-        } catch (UserProfileConfigurationException e) {
-            return IamErrorResponseFactory.getInstance().serverError(new Error("misconfiguration", e.getMessage()));
-        }
-    }
-
-    @PUT
-    @Path("/{id}/groups")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response addGroupsToUser(@PathParam("domain") String domainId, @PathParam("id") String id, Set<String> groups,
-            @Auth AuthorizationInfo authorizationInfo) {
-        User user = getUserResolvingMeAndUserDomainVerifying(id, authorizationInfo.getUserId(), domainId);
-        Optional<Domain> domain = domainService.getDomain(domainId);
-        if (!domain.isPresent()) {
-            return IamErrorResponseFactory.getInstance().notFound();
-        }
-        user.addGroups(groups);
-        userService.update(user);
+        userService.sendMailResetPassword(email, authorizationInfo.getClientId(), domainId);
         return Response.noContent().build();
     }
 
-    @DELETE
-    @Path("/{id}/groups/{groupId}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response deleteGroupsToUser(@PathParam("domain") String domainId, @PathParam("id") String id,
-            @PathParam("groupId") String groupId, @Auth AuthorizationInfo authorizationInfo) {
-        User user = getUserResolvingMeAndUserDomainVerifying(id, authorizationInfo.getUserId(), domainId);
-        Optional<Domain> domain = domainService.getDomain(domainId);
-        if (!domain.isPresent()) {
-            return IamErrorResponseFactory.getInstance().notFound();
-        }
-        user.deleteGroup(groupId);
-        userService.update(user);
-        return Response.noContent().build();
-    }
 
     private <T extends Entity> T ensureNoId(T entity) {
         entity.setId(null);

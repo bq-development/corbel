@@ -38,40 +38,11 @@ public class TokenResource {
         this.tokenCookieFactory = tokenCookieFactory;
     }
 
-    @POST
-    public Response getToken(@FormParam("grant_type") String grantType, @FormParam("assertion") String assertion,
-                             @HeaderParam("RequestCookie") boolean cookie) {
-        if (grantType == null || grantType.isEmpty()) {
-            return IamErrorResponseFactory.getInstance().missingGrantType();
-        }
-        if (assertion == null || assertion.isEmpty()) {
-            return IamErrorResponseFactory.getInstance().missingAssertion();
-        }
-        if (grantType.equals(GrantType.JWT_BEARER)) {
-            return doJwtAuthorization(assertion, Optional.absent(), cookie);
-        }
-        return IamErrorResponseFactory.getInstance().notSupportedGrantType(grantType);
-    }
-
-    @Path("/upgrade")
-    @GET
-    public Response upgradeTokenGET(@Auth AuthorizationInfo authorizationInfo, @QueryParam("grant_type") String grantType,
-                                    @QueryParam("assertion") String assertion) {
-        return upgradeToken(authorizationInfo, grantType, assertion);
-    }
-
-    @Path("/upgrade")
-    @POST
-    public Response upgradeTokenPOST(@Auth AuthorizationInfo authorizationInfo, @FormParam("grant_type") String grantType,
-                                     @FormParam("assertion") String assertion) {
-        return upgradeToken(authorizationInfo, grantType, assertion);
-    }
-
     @GET
     public Response getTokenWithCode(@Context UriInfo uriInfo, @QueryParam("grant_type") String grantType,
-                                     @QueryParam("assertion") String assertion, @QueryParam("access_token") String accessToken, @QueryParam("code") String code,
-                                     @QueryParam("oauth_token") String token, @QueryParam("oauth_verifier") String verifier,
-                                     @QueryParam("redirect_uri") String redirectUri, @QueryParam("state") String state, @HeaderParam("RequestCookie") boolean cookie) {
+            @QueryParam("assertion") String assertion, @QueryParam("access_token") String accessToken, @QueryParam("code") String code,
+            @QueryParam("oauth_token") String token, @QueryParam("oauth_verifier") String verifier,
+            @QueryParam("redirect_uri") String redirectUri, @QueryParam("state") String state, @HeaderParam("RequestCookie") boolean cookie) {
         if (state != null) {
             try {
                 state = URLDecoder.decode(state, "UTF-8");
@@ -99,10 +70,39 @@ public class TokenResource {
         if (grantType.equals(GrantType.JWT_BEARER)) {
             OauthParams params = new OauthParams().setAccessToken(accessToken).setCode(code).setToken(token)
                     .setVerifier(verifier).setRedirectUri(redirectUri != null ? redirectUri
-                    : uriInfo.getAbsolutePath().toString());
+                            : uriInfo.getAbsolutePath().toString());
             return doJwtAuthorization(assertion, Optional.of(params), cookie);
         }
         return IamErrorResponseFactory.getInstance().notSupportedGrantType(grantType);
+    }
+
+    @POST
+    public Response getToken(@FormParam("grant_type") String grantType, @FormParam("assertion") String assertion,
+                             @HeaderParam("RequestCookie") boolean cookie) {
+        if (grantType == null || grantType.isEmpty()) {
+            return IamErrorResponseFactory.getInstance().missingGrantType();
+        }
+        if (assertion == null || assertion.isEmpty()) {
+            return IamErrorResponseFactory.getInstance().missingAssertion();
+        }
+        if (grantType.equals(GrantType.JWT_BEARER)) {
+            return doJwtAuthorization(assertion, Optional.absent(), cookie);
+        }
+        return IamErrorResponseFactory.getInstance().notSupportedGrantType(grantType);
+    }
+
+    @Path("/upgrade")
+    @GET
+    public Response upgradeTokenGET(@Auth AuthorizationInfo authorizationInfo, @QueryParam("grant_type") String grantType,
+                                    @QueryParam("assertion") String assertion) {
+        return upgradeToken(authorizationInfo, grantType, assertion);
+    }
+
+    @Path("/upgrade")
+    @POST
+    public Response upgradeTokenPOST(@Auth AuthorizationInfo authorizationInfo, @FormParam("grant_type") String grantType,
+                                     @FormParam("assertion") String assertion) {
+        return upgradeToken(authorizationInfo, grantType, assertion);
     }
 
     private Response doJwtAuthorization(String assertion, Optional<OauthParams> params, boolean setCookie) {

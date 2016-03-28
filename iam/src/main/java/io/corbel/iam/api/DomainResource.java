@@ -47,6 +47,13 @@ import java.util.Optional;
         this.domainService = domainService;
     }
 
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getDomain(@PathParam("domain") String domainId) {
+        return domainService.getDomain(domainId).map(domain -> Response.ok(domain).build())
+                .orElseGet(() -> IamErrorResponseFactory.getInstance().notFound());
+    }
+
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     public Response createDomain(@PathParam("domain") String domainId, @Context UriInfo uriInfo,
@@ -68,11 +75,19 @@ import java.util.Optional;
         return Response.created(uriInfo.getAbsolutePathBuilder().path(domain.getId()).build()).build();
     }
 
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getDomain(@PathParam("domain") String domainId) {
-        return domainService.getDomain(domainId).map(domain -> Response.ok(domain).build())
-                .orElseGet(() -> IamErrorResponseFactory.getInstance().notFound());
+    @PUT
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response modifyDomain(@PathParam("domain") String domainId, Domain domain) {
+        domain.setId(domainId);
+        addTrace(domain);
+        domainService.update(domain);
+        return Response.noContent().build();
+    }
+
+    @DELETE
+    public Response deleteDomain(@PathParam("domain") String domain) {
+        domainService.delete(domain);
+        return Response.noContent().build();
     }
 
     @GET
@@ -81,7 +96,7 @@ import java.util.Optional;
     public Response getAllDomains(@PathParam("domain") String domainId, @Rest QueryParameters queryParameters) {
 
         ResourceQuery query = new ResourceQueryBuilder(queryParameters.getQuery().orElse(null))
-                              .add("id", generateDomainInIdRegex(domainId), QueryOperator.$LIKE).build();
+                .add("id", generateDomainInIdRegex(domainId), QueryOperator.$LIKE).build();
 
         return queryParameters.getAggregation().map(aggregation -> {
             try {
@@ -96,21 +111,6 @@ import java.util.Optional;
             Sort sort = queryParameters.getSort().orElse(null);
             return Response.ok(domainService.getAll(query, pagination, sort)).build();
         });
-    }
-
-    @PUT
-    @Consumes(MediaType.APPLICATION_JSON)
-    public Response modifyDomain(@PathParam("domain") String domainId, Domain domain) {
-        domain.setId(domainId);
-        addTrace(domain);
-        domainService.update(domain);
-        return Response.noContent().build();
-    }
-
-    @DELETE
-    public Response deleteDomain(@PathParam("domain") String domain) {
-        domainService.delete(domain);
-        return Response.noContent().build();
     }
 
     private String generateDomainInIdRegex(String domainId) {

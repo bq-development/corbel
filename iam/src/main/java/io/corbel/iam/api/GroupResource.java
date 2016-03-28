@@ -54,6 +54,18 @@ import io.corbel.lib.ws.annotation.Rest;
                 .orElseGet(() -> IamErrorResponseFactory.getInstance().groupNotExists(id));
     }
 
+    @DELETE
+    @Path("/{id}")
+    public Response deleteGroup(@PathParam("domain") String domain, @PathParam("id") final String id) {
+        return groupService.get(id).map(group -> {
+            if (!group.getDomain().equals(domain)) {
+                return IamErrorResponseFactory.getInstance().unauthorizedGroupDeletion(id);
+            }
+            groupService.delete(id, domain);
+            return Response.noContent().build();
+        }).orElseGet(() -> Response.noContent().build());
+    }
+
     @PUT
     @Path("/{id}/scopes")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -83,18 +95,6 @@ import io.corbel.lib.ws.annotation.Rest;
             groupService.removeScopes(id, scopeId);
             return Response.noContent().build();
         }).orElseGet(() -> IamErrorResponseFactory.getInstance().groupNotExists(id));
-    }
-
-    @DELETE
-    @Path("/{id}")
-    public Response deleteGroup(@PathParam("domain") String domain, @PathParam("id") final String id) {
-        return groupService.get(id).map(group -> {
-            if (!group.getDomain().equals(domain)) {
-                return IamErrorResponseFactory.getInstance().unauthorizedGroupDeletion(id);
-            }
-            groupService.delete(id, domain);
-            return Response.noContent().build();
-        }).orElseGet(() -> Response.noContent().build());
     }
 
 }

@@ -49,6 +49,26 @@ public class ClientResource {
         this.domainService = domainService;
     }
 
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getClientsByDomain(@PathParam("domain") String domainId, @Rest QueryParameters queryParameters) {
+        ResourceQuery query = queryParameters.getQuery().orElse(null);
+        return queryParameters.getAggregation().map(aggregation -> {
+                    try {
+                        JsonElement result = clientService.getClientsAggregation(domainId, query, aggregation);
+                        return Response.ok(result).build();
+                    } catch (InvalidAggregationException e) {
+                        return ErrorResponseFactory.getInstance().badRequest();
+                    }
+                }
+        ).orElseGet(() -> {
+            Pagination pagination = queryParameters.getPagination();
+            Sort sort = queryParameters.getSort().orElse(null);
+            return Response.ok(clientService.findClientsByDomain(domainId, query, pagination, sort)).build();
+        });
+    }
+
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     public Response createClient(@Context UriInfo uriInfo, @Valid Client client, @PathParam("domain") String domainId) {
@@ -76,25 +96,6 @@ public class ClientResource {
     public Response getClient(@PathParam("clientId") String clientId, @PathParam("domain") String domainId) {
         return clientService.find(clientId).filter(client -> client.getDomain().equals(domainId))
                 .map(client -> Response.ok(client).build()).orElseGet(() -> IamErrorResponseFactory.getInstance().notFound());
-    }
-
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getClientsByDomain(@PathParam("domain") String domainId, @Rest QueryParameters queryParameters) {
-        ResourceQuery query = queryParameters.getQuery().orElse(null);
-        return queryParameters.getAggregation().map(aggregation -> {
-                    try {
-                        JsonElement result = clientService.getClientsAggregation(domainId, query, aggregation);
-                        return Response.ok(result).build();
-                    } catch (InvalidAggregationException e) {
-                        return ErrorResponseFactory.getInstance().badRequest();
-                    }
-                }
-        ).orElseGet(() -> {
-            Pagination pagination = queryParameters.getPagination();
-            Sort sort = queryParameters.getSort().orElse(null);
-            return Response.ok(clientService.findClientsByDomain(domainId, query, pagination, sort)).build();
-        });
     }
 
     @PUT
