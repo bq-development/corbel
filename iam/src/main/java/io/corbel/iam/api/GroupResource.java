@@ -67,7 +67,7 @@ import io.corbel.lib.ws.annotation.Rest;
     }
 
     @PUT
-    @Path("/{id}/scopes")
+    @Path("/{id}/scope")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response addScopes(@PathParam("domain") String domain, @PathParam("id") final String id, List<String> scopes) {
         return groupService.get(id).map(group -> {
@@ -84,7 +84,7 @@ import io.corbel.lib.ws.annotation.Rest;
     }
 
     @DELETE
-    @Path("/{id}/scopes/{scopeId}")
+    @Path("/{id}/scope/{scopeId}")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response removeScopes(@PathParam("domain") String domain, @PathParam("id") String id,
                                  @PathParam("scopeId") String scopeId) {

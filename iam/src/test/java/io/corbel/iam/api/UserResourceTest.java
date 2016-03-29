@@ -77,6 +77,7 @@ public class UserResourceTest extends UserResourceTestBase {
     private static final QueryParser queryParserMock = mock(QueryParser.class);
     private static final DeviceService devicesServiceMock = mock(DeviceService.class);
     public static final String NOT_ALLOWED_SCOPE = "notAllowedScope";
+    private static final String GROUPS_PATH = "/group";
     private static AggregationResultsFactory<JsonElement> aggregationResultsFactory = new JsonAggregationResultsFactory();
 
     @SuppressWarnings("unchecked")
@@ -599,7 +600,7 @@ public class UserResourceTest extends UserResourceTestBase {
         when(authorizationInfoMock.getUserId()).thenReturn(TEST_USER_ID);
         when(authorizationInfoMock.getToken()).thenReturn(TEST_TOKEN);
 
-        Response response = RULE.client().target("/v1.0/" + TEST_DOMAIN_ID + "/user/me/sessions")
+        Response response = RULE.client().target("/v1.0/" + TEST_DOMAIN_ID + "/user/me/session")
                 .request(MediaType.APPLICATION_JSON).header(AUTHORIZATION, "Bearer " + TEST_TOKEN).delete(Response.class);
         assertThat(response.getStatus()).isEqualTo(204);
 
@@ -613,7 +614,7 @@ public class UserResourceTest extends UserResourceTestBase {
         when(authorizationInfoMock.getUserId()).thenReturn(null);
         when(authorizationInfoMock.getToken()).thenReturn(TEST_TOKEN);
 
-        Response response = RULE.client().target("/v1.0/" + TEST_DOMAIN_ID + "/user/me/sessions")
+        Response response = RULE.client().target("/v1.0/" + TEST_DOMAIN_ID + "/user/me/session")
                 .request(MediaType.APPLICATION_JSON).header(AUTHORIZATION, "Bearer " + TEST_TOKEN).delete(Response.class);
         assertThat(response.getStatus()).isEqualTo(404);
 
@@ -944,7 +945,7 @@ public class UserResourceTest extends UserResourceTestBase {
 
         when(userServiceMock.findById(TEST_USER_ID)).thenReturn(createTestUser());
 
-        Response response = RULE.client().target("/v1.0/" + TEST_DOMAIN_ID + "/user/"+TEST_USER_ID+"/groups")
+        Response response = RULE.client().target("/v1.0/" + TEST_DOMAIN_ID + "/user/"+TEST_USER_ID + GROUPS_PATH)
                 .request(MediaType.APPLICATION_JSON).header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
                 .put(Entity.json(groups), Response.class);
 
@@ -961,7 +962,7 @@ public class UserResourceTest extends UserResourceTestBase {
 
         when(userServiceMock.findById(TEST_USER_ID)).thenReturn(userWithGroup);
 
-        Response response = RULE.client().target("/v1.0/" + TEST_DOMAIN_ID + "/user/"+TEST_USER_ID+"/groups/groupId")
+        Response response = RULE.client().target("/v1.0/" + TEST_DOMAIN_ID + "/user/"+TEST_USER_ID + GROUPS_PATH + "/groupId")
                 .request(MediaType.APPLICATION_JSON).header(AUTHORIZATION, "Bearer " + TEST_TOKEN).delete(Response.class);
 
         User userWithGroupsEmpty = createTestUser();
