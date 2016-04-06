@@ -12,7 +12,8 @@ import io.corbel.lib.queries.mongo.repository.GenericFindRepository;
  * @author Francisco Sanchez
  */
 public interface DeviceRepository
-        extends CrudRepository<Device, String>, PartialUpdateRepository<Device, String>, GenericFindRepository<Device, String> {
+ extends CrudRepository<Device, String>, PartialUpdateRepository<Device, String>,
+        GenericFindRepository<Device, String>, DeviceRepositoryCustom {
 
     List<Device> findByUserId(String userId);
 

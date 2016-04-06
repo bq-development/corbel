@@ -9,6 +9,7 @@ import java.util.Optional;
 public class Device extends Entity {
 
     public static final String USER_ID_FIELD = "userId";
+    public static final String LAST_CONNECTION_FIELD = "lastConnection";
 
     private String domain;
     private String userId;

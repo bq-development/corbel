@@ -1,7 +1,10 @@
 package io.corbel.iam.service;
 
 import java.time.Clock;
-import java.util.*;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import io.corbel.iam.model.Device;
@@ -65,26 +68,19 @@ public class DefaultDeviceService implements DeviceService {
         device.setId(deviceIdGenerator.generateId(device));
         device.setFirstConnection(null);
         device.setLastConnection(null);
-        boolean notify = true;
-        return upsertDevice(device, notify);
+        return upsertDevice(device);
     }
 
     @Override
     public void deviceConnect(String domain, String userId, String uid) {
-        Device device = new Device();
-        device.setId(UserDomainIdGenerator.generateDeviceId(domain, userId, uid));
-        device.setUid(uid);
-        boolean notify = false;
-        device.setLastConnection(Date.from(clock.instant()));
-        upsertDevice(device, notify);
+        String deviceId = UserDomainIdGenerator.generateDeviceId(domain, userId, uid);
+        deviceRepository.updateLastConnectionIfExist(deviceId, Date.from(clock.instant()));
     }
 
-    private Device upsertDevice(Device device, boolean notify) {
+    private Device upsertDevice(Device device) {
         boolean isPartialUpdate = deviceRepository.upsert(device.getId(), device);
         if (isPartialUpdate) {
-            if (notify) {
-                eventsService.sendDeviceUpdateEvent(device);
-            }
+            eventsService.sendDeviceUpdateEvent(device);
         } else {
             device.setFirstConnection(Date.from(clock.instant()));
             device.setLastConnection(device.getFirstConnection());
