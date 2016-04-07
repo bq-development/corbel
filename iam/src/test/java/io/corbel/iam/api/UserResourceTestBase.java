@@ -61,10 +61,9 @@ public abstract class UserResourceTestBase {
         return user;
     }
 
-    protected Set<Scope> createTestScopes(){
-        Set<Scope> scopes = Sets.newHashSet();
-        Scope scope1 = new Scope(TEST_SCOPE_ID, TEST_SCOPE_TYPE, TEST_SCOPE_AUDIENCE, TEST_SCOPES, TEST_SCOPE_RULES, TEST_SCOPE_PARAMETERS);
-        scopes.add(scope1);
+    protected Set<String> createTestScopes(){
+        Set<String> scopes = Sets.newHashSet();
+        scopes.add(TEST_SCOPE_ID);
         return scopes;
     }
 

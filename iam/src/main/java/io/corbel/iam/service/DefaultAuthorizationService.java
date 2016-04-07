@@ -2,6 +2,7 @@ package io.corbel.iam.service;
 
 import java.security.SignatureException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import net.oauth.jsontoken.JsonToken;
 import net.oauth.jsontoken.JsonTokenParser;
@@ -171,7 +172,8 @@ public class DefaultAuthorizationService implements AuthorizationService {
         if (userOptional.isPresent()) {
             User user = userOptional.get();
             Set<Scope> expandedRequestedScopes = context.getExpandedRequestedScopes();
-            storeUserToken(tokenGrant, user, context.getDeviceId(), expandedRequestedScopes);
+            Set<String> expandedRequestedScopesIds = expandedRequestedScopes.stream().map(scope -> scope.getId()).collect(Collectors.toSet());
+            storeUserToken(tokenGrant, user, context.getDeviceId(), expandedRequestedScopesIds);
             updateDeviceLastConnection(user.getDomain(), user.getId(), context.getDeviceId());
             eventsService.sendUserAuthenticationEvent(userOptional.get().getUserProfile());
         } else {
@@ -229,7 +231,7 @@ public class DefaultAuthorizationService implements AuthorizationService {
         return grantAccess(context, Optional.of(user));
     }
 
-    private void storeUserToken(TokenGrant tokenGrant, User user, String deviceId, Set<Scope> expandedRequestedScopes) {
+    private void storeUserToken(TokenGrant tokenGrant, User user, String deviceId, Set<String> expandedRequestedScopes) {
         UserToken userToken = new UserToken(
                 tokenGrant.getAccessToken(), user.getId(), deviceId, new Date(tokenGrant.getExpiresAt()), expandedRequestedScopes);
         userTokenRepository.save(userToken);

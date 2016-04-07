@@ -20,6 +20,8 @@ import javax.ws.rs.core.Response;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import io.corbel.iam.model.*;
 import io.corbel.lib.ws.gson.GsonMessageReaderWriterProvider;
 import org.glassfish.jersey.client.ClientProperties;
 import org.junit.Before;
@@ -31,9 +33,6 @@ import org.mockito.Mockito;
 import io.corbel.iam.exception.DuplicatedOauthServiceIdentityException;
 import io.corbel.iam.exception.IdentityAlreadyExistsException;
 import io.corbel.iam.exception.UserProfileConfigurationException;
-import io.corbel.iam.model.Identity;
-import io.corbel.iam.model.User;
-import io.corbel.iam.model.UserWithIdentity;
 import io.corbel.iam.repository.CreateUserException;
 import io.corbel.iam.service.DeviceService;
 import io.corbel.iam.service.DomainService;
@@ -101,6 +100,7 @@ public class UserResourceTest extends UserResourceTestBase {
     public UserResourceTest() throws Exception {
         when(authorizationInfoMock.getClientId()).thenReturn(TEST_CLIENT_ID);
         when(authorizationInfoMock.getDomainId()).thenReturn(TEST_DOMAIN_ID);
+        when(authorizationInfoMock.getToken()).thenReturn(TEST_TOKEN);
 
         HttpServletRequest requestMock = mock(HttpServletRequest.class);
         when(requestMock.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + TEST_TOKEN);
@@ -1204,6 +1204,34 @@ public class UserResourceTest extends UserResourceTestBase {
         assertThat(response.getStatus()).isEqualTo(Response.Status.TEMPORARY_REDIRECT.getStatusCode());
         assertThat(java.util.Optional.ofNullable(response.getHeaders().get("Location"))
                 .map(locations -> locations.contains(TEST_AVATAR_URI)).orElse(false)).isTrue();
+    }
+
+
+    @Test
+    public void testGetMeSession() {
+        UserToken userToken = new UserToken();
+        userToken.setDeviceId("deviceId");
+        Date date = new Date();
+        userToken.setExpireAt(date);
+        userToken.setToken(TEST_TOKEN);
+        userToken.setUserId(TEST_USER_ID);
+
+        Set<String> scopes = new HashSet<>();
+        scopes.add("id1");
+        scopes.add("id2");
+        userToken.setScopes(scopes);
+
+
+        when(userServiceMock.getSession(TEST_TOKEN)).thenReturn(userToken);
+
+        Response response = RULE.client().target("/v1.0/" + TEST_DOMAIN_ID + "/user/me/session")
+                .request(MediaType.APPLICATION_JSON_TYPE).header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(Response.class);
+
+        assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
+        UserToken userTokenResponse = response.readEntity(UserToken.class);
+        assertThat(userTokenResponse.getScopes()).isEqualTo(scopes);
+
+
     }
 
 }
