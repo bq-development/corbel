@@ -1,31 +1,30 @@
 package io.corbel.iam.service;
 
-import static org.mockito.Mockito.*;
-
-import java.security.SignatureException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-
 import com.google.common.collect.Sets;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
+import io.corbel.iam.auth.AuthorizationRequestContextFactory;
+import io.corbel.iam.exception.UnauthorizedException;
+import io.corbel.iam.model.Scope;
 import io.corbel.iam.model.UserToken;
 import io.corbel.iam.repository.UserTokenRepository;
+import io.corbel.lib.token.TokenInfo;
+import io.corbel.lib.token.reader.TokenReader;
 import net.oauth.jsontoken.JsonToken;
 import net.oauth.jsontoken.JsonTokenParser;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import io.corbel.iam.auth.AuthorizationRequestContextFactory;
-import io.corbel.iam.exception.UnauthorizedException;
-import io.corbel.iam.model.Scope;
-import io.corbel.lib.token.TokenInfo;
-import io.corbel.lib.token.reader.TokenReader;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
+import java.security.SignatureException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class) public class DefaultUpgradeTokenServiceTest {
 
@@ -74,7 +73,9 @@ import com.google.gson.JsonPrimitive;
         when(userTokenRepositoryMock.findByToken(TEST_TOKEN)).thenReturn(userToken);
 
         when(jsonTokenParser.verifyAndDeserialize(TEST_ASSERTION)).thenReturn(validJsonToken);
-        upgradeTokenService.upgradeToken(TEST_ASSERTION, tokenReader);
+
+        List<String> scopesToAdd = upgradeTokenService.getScopesFromTokenToUpgrade(TEST_ASSERTION);
+        upgradeTokenService.upgradeToken(TEST_ASSERTION, tokenReader, scopesToAdd);
 
         verify(scopeServiceMock).fillScopes(scopes, TEST_USER, TEST_CLIENT, TEST_DOMAIN);
         verify(scopeServiceMock).addAuthorizationRules(TEST_TOKEN, scopes);
@@ -90,7 +91,9 @@ import com.google.gson.JsonPrimitive;
         doThrow(new IllegalStateException("Nonexistent scope scopeId")).when(scopeServiceMock).addAuthorizationRules(anyString(), anySet());
 
         when(jsonTokenParser.verifyAndDeserialize(TEST_ASSERTION)).thenReturn(validJsonToken);
-        upgradeTokenService.upgradeToken(TEST_ASSERTION, tokenReader);
+
+        List<String> scopesToAdd = upgradeTokenService.getScopesFromTokenToUpgrade(TEST_ASSERTION);
+        upgradeTokenService.upgradeToken(TEST_ASSERTION, tokenReader, scopesToAdd);
     }
 
     @Test
@@ -105,7 +108,9 @@ import com.google.gson.JsonPrimitive;
         when(jsonTokenParser.verifyAndDeserialize(TEST_ASSERTION)).thenReturn(validJsonToken);
         when(userTokenRepositoryMock.findByToken(TEST_TOKEN)).thenReturn(userToken);
         when(scopeServiceMock.fillScopes(any(), any(), any(), any())).thenReturn(Sets.newHashSet());
-        upgradeTokenService.upgradeToken(TEST_ASSERTION, tokenReader);
+
+        List<String> scopesToAdd = upgradeTokenService.getScopesFromTokenToUpgrade(TEST_ASSERTION);
+        upgradeTokenService.upgradeToken(TEST_ASSERTION, tokenReader, scopesToAdd);
 
         verify(scopeServiceMock).fillScopes(scopes, TEST_USER, TEST_CLIENT, TEST_DOMAIN);
         verify(scopeServiceMock).addAuthorizationRules(TEST_TOKEN, scopes);

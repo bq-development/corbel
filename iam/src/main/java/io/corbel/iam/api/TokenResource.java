@@ -20,6 +20,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriInfo;
 import java.net.URLDecoder;
+import java.util.List;
 
 /**
  * @author Alexander De Leon
@@ -40,9 +41,9 @@ public class TokenResource {
 
     @GET
     public Response getTokenWithCode(@Context UriInfo uriInfo, @QueryParam("grant_type") String grantType,
-            @QueryParam("assertion") String assertion, @QueryParam("access_token") String accessToken, @QueryParam("code") String code,
-            @QueryParam("oauth_token") String token, @QueryParam("oauth_verifier") String verifier,
-            @QueryParam("redirect_uri") String redirectUri, @QueryParam("state") String state, @HeaderParam("RequestCookie") boolean cookie) {
+                                     @QueryParam("assertion") String assertion, @QueryParam("access_token") String accessToken, @QueryParam("code") String code,
+                                     @QueryParam("oauth_token") String token, @QueryParam("oauth_verifier") String verifier,
+                                     @QueryParam("redirect_uri") String redirectUri, @QueryParam("state") String state, @HeaderParam("RequestCookie") boolean cookie) {
         if (state != null) {
             try {
                 state = URLDecoder.decode(state, "UTF-8");
@@ -95,6 +96,7 @@ public class TokenResource {
     @GET
     public Response upgradeTokenGET(@Auth AuthorizationInfo authorizationInfo, @QueryParam("grant_type") String grantType,
                                     @QueryParam("assertion") String assertion) {
+
         return upgradeToken(authorizationInfo, grantType, assertion);
     }
 
@@ -143,8 +145,10 @@ public class TokenResource {
         }
         if (grantType.equals(GrantType.JWT_BEARER)) {
             try {
-                upgradeTokenService.upgradeToken(assertion, authorizationInfo.getTokenReader());
-                return Response.noContent().build();
+                List<String> scopesToAdd = upgradeTokenService.getScopesFromTokenToUpgrade(assertion);
+                upgradeTokenService.upgradeToken(assertion, authorizationInfo.getTokenReader(), scopesToAdd);
+
+                return Response.ok(scopesToAdd, MediaType.APPLICATION_JSON_TYPE).build();
             } catch (UnauthorizedException e) {
                 return IamErrorResponseFactory.getInstance().unauthorized(e.getMessage());
             }

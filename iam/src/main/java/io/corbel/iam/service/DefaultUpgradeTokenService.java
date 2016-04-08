@@ -1,21 +1,16 @@
 package io.corbel.iam.service;
 
-import java.security.SignatureException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
-
-import com.google.common.collect.Sets;
+import com.google.gson.JsonObject;
+import io.corbel.iam.exception.UnauthorizedException;
 import io.corbel.iam.model.Scope;
 import io.corbel.iam.model.UserToken;
 import io.corbel.iam.repository.UserTokenRepository;
+import io.corbel.lib.token.reader.TokenReader;
 import net.oauth.jsontoken.JsonToken;
 import net.oauth.jsontoken.JsonTokenParser;
 
-import io.corbel.iam.exception.UnauthorizedException;
-import io.corbel.lib.token.reader.TokenReader;
-import com.google.gson.JsonObject;
+import java.security.SignatureException;
+import java.util.*;
 
 public class DefaultUpgradeTokenService implements UpgradeTokenService {
 
@@ -31,27 +26,36 @@ public class DefaultUpgradeTokenService implements UpgradeTokenService {
     }
 
     @Override
-    public void upgradeToken(String assertion, TokenReader tokenReader) throws UnauthorizedException {
+    public void upgradeToken(String assertion, TokenReader tokenReader, List<String> scopesToAdd) throws UnauthorizedException {
         try {
-            JsonToken jwt = jsonTokenParser.verifyAndDeserialize(assertion);
-            JsonObject payload = jwt.getPayloadAsJsonObject();
-            String[] scopesToAdd = new String[0];
-            if (payload.has(SCOPE) && payload.get(SCOPE).isJsonPrimitive()) {
-                String scopesToAddFromToken = payload.get(SCOPE).getAsString();
-                if (!scopesToAddFromToken.isEmpty()) {
-                    scopesToAdd = scopesToAddFromToken.split(" ");
-                }
-            }
-
-            Set<Scope> scopes = getUpgradedScopes(new HashSet<>(Arrays.asList(scopesToAdd)), tokenReader);
+            Set<Scope> scopes = getUpgradedScopes(new HashSet<>(scopesToAdd), tokenReader);
             publishScopes(scopes, tokenReader);
             saveUserToken(tokenReader.getToken(), scopes);
-        } catch (IllegalStateException | SignatureException e) {
+        } catch (IllegalStateException e) {
             throw new UnauthorizedException(e.getMessage());
         }
     }
 
-    private void saveUserToken(String token, Set<Scope> scopes){
+    @Override
+    public List<String> getScopesFromTokenToUpgrade(String assertion) throws UnauthorizedException {
+        try {
+            JsonToken jwt = jsonTokenParser.verifyAndDeserialize(assertion);
+            JsonObject payload = jwt.getPayloadAsJsonObject();
+            List<String> scopesToAdd = new ArrayList<>();
+
+            if (payload.has(SCOPE) && payload.get(SCOPE).isJsonPrimitive()) {
+                String scopesToAddFromToken = payload.get(SCOPE).getAsString();
+                if (!scopesToAddFromToken.isEmpty()) {
+                    scopesToAdd = Arrays.asList(scopesToAddFromToken.split(" "));
+                }
+            }
+            return scopesToAdd;
+        } catch (SignatureException e) {
+            throw new UnauthorizedException(e.getMessage());
+        }
+    }
+
+    private void saveUserToken(String token, Set<Scope> scopes) {
         UserToken userToken = userTokenRepository.findByToken(token);
         userToken.getScopes().addAll(scopes);
         userTokenRepository.save(userToken);
@@ -61,7 +65,7 @@ public class DefaultUpgradeTokenService implements UpgradeTokenService {
         scopeService.addAuthorizationRules(tokenReader.getToken(), scopes);
     }
 
-    private Set<Scope> getUpgradedScopes(Set<String> scopesIds, TokenReader tokenReader){
+    private Set<Scope> getUpgradedScopes(Set<String> scopesIds, TokenReader tokenReader) {
         Set<Scope> scopes = scopeService.expandScopes(scopesIds);
         return scopeService.fillScopes(scopes, tokenReader.getInfo().getUserId(), tokenReader.getInfo().getClientId(),
                 tokenReader.getInfo().getDomainId());
