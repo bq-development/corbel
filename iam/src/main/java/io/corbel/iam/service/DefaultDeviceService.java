@@ -1,12 +1,5 @@
 package io.corbel.iam.service;
 
-import java.time.Clock;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
 import io.corbel.iam.model.Device;
 import io.corbel.iam.model.User;
 import io.corbel.iam.repository.DeviceRepository;
@@ -17,6 +10,13 @@ import io.corbel.lib.queries.jaxrs.QueryParameters;
 import io.corbel.lib.queries.request.Pagination;
 import io.corbel.lib.queries.request.ResourceQuery;
 import io.corbel.lib.queries.request.Sort;
+
+import java.time.Clock;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 
 /**
@@ -65,10 +65,15 @@ public class DefaultDeviceService implements DeviceService {
 
     @Override
     public Device update(Device device) {
+        return update(device, false);
+    }
+
+    @Override
+    public Device update(Device device, boolean connected) {
         device.setId(deviceIdGenerator.generateId(device));
         device.setFirstConnection(null);
         device.setLastConnection(null);
-        return upsertDevice(device);
+        return upsertDevice(device, connected);
     }
 
     @Override
@@ -77,16 +82,17 @@ public class DefaultDeviceService implements DeviceService {
         deviceRepository.updateLastConnectionIfExist(deviceId, Date.from(clock.instant()));
     }
 
-    private Device upsertDevice(Device device) {
+    private Device upsertDevice(Device device, boolean connected) {
         boolean isPartialUpdate = deviceRepository.upsert(device.getId(), device);
         if (isPartialUpdate) {
             eventsService.sendDeviceUpdateEvent(device);
         } else {
             device.setFirstConnection(Date.from(clock.instant()));
-            device.setLastConnection(device.getFirstConnection());
-            deviceRepository.upsert(device.getId(), new Device()
-                    .setFirstConnection(device.getFirstConnection())
-                    .setLastConnection(device.getLastConnection()));
+            if (connected) {
+                device.setLastConnection(device.getFirstConnection());
+            }
+            deviceRepository.upsert(device.getId(),
+                    new Device().setFirstConnection(device.getFirstConnection()).setLastConnection(device.getLastConnection()));
             eventsService.sendDeviceCreateEvent(device);
         }
         return device;
@@ -96,7 +102,7 @@ public class DefaultDeviceService implements DeviceService {
     public void deleteByUidAndUserId(String deviceUid, String userId, String domainId) {
         String deviceId = UserDomainIdGenerator.generateDeviceId(domainId, userId, deviceUid);
         long result = deviceRepository.deleteById(deviceId);
-        if ( result > 0 ) {
+        if (result > 0) {
             eventsService.sendDeviceDeleteEvent(deviceUid, userId, domainId);
         }
     }

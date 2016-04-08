@@ -1,10 +1,16 @@
 package io.corbel.iam.api;
 
-import com.google.gson.JsonElement;
 import io.corbel.iam.exception.DuplicatedOauthServiceIdentityException;
 import io.corbel.iam.exception.IdentityAlreadyExistsException;
 import io.corbel.iam.exception.UserProfileConfigurationException;
-import io.corbel.iam.model.*;
+import io.corbel.iam.model.Device;
+import io.corbel.iam.model.DeviceResponse;
+import io.corbel.iam.model.Domain;
+import io.corbel.iam.model.Entity;
+import io.corbel.iam.model.Identity;
+import io.corbel.iam.model.TraceableEntity;
+import io.corbel.iam.model.User;
+import io.corbel.iam.model.UserWithIdentity;
 import io.corbel.iam.repository.CreateUserException;
 import io.corbel.iam.service.DeviceService;
 import io.corbel.iam.service.DomainService;
@@ -13,24 +19,52 @@ import io.corbel.iam.service.UserService;
 import io.corbel.iam.utils.Message;
 import io.corbel.lib.queries.builder.ResourceQueryBuilder;
 import io.corbel.lib.queries.jaxrs.QueryParameters;
-import io.corbel.lib.queries.request.*;
+import io.corbel.lib.queries.request.Aggregation;
+import io.corbel.lib.queries.request.AggregationOperator;
+import io.corbel.lib.queries.request.AggregationResultsFactory;
+import io.corbel.lib.queries.request.Pagination;
+import io.corbel.lib.queries.request.ResourceQuery;
+import io.corbel.lib.queries.request.Sort;
 import io.corbel.lib.ws.annotation.Rest;
 import io.corbel.lib.ws.auth.AuthorizationInfo;
 import io.corbel.lib.ws.model.Error;
 import io.dropwizard.auth.Auth;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.time.Clock;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import javax.validation.Valid;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.UriInfo;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DuplicateKeyException;
 
-import javax.validation.Valid;
-import javax.ws.rs.*;
-import javax.ws.rs.core.*;
-import javax.ws.rs.core.Response.Status;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.time.Clock;
-import java.util.*;
-import java.util.stream.Collectors;
+import com.google.gson.JsonElement;
 
 /**
  * @author Alexander De Leon
@@ -84,23 +118,23 @@ import java.util.stream.Collectors;
             setTracebleEntity(user, authorizationInfo);
             User createdUser;
             // The new user can only be on the domainId of the client making the request
-            try {
-                createdUser = userService.create(ensureNoId(user));
-            } catch (CreateUserException duplicatedUser) {
-                return IamErrorResponseFactory.getInstance().entityExists(Message.USER_EXISTS, duplicatedUser.getMessage());
-            }
-            Identity identity = user.getIdentity();
-            if (identity != null) {
                 try {
-                    addIdentity(identity);
-                } catch (Exception e) {
-                    // Rollback user creation and handle error
-                    userService.delete(user);
-                    return handleIdentityError(e, identity);
+                    createdUser = userService.create(ensureNoId(user));
+                } catch (CreateUserException duplicatedUser) {
+                    return IamErrorResponseFactory.getInstance().entityExists(Message.USER_EXISTS, duplicatedUser.getMessage());
                 }
-            }
-            return Response.created(uriInfo.getAbsolutePathBuilder().path(createdUser.getId()).build()).build();
-        }).orElseGet(() -> IamErrorResponseFactory.getInstance().invalidEntity(Message.NOT_FOUND.getMessage()));
+                Identity identity = user.getIdentity();
+                if (identity != null) {
+                    try {
+                        addIdentity(identity);
+                    } catch (Exception e) {
+                        // Rollback user creation and handle error
+                        userService.delete(user);
+                        return handleIdentityError(e, identity);
+                    }
+                }
+                return Response.created(uriInfo.getAbsolutePathBuilder().path(createdUser.getId()).build()).build();
+            }).orElseGet(() -> IamErrorResponseFactory.getInstance().invalidEntity(Message.NOT_FOUND.getMessage()));
     }
 
     @PUT
@@ -141,8 +175,7 @@ import java.util.stream.Collectors;
 
     @GET
     @Path("/{id}")
-    public Response getUser(@PathParam("domain") String domainId, @PathParam("id") String userId,
-            @Auth AuthorizationInfo authorizationInfo) {
+    public Response getUser(@PathParam("domain") String domainId, @PathParam("id") String userId, @Auth AuthorizationInfo authorizationInfo) {
         User user = getUserResolvingMeAndUserDomainVerifying(userId, authorizationInfo.getUserId(), domainId);
         return Response.ok().type(MediaType.APPLICATION_JSON).entity(user.getUserProfile()).build();
     }
@@ -269,8 +302,8 @@ import java.util.stream.Collectors;
     public Response getDevices(@Rest QueryParameters queryParameters, @PathParam("userId") String userId,
             @PathParam("domain") String domainId, @Auth AuthorizationInfo authorizationInfo) {
         User user = getUserResolvingMeAndUserDomainVerifying(userId, authorizationInfo.getUserId(), domainId);
-        List<Device> userDevices = Optional.ofNullable(deviceService.getByUserId(user.getId(), queryParameters))
-                .orElse(Collections.emptyList());
+        List<Device> userDevices = Optional.ofNullable(deviceService.getByUserId(user.getId(), queryParameters)).orElse(
+                Collections.emptyList());
         return Response.ok().type(MediaType.APPLICATION_JSON)
                 .entity(userDevices.stream().map(DeviceResponse::new).collect(Collectors.toList())).build();
     }
@@ -300,7 +333,8 @@ import java.util.stream.Collectors;
         deviceData.setUid(deviceId);
         deviceData.setUserId(user.getId());
         deviceData.setDomain(domainId);
-        Device storeDevice = deviceService.update(deviceData);
+        boolean connection = authorizationInfo.getDeviceId() != null && authorizationInfo.getDeviceId().equals(deviceId);
+        Device storeDevice = deviceService.update(deviceData, connection);
         return Response.created(uriInfo.getAbsolutePathBuilder().path(storeDevice.getUid()).build()).build();
     }
 
@@ -357,14 +391,15 @@ import java.util.stream.Collectors;
 
         ResourceQuery queryFinal = query;
 
-        List<User> profiles = optionalDomain.map(domain -> {
-            try {
-                return userService.findUserProfilesByDomain(domain, queryFinal, queryParameters.getPagination(),
-                        queryParameters.getSort().orElse(null));
-            } catch (UserProfileConfigurationException e) {
-                return new LinkedList<User>();
-            }
-        }).orElseGet(LinkedList::new);
+        List<User> profiles = optionalDomain.map(
+                domain -> {
+                    try {
+                        return userService.findUserProfilesByDomain(domain, queryFinal, queryParameters.getPagination(), queryParameters
+                                .getSort().orElse(null));
+                    } catch (UserProfileConfigurationException e) {
+                        return new LinkedList<User>();
+                    }
+                }).orElseGet(LinkedList::new);
         return Response.ok(profiles).type(MediaType.APPLICATION_JSON).build();
     }
 
@@ -384,18 +419,18 @@ import java.util.stream.Collectors;
 
     private Response getUsersAggregation(String domainId, ResourceQuery query, Aggregation aggregation) {
         if (!AggregationOperator.$COUNT.equals(aggregation.getOperator())) {
-            return IamErrorResponseFactory.getInstance()
-                    .badRequest(new Error("bad_request", "Aggregator" + aggregation.getOperator() + "not supported"));
+            return IamErrorResponseFactory.getInstance().badRequest(
+                    new Error("bad_request", "Aggregator" + aggregation.getOperator() + "not supported"));
         }
         JsonElement result = aggregationResultsFactory.countResult(userService.countUsersByDomain(domainId, query));
         return Response.ok().type(MediaType.APPLICATION_JSON).entity(result).build();
     }
 
-    private Identity addIdentity(Identity identity)
-            throws IllegalOauthServiceException, IdentityAlreadyExistsException, DuplicatedOauthServiceIdentityException {
+    private Identity addIdentity(Identity identity) throws IllegalOauthServiceException, IdentityAlreadyExistsException,
+            DuplicatedOauthServiceIdentityException {
 
-        String domainId = Optional.ofNullable(identity.getDomain())
-                .orElseThrow(() -> new IllegalArgumentException("Identity \"" + identity.getId() + "\" has no domain."));
+        String domainId = Optional.ofNullable(identity.getDomain()).orElseThrow(
+                () -> new IllegalArgumentException("Identity \"" + identity.getId() + "\" has no domain."));
 
         Optional<Domain> optDomain = domainService.getDomain(domainId);
 
@@ -434,8 +469,8 @@ import java.util.stream.Collectors;
     }
 
     private User getUserResolvingMeAndUserDomainVerifying(String userId, String tokenUserId, String domainId) {
-        User user = resolveMeIdAliases(userId, tokenUserId)
-                .orElseThrow(() -> new WebApplicationException(IamErrorResponseFactory.getInstance().notFound()));
+        User user = resolveMeIdAliases(userId, tokenUserId).orElseThrow(
+                () -> new WebApplicationException(IamErrorResponseFactory.getInstance().notFound()));
         checkingUserDomain(user, domainId);
         return user;
     }
