@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface UpgradeTokenService {
 
-    public List<String> getScopesFromTokenToUpgrade(String assertion) throws UnauthorizedException;
+    List<String> getScopesFromTokenToUpgrade(String assertion) throws UnauthorizedException;
 
-    public void upgradeToken(String assertion, TokenReader tokenReader, List<String> scopesToAdd) throws UnauthorizedException;
+    void upgradeToken(String assertion, TokenReader tokenReader, List<String> scopesToAdd) throws UnauthorizedException;
 }

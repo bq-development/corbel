@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.Sets;
+import io.corbel.iam.model.Entity;
 import io.corbel.iam.model.Scope;
 import io.corbel.iam.model.UserToken;
 import io.corbel.iam.repository.UserTokenRepository;
@@ -49,15 +50,15 @@ public class DefaultUpgradeTokenService implements UpgradeTokenService {
         try {
             JsonToken jwt = jsonTokenParser.verifyAndDeserialize(assertion);
             JsonObject payload = jwt.getPayloadAsJsonObject();
-            List<String> scopesToAdd = new ArrayList<>();
+            List<String> scopes = new ArrayList<>();
 
             if (payload.has(SCOPE) && payload.get(SCOPE).isJsonPrimitive()) {
                 String scopesToAddFromToken = payload.get(SCOPE).getAsString();
                 if (!scopesToAddFromToken.isEmpty()) {
-                    scopesToAdd = Arrays.asList(scopesToAddFromToken.split(" "));
+                    scopes = Arrays.asList(scopesToAddFromToken.split(" "));
                 }
             }
-            return scopesToAdd;
+            return scopes;
         } catch (SignatureException e) {
             throw new UnauthorizedException(e.getMessage());
         }
@@ -65,8 +66,7 @@ public class DefaultUpgradeTokenService implements UpgradeTokenService {
 
     private void saveUserToken(String token, Set<Scope> scopes) {
         UserToken userToken = userTokenRepository.findByToken(token);
-
-        Set<String> scopeIds = scopes.stream().map(scope -> scope.getId()).collect(Collectors.toSet());
+        Set<String> scopeIds = scopes.stream().map(Entity::getId).collect(Collectors.toSet());
         userToken.getScopes().addAll(scopeIds);
         userTokenRepository.save(userToken);
     }
