@@ -3,9 +3,7 @@ package io.corbel.iam.service;
 import com.google.gson.JsonObject;
 import io.corbel.iam.exception.UnauthorizedException;
 import java.security.SignatureException;
-import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -17,9 +15,6 @@ import io.corbel.iam.repository.UserTokenRepository;
 import io.corbel.lib.token.reader.TokenReader;
 import net.oauth.jsontoken.JsonToken;
 import net.oauth.jsontoken.JsonTokenParser;
-
-import java.security.SignatureException;
-import java.util.*;
 
 public class DefaultUpgradeTokenService implements UpgradeTokenService {
 
@@ -35,27 +30,26 @@ public class DefaultUpgradeTokenService implements UpgradeTokenService {
     }
 
     @Override
-    public void upgradeToken(String assertion, TokenReader tokenReader, List<String> scopesToAdd) throws UnauthorizedException {
+    public void upgradeToken(String assertion, TokenReader tokenReader, Set<String> scopes) throws UnauthorizedException {
         try {
-            Set<Scope> scopes = getUpgradedScopes(new HashSet<>(scopesToAdd), tokenReader);
-            publishScopes(scopes, tokenReader);
-            saveUserToken(tokenReader.getToken(), scopes);
+            Set<Scope> upgradedScopes = getUpgradedScopes(new HashSet<>(scopes), tokenReader);
+            publishScopes(upgradedScopes, tokenReader);
+            saveUserToken(tokenReader.getToken(), upgradedScopes);
         } catch (IllegalStateException e) {
             throw new UnauthorizedException(e.getMessage());
         }
     }
 
     @Override
-    public List<String> getScopesFromTokenToUpgrade(String assertion) throws UnauthorizedException {
+    public Set<String> getScopesFromTokenToUpgrade(String assertion) throws UnauthorizedException {
         try {
             JsonToken jwt = jsonTokenParser.verifyAndDeserialize(assertion);
             JsonObject payload = jwt.getPayloadAsJsonObject();
-            List<String> scopes = new ArrayList<>();
-
+            Set<String> scopes = new HashSet<>();
             if (payload.has(SCOPE) && payload.get(SCOPE).isJsonPrimitive()) {
                 String scopesToAddFromToken = payload.get(SCOPE).getAsString();
                 if (!scopesToAddFromToken.isEmpty()) {
-                    scopes = Arrays.asList(scopesToAddFromToken.split(" "));
+                    scopes = Sets.newHashSet(scopesToAddFromToken.split(" "));
                 }
             }
             return scopes;

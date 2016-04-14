@@ -1,13 +1,11 @@
 package io.corbel.iam.api;
 
-import com.fasterxml.jackson.databind.util.JSONPObject;
 import com.google.common.base.Optional;
-import com.google.gson.JsonObject;
 import io.corbel.iam.auth.OauthParams;
 import io.corbel.iam.exception.*;
 import io.corbel.iam.model.GrantType;
 import io.corbel.iam.model.TokenGrant;
-import io.corbel.iam.model.UpgradeTokenGrant;
+import io.corbel.iam.model.TokenUpgradeGrant;
 import io.corbel.iam.service.AuthorizationService;
 import io.corbel.iam.service.UpgradeTokenService;
 import io.corbel.iam.utils.TokenCookieFactory;
@@ -24,6 +22,7 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriInfo;
 import java.net.URLDecoder;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author Alexander De Leon
@@ -148,9 +147,9 @@ public class TokenResource {
         }
         if (grantType.equals(GrantType.JWT_BEARER)) {
             try {
-                List<String> scopes = upgradeTokenService.getScopesFromTokenToUpgrade(assertion);
+                Set<String> scopes = upgradeTokenService.getScopesFromTokenToUpgrade(assertion);
                 upgradeTokenService.upgradeToken(assertion, authorizationInfo.getTokenReader(), scopes);
-                return Response.ok(new UpgradeTokenGrant(scopes)).type(MediaType.APPLICATION_JSON_TYPE).build();
+                return Response.ok(new TokenUpgradeGrant(scopes)).type(MediaType.APPLICATION_JSON_TYPE).build();
             } catch (UnauthorizedException e) {
                 return IamErrorResponseFactory.getInstance().unauthorized(e.getMessage());
             }

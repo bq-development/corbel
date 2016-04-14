@@ -43,6 +43,7 @@ public class JsonTokenAuthorizationRequestContext implements AuthorizationReques
     private BasicParams basicParams;
     private Boolean hasPrincipal;
     private String principalId;
+    private Set<String> tokenScopes;
     private Set<Scope> expandedRequestedScopes;
 
     public JsonTokenAuthorizationRequestContext(ClientRepository clientRepository, DomainRepository domainRepository,
@@ -151,6 +152,16 @@ public class JsonTokenAuthorizationRequestContext implements AuthorizationReques
     @Override
     public BasicParams getBasicParams() {
         return (basicParams == null) ? (basicParams = BasicParams.createFromJWT(jsonToken)) : basicParams;
+    }
+
+    @Override
+    public Set<String> getTokenScopes() {
+        return tokenScopes;
+    }
+
+    @Override
+    public void setTokenScopes(Set<String> tokenScopes) {
+        this.tokenScopes = tokenScopes;
     }
 
     @Override

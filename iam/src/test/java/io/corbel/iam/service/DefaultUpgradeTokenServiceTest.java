@@ -74,7 +74,7 @@ import static org.mockito.Mockito.*;
 
         when(jsonTokenParser.verifyAndDeserialize(TEST_ASSERTION)).thenReturn(validJsonToken);
 
-        List<String> scopesToAdd = upgradeTokenService.getScopesFromTokenToUpgrade(TEST_ASSERTION);
+        Set<String> scopesToAdd = upgradeTokenService.getScopesFromTokenToUpgrade(TEST_ASSERTION);
         upgradeTokenService.upgradeToken(TEST_ASSERTION, tokenReader, scopesToAdd);
 
         verify(scopeServiceMock).fillScopes(scopes, TEST_USER, TEST_CLIENT, TEST_DOMAIN);
@@ -92,8 +92,8 @@ import static org.mockito.Mockito.*;
 
         when(jsonTokenParser.verifyAndDeserialize(TEST_ASSERTION)).thenReturn(validJsonToken);
 
-        List<String> scopesToAdd = upgradeTokenService.getScopesFromTokenToUpgrade(TEST_ASSERTION);
-        upgradeTokenService.upgradeToken(TEST_ASSERTION, tokenReader, scopesToAdd);
+        Set<String> scopes = upgradeTokenService.getScopesFromTokenToUpgrade(TEST_ASSERTION);
+        upgradeTokenService.upgradeToken(TEST_ASSERTION, tokenReader, scopes);
     }
 
     @Test
@@ -109,7 +109,7 @@ import static org.mockito.Mockito.*;
         when(userTokenRepositoryMock.findByToken(TEST_TOKEN)).thenReturn(userToken);
         when(scopeServiceMock.fillScopes(any(), any(), any(), any())).thenReturn(Sets.newHashSet());
 
-        List<String> scopesToAdd = upgradeTokenService.getScopesFromTokenToUpgrade(TEST_ASSERTION);
+        Set<String> scopesToAdd = upgradeTokenService.getScopesFromTokenToUpgrade(TEST_ASSERTION);
         upgradeTokenService.upgradeToken(TEST_ASSERTION, tokenReader, scopesToAdd);
 
         verify(scopeServiceMock).fillScopes(scopes, TEST_USER, TEST_CLIENT, TEST_DOMAIN);

@@ -3,21 +3,21 @@ package io.corbel.iam.model;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.List;
+import java.util.Set;
 
 /**
  * @author Alberto J. Rubio
  */
-public class UpgradeTokenGrant {
+public class TokenUpgradeGrant {
 
-    private final List<String> scopes;
+    private final Set<String> scopes;
 
     @JsonCreator
-    public UpgradeTokenGrant(@JsonProperty("scopes") List<String> scopes) {
+    public TokenUpgradeGrant(@JsonProperty("scopes") Set<String> scopes) {
         this.scopes = scopes;
     }
 
-    public List<String> getScopes() {
+    public Set<String> getScopes() {
         return scopes;
     }
 
@@ -26,7 +26,7 @@ public class UpgradeTokenGrant {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        UpgradeTokenGrant that = (UpgradeTokenGrant) o;
+        TokenUpgradeGrant that = (TokenUpgradeGrant) o;
 
         return scopes != null ? scopes.equals(that.scopes) : that.scopes == null;
 
