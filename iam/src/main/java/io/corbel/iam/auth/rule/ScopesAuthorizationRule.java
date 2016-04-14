@@ -28,30 +28,32 @@ public class ScopesAuthorizationRule implements AuthorizationRule {
 
     @Override
     public void process(AuthorizationRequestContext context) throws UnauthorizedException {
-        Set<Scope> allowedScopes = getAllowedScopes(context);
-        Set<Scope> requestedScopes;
+        Set<String> domainScopes = context.getRequestedDomain().getScopes();
+        Set<String> requestedScopes = context.isCrossDomain() ? domainScopes : getRequestedScopes(context);
+        Set<Scope> allowedScopes = getAllowedScopes(domainScopes, requestedScopes);
         if (context.getRequestedScopes().isEmpty()) {
-            requestedScopes = allowedScopes;
+            context.setExpandedRequestedScopes(allowedScopes);
+            context.setTokenScopes(requestedScopes);
         } else {
-            requestedScopes = scopeService.expandScopes(context.getRequestedScopes());
-            checkRequestedScopes(requestedScopes, allowedScopes);
+            Set<Scope> tokenRequestedScopes = scopeService.expandScopes(context.getRequestedScopes());
+            checkRequestedScopes(tokenRequestedScopes, allowedScopes);
+            context.setExpandedRequestedScopes(tokenRequestedScopes);
+            context.setTokenScopes(context.getRequestedScopes());
         }
-        context.setExpandedRequestedScopes(requestedScopes);
     }
 
-    private Set<Scope> getAllowedScopes(AuthorizationRequestContext context) {
-        Set<Scope> domainScopes = scopeService.expandScopes(context.getRequestedDomain().getScopes());
-        if (context.isCrossDomain()) {
-            return domainScopes;
-        } else {
-            Set<Scope> requestedScopes = scopeService.expandScopes(context.getIssuerClient().getScopes());
-            if (context.hasPrincipal()) {
-                Set<Scope> userScopes = scopeService.expandScopes(context.getPrincipal().getScopes());
-                Set<Scope> groupScopes = scopeService.expandScopes(groupService.getGroupScopes(context.getPrincipal().getGroups()));
-                requestedScopes = Sets.union(requestedScopes, Sets.union(userScopes, groupScopes));
-            }
-            return Sets.intersection(requestedScopes, domainScopes);
+    private Set<String> getRequestedScopes(AuthorizationRequestContext context) {
+        Set<String> requestedScopes = context.getIssuerClient().getScopes();
+        if (context.hasPrincipal()) {
+            Set<String> userScopes = context.getPrincipal().getScopes();
+            Set<String> groupScopes = groupService.getGroupScopes(context.getPrincipal().getGroups());
+            requestedScopes = Sets.union(requestedScopes, Sets.union(userScopes, groupScopes));
         }
+        return requestedScopes;
+    }
+
+    private Set<Scope> getAllowedScopes(Set<String> domainScopes, Set<String> requestedScopes) {
+        return Sets.intersection(scopeService.expandScopes(requestedScopes), scopeService.expandScopes(domainScopes));
     }
 
     private void checkRequestedScopes(Set<Scope> requestedExpandScopes, Set<Scope> allowedScopes) throws UnauthorizedException {

@@ -167,12 +167,11 @@ public class DefaultAuthorizationService implements AuthorizationService {
         }
         String accessToken = getAccessToken(context);
         TokenGrant tokenGrant = new TokenGrant(accessToken, context.getAuthorizationExpiration(), refreshTokenService.createRefreshToken(
-                context, accessToken));
-
+                context, accessToken), context.getTokenScopes());
         if (userOptional.isPresent()) {
             User user = userOptional.get();
             Set<Scope> expandedRequestedScopes = context.getExpandedRequestedScopes();
-            Set<String> expandedRequestedScopesIds = expandedRequestedScopes.stream().map(scope -> scope.getId()).collect(Collectors.toSet());
+            Set<String> expandedRequestedScopesIds = expandedRequestedScopes.stream().map(Entity::getId).collect(Collectors.toSet());
             storeUserToken(tokenGrant, user, context.getDeviceId(), expandedRequestedScopesIds);
             updateDeviceLastConnection(user.getDomain(), user.getId(), context.getDeviceId());
             eventsService.sendUserAuthenticationEvent(userOptional.get().getUserProfile());
@@ -216,7 +215,7 @@ public class DefaultAuthorizationService implements AuthorizationService {
     private String getAccessToken(AuthorizationRequestContext context) {
         Builder tokenBuilder = TokenInfo.newBuilder().setType(TokenType.TOKEN).setClientId(context.getIssuerClient().getId())
                 .setState(Long.toString(context.getAuthorizationExpiration())).setDomainId(context.getRequestedDomain().getId());
-        Optional.ofNullable(context.getDeviceId()).ifPresent(deviceId -> tokenBuilder.setDeviceId(deviceId));
+        Optional.ofNullable(context.getDeviceId()).ifPresent(tokenBuilder::setDeviceId);
         TokenInfo tokenInfo = context.hasPrincipal() ? tokenBuilder.setUserId(context.getPrincipal().getId())
                 .setGroups(context.getPrincipal().getGroups()).build() : tokenBuilder.build();
         return tokenFactory.createToken(tokenInfo, context.getAuthorizationExpiration()).getAccessToken();

@@ -1,6 +1,7 @@
 package io.corbel.iam.api;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.Sets;
 import io.corbel.iam.exception.*;
 import io.corbel.iam.model.GrantType;
 import io.corbel.iam.model.TokenGrant;
@@ -25,7 +26,9 @@ import javax.ws.rs.core.*;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.security.SignatureException;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -53,6 +56,8 @@ public class TokenResourceTest {
     private static final String REFRESH_TOKEN = "refreshToken";
     private static final String AUTHORIZATION = "Authorization";
     private static final String TEST_USER_ID = "testUserId";
+    private static final String SCOPE = "scope:test";
+    private static final Set<String> SCOPES = Sets.newHashSet(SCOPE);
 
     private static final AuthorizationService authorizationServiceMock = mock(AuthorizationService.class);
     private static final UpgradeTokenService upgradeTokenServiceMock = mock(UpgradeTokenService.class);
@@ -99,7 +104,7 @@ public class TokenResourceTest {
     @Test
     public void testPostReturnTokenOk() throws SignatureException, UnauthorizedException, MissingOAuthParamsException,
             OauthServerConnectionException, MissingBasicParamsException {
-        TokenGrant testTokenGrant = new TokenGrant(TEST_TOKEN, 1, REFRESH_TOKEN);
+        TokenGrant testTokenGrant = new TokenGrant(TEST_TOKEN, 1, REFRESH_TOKEN, SCOPES);
         when(authorizationServiceMock.authorize(TEST_ASSERTION)).thenReturn(testTokenGrant);
 
         MultivaluedMap<String, String> formData = new MultivaluedHashMap();
@@ -173,7 +178,7 @@ public class TokenResourceTest {
 
     @Test
     public void testGetIsAuthenticated() throws UnauthorizedException, MissingOAuthParamsException, OauthServerConnectionException {
-        TokenGrant testTokenGrant = new TokenGrant(TEST_TOKEN, 1, REFRESH_TOKEN);
+        TokenGrant testTokenGrant = new TokenGrant(TEST_TOKEN, 1, REFRESH_TOKEN, SCOPES);
         when(authorizationServiceMock.authorize(Mockito.eq(TEST_ASSERTION), Mockito.any())).thenReturn(testTokenGrant);
 
         Response response = RULE.client().target(OAUTH_TOKEN_ENDPOINT).queryParam(GRANT_TYPE, GrantType.JWT_BEARER)
@@ -184,7 +189,7 @@ public class TokenResourceTest {
 
     @Test
     public void testGetInvalidGrantType() throws UnauthorizedException, MissingOAuthParamsException, OauthServerConnectionException {
-        TokenGrant testTokenGrant = new TokenGrant(TEST_TOKEN, 1, REFRESH_TOKEN);
+        TokenGrant testTokenGrant = new TokenGrant(TEST_TOKEN, 1, REFRESH_TOKEN, SCOPES);
         when(authorizationServiceMock.authorize(Mockito.eq(TEST_ASSERTION), Mockito.any())).thenReturn(testTokenGrant);
 
         Response response = RULE.client().target(OAUTH_TOKEN_ENDPOINT).queryParam(GRANT_TYPE, INVALID_GRANT_TYPE)
@@ -195,7 +200,7 @@ public class TokenResourceTest {
 
     @Test
     public void testGetMissingGrantType() throws UnauthorizedException, MissingOAuthParamsException, OauthServerConnectionException {
-        TokenGrant testTokenGrant = new TokenGrant(TEST_TOKEN, 1, REFRESH_TOKEN);
+        TokenGrant testTokenGrant = new TokenGrant(TEST_TOKEN, 1, REFRESH_TOKEN, SCOPES);
         when(authorizationServiceMock.authorize(Mockito.eq(TEST_ASSERTION), Mockito.any())).thenReturn(testTokenGrant);
 
         Response response = RULE.client().target(OAUTH_TOKEN_ENDPOINT).queryParam(ASSERTION, TEST_ASSERTION)
@@ -206,7 +211,7 @@ public class TokenResourceTest {
 
     @Test
     public void testGetMissingAssertion() throws UnauthorizedException, MissingOAuthParamsException, OauthServerConnectionException {
-        TokenGrant testTokenGrant = new TokenGrant(TEST_TOKEN, 1, REFRESH_TOKEN);
+        TokenGrant testTokenGrant = new TokenGrant(TEST_TOKEN, 1, REFRESH_TOKEN, SCOPES);
         when(authorizationServiceMock.authorize(Mockito.eq(TEST_ASSERTION), Mockito.any())).thenReturn(testTokenGrant);
 
         Response response = RULE.client().target(OAUTH_TOKEN_ENDPOINT).queryParam(GRANT_TYPE, GrantType.JWT_BEARER)
@@ -218,7 +223,7 @@ public class TokenResourceTest {
     @Test
     public void testGetState() throws UnauthorizedException, MissingOAuthParamsException, UnsupportedEncodingException,
             OauthServerConnectionException {
-        TokenGrant testTokenGrant = new TokenGrant(TEST_TOKEN, 1, REFRESH_TOKEN);
+        TokenGrant testTokenGrant = new TokenGrant(TEST_TOKEN, 1, REFRESH_TOKEN, SCOPES);
         when(authorizationServiceMock.authorize(Mockito.eq(TEST_ASSERTION), Mockito.any())).thenReturn(testTokenGrant);
 
         Response response = RULE
@@ -241,8 +246,8 @@ public class TokenResourceTest {
 
         assertThat(response.getStatus()).isEqualTo(200);
 
-        List<String> scopesToAdd = upgradeTokenServiceMock.getScopesFromTokenToUpgrade(ASSERTION);
-        verify(upgradeTokenServiceMock).upgradeToken(TEST_ASSERTION, tokenReader, scopesToAdd);
+        Set<String> scopes = upgradeTokenServiceMock.getScopesFromTokenToUpgrade(ASSERTION);
+        verify(upgradeTokenServiceMock).upgradeToken(TEST_ASSERTION, tokenReader, scopes);
     }
 
     @Test
@@ -254,8 +259,8 @@ public class TokenResourceTest {
 
         assertThat(response.getStatus()).isEqualTo(200);
 
-        List<String> scopesToAdd = upgradeTokenServiceMock.getScopesFromTokenToUpgrade(ASSERTION);
-        verify(upgradeTokenServiceMock).upgradeToken(TEST_ASSERTION, tokenReader, scopesToAdd);
+        Set<String> scopes = upgradeTokenServiceMock.getScopesFromTokenToUpgrade(ASSERTION);
+        verify(upgradeTokenServiceMock).upgradeToken(TEST_ASSERTION, tokenReader, scopes);
     }
 
     @Test
@@ -292,7 +297,7 @@ public class TokenResourceTest {
     @Test
     public void testPostWithCookieReturnTokenOk() throws SignatureException, UnauthorizedException, MissingOAuthParamsException,
             OauthServerConnectionException, MissingBasicParamsException {
-        TokenGrant testTokenGrant = new TokenGrant(TEST_TOKEN, 1, REFRESH_TOKEN);
+        TokenGrant testTokenGrant = new TokenGrant(TEST_TOKEN, 1, REFRESH_TOKEN, SCOPES);
         when(authorizationServiceMock.authorize(TEST_ASSERTION)).thenReturn(testTokenGrant);
 
         MultivaluedMap<String, String> formData = new MultivaluedHashMap();
@@ -308,7 +313,7 @@ public class TokenResourceTest {
     @Test
     public void testGetWithCookieIsAuthenticated() throws UnauthorizedException, MissingOAuthParamsException,
             OauthServerConnectionException {
-        TokenGrant testTokenGrant = new TokenGrant(TEST_TOKEN, 1, REFRESH_TOKEN);
+        TokenGrant testTokenGrant = new TokenGrant(TEST_TOKEN, 1, REFRESH_TOKEN, SCOPES);
         when(authorizationServiceMock.authorize(Mockito.eq(TEST_ASSERTION), Mockito.any())).thenReturn(testTokenGrant);
 
         Response response = RULE.client().target(OAUTH_TOKEN_ENDPOINT).queryParam(GRANT_TYPE, GrantType.JWT_BEARER)
@@ -341,6 +346,7 @@ public class TokenResourceTest {
         assertThat(grant.getAccessToken()).isEqualTo(expectedToken);
         assertThat(grant.getRefreshToken()).isEqualTo(expectedRefreshToken);
         assertThat(grant.getExpiresAt()).isEqualTo(1);
+        assertThat(grant.getScopes()).containsExactly(SCOPE);
     }
 
 }

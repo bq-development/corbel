@@ -57,6 +57,10 @@ public interface AuthorizationRequestContext {
 
     BasicParams getBasicParams();
 
+    Set<String> getTokenScopes();
+
+    void setTokenScopes(Set<String> tokenScopes);
+
     Set<Scope> getExpandedRequestedScopes();
 
     void setExpandedRequestedScopes(Set<Scope> expandedRequestedScopes);
