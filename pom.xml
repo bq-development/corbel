@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.corbel</groupId>
   <artifactId>corbel</artifactId>
-  <version>1.30.0</version>
+  <version>1.31.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>corbel</name>
   <description>Corbel Platform</description>
@@ -22,7 +22,7 @@
     <connection>scm:git:ssh://bq-devtools@git.dev.bqsoftware.net:29418/corbel</connection>
     <developerConnection>scm:git:ssh://bq-devtools@git.dev.bqsoftware.net:29418/corbel</developerConnection>
     <url>https://github.com/bq/corbel</url>
-    <tag>corbel-1.30.0</tag>
+    <tag>HEAD</tag>
   </scm>
   <ciManagement>
     <system>Travis CI</system>
