@@ -61,7 +61,10 @@ public class DefaultSenderNotificationsService implements SenderNotificationsSer
 
         Map<String, String> properties = new HashMap<>();
         properties.putAll(propertiesByDomain);
-        properties.putAll(customProperties);
+
+        if(customProperties != null) {
+            properties.putAll(customProperties);
+        }
 
         return  properties;
     }
