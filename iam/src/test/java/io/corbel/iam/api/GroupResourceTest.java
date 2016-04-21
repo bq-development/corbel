@@ -73,6 +73,7 @@ public class GroupResourceTest {
         reset(authorizationInfoMock, authenticatorMock, cookieOAuthFactory, groupService);
 
         when(cookieOAuthFactory.provide()).thenReturn(authorizationInfoMock);
+        when(cookieOAuthFactory.clone(false)).thenReturn(cookieOAuthFactory);
         when(authenticatorMock.authenticate(TOKEN)).thenReturn(com.google.common.base.Optional.of(authorizationInfoMock));
         when(authorizationInfoMock.getDomainId()).thenReturn(DOMAIN);
 
