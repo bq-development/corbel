@@ -3,6 +3,8 @@ package io.corbel.iam.service;
 import java.text.MessageFormat;
 import java.util.Optional;
 
+import org.apache.commons.lang3.StringUtils;
+
 import io.corbel.iam.auth.AuthorizationRequestContext;
 import io.corbel.iam.model.User;
 import io.corbel.iam.repository.UserRepository;
@@ -41,11 +43,18 @@ public class DefaultRefreshTokenService implements RefreshTokenService {
     public String createRefreshToken(AuthorizationRequestContext context, String accessToken) {
         String refreshToken = null;
         if (context.hasPrincipal()) {
-            refreshToken = refreshTokenFactory.createToken(
-                    TokenInfo.newBuilder().setType(TokenType.REFRESH).setState(Long.toString(System.currentTimeMillis()))
-                            .setClientId(context.getIssuerClientId()).setOneUseToken(true).setUserId(context.getPrincipal().getId())
-                            .setGroups(context.getPrincipal().getGroups()).build(), refreshTokenDurationInSeconds, userTag(context),
-                            accessTokenTag(accessToken)).getAccessToken();
+            String deviceId = context.getDeviceId();
+            TokenInfo.Builder tokenInfoBuilder = TokenInfo.newBuilder().setOneUseToken(true).setType(TokenType.REFRESH)
+                    .setState(Long.toString(System.currentTimeMillis())).setClientId(context.getIssuerClientId())
+                    .setUserId(context.getPrincipal().getId()).setGroups(context.getPrincipal().getGroups());
+
+            if (!StringUtils.isEmpty(deviceId)) {
+                tokenInfoBuilder.setDeviceId(deviceId);
+            }
+
+            refreshToken = refreshTokenFactory
+                    .createToken(tokenInfoBuilder.build(), refreshTokenDurationInSeconds, userTag(context), accessTokenTag(accessToken))
+                    .getAccessToken();
         }
         return refreshToken;
     }

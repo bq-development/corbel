@@ -1,9 +1,7 @@
 package io.corbel.webfs.service;
 
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.AmazonS3Exception;
-import com.amazonaws.services.s3.model.GetObjectRequest;
-import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.*;
 
 /**
  * @author Rubén Carrasco
@@ -23,6 +21,8 @@ public class DefaultAmazonS3Service implements AmazonS3Service {
     public S3Object getObject(String key) {
 
         GetObjectRequest objectRequest = new GetObjectRequest(bucket, key);
+
+
         try {
             return amazonS3Client.getObject(objectRequest);
         } catch (AmazonS3Exception e) {
@@ -34,4 +34,17 @@ public class DefaultAmazonS3Service implements AmazonS3Service {
         }
     }
 
+    @Override
+    public void deleteFolder(String path){
+        ListObjectsRequest listObjectsRequest = new ListObjectsRequest().withBucketName(bucket).withPrefix(path);
+        ObjectListing objectListing;
+
+        do {
+            objectListing = amazonS3Client.listObjects(listObjectsRequest);
+            for (S3ObjectSummary objectSummary :objectListing.getObjectSummaries()) {
+                amazonS3Client.deleteObject(new DeleteObjectRequest(bucket, objectSummary.getKey()));
+            }
+            listObjectsRequest.setMarker(objectListing.getNextMarker());
+        } while (objectListing.isTruncated());
+    }
 }

@@ -26,6 +26,7 @@ import com.fasterxml.jackson.datatype.jsr310.JSR310Module;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 
+import io.corbel.event.DeviceEvent;
 import io.corbel.event.DomainDeletedEvent;
 import io.corbel.event.DomainPublicScopesNotPublishedEvent;
 import io.corbel.event.ScopeUpdateEvent;
@@ -38,6 +39,7 @@ import io.corbel.iam.auth.AuthorizationRule;
 import io.corbel.iam.auth.provider.*;
 import io.corbel.iam.auth.rule.*;
 import io.corbel.iam.cli.dsl.IamShell;
+import io.corbel.iam.eventbus.DeviceDeletedEventHandler;
 import io.corbel.iam.eventbus.DomainDeletedEventHandler;
 import io.corbel.iam.eventbus.DomainPublicScopesNotPublishedEventHandler;
 import io.corbel.iam.eventbus.ScopeModifiedEventHandler;
@@ -115,6 +117,11 @@ public class IamIoc {
     }
 
     @Bean
+    public EventHandler<DeviceEvent> getDeviceDeletedEventHandler() {
+        return new DeviceDeletedEventHandler(authorizationRulesRepository, userTokenRepository);
+    }
+
+    @Bean
     public EventHandler<ScopeUpdateEvent> scopeUpdateEventHandler(CacheManager cacheManager, GroupRepository groupRepository) {
         return new ScopeModifiedEventHandler(cacheManager, groupRepository);
     }
@@ -126,11 +133,11 @@ public class IamIoc {
 
     @Bean
     public AuthorizationService getAuthorizationService(RefreshTokenService refreshTokenService, TokenFactory tokenFactory,
-                                                        ScopeService scopeService, ScopesAuthorizationRule scopesAuthorizationRule, UserService userService, EventsService eventsService) {
+            ScopeService scopeService, ScopesAuthorizationRule scopesAuthorizationRule, UserService userService,
+            EventsService eventsService, DeviceService deviceService) {
         return new DefaultAuthorizationService(getJsonTokenParser(), getAuthorizationRules(scopesAuthorizationRule), tokenFactory,
                 getAuthorizationRequestContextFactory(scopeService), scopeService, getAuthorizationProviderFactory(), refreshTokenService,
-                userTokenRepository, userService, eventsService);
-
+                userTokenRepository, userService, eventsService, deviceService);
     }
 
     @Bean
@@ -176,8 +183,13 @@ public class IamIoc {
     }
 
     @Bean
-    public DomainResource getDomainResource(ClientService clientService, DomainService domainService) {
-        return new DomainResource(clientService, domainService);
+    public DomainResource getDomainResource(DomainService domainService) {
+        return new DomainResource(domainService);
+    }
+
+    @Bean
+    public ClientResource getClientResource(ClientService clientService, DomainService domainService) {
+        return new ClientResource(clientService, domainService);
     }
 
     @Bean
@@ -321,7 +333,7 @@ public class IamIoc {
 
     @Bean
     public UpgradeTokenService getUpgradeTokenService(ScopeService scopeService) {
-        return new DefaultUpgradeTokenService(getTokenUpgradeJsonTokenParser(), scopeService);
+        return new DefaultUpgradeTokenService(getTokenUpgradeJsonTokenParser(), scopeService, userTokenRepository);
     }
 
     @Bean
@@ -372,7 +384,7 @@ public class IamIoc {
 
     @Bean
     public IdGenerator<Device> getDeviceIdGenerator() {
-        return new DeviceIdGenerator(DigesterFactory.sha1());
+        return new DeviceIdGenerator();
     }
 
     private ScopeFillStrategy getScopeFillStrategy() {

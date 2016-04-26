@@ -4,7 +4,7 @@
     <parent>
         <groupId>io.corbel</groupId>
         <artifactId>corbel</artifactId>
-        <version>1.29.0-SNAPSHOT</version>
+        <version>1.31.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>rem-api</artifactId>
@@ -30,6 +30,10 @@
         <dependency>
             <groupId>com.github.zafarkhaja</groupId>
             <artifactId>java-semver</artifactId>
+        </dependency>
+        <dependency>
+	        <groupId>io.dropwizard</groupId>
+	        <artifactId>dropwizard-core</artifactId>
         </dependency>
     </dependencies>
 </project>

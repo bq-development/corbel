@@ -33,6 +33,7 @@ public class DefaultRefreshTokenServiceTest {
     private static final String REFRESH_TOKEN = "refresh_token";
 
     private static final String TEST_ACCESS_TOKEN = "access_token";
+    private static final String TEST_DEVICE_ID = "test_device_id";
 
     private TokenParser tokenParserMock;
     private UserRepository userRepositoryMock;
@@ -59,11 +60,13 @@ public class DefaultRefreshTokenServiceTest {
         User userMock = mock(User.class);
         when(userMock.getId()).thenReturn(TEST_USER);
         when(contextMock.getPrincipal()).thenReturn(userMock);
+        when(contextMock.getDeviceId()).thenReturn(TEST_DEVICE_ID);
+
 
         tokenGrant = new TokenGrant(REFRESH_TOKEN, REFRESH_TOKEN_DURATION_IN_SECONDS);
 
         tokenInfo = TokenInfo.newBuilder().setType(TokenType.REFRESH).setState(Long.toString(System.currentTimeMillis()))
-                .setClientId(TEST_CLIENT).setOneUseToken(true).setUserId(TEST_USER).build();
+                .setClientId(TEST_CLIENT).setOneUseToken(true).setUserId(TEST_USER).setDeviceId(TEST_DEVICE_ID).build();
     }
 
     @Test
@@ -79,9 +82,8 @@ public class DefaultRefreshTokenServiceTest {
         User principal = new User();
         principal.setId(TEST_USER);
         when(contextMock.getPrincipal()).thenReturn(principal);
-        when(
-                tokenFactoryMock.createToken(Mockito.any(TokenInfo.class), Mockito.eq(REFRESH_TOKEN_DURATION_IN_SECONDS),
-                        Mockito.eq("user:" + TEST_USER), Mockito.eq("access_token:" + TEST_ACCESS_TOKEN))).thenReturn(tokenGrant);
+        when(tokenFactoryMock.createToken(Mockito.any(TokenInfo.class), Mockito.eq(REFRESH_TOKEN_DURATION_IN_SECONDS),
+                Mockito.eq("user:" + TEST_USER), Mockito.eq("access_token:" + TEST_ACCESS_TOKEN))).thenReturn(tokenGrant);
         String refreshToken = refreshTokenService.createRefreshToken(contextMock, TEST_ACCESS_TOKEN);
         assertThat(refreshToken).isEqualTo(tokenGrant.getAccessToken());
     }
@@ -99,8 +101,8 @@ public class DefaultRefreshTokenServiceTest {
 
     @Test(expected = TokenVerificationException.class)
     public void testBadRefreshToken() throws TokenVerificationException {
-        when(tokenParserMock.parseAndVerify(REFRESH_TOKEN)).thenThrow(
-                new TokenVerificationException("Invalid token", new IllegalArgumentException()));
+        when(tokenParserMock.parseAndVerify(REFRESH_TOKEN))
+                .thenThrow(new TokenVerificationException("Invalid token", new IllegalArgumentException()));
         refreshTokenService.getUserFromRefreshToken(REFRESH_TOKEN);
     }
 

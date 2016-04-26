@@ -1,38 +1,8 @@
 package io.corbel.iam.service;
 
-import io.corbel.iam.auth.AuthorizationRequestContext;
-import io.corbel.iam.auth.AuthorizationRequestContextFactory;
-import io.corbel.iam.auth.AuthorizationRule;
-import io.corbel.iam.auth.BasicParams;
-import io.corbel.iam.auth.OauthParams;
-import io.corbel.iam.auth.provider.AuthorizationProviderFactory;
-import io.corbel.iam.auth.provider.Provider;
-import io.corbel.iam.exception.MissingBasicParamsException;
-import io.corbel.iam.exception.MissingOAuthParamsException;
-import io.corbel.iam.exception.NoSuchPrincipalException;
-import io.corbel.iam.exception.OauthServerConnectionException;
-import io.corbel.iam.exception.UnauthorizedException;
-import io.corbel.iam.exception.UnauthorizedTimeException;
-import io.corbel.iam.model.Domain;
-import io.corbel.iam.model.Identity;
-import io.corbel.iam.model.Scope;
-import io.corbel.iam.model.TokenGrant;
-import io.corbel.iam.model.User;
-import io.corbel.iam.model.UserToken;
-import io.corbel.iam.repository.UserTokenRepository;
-import io.corbel.iam.utils.Message;
-import io.corbel.lib.token.TokenInfo;
-import io.corbel.lib.token.TokenInfo.Builder;
-import io.corbel.lib.token.exception.TokenVerificationException;
-import io.corbel.lib.token.factory.TokenFactory;
-import io.corbel.lib.token.model.TokenType;
-
 import java.security.SignatureException;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import net.oauth.jsontoken.JsonToken;
 import net.oauth.jsontoken.JsonTokenParser;
@@ -40,6 +10,19 @@ import net.oauth.jsontoken.JsonTokenParser;
 import org.joda.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import io.corbel.iam.auth.*;
+import io.corbel.iam.auth.provider.AuthorizationProviderFactory;
+import io.corbel.iam.auth.provider.Provider;
+import io.corbel.iam.exception.*;
+import io.corbel.iam.model.*;
+import io.corbel.iam.repository.UserTokenRepository;
+import io.corbel.iam.utils.Message;
+import io.corbel.lib.token.TokenInfo;
+import io.corbel.lib.token.TokenInfo.Builder;
+import io.corbel.lib.token.exception.TokenVerificationException;
+import io.corbel.lib.token.factory.TokenFactory;
+import io.corbel.lib.token.model.TokenType;
 
 /**
  * @author Alexander De Leon
@@ -57,11 +40,12 @@ public class DefaultAuthorizationService implements AuthorizationService {
     private final UserTokenRepository userTokenRepository;
     private final UserService userService;
     private final EventsService eventsService;
+    private final DeviceService deviceService;
 
     public DefaultAuthorizationService(JsonTokenParser jsonTokenParser, List<AuthorizationRule> rules, TokenFactory accessTokenFactory,
             AuthorizationRequestContextFactory contextFactory, ScopeService scopeService,
             AuthorizationProviderFactory authorizationProviderFactory, RefreshTokenService refreshTokenService,
-            UserTokenRepository userTokenRepository, UserService userService, EventsService eventsService) {
+            UserTokenRepository userTokenRepository, UserService userService, EventsService eventsService, DeviceService deviceService) {
         this.jsonTokenParser = jsonTokenParser;
         this.eventsService = eventsService;
         this.rules = Collections.unmodifiableList(rules);
@@ -72,6 +56,7 @@ public class DefaultAuthorizationService implements AuthorizationService {
         this.refreshTokenService = refreshTokenService;
         this.userTokenRepository = userTokenRepository;
         this.userService = userService;
+        this.deviceService = deviceService;
     }
 
     @Override
@@ -176,17 +161,20 @@ public class DefaultAuthorizationService implements AuthorizationService {
         }
     }
 
-    private TokenGrant grantAccess(AuthorizationRequestContext context, Optional<User> user) throws UnauthorizedException {
+    private TokenGrant grantAccess(AuthorizationRequestContext context, Optional<User> userOptional) throws UnauthorizedException {
         for (AuthorizationRule processor : rules) {
             processor.process(context);
         }
         String accessToken = getAccessToken(context);
         TokenGrant tokenGrant = new TokenGrant(accessToken, context.getAuthorizationExpiration(), refreshTokenService.createRefreshToken(
-                context, accessToken));
-
-        if (user.isPresent()) {
-            storeUserToken(tokenGrant, user.get());
-            eventsService.sendUserAuthenticationEvent(user.get().getUserProfile());
+                context, accessToken), context.getTokenScopes());
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            Set<Scope> expandedRequestedScopes = context.getExpandedRequestedScopes();
+            Set<String> expandedRequestedScopesIds = expandedRequestedScopes.stream().map(Entity::getId).collect(Collectors.toSet());
+            storeUserToken(tokenGrant, user, context.getDeviceId(), expandedRequestedScopesIds);
+            updateDeviceLastConnection(user.getDomain(), user.getId(), context.getDeviceId());
+            eventsService.sendUserAuthenticationEvent(userOptional.get().getUserProfile());
         } else {
             eventsService.sendClientAuthenticationEvent(context.getIssuerClientDomain().getId(), context.getIssuerClientId());
         }
@@ -227,7 +215,7 @@ public class DefaultAuthorizationService implements AuthorizationService {
     private String getAccessToken(AuthorizationRequestContext context) {
         Builder tokenBuilder = TokenInfo.newBuilder().setType(TokenType.TOKEN).setClientId(context.getIssuerClient().getId())
                 .setState(Long.toString(context.getAuthorizationExpiration())).setDomainId(context.getRequestedDomain().getId());
-        Optional.ofNullable(context.getDeviceId()).ifPresent(deviceId -> tokenBuilder.setDeviceId(deviceId));
+        Optional.ofNullable(context.getDeviceId()).ifPresent(tokenBuilder::setDeviceId);
         TokenInfo tokenInfo = context.hasPrincipal() ? tokenBuilder.setUserId(context.getPrincipal().getId())
                 .setGroups(context.getPrincipal().getGroups()).build() : tokenBuilder.build();
         return tokenFactory.createToken(tokenInfo, context.getAuthorizationExpiration()).getAccessToken();
@@ -242,9 +230,17 @@ public class DefaultAuthorizationService implements AuthorizationService {
         return grantAccess(context, Optional.of(user));
     }
 
-    private void storeUserToken(TokenGrant tokenGrant, User user) {
-        UserToken userToken = new UserToken(tokenGrant.getAccessToken(), user.getId(), new Date(tokenGrant.getExpiresAt()));
+    private void storeUserToken(TokenGrant tokenGrant, User user, String deviceId, Set<String> expandedRequestedScopes) {
+        UserToken userToken = new UserToken(
+                tokenGrant.getAccessToken(), user.getId(), deviceId, new Date(tokenGrant.getExpiresAt()), expandedRequestedScopes);
         userTokenRepository.save(userToken);
     }
+
+    private void updateDeviceLastConnection(String domain, String id, String deviceId) {
+        if (deviceId != null) {
+            deviceService.deviceConnect(domain, id, deviceId);
+        }
+    }
+
 
 }

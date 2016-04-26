@@ -11,5 +11,7 @@ import io.corbel.iam.model.UserToken;
  */
 public interface UserTokenRepository extends CrudRepository<UserToken, String> {
 
+    UserToken findByToken(String id);
     List<UserToken> findByUserId(String userId);
+    List<UserToken> findByDeviceId(String deviceId);
 }

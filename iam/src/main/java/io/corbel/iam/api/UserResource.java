@@ -1,10 +1,16 @@
 package io.corbel.iam.api;
 
-import com.google.gson.JsonElement;
 import io.corbel.iam.exception.DuplicatedOauthServiceIdentityException;
 import io.corbel.iam.exception.IdentityAlreadyExistsException;
 import io.corbel.iam.exception.UserProfileConfigurationException;
-import io.corbel.iam.model.*;
+import io.corbel.iam.model.Device;
+import io.corbel.iam.model.DeviceResponse;
+import io.corbel.iam.model.Domain;
+import io.corbel.iam.model.Entity;
+import io.corbel.iam.model.Identity;
+import io.corbel.iam.model.TraceableEntity;
+import io.corbel.iam.model.User;
+import io.corbel.iam.model.UserWithIdentity;
 import io.corbel.iam.repository.CreateUserException;
 import io.corbel.iam.service.DeviceService;
 import io.corbel.iam.service.DomainService;
@@ -13,29 +19,57 @@ import io.corbel.iam.service.UserService;
 import io.corbel.iam.utils.Message;
 import io.corbel.lib.queries.builder.ResourceQueryBuilder;
 import io.corbel.lib.queries.jaxrs.QueryParameters;
-import io.corbel.lib.queries.request.*;
+import io.corbel.lib.queries.request.Aggregation;
+import io.corbel.lib.queries.request.AggregationOperator;
+import io.corbel.lib.queries.request.AggregationResultsFactory;
+import io.corbel.lib.queries.request.Pagination;
+import io.corbel.lib.queries.request.ResourceQuery;
+import io.corbel.lib.queries.request.Sort;
 import io.corbel.lib.ws.annotation.Rest;
 import io.corbel.lib.ws.auth.AuthorizationInfo;
 import io.corbel.lib.ws.model.Error;
 import io.dropwizard.auth.Auth;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.time.Clock;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import javax.validation.Valid;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.UriInfo;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DuplicateKeyException;
 
-import javax.validation.Valid;
-import javax.ws.rs.*;
-import javax.ws.rs.core.*;
-import javax.ws.rs.core.Response.Status;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.time.Clock;
-import java.util.*;
-import java.util.stream.Collectors;
+import com.google.gson.JsonElement;
 
 /**
  * @author Alexander De Leon
  */
-@Path(ApiVersion.CURRENT + "/user") public class UserResource {
+@Path(ApiVersion.CURRENT + "/{domain}/user") public class UserResource {
 
     private static final Logger LOG = LoggerFactory.getLogger(UserResource.class);
     private static final String ME = "me";
@@ -48,7 +82,7 @@ import java.util.stream.Collectors;
     private final AggregationResultsFactory<JsonElement> aggregationResultsFactory;
 
     public UserResource(UserService userService, DomainService domainService, IdentityService identityService, DeviceService deviceService,
-                        AggregationResultsFactory<JsonElement> aggregationResultsFactory, Clock clock) {
+            AggregationResultsFactory<JsonElement> aggregationResultsFactory, Clock clock) {
         this.userService = userService;
         this.domainService = domainService;
         this.identityService = identityService;
@@ -58,17 +92,16 @@ import java.util.stream.Collectors;
     }
 
     @GET
-    public Response getUsers(@Rest QueryParameters queryParameters, @Auth AuthorizationInfo authorizationInfo) {
-        String domainId = authorizationInfo.getDomainId();
+    public Response getUsers(@PathParam("domain") String domain, @Rest QueryParameters queryParameters) {
         ResourceQuery query = queryParameters.getQuery().orElse(null);
         Pagination pagination = queryParameters.getPagination();
         Sort sort = queryParameters.getSort().orElse(null);
         Aggregation aggregation = queryParameters.getAggregation().orElse(null);
 
         if (queryParameters.getAggregation().isPresent()) {
-            return getUsersAggregation(domainId, query, aggregation);
+            return getUsersAggregation(domain, query, aggregation);
         } else {
-            List<User> users = userService.findUsersByDomain(domainId, query, pagination, sort).stream().map(User::getUserProfile)
+            List<User> users = userService.findUsersByDomain(domain, query, pagination, sort).stream().map(User::getUserProfile)
                     .collect(Collectors.toList());
             return Response.ok().type(MediaType.APPLICATION_JSON).entity(users).build();
         }
@@ -76,59 +109,51 @@ import java.util.stream.Collectors;
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response postUser(@Valid UserWithIdentity user, @Context UriInfo uriInfo, @Auth AuthorizationInfo authorizationInfo) {
-        Optional<Domain> optDomain = domainService.getDomain(authorizationInfo.getDomainId());
+    public Response postUser(@PathParam("domain") String domainId, @Valid UserWithIdentity user, @Context UriInfo uriInfo,
+            @Auth AuthorizationInfo authorizationInfo) {
 
-        if (!optDomain.isPresent()) {
-            return IamErrorResponseFactory.getInstance().invalidEntity(Message.NOT_FOUND.getMessage());
-        }
-
-        Domain domain = optDomain.get();
-
-        user.setDomain(domain.getId());
-
-        user.setScopes(domain.getDefaultScopes());
-
-        setTracebleEntity(user, authorizationInfo);
-
-        User createdUser;
-        // The new user can only be on the domainId of the client making the request
-        try {
-            createdUser = userService.create(ensureNoId(user));
-        } catch (CreateUserException duplicatedUser) {
-            return IamErrorResponseFactory.getInstance().entityExists(Message.USER_EXISTS, duplicatedUser.getMessage());
-        }
-
-        Identity identity = user.getIdentity();
-        if (identity != null) {
-            try {
-                addIdentity(identity);
-            } catch (Exception e) {
-                // Rollback user creation and handle error
-                userService.delete(user);
-                return handleIdentityError(e, identity);
-            }
-        }
-
-        return Response.created(uriInfo.getAbsolutePathBuilder().path(createdUser.getId()).build()).build();
+        return domainService.getDomain(domainId).map(domain -> {
+            user.setDomain(domain.getId());
+            user.setScopes(domain.getDefaultScopes());
+            setTracebleEntity(user, authorizationInfo);
+            User createdUser;
+            // The new user can only be on the domainId of the client making the request
+                try {
+                    createdUser = userService.create(ensureNoId(user));
+                } catch (CreateUserException duplicatedUser) {
+                    return IamErrorResponseFactory.getInstance().entityExists(Message.USER_EXISTS, duplicatedUser.getMessage());
+                }
+                Identity identity = user.getIdentity();
+                if (identity != null) {
+                    try {
+                        addIdentity(identity);
+                    } catch (Exception e) {
+                        // Rollback user creation and handle error
+                        userService.delete(user);
+                        return handleIdentityError(e, identity);
+                    }
+                }
+                return Response.created(uriInfo.getAbsolutePathBuilder().path(createdUser.getId()).build()).build();
+            }).orElseGet(() -> IamErrorResponseFactory.getInstance().invalidEntity(Message.NOT_FOUND.getMessage()));
     }
 
     @PUT
     @Path("/{id}")
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response updateUser(@PathParam("id") String userId, User userData, @Auth AuthorizationInfo authorizationInfo) {
-        if (ME.equals(userId)) {
-            userData.setScopes(null);
-            userData.setGroups(null);
-        }
-
-        User user = getUserResolvingMeAndUserDomainVerifying(userId, authorizationInfo);
-
+    public Response updateUser(@PathParam("domain") String domainId, @PathParam("id") String userId,
+            @Auth AuthorizationInfo authorizationInfo, User userData) {
         if (userData != null) {
+
+            if (ME.equals(userId)) {
+                userData.setScopes(null);
+                userData.setGroups(null);
+            }
+
+            User user = getUserResolvingMeAndUserDomainVerifying(userId, authorizationInfo.getUserId(), domainId);
 
             user.updateUser(userData);
 
-            Optional<Domain> optDomain = domainService.getDomain(authorizationInfo.getDomainId());
+            Optional<Domain> optDomain = domainService.getDomain(domainId);
 
             if (!optDomain.isPresent()) {
                 return IamErrorResponseFactory.getInstance().invalidEntity(Message.NOT_FOUND.getMessage());
@@ -150,116 +175,18 @@ import java.util.stream.Collectors;
 
     @GET
     @Path("/{id}")
-    public Response getUser(@PathParam("id") String userId, @Auth AuthorizationInfo authorizationInfo) {
-        User user = getUserResolvingMeAndUserDomainVerifying(userId, authorizationInfo);
+    public Response getUser(@PathParam("domain") String domainId, @PathParam("id") String userId, @Auth AuthorizationInfo authorizationInfo) {
+        User user = getUserResolvingMeAndUserDomainVerifying(userId, authorizationInfo.getUserId(), domainId);
         return Response.ok().type(MediaType.APPLICATION_JSON).entity(user.getUserProfile()).build();
-    }
-
-    @GET
-    @Path("/{id}/avatar")
-    public Response getAvatar(@PathParam("id") String id, @Auth AuthorizationInfo authorizationInfo) {
-        Optional<User> user = resolveMeIdAliases(id, authorizationInfo);
-
-        if (!user.isPresent() || !userDomainMatchAuthorizationDomain(user.get(), authorizationInfo)) {
-            return IamErrorResponseFactory.getInstance().notFound();
-        }
-
-        return user.map(User::getProperties).map(p -> p.get("avatar")).map(a -> {
-            try {
-                return new URI(a.toString());
-            } catch (URISyntaxException e) {
-                return null;
-            }
-        }).map(avatarUri -> Response.temporaryRedirect(avatarUri).build())
-                .orElseGet(() -> IamErrorResponseFactory.getInstance().notfound(new Error("not_found", "User " + id + " has no avatar.")));
-    }
-
-    @GET
-    @Path("/{userId}/devices")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getDevices(@PathParam("userId") String userId, @Auth AuthorizationInfo authorizationInfo) {
-        User user = getUserResolvingMeAndUserDomainVerifying(userId, authorizationInfo);
-        return Optional.ofNullable(deviceService.getByUserId(user.getId()))
-                .map(devices -> Response.ok().type(MediaType.APPLICATION_JSON).entity(devices).build())
-                .orElseGet(() -> IamErrorResponseFactory.getInstance().notFound());
-    }
-
-    @GET
-    @Path("/{userId}/devices/{deviceId}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getDevice(@PathParam("userId") String userId, @PathParam("deviceId") String deviceId,
-            @Auth AuthorizationInfo authorizationInfo) {
-        User user = getUserResolvingMeAndUserDomainVerifying(userId, authorizationInfo);
-        return Optional.ofNullable(deviceService.getByIdAndUserId(deviceId, user.getId()))
-                .map(device -> Response.ok().type(MediaType.APPLICATION_JSON).entity(device).build())
-                .orElseGet(() -> IamErrorResponseFactory.getInstance().notFound());
-    }
-
-    @PUT
-    @Path("/{userId}/devices")
-    @Consumes(MediaType.APPLICATION_JSON)
-    public Response updateDevice(@PathParam("userId") String userId, @Valid Device deviceData, @Auth AuthorizationInfo authorizationInfo,
-            @Context UriInfo uriInfo) {
-        User user = getUserResolvingMeAndUserDomainVerifying(userId, authorizationInfo);
-        ensureNoId(deviceData);
-        deviceData.setUserId(user.getId());
-        deviceData.setDomain(authorizationInfo.getDomainId());
-        Device storeDevice = deviceService.update(deviceData);
-        return Response.created(uriInfo.getAbsolutePathBuilder().path(storeDevice.getId()).build()).build();
-    }
-
-    @DELETE
-    @Path("/{userId}/devices/{deviceId}")
-    public Response deleteDevice(@PathParam("userId") String userId, @PathParam("deviceId") final String deviceId,
-            @Auth AuthorizationInfo authorizationInfo) {
-        User user = getUserResolvingMeAndUserDomainVerifying(userId, authorizationInfo);
-        deviceService.deleteByIdAndUserId(deviceId, user.getId(), authorizationInfo.getDomainId());
-        return Response.status(Status.NO_CONTENT).build();
-    }
-
-    @Path("/resetPassword")
-    @GET
-    public Response generateResetPasswordEmail(@QueryParam("email") String email, @Auth AuthorizationInfo authorizationInfo) {
-        userService.sendMailResetPassword(email, authorizationInfo.getClientId(), authorizationInfo.getDomainId());
-        return Response.noContent().build();
-    }
-
-    @PUT
-    @Path("/me/signout")
-    public Response signOut(@Auth AuthorizationInfo authorizationInfo) {
-        return Optional.ofNullable(userService.findById(authorizationInfo.getUserId()))
-                .filter(user -> userDomainMatchAuthorizationDomain(user, authorizationInfo)).map(user -> {
-                    userService.signOut(user.getId(), Optional.of(authorizationInfo.getToken()));
-                    return Response.noContent().build();
-                }).orElseGet(() -> IamErrorResponseFactory.getInstance().notFound());
-    }
-
-    @PUT
-    @Path("/{id}/disconnect")
-    public Response disconnect(@PathParam("id") String userId, @Auth AuthorizationInfo authorizationInfo) {
-        return resolveMeIdAliases(userId, authorizationInfo).filter(user -> userDomainMatchAuthorizationDomain(user, authorizationInfo))
-                .map(user -> {
-                    userService.signOut(user.getId()); // invalidate all user tokens
-                    return Response.noContent().build();
-                }).orElseGet(() -> IamErrorResponseFactory.getInstance().notFound());
-    }
-
-    @DELETE
-    @Path("/{id}/sessions")
-    public Response deleteAllSessions(@PathParam("id") String userId, @Auth AuthorizationInfo authorizationInfo) {
-        return resolveMeIdAliases(userId, authorizationInfo).filter(user -> userDomainMatchAuthorizationDomain(user, authorizationInfo))
-                .map(user -> {
-                    userService.invalidateAllTokens(user.getId());
-                    return Response.noContent().build();
-                }).orElseGet(() -> IamErrorResponseFactory.getInstance().notFound());
     }
 
     @DELETE
     @Path("/{id}")
-    public Response deleteUser(@PathParam("id") String userId, @Auth AuthorizationInfo authorizationInfo) {
-        Optional<User> optionalUser = resolveMeIdAliases(userId, authorizationInfo);
+    public Response deleteUser(@PathParam("domain") String domainId, @PathParam("id") String userId,
+            @Auth AuthorizationInfo authorizationInfo) {
+        Optional<User> optionalUser = resolveMeIdAliases(userId, authorizationInfo.getUserId());
         optionalUser.ifPresent(user -> {
-            checkingUserDomain(user, authorizationInfo);
+            checkingUserDomain(user, domainId);
             identityService.deleteUserIdentities(user);
             userService.delete(user);
             deviceService.deleteByUserId(user);
@@ -267,16 +194,43 @@ import java.util.stream.Collectors;
         return Response.noContent().build();
     }
 
+    @GET
+    @Path("/{id}/avatar")
+    public Response getAvatar(@PathParam("domain") String domainId, @PathParam("id") String id, @Auth AuthorizationInfo authorizationInfo) {
+        User user = getUserResolvingMeAndUserDomainVerifying(id, authorizationInfo.getUserId(), domainId);
+        try {
+            return Response.temporaryRedirect(new URI(user.getProperties().get("avatar").toString())).build();
+        } catch (NullPointerException | URISyntaxException ignored) {
+            return IamErrorResponseFactory.getInstance().notfound(new Error("not_found", "User " + id + " has no avatar."));
+        }
+    }
+
+    @PUT
+    @Path("/{id}/disconnect")
+    public Response disconnect(@PathParam("domain") String domainId, @PathParam("id") String userId,
+            @Auth AuthorizationInfo authorizationInfo) {
+        User user = getUserResolvingMeAndUserDomainVerifying(userId, authorizationInfo.getUserId(), domainId);
+        userService.signOut(user.getId());
+        return Response.noContent().build();
+    }
+
+    @DELETE
+    @Path("/{id}/session")
+    public Response deleteAllSessions(@PathParam("domain") String domainId, @PathParam("id") String userId,
+            @Auth AuthorizationInfo authorizationInfo) {
+        User user = getUserResolvingMeAndUserDomainVerifying(userId, authorizationInfo.getUserId(), domainId);
+        userService.invalidateAllTokens(user.getId());
+        return Response.noContent().build();
+    }
+
     @POST
     @Path("/{id}/identity")
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response postUserIdentity(@Valid Identity identity, @PathParam("id") String id, @Auth AuthorizationInfo authorizationInfo,
-            @Context Request request) {
-        User user = getUserResolvingMeAndUserDomainVerifying(id, authorizationInfo);
-
-        identity.setDomain(authorizationInfo.getDomainId());
+    public Response postUserIdentity(@PathParam("domain") String domainId, @Valid Identity identity, @PathParam("id") String id,
+            @Auth AuthorizationInfo authorizationInfo) {
+        User user = getUserResolvingMeAndUserDomainVerifying(id, authorizationInfo.getUserId(), domainId);
+        identity.setDomain(domainId);
         identity.setUserId(user.getId());
-
         try {
             addIdentity(identity);
             return Response.status(Status.CREATED).build();
@@ -287,53 +241,22 @@ import java.util.stream.Collectors;
 
     @GET
     @Path("/{id}/identity")
-    public Response getUserIdentity(@PathParam("id") String id, @Auth AuthorizationInfo authorizationInfo) {
-        User user = getUserResolvingMeAndUserDomainVerifying(id, authorizationInfo);
+    public Response getUserIdentity(@PathParam("domain") String domainId, @PathParam("id") String id,
+            @Auth AuthorizationInfo authorizationInfo) {
+        User user = getUserResolvingMeAndUserDomainVerifying(id, authorizationInfo.getUserId(), domainId);
         return Response.ok().type(MediaType.APPLICATION_JSON).entity(identityService.findUserIdentities(user)).build();
-    }
-
-    @GET
-    @Path("/profile")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getUserProfiles(@Auth AuthorizationInfo authorizationInfo, @Rest QueryParameters queryParameters)
-            throws UserProfileConfigurationException {
-
-        Optional<Domain> optionalDomain = domainService.getDomain(authorizationInfo.getDomainId());
-
-        ResourceQuery query = queryParameters.getQuery().orElse(new ResourceQuery());
-
-        query = filterQuery(optionalDomain, query);
-
-        if (queryParameters.getAggregation().isPresent()) {
-            return getUsersAggregation(authorizationInfo.getDomainId(), query, queryParameters.getAggregation().get());
-        }
-
-        final ResourceQuery queryFinal = query;
-
-        List<User> profiles = optionalDomain.map(
-                domain -> {
-                    try {
-                        return userService.findUserProfilesByDomain(domain, queryFinal, queryParameters.getPagination(), queryParameters
-                                .getSort().orElse(null));
-                    } catch (UserProfileConfigurationException e) {
-                        return new LinkedList<User>();
-                    }
-                }).orElseGet(LinkedList::new);
-
-        return Response.ok(profiles).type(MediaType.APPLICATION_JSON).build();
     }
 
     @GET
     @Path("/{id}/profile")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getUserProfile(@PathParam("id") String id, @Auth AuthorizationInfo authorizationInfo) {
-        User user = getUserResolvingMeAndUserDomainVerifying(id, authorizationInfo);
-        Optional<Domain> domain = domainService.getDomain(authorizationInfo.getDomainId());
-
+    public Response getUserProfile(@PathParam("domain") String domainId, @PathParam("id") String id,
+            @Auth AuthorizationInfo authorizationInfo) {
+        User user = getUserResolvingMeAndUserDomainVerifying(id, authorizationInfo.getUserId(), domainId);
+        Optional<Domain> domain = domainService.getDomain(domainId);
         if (!domain.isPresent()) {
             return IamErrorResponseFactory.getInstance().notFound();
         }
-
         try {
             return Optional.ofNullable(userService.getUserProfile(user, domain.get().getUserProfileFields()))
                     .map(userProfile -> Response.ok().type(MediaType.APPLICATION_JSON).entity(userProfile).build())
@@ -344,37 +267,150 @@ import java.util.stream.Collectors;
     }
 
     @PUT
-    @Path("/{id}/groups")
+    @Path("/{id}/group")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response addGroupsToUser(@PathParam("id") String id, Set<String> groups, @Auth AuthorizationInfo authorizationInfo) {
-        User user = getUserResolvingMeAndUserDomainVerifying(id, authorizationInfo);
-        Optional<Domain> domain = domainService.getDomain(authorizationInfo.getDomainId());
-
+    public Response addGroupsToUser(@PathParam("domain") String domainId, @PathParam("id") String id, Set<String> groups,
+            @Auth AuthorizationInfo authorizationInfo) {
+        User user = getUserResolvingMeAndUserDomainVerifying(id, authorizationInfo.getUserId(), domainId);
+        Optional<Domain> domain = domainService.getDomain(domainId);
         if (!domain.isPresent()) {
             return IamErrorResponseFactory.getInstance().notFound();
         }
-
         user.addGroups(groups);
         userService.update(user);
         return Response.noContent().build();
     }
 
     @DELETE
-    @Path("/{id}/groups/{groupId}")
+    @Path("/{id}/group/{groupId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response deleteGroupsToUser(@PathParam("id") String id, @PathParam("groupId") String groupId,
-            @Auth AuthorizationInfo authorizationInfo) {
-        User user = getUserResolvingMeAndUserDomainVerifying(id, authorizationInfo);
-        Optional<Domain> domain = domainService.getDomain(authorizationInfo.getDomainId());
-
+    public Response deleteGroupsToUser(@PathParam("domain") String domainId, @PathParam("id") String id,
+            @PathParam("groupId") String groupId, @Auth AuthorizationInfo authorizationInfo) {
+        User user = getUserResolvingMeAndUserDomainVerifying(id, authorizationInfo.getUserId(), domainId);
+        Optional<Domain> domain = domainService.getDomain(domainId);
         if (!domain.isPresent()) {
             return IamErrorResponseFactory.getInstance().notFound();
         }
-
         user.deleteGroup(groupId);
         userService.update(user);
         return Response.noContent().build();
     }
+
+    @GET
+    @Path("/{userId}/device")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getDevices(@Rest QueryParameters queryParameters, @PathParam("userId") String userId,
+            @PathParam("domain") String domainId, @Auth AuthorizationInfo authorizationInfo) {
+        User user = getUserResolvingMeAndUserDomainVerifying(userId, authorizationInfo.getUserId(), domainId);
+        List<Device> userDevices = Optional.ofNullable(deviceService.getByUserId(user.getId(), queryParameters)).orElse(
+                Collections.emptyList());
+        return Response.ok().type(MediaType.APPLICATION_JSON)
+                .entity(userDevices.stream().map(DeviceResponse::new).collect(Collectors.toList())).build();
+    }
+
+    @GET
+    @Path("/{userId}/device/{deviceId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getDevice(@PathParam("domain") String domainId, @PathParam("userId") String userId,
+            @PathParam("deviceId") String deviceUid, @Auth AuthorizationInfo authorizationInfo) {
+        User user = getUserResolvingMeAndUserDomainVerifying(userId, authorizationInfo.getUserId(), domainId);
+        Device userDevice = deviceService.getByUidAndUserId(deviceUid, user.getId(), user.getDomain());
+        if (userDevice != null) {
+            return Response.ok().type(MediaType.APPLICATION_JSON).entity(new DeviceResponse(userDevice)).build();
+        } else {
+            return IamErrorResponseFactory.getInstance().notFound();
+        }
+    }
+
+    @PUT
+    @Path("/{userId}/device/{deviceId}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response updateDevice(@PathParam("userId") String userId, @PathParam("deviceId") String deviceId,
+            @PathParam("domain") String domainId, @Valid Device deviceData, @Auth AuthorizationInfo authorizationInfo,
+            @Context UriInfo uriInfo) {
+        User user = getUserResolvingMeAndUserDomainVerifying(userId, authorizationInfo.getUserId(), domainId);
+        ensureNoId(deviceData);
+        deviceData.setUid(deviceId);
+        deviceData.setUserId(user.getId());
+        deviceData.setDomain(domainId);
+        boolean connection = authorizationInfo.getDeviceId() != null && authorizationInfo.getDeviceId().equals(deviceId);
+        Device storeDevice = deviceService.update(deviceData, connection);
+        return Response.created(uriInfo.getAbsolutePathBuilder().path(storeDevice.getUid()).build()).build();
+    }
+
+    @DELETE
+    @Path("/{userId}/device/{deviceId}")
+    public Response deleteDevice(@PathParam("domain") String domainId, @PathParam("userId") String userId,
+            @PathParam("deviceId") final String deviceUid, @Auth AuthorizationInfo authorizationInfo) {
+        User user = getUserResolvingMeAndUserDomainVerifying(userId, authorizationInfo.getUserId(), domainId);
+        deviceService.deleteByUidAndUserId(deviceUid, user.getId(), domainId);
+        return Response.status(Status.NO_CONTENT).build();
+    }
+
+    @PUT
+    @Path("/me/signout")
+    public Response signOut(@Auth AuthorizationInfo authorizationInfo) {
+        return Optional.ofNullable(userService.findById(authorizationInfo.getUserId()))
+                .filter(user -> userDomainMatchAuthorizationDomain(user, authorizationInfo.getDomainId())).map(user -> {
+                    userService.signOut(user.getId(), Optional.of(authorizationInfo.getToken()));
+                    return Response.noContent().build();
+                }).orElseGet(() -> IamErrorResponseFactory.getInstance().notFound());
+    }
+
+    @GET
+    @Path("/me/session")
+    public Response getSession(@Auth AuthorizationInfo authorizationInfo) {
+        return Optional.ofNullable(authorizationInfo.getToken())
+                .map(token -> Response.ok().type(MediaType.APPLICATION_JSON).entity(userService.getSession(token)).build())
+                .orElseGet(() -> IamErrorResponseFactory.getInstance().notFound());
+    }
+
+    @DELETE
+    @Path("/me/session")
+    public Response deleteAllMeSessions(@PathParam("domain") String domainId, @Auth AuthorizationInfo authorizationInfo) {
+        User user = getUserResolvingMeAndUserDomainVerifying(ME, authorizationInfo.getUserId(), domainId);
+        userService.invalidateAllTokens(user.getId());
+        return Response.noContent().build();
+    }
+
+    @GET
+    @Path("/profile")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getUserProfiles(@PathParam("domain") String domainId, @Auth AuthorizationInfo authorizationInfo,
+            @Rest QueryParameters queryParameters) throws UserProfileConfigurationException {
+
+        Optional<Domain> optionalDomain = domainService.getDomain(domainId);
+
+        ResourceQuery query = queryParameters.getQuery().orElse(new ResourceQuery());
+
+        query = filterQuery(optionalDomain, query);
+
+        if (queryParameters.getAggregation().isPresent()) {
+            return getUsersAggregation(domainId, query, queryParameters.getAggregation().get());
+        }
+
+        ResourceQuery queryFinal = query;
+
+        List<User> profiles = optionalDomain.map(
+                domain -> {
+                    try {
+                        return userService.findUserProfilesByDomain(domain, queryFinal, queryParameters.getPagination(), queryParameters
+                                .getSort().orElse(null));
+                    } catch (UserProfileConfigurationException e) {
+                        return new LinkedList<User>();
+                    }
+                }).orElseGet(LinkedList::new);
+        return Response.ok(profiles).type(MediaType.APPLICATION_JSON).build();
+    }
+
+    @Path("/resetPassword")
+    @GET
+    public Response generateResetPasswordEmail(@PathParam("domain") String domainId, @QueryParam("email") String email,
+            @Auth AuthorizationInfo authorizationInfo) {
+        userService.sendMailResetPassword(email, authorizationInfo.getClientId(), domainId);
+        return Response.noContent().build();
+    }
+
 
     private <T extends Entity> T ensureNoId(T entity) {
         entity.setId(null);
@@ -418,27 +454,24 @@ import java.util.stream.Collectors;
         entity.setCreatedDate(Date.from(clock.instant()));
     }
 
-    private Optional<User> resolveMeIdAliases(String id, AuthorizationInfo authorizationInfo) {
-        if (ME.equals(id)) {
-            id = authorizationInfo.getUserId();
-        }
-        return Optional.ofNullable(userService.findById(id));
+    private Optional<User> resolveMeIdAliases(String id, String tokenUserId) {
+        return Optional.ofNullable(userService.findById(ME.equals(id) ? tokenUserId : id));
     }
 
-    private boolean userDomainMatchAuthorizationDomain(User user, AuthorizationInfo authorizationInfo) {
-        return Objects.equals(user.getDomain(), authorizationInfo.getDomainId());
+    private boolean userDomainMatchAuthorizationDomain(User user, String domainId) {
+        return Objects.equals(user.getDomain(), domainId);
     }
 
-    private void checkingUserDomain(User user, AuthorizationInfo authorizationInfo) {
-        if (!userDomainMatchAuthorizationDomain(user, authorizationInfo)) {
+    private void checkingUserDomain(User user, String domainId) {
+        if (!userDomainMatchAuthorizationDomain(user, domainId)) {
             throw new WebApplicationException(IamErrorResponseFactory.getInstance().unauthorized("User domain mismatch"));
         }
     }
 
-    private User getUserResolvingMeAndUserDomainVerifying(String userId, AuthorizationInfo authorizationInfo) {
-        User user = resolveMeIdAliases(userId, authorizationInfo).orElseThrow(
+    private User getUserResolvingMeAndUserDomainVerifying(String userId, String tokenUserId, String domainId) {
+        User user = resolveMeIdAliases(userId, tokenUserId).orElseThrow(
                 () -> new WebApplicationException(IamErrorResponseFactory.getInstance().notFound()));
-        checkingUserDomain(user, authorizationInfo);
+        checkingUserDomain(user, domainId);
         return user;
     }
 

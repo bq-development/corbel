@@ -16,11 +16,11 @@ public interface GroupService {
 
     Optional<Group> get(String id);
 
-    Optional<Group> get(String id, String domain);
+    Optional<Group> get(String name, String domain);
 
     List<Group> getAll(String domain, List<ResourceQuery> resourceQueries, Pagination pagination, Sort sort);
 
-    Set<String> getGroupScopes(Collection<String> groups);
+    Set<String> getGroupScopes(String domain, Collection<String> groups);
 
     Group create(Group group) throws GroupAlreadyExistsException, NotExistentScopeException;
 

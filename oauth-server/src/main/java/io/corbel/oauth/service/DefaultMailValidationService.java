@@ -37,7 +37,7 @@ public class DefaultMailValidationService implements MailValidationService {
             String notificationId = Optional.ofNullable(client.getValidationNotificationId())
                     .orElse(emailValidationConfiguration.getNotificationId());
             String clientUrl = validationtUrl.replace("{token}", createEmailValidationToken(client.getName(), userId, email));
-            sendNotificationService.sendNotification(notificationId, email, ImmutableMap.of("clientUrl", clientUrl));
+            sendNotificationService.sendNotification(client.getDomain(), notificationId, email, ImmutableMap.of("clientUrl", clientUrl));
         }
     }
 

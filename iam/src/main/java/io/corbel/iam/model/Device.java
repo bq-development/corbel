@@ -1,23 +1,25 @@
 package io.corbel.iam.model;
 
 import java.util.Date;
-
-import javax.validation.constraints.NotNull;
+import java.util.Optional;
 
 /**
  * @author Francisco Sanchez
  */
 public class Device extends Entity {
 
+    public static final String USER_ID_FIELD = "userId";
+    public static final String LAST_CONNECTION_FIELD = "lastConnection";
+
     private String domain;
     private String userId;
-    @NotNull private String uid;
+    private String uid;
     private String notificationUri;
     private String name;
-    private Type type;
+    private String type;
     private Boolean notificationEnabled;
-    private Date _createdAt;
-    private Date _updatedAt;
+    private Date firstConnection;
+    private Date lastConnection;
 
     public String getDomain() {
         return domain;
@@ -55,12 +57,12 @@ public class Device extends Entity {
         return this;
     }
 
-    public Type getType() {
+    public String getType() {
         return type;
     }
 
-    public Device setType(Type type) {
-        this.type = type;
+    public Device setType(String type) {
+        this.type = Optional.ofNullable(type).map(String::toUpperCase).orElse(type);
         return this;
     }
 
@@ -82,26 +84,21 @@ public class Device extends Entity {
         return this;
     }
 
-    public Date get_createdAt() {
-        return _createdAt;
+    public Date getFirstConnection() {
+        return firstConnection;
     }
 
-    public Device set_createdAt(Date _createdAt) {
-        this._createdAt = _createdAt;
+    public Device setFirstConnection(Date firstConnection) {
+        this.firstConnection = firstConnection;
         return this;
     }
 
-    public Date get_updatedAt() {
-        return _updatedAt;
+    public Date getLastConnection() {
+        return lastConnection;
     }
 
-    public Device set_updatedAt(Date _updatedAt) {
-        this._updatedAt = _updatedAt;
+    public Device setLastConnection(Date lastConnection) {
+        this.lastConnection = lastConnection;
         return this;
     }
-
-    public enum Type {
-        Android, Apple
-    }
-
 }

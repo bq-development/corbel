@@ -246,7 +246,6 @@ public class DefaultScopeService implements ScopeService {
         if (scope.getId().contains(";")) {
             throw new ScopeNameException();
         }
-
         scopeRepository.save(scope);
         eventsService.sendCreateScope(scope.getIdWithParameters());
     }

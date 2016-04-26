@@ -5,6 +5,7 @@ import io.corbel.iam.auth.OauthParams;
 import io.corbel.iam.exception.*;
 import io.corbel.iam.model.GrantType;
 import io.corbel.iam.model.TokenGrant;
+import io.corbel.iam.model.TokenUpgradeGrant;
 import io.corbel.iam.service.AuthorizationService;
 import io.corbel.iam.service.UpgradeTokenService;
 import io.corbel.iam.utils.TokenCookieFactory;
@@ -20,6 +21,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriInfo;
 import java.net.URLDecoder;
+import java.util.List;
+import java.util.Set;
 
 /**
  * @author Alexander De Leon
@@ -38,43 +41,11 @@ public class TokenResource {
         this.tokenCookieFactory = tokenCookieFactory;
     }
 
-    @POST
-    public Response getToken(@FormParam("grant_type") String grantType, @FormParam("assertion") String assertion,
-                             @HeaderParam("RequestCookie") boolean cookie) {
-        if (grantType == null || grantType.isEmpty()) {
-            return IamErrorResponseFactory.getInstance().missingGrantType();
-        }
-        if (assertion == null || assertion.isEmpty()) {
-            return IamErrorResponseFactory.getInstance().missingAssertion();
-        }
-        if (grantType.equals(GrantType.JWT_BEARER)) {
-            return doJwtAuthorization(assertion, Optional.<OauthParams>absent(), cookie);
-        }
-        return IamErrorResponseFactory.getInstance().notSupportedGrantType(grantType);
-    }
-
-    @Path("/upgrade")
-    @GET
-    public Response upgradeTokenGET(@Auth AuthorizationInfo authorizationInfo, @QueryParam("grant_type") String grantType,
-                                    @QueryParam("assertion") String assertion) {
-
-        return upgradeToken(authorizationInfo, grantType, assertion);
-    }
-
-    @Path("/upgrade")
-    @POST
-    public Response upgradeTokenPOST(@Auth AuthorizationInfo authorizationInfo, @FormParam("grant_type") String grantType,
-                                     @FormParam("assertion") String assertion) {
-
-        return upgradeToken(authorizationInfo, grantType, assertion);
-    }
-
     @GET
     public Response getTokenWithCode(@Context UriInfo uriInfo, @QueryParam("grant_type") String grantType,
                                      @QueryParam("assertion") String assertion, @QueryParam("access_token") String accessToken, @QueryParam("code") String code,
                                      @QueryParam("oauth_token") String token, @QueryParam("oauth_verifier") String verifier,
                                      @QueryParam("redirect_uri") String redirectUri, @QueryParam("state") String state, @HeaderParam("RequestCookie") boolean cookie) {
-
         if (state != null) {
             try {
                 state = URLDecoder.decode(state, "UTF-8");
@@ -93,34 +64,60 @@ public class TokenResource {
                 return ErrorResponseFactory.getInstance().badRequest();
             }
         }
-
         if (grantType == null || grantType.isEmpty()) {
             return IamErrorResponseFactory.getInstance().missingGrantType();
         }
         if (assertion == null || assertion.isEmpty()) {
             return IamErrorResponseFactory.getInstance().missingAssertion();
         }
-
         if (grantType.equals(GrantType.JWT_BEARER)) {
-            OauthParams params = new OauthParams().setAccessToken(accessToken).setCode(code).setToken(token).setVerifier(verifier)
-                    .setRedirectUri(redirectUri != null ? redirectUri : uriInfo.getAbsolutePath().toString());
+            OauthParams params = new OauthParams().setAccessToken(accessToken).setCode(code).setToken(token)
+                    .setVerifier(verifier).setRedirectUri(redirectUri != null ? redirectUri
+                            : uriInfo.getAbsolutePath().toString());
             return doJwtAuthorization(assertion, Optional.of(params), cookie);
         }
         return IamErrorResponseFactory.getInstance().notSupportedGrantType(grantType);
     }
 
+    @POST
+    public Response getToken(@FormParam("grant_type") String grantType, @FormParam("assertion") String assertion,
+                             @HeaderParam("RequestCookie") boolean cookie) {
+        if (grantType == null || grantType.isEmpty()) {
+            return IamErrorResponseFactory.getInstance().missingGrantType();
+        }
+        if (assertion == null || assertion.isEmpty()) {
+            return IamErrorResponseFactory.getInstance().missingAssertion();
+        }
+        if (grantType.equals(GrantType.JWT_BEARER)) {
+            return doJwtAuthorization(assertion, Optional.absent(), cookie);
+        }
+        return IamErrorResponseFactory.getInstance().notSupportedGrantType(grantType);
+    }
+
+    @Path("/upgrade")
+    @GET
+    public Response upgradeTokenGET(@Auth AuthorizationInfo authorizationInfo, @QueryParam("grant_type") String grantType,
+                                    @QueryParam("assertion") String assertion) {
+
+        return upgradeToken(authorizationInfo, grantType, assertion);
+    }
+
+    @Path("/upgrade")
+    @POST
+    public Response upgradeTokenPOST(@Auth AuthorizationInfo authorizationInfo, @FormParam("grant_type") String grantType,
+                                     @FormParam("assertion") String assertion) {
+        return upgradeToken(authorizationInfo, grantType, assertion);
+    }
+
     private Response doJwtAuthorization(String assertion, Optional<OauthParams> params, boolean setCookie) {
         try {
-            TokenGrant token = params.isPresent() ? authorizationService.authorize(assertion, params.get()) : authorizationService
-                    .authorize(assertion);
-
+            TokenGrant token = params.isPresent() ? authorizationService.authorize(assertion, params.get()) :
+                    authorizationService.authorize(assertion);
             ResponseBuilder responseBuilder = Response.ok(token).type(MediaType.APPLICATION_JSON_TYPE);
-
             if (setCookie) {
                 int maxAge = (int) ((token.getExpiresAt() - System.currentTimeMillis()) / 1000);
                 responseBuilder.cookie(tokenCookieFactory.createCookie(token.getAccessToken(), maxAge));
             }
-
             return responseBuilder.build();
         } catch (NoSuchPrincipalException e) {
             return IamErrorResponseFactory.getInstance().noSuchPrincipal(e.getMessage());
@@ -142,7 +139,6 @@ public class TokenResource {
 
     private Response upgradeToken(@Auth AuthorizationInfo authorizationInfo, @QueryParam("grant_type") String grantType,
                                   @QueryParam("assertion") String assertion) {
-
         if (assertion == null || assertion.isEmpty()) {
             return IamErrorResponseFactory.getInstance().missingAssertion();
         }
@@ -151,13 +147,13 @@ public class TokenResource {
         }
         if (grantType.equals(GrantType.JWT_BEARER)) {
             try {
-                upgradeTokenService.upgradeToken(assertion, authorizationInfo.getTokenReader());
-                return Response.noContent().build();
+                Set<String> scopes = upgradeTokenService.getScopesFromTokenToUpgrade(assertion);
+                upgradeTokenService.upgradeToken(assertion, authorizationInfo.getTokenReader(), scopes);
+                return Response.ok(new TokenUpgradeGrant(scopes)).type(MediaType.APPLICATION_JSON_TYPE).build();
             } catch (UnauthorizedException e) {
                 return IamErrorResponseFactory.getInstance().unauthorized(e.getMessage());
             }
         }
         return IamErrorResponseFactory.getInstance().notSupportedGrantType(grantType);
     }
-
 }

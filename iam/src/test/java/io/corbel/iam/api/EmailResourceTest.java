@@ -34,7 +34,7 @@ public class EmailResourceTest extends UserResourceTestBase {
     private static final TokenInfo tokenMock = mock(TokenInfo.class);
 
     private static OAuthFactory oAuthFactory = new OAuthFactory<>(authenticatorMock, "realm", AuthorizationInfo.class);
-    private static final AuthorizationRequestFilter filter = spy(new AuthorizationRequestFilter(oAuthFactory, null, "", false));
+    private static final AuthorizationRequestFilter filter = spy(new AuthorizationRequestFilter(oAuthFactory, null, "", false, "email"));
 
     @ClassRule
     public static ResourceTestRule RULE = ResourceTestRule.builder().addResource(new EmailResource(userServiceMock))
@@ -59,8 +59,8 @@ public class EmailResourceTest extends UserResourceTestBase {
     public void testGetUserByEmailOK() {
         User user = createTestUser();
         when(userServiceMock.findByDomainAndEmail(TEST_DOMAIN_ID, TEST_USER_EMAIL)).thenReturn(user);
-        User response = RULE.client().target("/v1.0/email/" + TEST_USER_EMAIL).request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
-                .get(User.class);
+        User response = RULE.client().target("/v1.0/" + TEST_DOMAIN_ID + "/email/" + TEST_USER_EMAIL)
+                .request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(User.class);
         verify(userServiceMock, times(1)).findByDomainAndEmail(TEST_DOMAIN_ID, TEST_USER_EMAIL);
 
         assertEquals(response.getId(), TEST_USER_ID);
@@ -71,8 +71,8 @@ public class EmailResourceTest extends UserResourceTestBase {
         when(userServiceMock.findUserDomain(TEST_USER_ID)).thenReturn(TEST_DOMAIN_ID);
         User user = createTestUser();
         when(userServiceMock.findByDomainAndEmail(TEST_DOMAIN_ID, TEST_USER_EMAIL)).thenReturn(user);
-        Response response = RULE.client().target("/v1.0/email/" + TEST_USER_EMAIL + Instant.now().toString()).request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
-                .get();
+        Response response = RULE.client().target("/v1.0/email/" + TEST_USER_EMAIL + Instant.now().toString())
+                .request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get();
 
         assertThat(response.getStatus()).isEqualTo(404);
     }
@@ -80,8 +80,8 @@ public class EmailResourceTest extends UserResourceTestBase {
     @Test
     public void testExistsUserByEmail() {
         when(userServiceMock.existsByEmailAndDomain(TEST_USER_EMAIL, TEST_DOMAIN_ID)).thenReturn(true);
-        Response response = RULE.client().target("/" + ApiVersion.CURRENT + "/email/" + TEST_USER_EMAIL).request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
-                .head();
+        Response response = RULE.client().target("/" + ApiVersion.CURRENT + "/" + TEST_DOMAIN_ID +"/email/"
+                + TEST_USER_EMAIL).request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN).head();
         assertThat(response.getStatus()).isEqualTo(200);
     }
 

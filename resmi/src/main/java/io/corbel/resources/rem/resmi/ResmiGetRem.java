@@ -44,12 +44,12 @@ public class ResmiGetRem extends AbstractResmiRem {
         ResourceUri resourceUri = buildCollectionUri(parameters.getRequestedDomain(), type);
         try {
             if (parameters.getOptionalApiParameters().flatMap(CollectionParameters::getAggregation).isPresent()) {
-                return buildResponse(resmiService.aggregate(resourceUri, parameters.getOptionalApiParameters().get()));
+                return buildResponseWithCustomEtag(resmiService.aggregate(resourceUri, parameters.getOptionalApiParameters().get()));
             } else if (parameters.getCustomParameterValue(API_DISTINCT) != null) {
                 List<String> fields = getDistinctFields(parameters.getCustomParameterValue(API_DISTINCT));
-                return buildResponse(resmiService.findCollectionDistinct(resourceUri, parameters.getOptionalApiParameters(), fields, true));
+                return buildResponseWithCustomEtag(resmiService.findCollectionDistinct(resourceUri, parameters.getOptionalApiParameters(), fields, true));
             } else {
-                return buildResponse(resmiService.findCollection(resourceUri, parameters.getOptionalApiParameters()));
+                return buildResponseWithCustomEtag(resmiService.findCollection(resourceUri, parameters.getOptionalApiParameters()));
             }
 
         } catch (BadConfigurationException | InvalidApiParamException | ElasticsearchException e) {
@@ -63,7 +63,7 @@ public class ResmiGetRem extends AbstractResmiRem {
     @Override
     public Response resource(String type, ResourceId id, RequestParameters<ResourceParameters> parameters, Optional<JsonObject> entity) {
         ResourceUri resourceUri = buildResourceUri(parameters.getRequestedDomain(), type, id.getId());
-        return buildResponse(resmiService.findResource(resourceUri));
+        return buildResponseWithCustomEtag(resmiService.findResource(resourceUri));
     }
 
     @Override
@@ -73,12 +73,12 @@ public class ResmiGetRem extends AbstractResmiRem {
                 parameters.getOptionalApiParameters().flatMap(RelationParameters::getPredicateResource));
         try {
             if (parameters.getOptionalApiParameters().flatMap(CollectionParameters::getAggregation).isPresent()) {
-                return buildResponse(resmiService.aggregate(resourceUri, parameters.getOptionalApiParameters().get()));
+                return buildResponseWithCustomEtag(resmiService.aggregate(resourceUri, parameters.getOptionalApiParameters().get()));
             } else if (parameters.getCustomParameterValue(API_DISTINCT) != null) {
                 List<String> fields = getDistinctFields(parameters.getCustomParameterValue(API_DISTINCT));
-                return buildResponse(resmiService.findRelationDistinct(resourceUri, parameters.getOptionalApiParameters(), fields, true));
+                return buildResponseWithCustomEtag(resmiService.findRelationDistinct(resourceUri, parameters.getOptionalApiParameters(), fields, true));
             } else {
-                return buildResponse(resmiService.findRelation(resourceUri, parameters.getOptionalApiParameters()));
+                return buildResponseWithCustomEtag(resmiService.findRelation(resourceUri, parameters.getOptionalApiParameters()));
             }
         } catch (InvalidApiParamException | ElasticsearchException e) {
             return ErrorResponseFactory.getInstance().badRequest(new Error("bad_request", e.getMessage()));

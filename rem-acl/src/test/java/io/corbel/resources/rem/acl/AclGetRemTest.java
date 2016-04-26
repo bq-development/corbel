@@ -24,6 +24,7 @@ import com.google.gson.JsonObject;
 
 import io.corbel.lib.token.TokenInfo;
 import io.corbel.resources.rem.acl.exception.AclFieldNotPresentException;
+import io.corbel.resources.rem.model.AclPermission;
 import io.corbel.resources.rem.request.*;
 import io.corbel.resources.rem.service.AclResourcesService;
 import io.corbel.resources.rem.service.RemService;

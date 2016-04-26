@@ -12,6 +12,7 @@ import io.corbel.lib.queries.mongo.builder.CriteriaBuilder;
 import io.corbel.lib.queries.request.*;
 import io.corbel.resources.rem.dao.builder.MongoAggregationBuilder;
 import io.corbel.resources.rem.model.GenericDocument;
+import io.corbel.resources.rem.model.RelationDocument;
 import io.corbel.resources.rem.model.ResourceUri;
 import io.corbel.resources.rem.resmi.exception.InvalidApiParamException;
 import io.corbel.resources.rem.utils.JsonUtils;
@@ -56,6 +57,11 @@ public class MongoResmiDao implements ResmiDao {
     private static final String CREATED_AT = "_createdAt";
     private static final String COUNT = "count";
     private static final String AVERAGE = "average";
+    private static final String SUM = "sum";
+
+    private static final int MONGO_DOUBLE_TYPE = 1;
+    private static final int MONGO_INT_TYPE = 16;
+    private static final int MONGO_LONG_TYPE = 18;
 
 
     private final MongoOperations mongoOperations;
@@ -316,7 +322,7 @@ public class MongoResmiDao implements ResmiDao {
     public List<GenericDocument> deleteCollection(ResourceUri uri, Optional<List<ResourceQuery>> queries) {
         List<ResourceQuery> resourceQueries = queries.orElse(Collections.<ResourceQuery>emptyList());
         Criteria criteria = CriteriaBuilder.buildFromResourceQueries(resourceQueries);
-        return findAllAndRemove(uri, criteria);
+        return findAllAndRemove(uri, criteria, GenericDocument.class);
     }
 
     @Override
@@ -330,11 +336,13 @@ public class MongoResmiDao implements ResmiDao {
             criteria = criteria.and(JsonRelation._DST_ID).is(uri.getRelationId());
         }
 
-        return findAllAndRemove(uri, criteria);
+        return findAllAndRemove(uri, criteria, RelationDocument.class).stream().map(document -> {
+            return new GenericDocument().setId(document.getDstId());
+        }).collect(Collectors.<GenericDocument>toList());
     }
 
-    private List<GenericDocument> findAllAndRemove(ResourceUri resourceUri, Criteria criteria) {
-        return mongoOperations.findAllAndRemove(new Query(criteria), GenericDocument.class, getMongoCollectionName(resourceUri));
+    private <T extends GenericDocument> List<T> findAllAndRemove(ResourceUri resourceUri, Criteria criteria, Class<T> clazz) {
+        return mongoOperations.findAllAndRemove(new Query(criteria), clazz, getMongoCollectionName(resourceUri));
     }
 
     private JsonObject findAndRemove(ResourceUri resourceUri, Criteria criteria) {
@@ -360,27 +368,48 @@ public class MongoResmiDao implements ResmiDao {
 
     @Override
     public JsonElement average(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field) {
-        List<DBObject> results = aggregate(resourceUri, resourceQueries, group().avg(field).as(AVERAGE));
+        List<DBObject> results = aggregate(resourceUri, resourceQueries, group().avg(field).as(AVERAGE).count().as(COUNT));
 
         return fieldNotExists(resourceUri, field, results, AVERAGE) ? aggregationResultsFactory.averageResult(Optional.empty()) :
-                aggregationResultsFactory.averageResult(results.isEmpty() ? Optional.empty() : Optional.ofNullable(
-                        (Number) results.get(0).get(AVERAGE)).map(Number::doubleValue));
+                aggregationResultsFactory.averageResult(getAggregationResultValue(AVERAGE, results, resourceUri, field));
+    }
+
+    @Override
+        public JsonElement sum(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field) {
+        List<DBObject> results = aggregate(resourceUri, resourceQueries, group().sum(field).as(SUM).count().as(COUNT));
+
+        return aggregationResultsFactory.sumResult(getAggregationResultValue(SUM, results, resourceUri, field));
     }
 
 
-    @Override
-    public JsonElement sum(ResourceUri resourceUri, List<ResourceQuery> resourceQueries, String field) {
-        List<DBObject> results = aggregate(resourceUri, resourceQueries, group().sum(field).as("sum"));
+    private Optional<Double> getAggregationResultValue(String operator, List<DBObject> results, ResourceUri resourceUri, String field) {
+        if(!results.isEmpty()) {
+            DBObject result = results.get(0);
+            if(isValidAggregationResult(result, resourceUri, field, operator)) {
+                return Optional.ofNullable((Number) result.get(operator)).map(Number::doubleValue);
+            }
+        }
+        return Optional.empty();
+    }
 
-        return fieldNotExists(resourceUri, field, results, "sum") ? aggregationResultsFactory.sumResult(Optional.empty()) :
-                aggregationResultsFactory.sumResult(results.isEmpty() ? Optional.empty() : Optional.ofNullable(
-                        (Number) results.get(0).get("sum")).map(Number::doubleValue));
+    private boolean isValidAggregationResult(DBObject result, ResourceUri resourceUri, String field, String operator) {
+        Object aggregation = result.get(operator);
+        int count = (int) result.get(COUNT);
+
+        return !(count == 0 || ((aggregation.equals(0) || aggregation.equals(0.0)) && !collectionHasAtLeastOneEntryWithNumericInField(resourceUri, field)));
     }
 
     protected boolean fieldNotExists(ResourceUri resourceUri, String field, List<DBObject> results, String type) {
         Query query = Query.query(Criteria.where(field).exists(true));
 
         return ((results.get(0).get(type).equals(0) || results.get(0).get(type).equals(0.0)) && mongoOperations.count(query, getMongoCollectionName(resourceUri)) == 0);
+    }
+
+    protected boolean collectionHasAtLeastOneEntryWithNumericInField(ResourceUri resourceUri, String field) {
+        Query query = Query.query(Criteria.where(field).type(MONGO_DOUBLE_TYPE).orOperator(Criteria.where(field).type(MONGO_INT_TYPE)
+                .orOperator(Criteria.where(field).type(MONGO_LONG_TYPE))));
+
+        return mongoOperations.count(query, getMongoCollectionName(resourceUri)) != 0;
     }
 
     @Override

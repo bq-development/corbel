@@ -98,7 +98,7 @@ public class RemResourceTest {
     private static EventBus eventBusMock = mock(EventBus.class);
 
     private static OAuthFactory oAuthFactory = new OAuthFactory<>(authenticatorMock, "realm", AuthorizationInfo.class);
-    private static final AuthorizationRequestFilter filter = spy(new AuthorizationRequestFilter(oAuthFactory, null, "", true));
+    private static final AuthorizationRequestFilter filter = spy(new AuthorizationRequestFilter(oAuthFactory, null, "", true, "resource"));
 
     private static final RemResource remResource;
 

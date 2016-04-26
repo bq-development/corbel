@@ -43,6 +43,7 @@ public class GroupResourceTest {
     private static final String TOKEN = "token";
     private static final int DEFAULT_PAGE_SIZE = 10;
     private static final int MAX_PAGE_SIZE = 20;
+    private static final String SCOPES_PATH = "/scope";
 
     public static final QueryParser queryParserMock = mock(QueryParser.class);
     public static final AggregationParser aggregationParserMock = mock(AggregationParser.class);
@@ -56,10 +57,11 @@ public class GroupResourceTest {
     private static final BearerTokenAuthenticator authenticatorMock = mock(BearerTokenAuthenticator.class);
     private static final AuthorizationInfo authorizationInfoMock = mock(AuthorizationInfo.class);
 
+
     private static OAuthFactory oAuthFactory = new OAuthFactory<>(authenticatorMock, "realm", AuthorizationInfo.class);
     @SuppressWarnings("unchecked") private static CookieOAuthFactory<AuthorizationInfo> cookieOAuthFactory = mock(CookieOAuthFactory.class);
     @SuppressWarnings("unchecked") private static final AuthorizationRequestFilter filter = spy(
-            new AuthorizationRequestFilter(oAuthFactory, cookieOAuthFactory, "", false));
+            new AuthorizationRequestFilter(oAuthFactory, cookieOAuthFactory, "", false, "group"));
 
     @ClassRule public static ResourceTestRule RULE = ResourceTestRule.builder().addResource(new GroupResource(groupService))
             .addProvider(filter).addProvider(new AuthorizationInfoProvider().getBinder()).addProvider(GenericExceptionMapper.class)
@@ -71,6 +73,7 @@ public class GroupResourceTest {
         reset(authorizationInfoMock, authenticatorMock, cookieOAuthFactory, groupService);
 
         when(cookieOAuthFactory.provide()).thenReturn(authorizationInfoMock);
+        when(cookieOAuthFactory.clone(false)).thenReturn(cookieOAuthFactory);
         when(authenticatorMock.authenticate(TOKEN)).thenReturn(com.google.common.base.Optional.of(authorizationInfoMock));
         when(authorizationInfoMock.getDomainId()).thenReturn(DOMAIN);
 
@@ -89,7 +92,7 @@ public class GroupResourceTest {
 
         String groupJson = new ObjectMapper().writer().writeValueAsString(group);
 
-        Response response = RULE.client().target("/" + ApiVersion.CURRENT + "/group").request().post(Entity.json(groupJson),
+        Response response = RULE.client().target("/" + ApiVersion.CURRENT + "/" + DOMAIN + "/group").request().post(Entity.json(groupJson),
                 Response.class);
 
         assertThat(response.getStatus()).isEqualTo(Response.Status.CREATED.getStatusCode());
@@ -105,7 +108,7 @@ public class GroupResourceTest {
 
         String groupJson = new ObjectMapper().writer().writeValueAsString(group);
 
-        Response response = RULE.client().target("/" + ApiVersion.CURRENT + "/group").request().post(Entity.json(groupJson),
+        Response response = RULE.client().target("/" + ApiVersion.CURRENT + "/" + DOMAIN + "/group").request().post(Entity.json(groupJson),
                 Response.class);
 
         assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
@@ -119,7 +122,7 @@ public class GroupResourceTest {
 
         String groupJson = new ObjectMapper().writer().writeValueAsString(group);
 
-        Response response = RULE.client().target("/" + ApiVersion.CURRENT + "/group").request().post(Entity.json(groupJson),
+        Response response = RULE.client().target("/" + ApiVersion.CURRENT + "/" + DOMAIN + "/group").request().post(Entity.json(groupJson),
                 Response.class);
 
         assertThat(response.getStatus()).isEqualTo(Response.Status.CONFLICT.getStatusCode());
@@ -130,7 +133,7 @@ public class GroupResourceTest {
     public void getAllGroupsTest() {
         when(groupService.getAll(any(), any(), any(), any())).thenReturn(Collections.emptyList());
 
-        assertThat(RULE.client().target("/" + ApiVersion.CURRENT + "/group").request().get(List.class)).hasSize(0);
+        assertThat(RULE.client().target("/" + ApiVersion.CURRENT + "/" + DOMAIN + "/group").request().get(List.class)).hasSize(0);
     }
 
     @Test
@@ -139,14 +142,14 @@ public class GroupResourceTest {
 
         when(groupService.get(eq(ID), eq(DOMAIN))).thenReturn(Optional.of(group));
 
-        assertThat(RULE.client().target("/" + ApiVersion.CURRENT + "/group/" + ID).request().get(Group.class)).isEqualTo(group);
+        assertThat(RULE.client().target("/" + ApiVersion.CURRENT + "/" + DOMAIN + "/group/" + ID).request().get(Group.class)).isEqualTo(group);
     }
 
     @Test
     public void getNonexistentGroupTest() {
         when(groupService.get(eq(ID), eq(DOMAIN))).thenReturn(Optional.empty());
 
-        assertThat(RULE.client().target("/" + ApiVersion.CURRENT + "/group/" + ID).request().get(Response.class).getStatus())
+        assertThat(RULE.client().target("/" + ApiVersion.CURRENT + "/" + DOMAIN + "/group/" + ID).request().get(Response.class).getStatus())
                 .isEqualTo(Response.Status.NOT_FOUND.getStatusCode());
     }
 
@@ -156,7 +159,7 @@ public class GroupResourceTest {
 
         when(groupService.get(eq(ID))).thenReturn(Optional.of(group));
 
-        assertThat(RULE.client().target("/" + ApiVersion.CURRENT + "/group/" + ID).request().delete().getStatus())
+        assertThat(RULE.client().target("/" + ApiVersion.CURRENT + "/" + DOMAIN + "/group/" + ID).request().delete().getStatus())
                 .isEqualTo(Response.Status.NO_CONTENT.getStatusCode());
 
         verify(groupService).get(eq(ID));
@@ -170,7 +173,7 @@ public class GroupResourceTest {
 
         when(groupService.get(eq(ID))).thenReturn(Optional.of(group));
 
-        assertThat(RULE.client().target("/" + ApiVersion.CURRENT + "/group/" + ID).request().delete().getStatus())
+        assertThat(RULE.client().target("/" + ApiVersion.CURRENT + "/" + DOMAIN + "/group/" + ID).request().delete().getStatus())
                 .isEqualTo(Response.Status.UNAUTHORIZED.getStatusCode());
 
         verify(groupService).get(eq(ID));
@@ -181,7 +184,7 @@ public class GroupResourceTest {
     public void deleteNonExistentGroupTest() {
         when(groupService.get(eq(ID))).thenReturn(Optional.empty());
 
-        assertThat(RULE.client().target("/" + ApiVersion.CURRENT + "/group/" + ID).request().delete().getStatus())
+        assertThat(RULE.client().target("/" + ApiVersion.CURRENT + "/" + DOMAIN + "/group/" + ID).request().delete().getStatus())
                 .isEqualTo(Response.Status.NO_CONTENT.getStatusCode());
 
         verify(groupService).get(eq(ID));
@@ -196,8 +199,8 @@ public class GroupResourceTest {
 
         when(groupService.get(eq(ID))).thenReturn(Optional.of(group));
 
-        assertThat(RULE.client().target("/" + ApiVersion.CURRENT + "/group/" + ID + "/scopes").request().put(Entity.json(scopesToJson))
-                .getStatus()).isEqualTo(Response.Status.NO_CONTENT.getStatusCode());
+        assertThat(RULE.client().target("/" + ApiVersion.CURRENT + "/" + DOMAIN + "/group/" + ID + SCOPES_PATH).request()
+                .put(Entity.json(scopesToJson)).getStatus()).isEqualTo(Response.Status.NO_CONTENT.getStatusCode());
 
         verify(groupService).get(eq(ID));
         verify(groupService).addScopes(eq(ID), any());
@@ -213,7 +216,7 @@ public class GroupResourceTest {
         when(groupService.get(eq(ID))).thenReturn(Optional.of(group));
         doThrow(NotExistentScopeException.class).when(groupService).addScopes(ID, "scope");
 
-        Response response = RULE.client().target("/" + ApiVersion.CURRENT + "/group/" + ID + "/scopes").request()
+        Response response = RULE.client().target("/" + ApiVersion.CURRENT + "/" + DOMAIN + "/group/" + ID + SCOPES_PATH).request()
                 .put(Entity.json(scopesToJson));
 
         assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
@@ -230,7 +233,7 @@ public class GroupResourceTest {
 
         when(groupService.get(eq(ID))).thenReturn(Optional.empty());
 
-        assertThat(RULE.client().target("/" + ApiVersion.CURRENT + "/group/" + ID + "/scopes").request().put(Entity.json(scopesToJson))
+        assertThat(RULE.client().target("/" + ApiVersion.CURRENT + "/" + DOMAIN + "/group/" + ID + SCOPES_PATH).request().put(Entity.json(scopesToJson))
                 .getStatus()).isEqualTo(Response.Status.NOT_FOUND.getStatusCode());
 
         verify(groupService).get(eq(ID));
@@ -245,7 +248,7 @@ public class GroupResourceTest {
 
         when(groupService.get(eq(ID))).thenReturn(Optional.of(group));
 
-        assertThat(RULE.client().target("/" + ApiVersion.CURRENT + "/group/" + ID + "/scopes").request().put(Entity.json(scopesToJson))
+        assertThat(RULE.client().target("/" + ApiVersion.CURRENT + "/" + DOMAIN + "/group/" + ID + SCOPES_PATH).request().put(Entity.json(scopesToJson))
                 .getStatus()).isEqualTo(Response.Status.UNAUTHORIZED.getStatusCode());
 
         verify(groupService).get(eq(ID));
@@ -259,7 +262,7 @@ public class GroupResourceTest {
 
         when(groupService.get(eq(ID))).thenReturn(Optional.of(group));
 
-        assertThat(RULE.client().target("/" + ApiVersion.CURRENT + "/group/" + ID + "/scopes/" + scope).request().delete().getStatus())
+        assertThat(RULE.client().target("/" + ApiVersion.CURRENT + "/" + DOMAIN + "/group/" + ID + SCOPES_PATH + "/" + scope).request().delete().getStatus())
                 .isEqualTo(Response.Status.NO_CONTENT.getStatusCode());
 
         verify(groupService).get(eq(ID));
@@ -273,7 +276,7 @@ public class GroupResourceTest {
 
         when(groupService.get(eq(ID))).thenReturn(Optional.empty());
 
-        assertThat(RULE.client().target("/" + ApiVersion.CURRENT + "/group/" + ID + "/scopes/" + scope).request().delete().getStatus())
+        assertThat(RULE.client().target("/" + ApiVersion.CURRENT + "/" + DOMAIN + "/group/" + ID + SCOPES_PATH + "/" + scope).request().delete().getStatus())
                 .isEqualTo(Response.Status.NOT_FOUND.getStatusCode());
 
         verify(groupService).get(eq(ID));
@@ -287,7 +290,7 @@ public class GroupResourceTest {
 
         when(groupService.get(eq(ID))).thenReturn(Optional.of(group));
 
-        assertThat(RULE.client().target("/" + ApiVersion.CURRENT + "/group/" + ID + "/scopes/" + scope).request().delete().getStatus())
+        assertThat(RULE.client().target("/" + ApiVersion.CURRENT + "/" + DOMAIN + "/group/" + ID + SCOPES_PATH + "/" + scope).request().delete().getStatus())
                 .isEqualTo(Response.Status.UNAUTHORIZED.getStatusCode());
 
         verify(groupService).get(eq(ID));

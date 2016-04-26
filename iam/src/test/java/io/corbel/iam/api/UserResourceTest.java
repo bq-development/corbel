@@ -20,6 +20,8 @@ import javax.ws.rs.core.Response;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import io.corbel.iam.model.*;
 import io.corbel.lib.ws.gson.GsonMessageReaderWriterProvider;
 import org.glassfish.jersey.client.ClientProperties;
 import org.junit.Before;
@@ -31,9 +33,6 @@ import org.mockito.Mockito;
 import io.corbel.iam.exception.DuplicatedOauthServiceIdentityException;
 import io.corbel.iam.exception.IdentityAlreadyExistsException;
 import io.corbel.iam.exception.UserProfileConfigurationException;
-import io.corbel.iam.model.Identity;
-import io.corbel.iam.model.User;
-import io.corbel.iam.model.UserWithIdentity;
 import io.corbel.iam.repository.CreateUserException;
 import io.corbel.iam.service.DeviceService;
 import io.corbel.iam.service.DomainService;
@@ -66,7 +65,6 @@ public class UserResourceTest extends UserResourceTestBase {
     private static final int MAX_DEFAULT_LIMIT = 50;
     private static final String TEST_AVATAR_URI = "http://jklsdfjklasdfjkl.com/jsdklfjasdkl.png";
 
-
     private static final SortParser sortParserMock = mock(SortParser.class);
     private static final SearchParser searchParserMock = mock(SearchParser.class);
     private static final AggregationParser aggregationParserMock = mock(AggregationParser.class);
@@ -78,6 +76,7 @@ public class UserResourceTest extends UserResourceTestBase {
     private static final QueryParser queryParserMock = mock(QueryParser.class);
     private static final DeviceService devicesServiceMock = mock(DeviceService.class);
     public static final String NOT_ALLOWED_SCOPE = "notAllowedScope";
+    private static final String GROUPS_PATH = "/group";
     private static AggregationResultsFactory<JsonElement> aggregationResultsFactory = new JsonAggregationResultsFactory();
 
     @SuppressWarnings("unchecked")
@@ -85,11 +84,7 @@ public class UserResourceTest extends UserResourceTestBase {
 
     private static OAuthFactory oAuthFactory = new OAuthFactory<>(authenticator, "realm", AuthorizationInfo.class);
 
-    @SuppressWarnings("unchecked") private static final AuthorizationRequestFilter filter = spy(
-            new AuthorizationRequestFilter(oAuthFactory, null, "", false));
-
-
-
+    @SuppressWarnings("unchecked") private static final AuthorizationRequestFilter filter = spy(new AuthorizationRequestFilter(oAuthFactory, null, "", false, "user"));
 
     @ClassRule public static ResourceTestRule RULE = ResourceTestRule
             .builder()
@@ -105,6 +100,7 @@ public class UserResourceTest extends UserResourceTestBase {
     public UserResourceTest() throws Exception {
         when(authorizationInfoMock.getClientId()).thenReturn(TEST_CLIENT_ID);
         when(authorizationInfoMock.getDomainId()).thenReturn(TEST_DOMAIN_ID);
+        when(authorizationInfoMock.getToken()).thenReturn(TEST_TOKEN);
 
         HttpServletRequest requestMock = mock(HttpServletRequest.class);
         when(requestMock.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer " + TEST_TOKEN);
@@ -122,7 +118,7 @@ public class UserResourceTest extends UserResourceTestBase {
     public void setUp() {
         reset(userServiceMock, domainServiceMock, identityServiceMock);
         when(TEST_DOMAIN.getDefaultScopes()).thenReturn(ImmutableSet.of("defaultScope1", "defaultScope2"));
-        when(domainServiceMock.getDomain(TEST_DOMAIN_ID)).thenReturn(Optional.ofNullable(TEST_DOMAIN));
+        when(domainServiceMock.getDomain(TEST_DOMAIN_ID)).thenReturn(Optional.of(TEST_DOMAIN));
     }
 
     @Test
@@ -242,9 +238,9 @@ public class UserResourceTest extends UserResourceTestBase {
         JsonElement expectedResult = aggregationResultsFactory.countResult(4);
         when(aggregationParserMock.parse(aggRequest)).thenReturn(operation);
 
-        when(userServiceMock.countUsersByDomain(eq(TEST_DOMAIN_ID), eq(targetQuery))).thenReturn(4l);
+        when(userServiceMock.countUsersByDomain(eq(TEST_DOMAIN_ID), eq(targetQuery))).thenReturn(4L);
 
-        Response response = getTestRule().client().target("/v1.0/user/")
+        Response response = getTestRule().client().target("/v1.0/" + TEST_DOMAIN_ID + "/user/")
                 .queryParam("api:aggregation", URLEncoder.encode(aggRequest, "UTF-8"))
                 .queryParam("api:query", URLEncoder.encode(queryString, "UTF-8")).request(MediaType.APPLICATION_JSON)
                 .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(Response.class);
@@ -278,7 +274,7 @@ public class UserResourceTest extends UserResourceTestBase {
 
         when(aggregationParserMock.parse(aggRequest)).thenReturn(operation);
 
-        Response response = getTestRule().client().target("/v1.0/user")
+        Response response = getTestRule().client().target("/v1.0/" + TEST_DOMAIN_ID + "/user/")
                 .queryParam("api:aggregation", URLEncoder.encode(aggRequest, "UTF-8"))
                 .queryParam("api:query", URLEncoder.encode(queryString, "UTF-8")).request(MediaType.APPLICATION_JSON)
                 .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(Response.class);
@@ -349,7 +345,7 @@ public class UserResourceTest extends UserResourceTestBase {
         User user = new User();
         user.setEmail(newEmail);
 
-        Response response = getUserClient(TEST_USER_ID).put(Entity.json(user), Response.class);
+        Response response = getUserClientInOtherEmail(TEST_USER_ID).put(Entity.json(user), Response.class);
         assertThat(response.getStatus()).isEqualTo(401);
     }
 
@@ -576,8 +572,9 @@ public class UserResourceTest extends UserResourceTestBase {
         when(authorizationInfoMock.getUserId()).thenReturn(TEST_USER_ID);
         when(authorizationInfoMock.getToken()).thenReturn(TEST_TOKEN);
 
-        Response response = RULE.client().target("/v1.0/user/me/signout").request(MediaType.APPLICATION_JSON)
-                .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).put(Entity.json(""), Response.class);
+        Response response = RULE.client().target("/v1.0/" + TEST_DOMAIN_ID + "/user/me/signout")
+                .request(MediaType.APPLICATION_JSON).header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
+                .put(Entity.json(""), Response.class);
         assertThat(response.getStatus()).isEqualTo(204);
 
         verify(userServiceMock).signOut(TEST_USER_ID, java.util.Optional.of(TEST_TOKEN));
@@ -590,10 +587,10 @@ public class UserResourceTest extends UserResourceTestBase {
         when(authorizationInfoMock.getUserId()).thenReturn(null);
         when(authorizationInfoMock.getToken()).thenReturn(TEST_TOKEN);
 
-        Response response = RULE.client().target("/v1.0/user/me/signout").request(MediaType.APPLICATION_JSON)
-                .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).put(Entity.json(""), Response.class);
+        Response response = RULE.client().target("/v1.0/" + TEST_DOMAIN_ID + "/user/me/signout")
+                .request(MediaType.APPLICATION_JSON).header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
+                .put(Entity.json(""), Response.class);
         assertThat(response.getStatus()).isEqualTo(404);
-
     }
 
     @Test
@@ -603,8 +600,8 @@ public class UserResourceTest extends UserResourceTestBase {
         when(authorizationInfoMock.getUserId()).thenReturn(TEST_USER_ID);
         when(authorizationInfoMock.getToken()).thenReturn(TEST_TOKEN);
 
-        Response response = RULE.client().target("/v1.0/user/me/sessions").request(MediaType.APPLICATION_JSON)
-                .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).delete(Response.class);
+        Response response = RULE.client().target("/v1.0/" + TEST_DOMAIN_ID + "/user/me/session")
+                .request(MediaType.APPLICATION_JSON).header(AUTHORIZATION, "Bearer " + TEST_TOKEN).delete(Response.class);
         assertThat(response.getStatus()).isEqualTo(204);
 
         verify(userServiceMock).invalidateAllTokens(TEST_USER_ID);
@@ -617,10 +614,33 @@ public class UserResourceTest extends UserResourceTestBase {
         when(authorizationInfoMock.getUserId()).thenReturn(null);
         when(authorizationInfoMock.getToken()).thenReturn(TEST_TOKEN);
 
-        Response response = RULE.client().target("/v1.0/user/me/sessions").request(MediaType.APPLICATION_JSON)
-                .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).delete(Response.class);
+        Response response = RULE.client().target("/v1.0/" + TEST_DOMAIN_ID + "/user/me/session")
+                .request(MediaType.APPLICATION_JSON).header(AUTHORIZATION, "Bearer " + TEST_TOKEN).delete(Response.class);
         assertThat(response.getStatus()).isEqualTo(404);
 
+    }
+
+    @Test
+    public void testGetSession(){
+        when(userServiceMock.getSession(TEST_TOKEN)).thenReturn(getTestUserToken());
+        when(userServiceMock.findById(TEST_USER_ID)).thenReturn(getTestUser());
+        when(authorizationInfoMock.getToken()).thenReturn(TEST_TOKEN);
+        when(authorizationInfoMock.getUserId()).thenReturn(TEST_USER_ID);
+
+        Response response = RULE.client().target("/v1.0/" + TEST_DOMAIN_ID + "/user/me/session")
+                .request(MediaType.APPLICATION_JSON).header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(Response.class);
+        assertThat(response.getStatus()).isEqualTo(200);
+
+        verify(userServiceMock).getSession(TEST_TOKEN);
+    }
+
+    @Test
+    public void testGetSessionWithoutToken(){
+        when(userServiceMock.getSession(TEST_TOKEN)).thenReturn(getTestUserToken());
+        when(authorizationInfoMock.getToken()).thenReturn(null);
+        Response response = RULE.client().target("/v1.0/" + TEST_DOMAIN_ID + "/user/me/session")
+                .request(MediaType.APPLICATION_JSON).header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(Response.class);
+        assertThat(response.getStatus()).isEqualTo(404);
     }
 
     @Test
@@ -630,8 +650,9 @@ public class UserResourceTest extends UserResourceTestBase {
 
         when(authorizationInfoMock.getUserId()).thenReturn(TEST_USER_ID);
 
-        Response response = RULE.client().target("/v1.0/user/me/disconnect").request(MediaType.APPLICATION_JSON)
-                .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).put(Entity.json(""), Response.class);
+        Response response = RULE.client().target("/v1.0/" + TEST_DOMAIN_ID + "/user/me/disconnect")
+                .request(MediaType.APPLICATION_JSON).header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
+                .put(Entity.json(""), Response.class);
         assertThat(response.getStatus()).isEqualTo(204);
 
         verify(userServiceMock).signOut(TEST_USER_ID);
@@ -642,8 +663,9 @@ public class UserResourceTest extends UserResourceTestBase {
         when(userServiceMock.findById(TEST_USER_ID)).thenReturn(getTestUser());
         when(userServiceMock.findUserDomain(TEST_USER_ID)).thenReturn(TEST_DOMAIN_ID);
 
-        Response response = RULE.client().target("/v1.0/user/" + TEST_USER_ID + "/disconnect").request(MediaType.APPLICATION_JSON)
-                .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).put(Entity.json(""), Response.class);
+        Response response = RULE.client().target("/v1.0/" + TEST_DOMAIN_ID + "/user/" + TEST_USER_ID + "/disconnect")
+                .request(MediaType.APPLICATION_JSON).header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
+                .put(Entity.json(""), Response.class);
         assertThat(response.getStatus()).isEqualTo(204);
 
         verify(userServiceMock).signOut(TEST_USER_ID);
@@ -654,8 +676,9 @@ public class UserResourceTest extends UserResourceTestBase {
         when(userServiceMock.findById(TEST_USER_ID)).thenReturn(null);
         when(userServiceMock.findUserDomain(TEST_USER_ID)).thenReturn(null);
 
-        Response response = RULE.client().target("/v1.0/user/" + TEST_USER_ID + "/disconnect").request(MediaType.APPLICATION_JSON)
-                .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).put(Entity.json(""), Response.class);
+        Response response = RULE.client().target("/v1.0/" + TEST_DOMAIN_ID + "/user/" + TEST_USER_ID + "/disconnect")
+                .request(MediaType.APPLICATION_JSON).header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
+                .put(Entity.json(""), Response.class);
         assertThat(response.getStatus()).isEqualTo(404);
     }
 
@@ -706,8 +729,9 @@ public class UserResourceTest extends UserResourceTestBase {
         when(domainServiceMock.oAuthServiceAllowedInDomain(oAuthService, TEST_DOMAIN)).thenReturn(true);
         when(userServiceMock.findById(TEST_USER_ID)).thenReturn(createTestUser());
 
-        Response response = RULE.client().target("/v1.0/user/" + TEST_USER_ID + "/identity").request(MediaType.APPLICATION_JSON)
-                .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).post(Entity.json(identity), Response.class);
+        Response response = RULE.client().target("/v1.0/" + TEST_DOMAIN_ID + "/user/" + TEST_USER_ID + "/identity")
+                .request(MediaType.APPLICATION_JSON).header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
+                .post(Entity.json(identity), Response.class);
 
         assertThat(response.getStatus()).isEqualTo(201);
 
@@ -732,7 +756,7 @@ public class UserResourceTest extends UserResourceTestBase {
         when(domainServiceMock.oAuthServiceAllowedInDomain(oAuthService, TEST_DOMAIN)).thenReturn(true);
         when(userServiceMock.findById(TEST_USER_ID)).thenReturn(createTestUser());
 
-        Response response = RULE.client().target("/v1.0/user/me/identity").request(MediaType.APPLICATION_JSON)
+        Response response = RULE.client().target("/v1.0/" + TEST_DOMAIN_ID + "/user/me/identity").request(MediaType.APPLICATION_JSON)
                 .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).post(Entity.json(identity), Response.class);
 
         assertThat(response.getStatus()).isEqualTo(201);
@@ -758,7 +782,7 @@ public class UserResourceTest extends UserResourceTestBase {
         when(domainServiceMock.oAuthServiceAllowedInDomain(oAuthService, TEST_DOMAIN)).thenReturn(true);
         when(userServiceMock.findById(TEST_USER_ID)).thenReturn(null);
 
-        Response response = RULE.client().target("/v1.0/user/" + TEST_USER_ID + "/identity").request(MediaType.APPLICATION_JSON)
+        Response response = RULE.client().target("/v1.0/" + TEST_DOMAIN_ID + "/user/" + TEST_USER_ID + "/identity").request(MediaType.APPLICATION_JSON)
                 .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).post(Entity.json(identity), Response.class);
 
         assertThat(response.getStatus()).isEqualTo(Response.Status.NOT_FOUND.getStatusCode());
@@ -776,7 +800,7 @@ public class UserResourceTest extends UserResourceTestBase {
         when(domainServiceMock.oAuthServiceAllowedInDomain(oAuthService, TEST_DOMAIN)).thenReturn(true);
         when(userServiceMock.findById(TEST_USER_ID)).thenReturn(null);
 
-        Response response = RULE.client().target("/v1.0/user/me/identity").request(MediaType.APPLICATION_JSON)
+        Response response = RULE.client().target("/v1.0/" + TEST_DOMAIN_ID + "/user/me/identity").request(MediaType.APPLICATION_JSON)
                 .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).post(Entity.json(identity), Response.class);
 
         assertThat(response.getStatus()).isEqualTo(Response.Status.NOT_FOUND.getStatusCode());
@@ -793,7 +817,7 @@ public class UserResourceTest extends UserResourceTestBase {
         when(domainServiceMock.oAuthServiceAllowedInDomain(oAuthService, TEST_DOMAIN)).thenReturn(true);
         when(userServiceMock.findById(TEST_USER_ID)).thenReturn(null);
 
-        Response response = RULE.client().target("/v1.0/user/" + TEST_USER_ID + "/identity").request(MediaType.APPLICATION_JSON)
+        Response response = RULE.client().target("/v1.0/" + TEST_DOMAIN_ID + "/user/" + TEST_USER_ID + "/identity").request(MediaType.APPLICATION_JSON)
                 .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).post(Entity.json(identity), Response.class);
 
         assertThat(response.getStatus()).isEqualTo(Response.Status.NOT_FOUND.getStatusCode());
@@ -811,7 +835,7 @@ public class UserResourceTest extends UserResourceTestBase {
         when(domainServiceMock.oAuthServiceAllowedInDomain(oAuthService, TEST_DOMAIN)).thenReturn(true);
         when(userServiceMock.findById(TEST_USER_ID)).thenReturn(null);
 
-        Response response = RULE.client().target("/v1.0/user/me/identity").request(MediaType.APPLICATION_JSON)
+        Response response = RULE.client().target("/v1.0/" + TEST_DOMAIN_ID + "/user/me/identity").request(MediaType.APPLICATION_JSON)
                 .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).post(Entity.json(identity), Response.class);
 
         assertThat(response.getStatus()).isEqualTo(Response.Status.NOT_FOUND.getStatusCode());
@@ -830,7 +854,7 @@ public class UserResourceTest extends UserResourceTestBase {
         when(userServiceMock.findById(TEST_USER_ID)).thenReturn(createTestUser());
         doThrow(new IdentityAlreadyExistsException()).when(identityServiceMock).addIdentity(identity);
 
-        Response response = RULE.client().target("/v1.0/user/" + TEST_USER_ID + "/identity").request(MediaType.APPLICATION_JSON)
+        Response response = RULE.client().target("/v1.0/" + TEST_DOMAIN_ID + "/user/" + TEST_USER_ID + "/identity").request(MediaType.APPLICATION_JSON)
                 .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).post(Entity.json(identity), Response.class);
 
         assertThat(response.getStatus()).isEqualTo(Response.Status.CONFLICT.getStatusCode());
@@ -849,7 +873,7 @@ public class UserResourceTest extends UserResourceTestBase {
         when(userServiceMock.findById(TEST_USER_ID)).thenReturn(createTestUser());
         doThrow(new DuplicatedOauthServiceIdentityException()).when(identityServiceMock).addIdentity(identity);
 
-        Response response = RULE.client().target("/v1.0/user/" + TEST_USER_ID + "/identity").request(MediaType.APPLICATION_JSON)
+        Response response = RULE.client().target("/v1.0/" + TEST_DOMAIN_ID + "/user/" + TEST_USER_ID + "/identity").request(MediaType.APPLICATION_JSON)
                 .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).post(Entity.json(identity), Response.class);
 
         assertThat(response.getStatus()).isEqualTo(Response.Status.CONFLICT.getStatusCode());
@@ -869,7 +893,7 @@ public class UserResourceTest extends UserResourceTestBase {
         when(userServiceMock.findById(TEST_USER_ID)).thenReturn(createTestUser());
         doThrow(new IdentityAlreadyExistsException()).when(identityServiceMock).addIdentity(identity);
 
-        Response response = RULE.client().target("/v1.0/user/me/identity").request(MediaType.APPLICATION_JSON)
+        Response response = RULE.client().target("/v1.0/" + TEST_DOMAIN_ID + "/user/me/identity").request(MediaType.APPLICATION_JSON)
                 .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).post(Entity.json(identity), Response.class);
 
         assertThat(response.getStatus()).isEqualTo(Response.Status.CONFLICT.getStatusCode());
@@ -886,8 +910,10 @@ public class UserResourceTest extends UserResourceTestBase {
         when(domainServiceMock.scopesAllowedInDomain(TEST_SCOPES, TEST_DOMAIN)).thenReturn(true);
         when(domainServiceMock.oAuthServiceAllowedInDomain(oAuthService, TEST_DOMAIN)).thenReturn(false);
         when(userServiceMock.findById(TEST_USER_ID)).thenReturn(createTestUser());
-        Response response = RULE.client().target("/v1.0/user/" + TEST_USER_ID + "/identity").request(MediaType.APPLICATION_JSON)
-                .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).post(Entity.json(identity), Response.class);
+
+        Response response = RULE.client().target("/v1.0/" + TEST_DOMAIN_ID + "/user/" + TEST_USER_ID + "/identity")
+                .request(MediaType.APPLICATION_JSON).header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
+                .post(Entity.json(identity), Response.class);
 
         assertThat(response.getStatus()).isEqualTo(400);
     }
@@ -903,8 +929,9 @@ public class UserResourceTest extends UserResourceTestBase {
         when(domainServiceMock.scopesAllowedInDomain(TEST_SCOPES, TEST_DOMAIN)).thenReturn(true);
         when(domainServiceMock.oAuthServiceAllowedInDomain(oAuthService, TEST_DOMAIN)).thenReturn(false);
         when(userServiceMock.findById(TEST_USER_ID)).thenReturn(createTestUser());
-        Response response = RULE.client().target("/v1.0/user/me/identity").request(MediaType.APPLICATION_JSON)
-                .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).post(Entity.json(identity), Response.class);
+        Response response = RULE.client().target("/v1.0/" + TEST_DOMAIN_ID + "/user/me/identity")
+                .request(MediaType.APPLICATION_JSON).header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
+                .post(Entity.json(identity), Response.class);
 
         assertThat(response.getStatus()).isEqualTo(400);
     }
@@ -918,8 +945,9 @@ public class UserResourceTest extends UserResourceTestBase {
 
         when(userServiceMock.findById(TEST_USER_ID)).thenReturn(createTestUser());
 
-        Response response = RULE.client().target("/v1.0/user/"+TEST_USER_ID+"/groups").request(MediaType.APPLICATION_JSON)
-                .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).put(Entity.json(groups), Response.class);
+        Response response = RULE.client().target("/v1.0/" + TEST_DOMAIN_ID + "/user/"+TEST_USER_ID + GROUPS_PATH)
+                .request(MediaType.APPLICATION_JSON).header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
+                .put(Entity.json(groups), Response.class);
 
         verify(userServiceMock).update(userWithGroup);
         assertThat(response.getStatus()).isEqualTo(204);
@@ -934,8 +962,8 @@ public class UserResourceTest extends UserResourceTestBase {
 
         when(userServiceMock.findById(TEST_USER_ID)).thenReturn(userWithGroup);
 
-        Response response = RULE.client().target("/v1.0/user/"+TEST_USER_ID+"/groups/groupId").request(MediaType.APPLICATION_JSON)
-                .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).delete(Response.class);
+        Response response = RULE.client().target("/v1.0/" + TEST_DOMAIN_ID + "/user/"+TEST_USER_ID + GROUPS_PATH + "/groupId")
+                .request(MediaType.APPLICATION_JSON).header(AUTHORIZATION, "Bearer " + TEST_TOKEN).delete(Response.class);
 
         User userWithGroupsEmpty = createTestUser();
         userWithGroupsEmpty.setGroups(new HashSet<>());
@@ -943,7 +971,6 @@ public class UserResourceTest extends UserResourceTestBase {
         verify(userServiceMock).update(userWithGroupsEmpty);
         assertThat(response.getStatus()).isEqualTo(204);
     }
-
 
     @Test
     public void testGetIdentities() {
@@ -965,8 +992,8 @@ public class UserResourceTest extends UserResourceTestBase {
 
         when(identityServiceMock.findUserIdentities(user)).thenReturn(identities);
 
-        Response response = RULE.client().target("/v1.0/user/" + TEST_USER_ID + "/identity").request(MediaType.APPLICATION_JSON)
-                .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(Response.class);
+        Response response = RULE.client().target("/v1.0/" + TEST_DOMAIN_ID + "/user/" + TEST_USER_ID + "/identity")
+                .request(MediaType.APPLICATION_JSON).header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(Response.class);
 
         assertThat(response.getStatus()).isEqualTo(200);
         assertThat(response.readEntity(new GenericType<List<Identity>>() {})).isEqualTo(identities);
@@ -992,8 +1019,8 @@ public class UserResourceTest extends UserResourceTestBase {
 
         when(identityServiceMock.findUserIdentities(user)).thenReturn(identities);
 
-        Response response = RULE.client().target("/v1.0/user/me/identity").request(MediaType.APPLICATION_JSON)
-                .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(Response.class);
+        Response response = RULE.client().target("/v1.0/" + TEST_DOMAIN_ID + "/user/me/identity")
+                .request(MediaType.APPLICATION_JSON).header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(Response.class);
 
         assertThat(response.getStatus()).isEqualTo(200);
         assertThat(response.readEntity(new GenericType<List<Identity>>() {})).isEqualTo(identities);
@@ -1003,8 +1030,8 @@ public class UserResourceTest extends UserResourceTestBase {
     public void testMeGetIdentitiesWithoutUser() {
         when(authorizationInfoMock.getUserId()).thenReturn(null);
 
-        Response response = RULE.client().target("/v1.0/user/me/identity").request(MediaType.APPLICATION_JSON)
-                .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(Response.class);
+        Response response = RULE.client().target("/v1.0/" + TEST_DOMAIN_ID + "/user/me/identity")
+                .request(MediaType.APPLICATION_JSON).header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(Response.class);
 
         assertThat(response.getStatus()).isEqualTo(404);
     }
@@ -1039,12 +1066,12 @@ public class UserResourceTest extends UserResourceTestBase {
         when(queryParserMock.parse(queryString)).thenReturn(targetQuery);
         when(userServiceMock.findUserDomain(TEST_USER_ID)).thenReturn(TEST_DOMAIN_ID);
 
-        JsonElement expectedResult = aggregationResultsFactory.countResult(4l);
+        JsonElement expectedResult = aggregationResultsFactory.countResult(4L);
         when(aggregationParserMock.parse(aggRequest)).thenReturn(operation);
 
-        when(userServiceMock.countUsersByDomain(eq(TEST_DOMAIN_ID), eq(targetQuery))).thenReturn(4l);
+        when(userServiceMock.countUsersByDomain(eq(TEST_DOMAIN_ID), eq(targetQuery))).thenReturn(4L);
 
-        Response response = getTestRule().client().target("/v1.0/user/profile")
+        Response response = getTestRule().client().target("/v1.0/" + TEST_DOMAIN_ID + "/user/profile")
                 .queryParam("api:aggregation", URLEncoder.encode(aggRequest, "UTF-8"))
                 .queryParam("api:query", URLEncoder.encode(queryString, "UTF-8")).request(MediaType.APPLICATION_JSON)
                 .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(Response.class);
@@ -1078,7 +1105,7 @@ public class UserResourceTest extends UserResourceTestBase {
 
         when(aggregationParserMock.parse(aggRequest)).thenReturn(operation);
 
-        Response response = getTestRule().client().target("/v1.0/user/profile")
+        Response response = getTestRule().client().target("/v1.0/" + TEST_DOMAIN_ID + "/user/profile")
                 .queryParam("api:aggregation", URLEncoder.encode(aggRequest, "UTF-8"))
                 .queryParam("api:query", URLEncoder.encode(queryString, "UTF-8")).request(MediaType.APPLICATION_JSON)
                 .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(Response.class);
@@ -1105,7 +1132,8 @@ public class UserResourceTest extends UserResourceTestBase {
         User user = createTestUser();
         when(userServiceMock.findById(TEST_USER_ID)).thenReturn(user);
 
-        when(userServiceMock.getUserProfile(user, TEST_DOMAIN.getUserProfileFields())).thenThrow(UserProfileConfigurationException.class);
+        when(userServiceMock.getUserProfile(user, TEST_DOMAIN.getUserProfileFields()))
+                .thenThrow(UserProfileConfigurationException.class);
 
         Response response = getUserProfile(TEST_USER_ID).get(Response.class);
         assertThat(response.getStatus()).isEqualTo(500);
@@ -1120,7 +1148,7 @@ public class UserResourceTest extends UserResourceTestBase {
         ResourceQuery targetQuery = new ResourceQueryBuilder().add("field1", "value1").add("field2", "value2").build();
 
         when(queryParserMock.parse(queryString)).thenReturn(targetQuery);
-        Response response = getTestRule().client().target("/v1.0/user/profile")
+        Response response = getTestRule().client().target("/v1.0/" + TEST_DOMAIN_ID + "/user/profile")
                 .queryParam("api:query", URLEncoder.encode(queryString, "UTF-8")).request(MediaType.APPLICATION_JSON)
                 .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(Response.class);
 
@@ -1140,7 +1168,7 @@ public class UserResourceTest extends UserResourceTestBase {
         ResourceQuery targetQuery = new ResourceQueryBuilder().add("field1", "value1").build();
 
         when(queryParserMock.parse(queryString)).thenReturn(targetQuery);
-        Response response = getTestRule().client().target("/v1.0/user/profile")
+        Response response = getTestRule().client().target("/v1.0/" + TEST_DOMAIN_ID + "/user/profile")
                 .queryParam("api:query", URLEncoder.encode(queryString, "UTF-8")).request(MediaType.APPLICATION_JSON)
                 .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(Response.class);
 
@@ -1153,8 +1181,8 @@ public class UserResourceTest extends UserResourceTestBase {
 
     @Test
     public void testGenerateResetPasswordEmail() {
-        Response response = RULE.client().target("/v1.0/user/resetPassword").request(MediaType.APPLICATION_JSON_TYPE)
-                .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(Response.class);
+        Response response = RULE.client().target("/v1.0/" + TEST_DOMAIN_ID + "/user/resetPassword")
+                .request(MediaType.APPLICATION_JSON_TYPE).header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(Response.class);
 
         assertThat(response.getStatus()).isEqualTo(Response.Status.NO_CONTENT.getStatusCode());
     }
@@ -1169,14 +1197,41 @@ public class UserResourceTest extends UserResourceTestBase {
         when(user.getProperties()).thenReturn(properties);
         when(user.getDomain()).thenReturn(TEST_DOMAIN_ID);
 
-        Response response = RULE.client().target("/v1.0/user/" + TEST_USER_ID + "/avatar")
+        Response response = RULE.client().target("/v1.0/" + TEST_DOMAIN_ID + "/user/" + TEST_USER_ID + "/avatar")
                 .property(ClientProperties.FOLLOW_REDIRECTS, false).request(MediaType.APPLICATION_JSON_TYPE)
                 .header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(Response.class);
 
         assertThat(response.getStatus()).isEqualTo(Response.Status.TEMPORARY_REDIRECT.getStatusCode());
-        assertThat(
-                java.util.Optional.ofNullable(response.getHeaders().get("Location")).map(locations -> locations.contains(TEST_AVATAR_URI))
-                        .orElse(false)).isTrue();
+        assertThat(java.util.Optional.ofNullable(response.getHeaders().get("Location"))
+                .map(locations -> locations.contains(TEST_AVATAR_URI)).orElse(false)).isTrue();
+    }
+
+
+    @Test
+    public void testGetMeSession() {
+        UserToken userToken = new UserToken();
+        userToken.setDeviceId("deviceId");
+        Date date = new Date();
+        userToken.setExpireAt(date);
+        userToken.setToken(TEST_TOKEN);
+        userToken.setUserId(TEST_USER_ID);
+
+        Set<String> scopes = new HashSet<>();
+        scopes.add("id1");
+        scopes.add("id2");
+        userToken.setScopes(scopes);
+
+
+        when(userServiceMock.getSession(TEST_TOKEN)).thenReturn(userToken);
+
+        Response response = RULE.client().target("/v1.0/" + TEST_DOMAIN_ID + "/user/me/session")
+                .request(MediaType.APPLICATION_JSON_TYPE).header(AUTHORIZATION, "Bearer " + TEST_TOKEN).get(Response.class);
+
+        assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
+        UserToken userTokenResponse = response.readEntity(UserToken.class);
+        assertThat(userTokenResponse.getScopes()).isEqualTo(scopes);
+
+
     }
 
 }

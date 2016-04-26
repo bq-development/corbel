@@ -1,10 +1,10 @@
-package io.corbel.resources.rem.acl;
+package io.corbel.resources.rem.model;
 
 /**
  * @author Cristian del Cerro
  */
 public enum AclPermission {
-    READ, WRITE, ADMIN;
+    NONE, READ, WRITE, ADMIN;
 
     public boolean canPerform(AclPermission operation) {
         return this.ordinal() >= operation.ordinal();

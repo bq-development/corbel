@@ -14,7 +14,6 @@ public class ClientSideAuthenticationAllowedAuthorizationRule implements Authori
                 throw new UnauthorizedException(Message.CLIENT_SIDE_AUTHENTICATION_NOT_ALLOWED.getMessage());
             }
         }
-
     }
 
 }

@@ -56,7 +56,7 @@ public class DefaultMailResetPasswordService implements MailResetPasswordService
         Map<String, String> properties = new HashMap<>();
         properties.put("clientUrl", clientUrl);
 
-        eventsService.sendNotificationEvent(notificationId, email, properties);
+        eventsService.sendNotificationEvent(domainId, notificationId, email, properties);
     }
 
     private String createEmailResetPasswordToken(String clientId, String userId, String domainId) {

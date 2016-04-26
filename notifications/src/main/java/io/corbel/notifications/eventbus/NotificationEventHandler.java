@@ -17,7 +17,7 @@ public class NotificationEventHandler implements EventHandler<NotificationEvent>
 
 	@Override
 	public void handle(NotificationEvent event) {
-		senderNotificationsService.sendNotification(event.getNotificationId(), event.getProperties(),
+		senderNotificationsService.sendNotification(event.getDomain(), event.getNotificationId(), event.getProperties(),
 				event.getRecipient());
 	}
 

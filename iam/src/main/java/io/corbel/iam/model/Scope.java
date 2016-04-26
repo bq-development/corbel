@@ -21,7 +21,9 @@ import java.util.stream.Collectors;
  * 
  */
 public class Scope extends Entity {
+
     public static final String COMPOSITE_SCOPE_TYPE = "composite_scope";
+    public static final String ID_SEPARATOR = "::";
 
     private String type;
     private String audience;

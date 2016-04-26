@@ -5,6 +5,7 @@ import io.corbel.lib.ws.health.AuthorizationRedisHealthCheck;
 import io.corbel.lib.ws.health.BasicHealthCheck;
 import io.corbel.lib.ws.health.MongoHealthCheck;
 import io.corbel.lib.ws.health.RabbitMQHealthCheck;
+import io.corbel.notifications.api.DomainResource;
 import io.corbel.notifications.api.NotificationsResource;
 import io.corbel.notifications.ioc.NotificationsListenerIoc;
 import io.dropwizard.setup.Environment;
@@ -33,6 +34,7 @@ public class NotificationsService extends ServiceRunnerWithVersionResource<Notif
 	protected void configureService(Environment environment, ApplicationContext context) {
 		super.configureService(environment, context);
 		environment.jersey().register(context.getBean(NotificationsResource.class));
+		environment.jersey().register(context.getBean(DomainResource.class));
 		environment.healthChecks().register("basic", new BasicHealthCheck());
 		environment.healthChecks().register("redis",context.getBean(AuthorizationRedisHealthCheck.class));
 		environment.healthChecks().register("mongo", context.getBean(MongoHealthCheck.class));

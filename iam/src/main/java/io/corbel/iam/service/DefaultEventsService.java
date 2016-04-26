@@ -1,14 +1,14 @@
 package io.corbel.iam.service;
 
-import io.corbel.event.*;
-import io.corbel.eventbus.service.EventBus;
-import io.corbel.iam.model.Device;
-import io.corbel.iam.model.User;
-
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import io.corbel.event.*;
+import io.corbel.eventbus.service.EventBus;
+import io.corbel.iam.model.Device;
+import io.corbel.iam.model.User;
 
 /**
  * Created by Alberto J. Rubio
@@ -53,8 +53,8 @@ public class DefaultEventsService implements EventsService {
     }
 
     @Override
-    public void sendNotificationEvent(String notificationId, String recipient, Map<String, String> properties) {
-        NotificationEvent notificationEvent = new NotificationEvent(notificationId, recipient);
+    public void sendNotificationEvent(String domainId, String notificationId, String recipient, Map<String, String> properties) {
+        NotificationEvent notificationEvent = new NotificationEvent(notificationId, recipient, domainId);
         notificationEvent.setProperties(properties);
         eventBus.dispatch(notificationEvent);
         LOG.info("Sending email from IAM with notification: {}", notificationId);
@@ -82,20 +82,22 @@ public class DefaultEventsService implements EventsService {
 
     @Override
     public void sendDeviceCreateEvent(Device device) {
-        eventBus.dispatch(new DeviceEvent(DeviceEvent.Type.CREATED, device.getDomain(), device.getId(), device.getUserId(), device
-                .getType().name(), device.getName()));
+        eventBus.dispatch(new DeviceEvent(DeviceEvent.Type.CREATED, device.getDomain(), device.getUid(), device.getUserId(),
+                device
+.getType(), device.getName()));
     }
 
     @Override
     public void sendDeviceUpdateEvent(Device device) {
-        eventBus.dispatch(new DeviceEvent(DeviceEvent.Type.UPDATED, device.getDomain(), device.getId(), device.getUserId(), device
-                .getType().name(), device.getName()));
+        eventBus.dispatch(new DeviceEvent(DeviceEvent.Type.UPDATED, device.getDomain(), device.getUid(), device.getUserId(),
+                device
+.getType(), device.getName()));
 
     }
 
     @Override
-    public void sendDeviceDeleteEvent(String deviceId, String userId, String domainId) {
-        eventBus.dispatch(new DeviceEvent(DeviceEvent.Type.DELETED, domainId, deviceId, userId));
+    public void sendDeviceDeleteEvent(String deviceUid, String userId, String domainId) {
+        eventBus.dispatch(new DeviceEvent(DeviceEvent.Type.DELETED, domainId, deviceUid, userId));
     }
 
     @Override

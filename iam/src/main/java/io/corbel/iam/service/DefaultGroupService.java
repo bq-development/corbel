@@ -31,8 +31,8 @@ public class DefaultGroupService implements GroupService {
     }
 
     @Override
-    public Optional<Group> get(String id, String domain) {
-        return Optional.ofNullable(groupRepository.findByIdAndDomain(id, domain));
+    public Optional<Group> get(String name, String domain) {
+        return Optional.ofNullable(groupRepository.findByNameAndDomain(name, domain));
     }
 
     @Override
@@ -41,10 +41,10 @@ public class DefaultGroupService implements GroupService {
     }
 
     @Override
-    public Set<String> getGroupScopes(Collection<String> groups) {
+    public Set<String> getGroupScopes(String domain, Collection<String> groups) {
         Set<String> scopes = new HashSet<>();
         groups.stream().forEach(
-                groupId -> Optional.ofNullable(groupRepository.findOne(groupId)).ifPresent(group -> scopes.addAll(group.getScopes())));
+                groupName -> Optional.ofNullable(groupRepository.findByNameAndDomain(groupName, domain)).ifPresent(group -> scopes.addAll(group.getScopes())));
         return scopes;
     }
 
