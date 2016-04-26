@@ -231,8 +231,8 @@ import io.corbel.lib.queries.request.ResourceQuery;
         Group administrators = new Group("Admins", "Admins", "MyDomain", new HashSet<>(Arrays.asList(SCOPE_1)));
         Group users = new Group("Admins", "Users", "MyDomain", new HashSet<>(Arrays.asList(SCOPE_2, SCOPE_3)));
 
-        when(groupRepositoryMock.findOne("Admins")).thenReturn(administrators);
-        when(groupRepositoryMock.findOne("Users")).thenReturn(users);
+        when(groupRepositoryMock.findByNameAndDomain("Admins", DOMAIN)).thenReturn(administrators);
+        when(groupRepositoryMock.findByNameAndDomain("Users", DOMAIN)).thenReturn(users);
 
         Set<String> scopes = groupService.getGroupScopes(DOMAIN, groups);
 
