@@ -69,7 +69,7 @@ import io.corbel.lib.queries.request.ResourceQuery;
 
         when(groupRepositoryMock.findByNameAndDomain(ID, DOMAIN)).thenReturn(expectedGroup);
 
-        Optional<Group> group = groupService.get(ID, DOMAIN);
+        Optional<Group> group = groupService.getById(ID, DOMAIN);
 
         assertThat(group.isPresent()).isTrue();
 
@@ -81,7 +81,7 @@ import io.corbel.lib.queries.request.ResourceQuery;
 
     @Test
     public void getNullGroupTest() {
-        Optional<Group> group = groupService.get(ID, DOMAIN);
+        Optional<Group> group = groupService.getById(ID, DOMAIN);
 
         assertThat(group.isPresent()).isFalse();
 
@@ -95,7 +95,7 @@ import io.corbel.lib.queries.request.ResourceQuery;
 
         when(groupRepositoryMock.findOne(ID)).thenReturn(expectedGroup);
 
-        Optional<Group> group = groupService.get(ID);
+        Optional<Group> group = groupService.getById(ID);
 
         assertThat(group.isPresent()).isTrue();
 
@@ -107,7 +107,7 @@ import io.corbel.lib.queries.request.ResourceQuery;
 
     @Test
     public void getNullWithoutDomainGroupTest() {
-        Optional<Group> group = groupService.get(ID);
+        Optional<Group> group = groupService.getById(ID);
 
         assertThat(group.isPresent()).isFalse();
 
