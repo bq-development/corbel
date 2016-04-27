@@ -67,7 +67,7 @@ import io.corbel.lib.queries.request.ResourceQuery;
     public void getGroupTest() {
         Group expectedGroup = getGroup();
 
-        when(groupRepositoryMock.findByNameAndDomain(ID, DOMAIN)).thenReturn(expectedGroup);
+        when(groupRepositoryMock.findByIdAndDomain(ID, DOMAIN)).thenReturn(expectedGroup);
 
         Optional<Group> group = groupService.getById(ID, DOMAIN);
 
@@ -75,7 +75,7 @@ import io.corbel.lib.queries.request.ResourceQuery;
 
         assertThat(group.get()).isEqualTo(expectedGroup);
 
-        verify(groupRepositoryMock).findByNameAndDomain(ID, DOMAIN);
+        verify(groupRepositoryMock).findByIdAndDomain(ID, DOMAIN);
         verifyNoMoreInteractions(groupRepositoryMock);
     }
 
@@ -85,7 +85,7 @@ import io.corbel.lib.queries.request.ResourceQuery;
 
         assertThat(group.isPresent()).isFalse();
 
-        verify(groupRepositoryMock).findByNameAndDomain(ID, DOMAIN);
+        verify(groupRepositoryMock).findByIdAndDomain(ID, DOMAIN);
         verifyNoMoreInteractions(groupRepositoryMock);
     }
 
