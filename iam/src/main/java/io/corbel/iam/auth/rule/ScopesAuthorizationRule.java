@@ -46,7 +46,7 @@ public class ScopesAuthorizationRule implements AuthorizationRule {
         Set<String> requestedScopes = context.getIssuerClient().getScopes();
         if (context.hasPrincipal()) {
             Set<String> userScopes = context.getPrincipal().getScopes();
-            Set<String> groupScopes = groupService.getGroupScopes(context.getPrincipal().getGroups());
+            Set<String> groupScopes = groupService.getGroupScopes(context.getRequestedDomain().getId(), context.getPrincipal().getGroups());
             requestedScopes = Sets.union(requestedScopes, Sets.union(userScopes, groupScopes));
         }
         return requestedScopes;
