@@ -120,6 +120,18 @@ class IamShell {
         scopeRepository.save(scope)
     }
 
+    @Description('Created a new composite scope or overwrites an existing one with parameters. Takes a id, the lists of the scopes to include and the parameters.')
+    def createCompositeScopeWithParameters(String scopeId,  Map parameters = [:], String... scopes) {
+        assert scopeId: "scopeId is required"
+        assert scopes: "scopes is required"
+        def jsonParameters = null
+        if (parameters) {
+            jsonParameters = gson.toJsonTree(parameters)
+        }
+        Scope scope = new Scope(scopeId, Scope.COMPOSITE_SCOPE_TYPE, null, new HashSet<Scope>(scopes.toList()), null, jsonParameters)
+        scopeRepository.save(scope)
+    }
+
     @Description('Created a new user or overwrites an existing one. The input parameter is a map contaning the user data. The created user is returned.')
     def createUser(userFields) {
         assert userFields.username: "username is required"
