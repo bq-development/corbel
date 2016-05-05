@@ -243,7 +243,7 @@ import io.corbel.lib.ws.auth.repository.AuthorizationRulesRepository;
         assertThat(expandedScopes).contains(scope2);
         Scope res = expandedScopes.iterator().next();
         assertThat(res.getParameters()).isEqualTo(RULE_WITH_PARAMS_FILLED);
-        assertThat(scope1).isNotEqualTo(res);
+        assertThat(scope1.getParameters()).isNotEqualTo(res.getParameters());
     }
 
     @SuppressWarnings("unchecked")
@@ -257,7 +257,7 @@ import io.corbel.lib.ws.auth.repository.AuthorizationRulesRepository;
         Set<Scope> scopes = defaultScopeService.getScopes(requestScopes);
         Scope scope2 = scopes.iterator().next();
         assertThat(scope2.getParameters()).isEqualTo(RULE_WITH_PARAMS_FILLED);
-        assertThat(scope1).isNotEqualTo(scope2);
+        assertThat(scope1.getParameters()).isNotEqualTo(scope2.getParameters());
     }
 
     @SuppressWarnings("unchecked")
