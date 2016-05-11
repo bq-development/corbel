@@ -140,14 +140,14 @@ public class GroupResourceTest {
     public void getGroupTest() {
         Group group = new Group(ID, NAME, DOMAIN, SCOPES);
 
-        when(groupService.get(eq(ID), eq(DOMAIN))).thenReturn(Optional.of(group));
+        when(groupService.getById(eq(ID), eq(DOMAIN))).thenReturn(Optional.of(group));
 
         assertThat(RULE.client().target("/" + ApiVersion.CURRENT + "/" + DOMAIN + "/group/" + ID).request().get(Group.class)).isEqualTo(group);
     }
 
     @Test
     public void getNonexistentGroupTest() {
-        when(groupService.get(eq(ID), eq(DOMAIN))).thenReturn(Optional.empty());
+        when(groupService.getById(eq(ID), eq(DOMAIN))).thenReturn(Optional.empty());
 
         assertThat(RULE.client().target("/" + ApiVersion.CURRENT + "/" + DOMAIN + "/group/" + ID).request().get(Response.class).getStatus())
                 .isEqualTo(Response.Status.NOT_FOUND.getStatusCode());
@@ -157,12 +157,12 @@ public class GroupResourceTest {
     public void deleteGroupTest() {
         Group group = new Group(ID, NAME, DOMAIN, SCOPES);
 
-        when(groupService.get(eq(ID))).thenReturn(Optional.of(group));
+        when(groupService.getById(eq(ID))).thenReturn(Optional.of(group));
 
         assertThat(RULE.client().target("/" + ApiVersion.CURRENT + "/" + DOMAIN + "/group/" + ID).request().delete().getStatus())
                 .isEqualTo(Response.Status.NO_CONTENT.getStatusCode());
 
-        verify(groupService).get(eq(ID));
+        verify(groupService).getById(eq(ID));
         verify(groupService).delete(eq(ID), eq(DOMAIN));
         verifyNoMoreInteractions(groupService);
     }
@@ -171,23 +171,23 @@ public class GroupResourceTest {
     public void deleteUnauthorizedGroupTest() {
         Group group = new Group(ID, NAME, ANOTHER_DOMAIN, SCOPES);
 
-        when(groupService.get(eq(ID))).thenReturn(Optional.of(group));
+        when(groupService.getById(eq(ID))).thenReturn(Optional.of(group));
 
         assertThat(RULE.client().target("/" + ApiVersion.CURRENT + "/" + DOMAIN + "/group/" + ID).request().delete().getStatus())
                 .isEqualTo(Response.Status.UNAUTHORIZED.getStatusCode());
 
-        verify(groupService).get(eq(ID));
+        verify(groupService).getById(eq(ID));
         verifyNoMoreInteractions(groupService);
     }
 
     @Test
     public void deleteNonExistentGroupTest() {
-        when(groupService.get(eq(ID))).thenReturn(Optional.empty());
+        when(groupService.getById(eq(ID))).thenReturn(Optional.empty());
 
         assertThat(RULE.client().target("/" + ApiVersion.CURRENT + "/" + DOMAIN + "/group/" + ID).request().delete().getStatus())
                 .isEqualTo(Response.Status.NO_CONTENT.getStatusCode());
 
-        verify(groupService).get(eq(ID));
+        verify(groupService).getById(eq(ID));
         verifyNoMoreInteractions(groupService);
     }
 
@@ -197,12 +197,12 @@ public class GroupResourceTest {
         List<String> scopes = Collections.singletonList("scope");
         String scopesToJson = new ObjectMapper().writer().writeValueAsString(scopes);
 
-        when(groupService.get(eq(ID))).thenReturn(Optional.of(group));
+        when(groupService.getById(eq(ID))).thenReturn(Optional.of(group));
 
         assertThat(RULE.client().target("/" + ApiVersion.CURRENT + "/" + DOMAIN + "/group/" + ID + SCOPES_PATH).request()
                 .put(Entity.json(scopesToJson)).getStatus()).isEqualTo(Response.Status.NO_CONTENT.getStatusCode());
 
-        verify(groupService).get(eq(ID));
+        verify(groupService).getById(eq(ID));
         verify(groupService).addScopes(eq(ID), any());
         verifyNoMoreInteractions(groupService);
     }
@@ -213,7 +213,7 @@ public class GroupResourceTest {
         List<String> scopes = Collections.singletonList("scope");
         String scopesToJson = new ObjectMapper().writer().writeValueAsString(scopes);
 
-        when(groupService.get(eq(ID))).thenReturn(Optional.of(group));
+        when(groupService.getById(eq(ID))).thenReturn(Optional.of(group));
         doThrow(NotExistentScopeException.class).when(groupService).addScopes(ID, "scope");
 
         Response response = RULE.client().target("/" + ApiVersion.CURRENT + "/" + DOMAIN + "/group/" + ID + SCOPES_PATH).request()
@@ -221,7 +221,7 @@ public class GroupResourceTest {
 
         assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
 
-        verify(groupService).get(eq(ID));
+        verify(groupService).getById(eq(ID));
         verify(groupService).addScopes(ID, "scope");
         verifyNoMoreInteractions(groupService);
     }
@@ -231,12 +231,12 @@ public class GroupResourceTest {
         List<String> scopes = Collections.singletonList("scope");
         String scopesToJson = new ObjectMapper().writer().writeValueAsString(scopes);
 
-        when(groupService.get(eq(ID))).thenReturn(Optional.empty());
+        when(groupService.getById(eq(ID))).thenReturn(Optional.empty());
 
         assertThat(RULE.client().target("/" + ApiVersion.CURRENT + "/" + DOMAIN + "/group/" + ID + SCOPES_PATH).request().put(Entity.json(scopesToJson))
                 .getStatus()).isEqualTo(Response.Status.NOT_FOUND.getStatusCode());
 
-        verify(groupService).get(eq(ID));
+        verify(groupService).getById(eq(ID));
         verifyNoMoreInteractions(groupService);
     }
 
@@ -246,12 +246,12 @@ public class GroupResourceTest {
         List<String> scopes = Collections.singletonList("scope");
         String scopesToJson = new ObjectMapper().writer().writeValueAsString(scopes);
 
-        when(groupService.get(eq(ID))).thenReturn(Optional.of(group));
+        when(groupService.getById(eq(ID))).thenReturn(Optional.of(group));
 
         assertThat(RULE.client().target("/" + ApiVersion.CURRENT + "/" + DOMAIN + "/group/" + ID + SCOPES_PATH).request().put(Entity.json(scopesToJson))
                 .getStatus()).isEqualTo(Response.Status.UNAUTHORIZED.getStatusCode());
 
-        verify(groupService).get(eq(ID));
+        verify(groupService).getById(eq(ID));
         verifyNoMoreInteractions(groupService);
     }
 
@@ -260,12 +260,12 @@ public class GroupResourceTest {
         Group group = new Group(ID, NAME, DOMAIN, SCOPES);
         String scope = "scope";
 
-        when(groupService.get(eq(ID))).thenReturn(Optional.of(group));
+        when(groupService.getById(eq(ID))).thenReturn(Optional.of(group));
 
         assertThat(RULE.client().target("/" + ApiVersion.CURRENT + "/" + DOMAIN + "/group/" + ID + SCOPES_PATH + "/" + scope).request().delete().getStatus())
                 .isEqualTo(Response.Status.NO_CONTENT.getStatusCode());
 
-        verify(groupService).get(eq(ID));
+        verify(groupService).getById(eq(ID));
         verify(groupService).removeScopes(eq(ID), any());
         verifyNoMoreInteractions(groupService);
     }
@@ -274,12 +274,12 @@ public class GroupResourceTest {
     public void removeScopesFromInexistentGroupTest() throws JsonProcessingException {
         String scope = "scope";
 
-        when(groupService.get(eq(ID))).thenReturn(Optional.empty());
+        when(groupService.getById(eq(ID))).thenReturn(Optional.empty());
 
         assertThat(RULE.client().target("/" + ApiVersion.CURRENT + "/" + DOMAIN + "/group/" + ID + SCOPES_PATH + "/" + scope).request().delete().getStatus())
                 .isEqualTo(Response.Status.NOT_FOUND.getStatusCode());
 
-        verify(groupService).get(eq(ID));
+        verify(groupService).getById(eq(ID));
         verifyNoMoreInteractions(groupService);
     }
 
@@ -288,12 +288,12 @@ public class GroupResourceTest {
         Group group = new Group(ID, NAME, ANOTHER_DOMAIN, SCOPES);
         String scope = "scope";
 
-        when(groupService.get(eq(ID))).thenReturn(Optional.of(group));
+        when(groupService.getById(eq(ID))).thenReturn(Optional.of(group));
 
         assertThat(RULE.client().target("/" + ApiVersion.CURRENT + "/" + DOMAIN + "/group/" + ID + SCOPES_PATH + "/" + scope).request().delete().getStatus())
                 .isEqualTo(Response.Status.UNAUTHORIZED.getStatusCode());
 
-        verify(groupService).get(eq(ID));
+        verify(groupService).getById(eq(ID));
         verifyNoMoreInteractions(groupService);
     }
 

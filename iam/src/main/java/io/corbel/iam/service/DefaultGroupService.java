@@ -26,13 +26,13 @@ public class DefaultGroupService implements GroupService {
     }
 
     @Override
-    public Optional<Group> get(String id) {
+    public Optional<Group> getById(String id) {
         return Optional.ofNullable(groupRepository.findOne(id));
     }
 
     @Override
-    public Optional<Group> get(String name, String domain) {
-        return Optional.ofNullable(groupRepository.findByNameAndDomain(name, domain));
+    public Optional<Group> getById(String id, String domain) {
+        return Optional.ofNullable(groupRepository.findByIdAndDomain(id, domain));
     }
 
     @Override

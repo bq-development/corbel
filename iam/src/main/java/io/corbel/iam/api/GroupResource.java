@@ -50,14 +50,14 @@ import io.corbel.lib.ws.annotation.Rest;
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{id}")
     public Response get(@PathParam("domain") String domain, @PathParam("id") final String id) {
-        return groupService.get(id, domain).map(group -> Response.ok(group).build())
+        return groupService.getById(id, domain).map(group -> Response.ok(group).build())
                 .orElseGet(() -> IamErrorResponseFactory.getInstance().groupNotExists(id));
     }
 
     @DELETE
     @Path("/{id}")
     public Response deleteGroup(@PathParam("domain") String domain, @PathParam("id") final String id) {
-        return groupService.get(id).map(group -> {
+        return groupService.getById(id).map(group -> {
             if (!group.getDomain().equals(domain)) {
                 return IamErrorResponseFactory.getInstance().unauthorizedGroupDeletion(id);
             }
@@ -70,7 +70,7 @@ import io.corbel.lib.ws.annotation.Rest;
     @Path("/{id}/scope")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response addScopes(@PathParam("domain") String domain, @PathParam("id") final String id, List<String> scopes) {
-        return groupService.get(id).map(group -> {
+        return groupService.getById(id).map(group -> {
             if (!group.getDomain().equals(domain)) {
                 return IamErrorResponseFactory.getInstance().unauthorizedGroupUpdate(id);
             }
@@ -88,7 +88,7 @@ import io.corbel.lib.ws.annotation.Rest;
     @Consumes(MediaType.APPLICATION_JSON)
     public Response removeScopes(@PathParam("domain") String domain, @PathParam("id") String id,
                                  @PathParam("scopeId") String scopeId) {
-        return groupService.get(id).map(group -> {
+        return groupService.getById(id).map(group -> {
             if (!group.getDomain().equals(domain)) {
                 return IamErrorResponseFactory.getInstance().unauthorizedGroupUpdate(id);
             }

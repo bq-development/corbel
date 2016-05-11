@@ -14,9 +14,9 @@ import io.corbel.lib.queries.request.Sort;
 
 public interface GroupService {
 
-    Optional<Group> get(String id);
+    Optional<Group> getById(String id);
 
-    Optional<Group> get(String name, String domain);
+    Optional<Group> getById(String id, String domain);
 
     List<Group> getAll(String domain, List<ResourceQuery> resourceQueries, Pagination pagination, Sort sort);
 
