@@ -17,10 +17,12 @@ import java.util.List;
 import java.util.Optional;
 
 import javax.ws.rs.core.MultivaluedHashMap;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
 import com.google.gson.JsonPrimitive;
 
+import org.glassfish.jersey.internal.util.collection.MultivaluedStringMap;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -60,6 +62,7 @@ import io.corbel.resources.rem.service.RemService;
     @Mock private List<MediaType> acceptedMediaTypes;
     @Mock private RemService remService;
     @Mock private RequestParameters<ResourceParameters> parameters;
+    @Mock private RequestParameters<ResourceParameters> emptyParameters;
     @Mock private TokenInfo tokenInfo;
     @Mock private Response getResponse;
 
@@ -72,13 +75,19 @@ import io.corbel.resources.rem.service.RemService;
 
         when(tokenInfo.getUserId()).thenReturn(USER_ID);
         when(tokenInfo.getGroups()).thenReturn(GROUPS);
+
+        when(emptyParameters.getTokenInfo()).thenReturn(tokenInfo);
+
         when(parameters.getTokenInfo()).thenReturn(tokenInfo);
 
         when(parameters.getOptionalApiParameters()).thenReturn(Optional.empty());
         when(parameters.getParams()).thenReturn(new MultivaluedHashMap<>());
-        when(parameters.getHeaders()).thenReturn(new MultivaluedHashMap<>());
+        MultivaluedMap<String, String> headers = new MultivaluedStringMap();
+        headers.putSingle("Content-Length", "10");
+        when(parameters.getHeaders()).thenReturn(headers);
 
         when(parameters.getRequestedDomain()).thenReturn(REQUESTED_DOMAIN_ID);
+
     }
 
     @Test
@@ -93,7 +102,7 @@ import io.corbel.resources.rem.service.RemService;
     public void testEmptyObject() throws IOException {
         InputStream entity = mock(InputStream.class);
         when(entity.available()).thenReturn(0);
-        Response response = rem.resource(TYPE, RESOURCE_ID, parameters, Optional.of(entity), Optional.empty());
+        Response response = rem.resource(TYPE, RESOURCE_ID, emptyParameters, Optional.of(entity), Optional.empty());
         assertThat(response.getStatus()).isEqualTo(400);
     }
 
