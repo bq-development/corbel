@@ -40,7 +40,7 @@ public class AclPostRem extends AclBaseRem {
             return ErrorResponseFactory.getInstance().methodNotAllowed();
         }
 
-        if (AclUtils.entityIsEmpty(entity)) {
+        if (AclUtils.entityIsEmpty(parameters.getHeaders())) {
             return ErrorResponseFactory.getInstance().badRequest();
         }
 

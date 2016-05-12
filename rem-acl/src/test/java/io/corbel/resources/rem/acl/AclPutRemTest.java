@@ -15,8 +15,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.internal.util.collection.MultivaluedStringMap;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -55,6 +57,8 @@ import io.corbel.resources.rem.service.RemService;
     @Mock private List<MediaType> acceptedMediaTypes;
     @Mock private RemService remService;
     @Mock private RequestParameters<ResourceParameters> resourceParameters;
+    @Mock private RequestParameters<ResourceParameters> emptyResourceParameters;
+
     @Mock private TokenInfo tokenInfo;
     @Mock private Response getResponse;
     @Mock private RequestParameters<RelationParameters> relationParameters;
@@ -68,11 +72,15 @@ import io.corbel.resources.rem.service.RemService;
 
         when(tokenInfo.getUserId()).thenReturn(USER_ID);
         when(tokenInfo.getGroups()).thenReturn(Collections.singletonList(GROUP_ID));
+        when(emptyResourceParameters.getTokenInfo()).thenReturn(tokenInfo);
         when(resourceParameters.getTokenInfo()).thenReturn(tokenInfo);
         when(relationParameters.getTokenInfo()).thenReturn(tokenInfo);
 
         when(resourceParameters.getRequestedDomain()).thenReturn(REQUESTED_DOMAIN_ID);
         when(relationParameters.getRequestedDomain()).thenReturn(REQUESTED_DOMAIN_ID);
+        MultivaluedMap<String, String> headers = new MultivaluedStringMap();
+        headers.putSingle("Content-Length", "10");
+        when(resourceParameters.getHeaders()).thenReturn(headers);
     }
 
     @Test
@@ -87,7 +95,7 @@ import io.corbel.resources.rem.service.RemService;
     public void testPutResourceEmptyObject() throws IOException {
         InputStream entity = mock(InputStream.class);
         when(entity.available()).thenReturn(0);
-        Response response = rem.resource(TYPE, RESOURCE_ID, resourceParameters, Optional.of(entity), Optional.empty());
+        Response response = rem.resource(TYPE, RESOURCE_ID, emptyResourceParameters, Optional.of(entity), Optional.empty());
         assertThat(response.getStatus()).isEqualTo(400);
     }
 

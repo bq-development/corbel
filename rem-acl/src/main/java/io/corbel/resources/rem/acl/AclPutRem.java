@@ -49,7 +49,7 @@ public class AclPutRem extends AclBaseRem {
             return ErrorResponseFactory.getInstance().methodNotAllowed();
         }
 
-        if (AclUtils.entityIsEmpty(entity)) {
+        if (AclUtils.entityIsEmpty(parameters.getHeaders())) {
             return ErrorResponseFactory.getInstance().badRequest();
         }
 
@@ -131,7 +131,7 @@ public class AclPutRem extends AclBaseRem {
 
         InputStream requestBody = entity.get();
 
-        if (!AclUtils.entityIsEmpty(requestBody)) {
+        if (!AclUtils.entityIsEmpty(parameters.getHeaders())) {
             JsonReader reader = new JsonReader(new InputStreamReader(requestBody));
             jsonObject = new JsonParser().parse(reader).getAsJsonObject();
         }
