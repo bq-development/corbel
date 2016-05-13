@@ -1,22 +1,9 @@
 package io.corbel.resources.rem.acl;
 
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-
+import com.google.gson.JsonIOException;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
-
 import io.corbel.lib.token.TokenInfo;
 import io.corbel.lib.ws.api.error.ErrorResponseFactory;
 import io.corbel.resources.rem.Rem;
@@ -29,6 +16,17 @@ import io.corbel.resources.rem.request.ResourceParameters;
 import io.corbel.resources.rem.service.AclResourcesService;
 import io.corbel.resources.rem.service.DefaultAclResourcesService;
 import io.corbel.resources.rem.utils.AclUtils;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * @author Rubén Carrasco
@@ -49,7 +47,7 @@ public class AclPutRem extends AclBaseRem {
             return ErrorResponseFactory.getInstance().methodNotAllowed();
         }
 
-        if (AclUtils.entityIsEmpty(parameters.getHeaders())) {
+        if (!entity.isPresent()) {
             return ErrorResponseFactory.getInstance().badRequest();
         }
 
@@ -57,14 +55,13 @@ public class AclPutRem extends AclBaseRem {
         Optional<JsonObject> originalObject = Optional.empty();
 
         try {
-            originalObject = aclResourcesService.getResourceIfIsAuthorized(parameters.getRequestedDomain(),tokenInfo, type, id, AclPermission.WRITE);
+            originalObject = aclResourcesService.getResourceIfIsAuthorized(parameters.getRequestedDomain(), tokenInfo, type, id, AclPermission.WRITE);
         } catch (AclFieldNotPresentException e) {
             return ErrorResponseFactory.getInstance().forbidden();
         } catch (WebApplicationException exception) {
             if (exception.getResponse().getStatus() != Status.NOT_FOUND.getStatusCode()) {
                 return exception.getResponse();
             }
-
             newResource = true;
         }
 
@@ -98,8 +95,13 @@ public class AclPutRem extends AclBaseRem {
         InputStream requestBody = entity.get();
 
         if (parameters.getAcceptedMediaTypes().contains(MediaType.APPLICATION_JSON)) {
-            JsonReader reader = new JsonReader(new InputStreamReader(requestBody));
-            JsonObject jsonObject = new JsonParser().parse(reader).getAsJsonObject();
+            JsonObject jsonObject;
+            try {
+                JsonReader reader = new JsonReader(new InputStreamReader(requestBody));
+                jsonObject = new JsonParser().parse(reader).getAsJsonObject();
+            } catch (IllegalStateException ignored) {
+                return ErrorResponseFactory.getInstance().badRequest();
+            }
             jsonObject.remove(DefaultAclResourcesService._ACL);
             return aclResourcesService.updateResource(rem, type, id, parameters, jsonObject, excluded);
         }
@@ -109,12 +111,16 @@ public class AclPutRem extends AclBaseRem {
 
     @Override
     public Response relation(String type, ResourceId id, String relation, RequestParameters<RelationParameters> parameters,
-            Optional<InputStream> entity, Optional<List<Rem>> excludedRems) {
+                             Optional<InputStream> entity, Optional<List<Rem>> excludedRems) {
 
         TokenInfo tokenInfo = parameters.getTokenInfo();
 
         if (tokenInfo.getUserId() == null || id.isWildcard()) {
             return ErrorResponseFactory.getInstance().methodNotAllowed();
+        }
+
+        if (!entity.isPresent()) {
+            return ErrorResponseFactory.getInstance().badRequest();
         }
 
         try {
@@ -127,13 +133,13 @@ public class AclPutRem extends AclBaseRem {
 
         List<Rem> excluded = getExcludedRems(excludedRems);
         Rem rem = remService.getRem(type, parameters.getAcceptedMediaTypes(), HttpMethod.PUT, excluded);
-        JsonObject jsonObject = new JsonObject();
+        JsonObject jsonObject;
 
-        InputStream requestBody = entity.get();
-
-        if (!AclUtils.entityIsEmpty(parameters.getHeaders())) {
-            JsonReader reader = new JsonReader(new InputStreamReader(requestBody));
+        try {
+            JsonReader reader = new JsonReader(new InputStreamReader(entity.get()));
             jsonObject = new JsonParser().parse(reader).getAsJsonObject();
+        } catch (JsonIOException | IllegalStateException ignored) {
+            return ErrorResponseFactory.getInstance().badRequest();
         }
 
         return aclResourcesService.putRelation(rem, type, id, relation, parameters, jsonObject, excluded);

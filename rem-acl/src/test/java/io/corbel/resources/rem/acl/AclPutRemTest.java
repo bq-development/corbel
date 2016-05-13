@@ -15,10 +15,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.internal.util.collection.MultivaluedStringMap;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -57,7 +55,6 @@ import io.corbel.resources.rem.service.RemService;
     @Mock private List<MediaType> acceptedMediaTypes;
     @Mock private RemService remService;
     @Mock private RequestParameters<ResourceParameters> resourceParameters;
-    @Mock private RequestParameters<ResourceParameters> emptyResourceParameters;
 
     @Mock private TokenInfo tokenInfo;
     @Mock private Response getResponse;
@@ -72,15 +69,11 @@ import io.corbel.resources.rem.service.RemService;
 
         when(tokenInfo.getUserId()).thenReturn(USER_ID);
         when(tokenInfo.getGroups()).thenReturn(Collections.singletonList(GROUP_ID));
-        when(emptyResourceParameters.getTokenInfo()).thenReturn(tokenInfo);
         when(resourceParameters.getTokenInfo()).thenReturn(tokenInfo);
         when(relationParameters.getTokenInfo()).thenReturn(tokenInfo);
 
         when(resourceParameters.getRequestedDomain()).thenReturn(REQUESTED_DOMAIN_ID);
         when(relationParameters.getRequestedDomain()).thenReturn(REQUESTED_DOMAIN_ID);
-        MultivaluedMap<String, String> headers = new MultivaluedStringMap();
-        headers.putSingle("Content-Length", "10");
-        when(resourceParameters.getHeaders()).thenReturn(headers);
     }
 
     @Test
@@ -92,13 +85,16 @@ import io.corbel.resources.rem.service.RemService;
     }
 
     @Test
-    public void testPutResourceEmptyObject() throws IOException {
-        InputStream entity = mock(InputStream.class);
-        when(entity.available()).thenReturn(0);
-        Response response = rem.resource(TYPE, RESOURCE_ID, emptyResourceParameters, Optional.of(entity), Optional.empty());
+    public void testPutResourceEmptyObject() throws IOException, AclFieldNotPresentException {
+        JsonObject entity = getEntity(USER_ID, AclPermission.ADMIN.toString());
+        when(getResponse.getEntity()).thenReturn(entity);
+        when(aclResourcesService.getResourceIfIsAuthorized(eq(REQUESTED_DOMAIN_ID), eq(tokenInfo), eq(TYPE), eq(RESOURCE_ID), eq(AclPermission.WRITE)))
+                .thenReturn(Optional.of(entity));
+        when(resourceParameters.getAcceptedMediaTypes()).thenReturn(AclBaseRem.JSON_MEDIATYPE);
+
+        Response response = rem.resource(TYPE, RESOURCE_ID, resourceParameters, Optional.of(new ByteArrayInputStream("".getBytes())), Optional.empty());
         assertThat(response.getStatus()).isEqualTo(400);
     }
-
 
     @Test
     public void testUpdateResourceObject() throws AclFieldNotPresentException {
@@ -122,7 +118,6 @@ import io.corbel.resources.rem.service.RemService;
     @Test
     public void testPutRelation() throws IOException, AclFieldNotPresentException {
         InputStream entity = mock(InputStream.class);
-        when(entity.available()).thenReturn(0);
 
         ResourceId resourceId = new ResourceId("idOrigin");
 
@@ -138,7 +133,7 @@ import io.corbel.resources.rem.service.RemService;
                 getResponse);
         when(getResponse.getEntity()).thenReturn(entity);
         Response response = rem.relation(TYPE, resourceId, TYPE, relationParameters, Optional.of(entity), Optional.empty());
-        assertThat(response.getStatus()).isEqualTo(204);
+        assertThat(response.getStatus()).isEqualTo(400);
     }
 
     @Test

@@ -28,7 +28,6 @@ import java.util.*;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.internal.util.collection.MultivaluedStringMap;
 import org.glassfish.jersey.internal.util.collection.StringKeyIgnoreCaseMultivaluedMap;
 import org.junit.Before;
 import org.junit.Test;
@@ -55,7 +54,6 @@ import com.google.gson.JsonObject;
     @Mock private AclResourcesService aclResourcesService;
     @Mock private RemService remService;
     @Mock private RequestParameters<CollectionParameters> parameters;
-    @Mock private RequestParameters<CollectionParameters> emptyParameters;
     @Mock private TokenInfo tokenInfo;
     @Mock private Response getResponse;
     @Mock private Response postResponse;
@@ -73,11 +71,7 @@ import com.google.gson.JsonObject;
         rem.setRemService(remService);
 
         when(tokenInfo.getUserId()).thenReturn(USER_ID);
-        when(emptyParameters.getTokenInfo()).thenReturn(tokenInfo);
         when(parameters.getTokenInfo()).thenReturn(tokenInfo);
-        MultivaluedMap<String, String> headers = new MultivaluedStringMap();
-        headers.putSingle("Content-Length", "10");
-        when(parameters.getHeaders()).thenReturn(headers);
     }
 
     @Test
@@ -91,8 +85,8 @@ import com.google.gson.JsonObject;
     @Test
     public void testEmptyObject() throws URISyntaxException, IOException {
         InputStream entity = mock(InputStream.class);
-        when(entity.available()).thenReturn(0);
-        Response response = rem.collection(TYPE, emptyParameters, new URI("test"), Optional.of(entity), Optional.empty());
+        when(parameters.getAcceptedMediaTypes()).thenReturn(AclBaseRem.JSON_MEDIATYPE);
+        Response response = rem.collection(TYPE, parameters, new URI("test"), Optional.of(entity), Optional.empty());
         assertThat(response.getStatus()).isEqualTo(400);
     }
 
