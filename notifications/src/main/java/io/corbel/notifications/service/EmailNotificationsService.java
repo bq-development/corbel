@@ -20,12 +20,22 @@ import java.util.Properties;
 public class EmailNotificationsService implements NotificationsService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(EmailNotificationsService.class);
+	private String host;
+	private String port;
+
+	public EmailNotificationsService(String host, String port) {
+		this.host = host;
+		this.port = port;
+	}
 
 	@Override
 	public void send(NotificationTemplate notificationTemplate, String... recipients) {
 		try {
 			LOG.info("Sending email to: {}" + Arrays.toString(recipients));
-			MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties(), null));
+			Properties props = new Properties();
+			props.setProperty("mail.smtp.host", host);
+			props.setProperty("mail.smtp.port", port);
+			MimeMessage message = new MimeMessage(Session.getDefaultInstance(props, null));
 			message.setFrom(new InternetAddress(notificationTemplate.getSender()));
 			for (String recipient : recipients) {
 				message.addRecipient(Message.RecipientType.BCC, new InternetAddress(recipient));
