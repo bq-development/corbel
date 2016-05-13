@@ -2,13 +2,8 @@ package io.corbel.notifications.ioc;
 
 import java.io.InputStream;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
 import io.corbel.lib.mongo.IdGenerator;
 import io.corbel.lib.mongo.IdGeneratorMongoEventListener;
-import io.corbel.lib.queries.request.AggregationResultsFactory;
-import io.corbel.lib.queries.request.JsonAggregationResultsFactory;
-import io.corbel.lib.ws.digest.DigesterFactory;
 import io.corbel.notifications.api.DomainResource;
 import io.corbel.notifications.model.NotificationTemplate;
 import io.corbel.notifications.model.NotificationTemplateIdGenerator;
@@ -109,7 +104,7 @@ import com.notnoop.apns.ApnsServiceBuilder;
     @Bean(name = "email")
     @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
     public NotificationsService getNotificationsService() {
-        return new EmailNotificationsService();
+        return new EmailNotificationsService(env.getProperty("smtp.server.host"), env.getProperty("smtp.server.port"));
     }
 
     @Bean(name = "android")
