@@ -31,6 +31,7 @@ notifications:
     - mongo
     - rabbitmq
     - redis
+    - smtp
   ports:
     - "8094:8094"
     - "8095:8095"
@@ -41,3 +42,5 @@ redis:
   image: redis
 rabbitmq:
   image: rabbitmq
+smtp:
+  image: namshi/smtp
