@@ -61,17 +61,16 @@ public class SetUpAclPutRem extends AclBaseRem {
             return ErrorResponseFactory.getInstance().methodNotAllowed();
         }
 
-        if (AclUtils.entityIsEmpty(parameters.getHeaders())) {
+        if (!entity.isPresent()) {
             return ErrorResponseFactory.getInstance().badRequest();
         }
 
-        JsonReader reader = new JsonReader(new InputStreamReader(entity.get()));
         JsonObject jsonObject;
-
         try {
+            JsonReader reader = new JsonReader(new InputStreamReader(entity.get()));
             jsonObject = new JsonParser().parse(reader).getAsJsonObject();
-        } catch (JsonIOException | JsonSyntaxException | IllegalStateException e) {
-            return ErrorResponseFactory.getInstance().invalidEntity("Malformed acl object");
+        } catch (JsonIOException | IllegalStateException ignored) {
+            return ErrorResponseFactory.getInstance().badRequest();
         }
 
         boolean isAuthorized = false;

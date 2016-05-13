@@ -7,6 +7,7 @@ import java.util.*;
 
 import javax.ws.rs.core.Response;
 
+import com.google.gson.JsonIOException;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 
@@ -40,7 +41,7 @@ public class AclPostRem extends AclBaseRem {
             return ErrorResponseFactory.getInstance().methodNotAllowed();
         }
 
-        if (AclUtils.entityIsEmpty(parameters.getHeaders())) {
+        if (!entity.isPresent()) {
             return ErrorResponseFactory.getInstance().badRequest();
         }
 
@@ -50,8 +51,12 @@ public class AclPostRem extends AclBaseRem {
         JsonObject jsonObject = new JsonObject();
 
         if (jsonMediaTypeAccepted) {
-            JsonReader reader = new JsonReader(new InputStreamReader(requestBody));
-            jsonObject = new JsonParser().parse(reader).getAsJsonObject();
+            try{
+                JsonReader reader = new JsonReader(new InputStreamReader(requestBody));
+                jsonObject = new JsonParser().parse(reader).getAsJsonObject();
+            } catch (JsonIOException | IllegalStateException ignored) {
+                return ErrorResponseFactory.getInstance().badRequest();
+            }
             jsonObject.remove(DefaultAclResourcesService._ACL);
         }
 
