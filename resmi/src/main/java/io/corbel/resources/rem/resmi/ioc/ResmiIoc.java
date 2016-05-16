@@ -53,6 +53,10 @@ public class ResmiIoc extends DefaultMongoConfiguration {
     private String elasticSearchIndexSettings;
     @Value("${resmi.elasticsearch.defaultMapping.settings:/elasticsearch/defaultMapping.settings}")
     private String elasticSearchDefaultMappingSettings;
+    @Value("${resmi.elasticsearch.enabled:false}")
+    private Boolean elasticSearchEnabled;
+    @Value("${resmi.textsearch.mode:disabled}")
+    private String textSearchMode;
 
     @Autowired
     private Environment env;
@@ -121,7 +125,7 @@ public class ResmiIoc extends DefaultMongoConfiguration {
     }
 
     @Bean
-    public ResmiService resmiService(@Value("${resmi.elasticsearch.enabled:false}") boolean elasticSearchEnabled, @Value("${resmi.textsearch.mode:disabled}") String textSearchMode, AggregationResultsFactory<JsonElement> aggregationResultsFactory, ResmiDao resmiDao) throws Exception {
+    public ResmiService resmiService(AggregationResultsFactory<JsonElement> aggregationResultsFactory, ResmiDao resmiDao) throws Exception {
         if (elasticSearchEnabled || textSearchMode.equalsIgnoreCase("elasticsearch")) {
             return new WithSearchResmiService(resmiDao, resmiSearch(aggregationResultsFactory), getSearchableFieldsRegistry(), getGson(), getClock());
         } else if (textSearchMode.equalsIgnoreCase("mongo")) {
@@ -158,7 +162,11 @@ public class ResmiIoc extends DefaultMongoConfiguration {
     @Bean(name = ResmiRemNames.ELASTICSEARCH_HEALTHCHECK)
     @Lazy
     public ElasticSearchHealthCheck getElasticSearchHealthCheck() {
-        return new ElasticSearchHealthCheck(applicationContext.getBean(Client.class));
+        if(elasticSearchEnabled || textSearchMode.equalsIgnoreCase("elasticsearch")) {
+            return new ElasticSearchHealthCheck(applicationContext.getBean(Client.class));
+        } else {
+            return new ElasticSearchHealthCheck();
+        }
     }
 
     @Bean
