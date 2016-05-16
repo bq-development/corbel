@@ -27,9 +27,8 @@ public class ElasticSearchHealthCheck extends HealthCheck {
         }
         if (elasticsearchClient.connectedNodes().isEmpty()) {
             return Result.unhealthy("No nodes available, verify ES is running correctly!");
-        } else {
-            return Result.healthy();
         }
+        return Result.healthy();
     }
 
 }
