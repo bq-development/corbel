@@ -16,14 +16,19 @@ public class ElasticSearchHealthCheck extends HealthCheck {
         this.elasticsearchClient = (TransportClient) elasticsearchClient;
     }
 
+    public ElasticSearchHealthCheck() {
+        this.elasticsearchClient = null;
+    }
+
     @Override
     protected Result check() throws Exception {
-        List<DiscoveryNode> nodes = elasticsearchClient.connectedNodes();
-        if (nodes.isEmpty()) {
-            return Result.unhealthy("No nodes available. Verify ES is running!");
-        } else {
-            return Result.healthy();
+        if(elasticsearchClient == null) {
+            return Result.healthy("ES disabled, you can activate it via properties");
         }
+        if (elasticsearchClient.connectedNodes().isEmpty()) {
+            return Result.unhealthy("No nodes available, verify ES is running correctly!");
+        }
+        return Result.healthy();
     }
 
 }
