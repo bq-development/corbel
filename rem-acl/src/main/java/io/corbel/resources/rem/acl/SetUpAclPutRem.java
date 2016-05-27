@@ -86,17 +86,8 @@ public class SetUpAclPutRem extends AclBaseRem {
             return ErrorResponseFactory.getInstance().unauthorized(AclUtils.buildMessage(AclPermission.ADMIN));
         }
 
-        JsonObject filteredAclObject = getFilteredAclObject(jsonObject);
-
-        if (!hasAdminPermission(tokenInfo, filteredAclObject)) {
-            JsonObject permission = new JsonObject();
-            permission.addProperty(PERMISSION,  AclPermission.ADMIN.toString());
-            permission.add(PROPERTIES,  new JsonObject());
-            filteredAclObject.add(DefaultAclResourcesService.USER_PREFIX + tokenInfo.getUserId(), permission);
-        }
-
         JsonObject objectToSave = new JsonObject();
-        objectToSave.add(DefaultAclResourcesService._ACL, filteredAclObject);
+        objectToSave.add(DefaultAclResourcesService._ACL, getFilteredAclObject(jsonObject));
 
         Rem rem = remService.getRem(type, JSON_MEDIATYPE, HttpMethod.PUT, excluded);
 
@@ -146,25 +137,6 @@ public class SetUpAclPutRem extends AclBaseRem {
         objectToReturn.add(DefaultAclResourcesService.PROPERTIES, properties);
 
         return Optional.of(objectToReturn);
-    }
-
-    private boolean idHasAdminPermission(String id, JsonObject acl) {
-        return Optional.ofNullable(acl.get(id)).map(JsonElement::getAsJsonObject)
-                .map(jsonObject -> jsonObject.get(DefaultAclResourcesService.PERMISSION)).map(JsonElement::getAsString)
-                .filter(permissionValue -> permissionValue.equals(AclPermission.ADMIN.toString())).isPresent();
-    }
-
-    private boolean hasAdminPermission(TokenInfo tokenInfo, JsonObject acl) {
-        return hasAdminPermission(Optional.ofNullable(tokenInfo.getUserId()), tokenInfo.getGroups(), acl);
-    }
-
-    private boolean hasAdminPermission(Optional<String> userId, Collection<String> groupIds, JsonObject acl) {
-        Stream<String> userAndAllStream = userId
-                .map(id -> Arrays.asList(DefaultAclResourcesService.ALL, DefaultAclResourcesService.USER_PREFIX + id))
-                .orElseGet(() -> Collections.singletonList(DefaultAclResourcesService.ALL)).stream();
-        Stream<String> groupsStream = groupIds.stream().map(id -> DefaultAclResourcesService.GROUP_PREFIX + id);
-
-        return Stream.concat(userAndAllStream, groupsStream).anyMatch(id -> idHasAdminPermission(id, acl));
     }
 
 }
