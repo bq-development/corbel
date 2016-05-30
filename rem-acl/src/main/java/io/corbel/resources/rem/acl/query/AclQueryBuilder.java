@@ -5,9 +5,11 @@ import java.util.stream.Collectors;
 
 import io.corbel.lib.queries.BooleanQueryLiteral;
 import io.corbel.lib.queries.QueryNodeImpl;
+import io.corbel.lib.queries.StringQueryLiteral;
 import io.corbel.lib.queries.request.QueryNode;
 import io.corbel.lib.queries.request.QueryOperator;
 import io.corbel.lib.queries.request.ResourceQuery;
+import io.corbel.resources.rem.model.AclPermission;
 import io.corbel.resources.rem.service.DefaultAclResourcesService;
 
 /**
@@ -48,9 +50,8 @@ public class AclQueryBuilder {
     }
 
     private static QueryNodeImpl buildQueryNodeExistInAcl(String id) {
-        BooleanQueryLiteral booleanQueryLiteral = new BooleanQueryLiteral();
-        booleanQueryLiteral.setLiteral(true);
-        return new QueryNodeImpl(QueryOperator.$EXISTS, DefaultAclResourcesService._ACL + "." + id, booleanQueryLiteral);
+        StringQueryLiteral none = new StringQueryLiteral(AclPermission.NONE.name());
+        return new QueryNodeImpl(QueryOperator.$NE, DefaultAclResourcesService._ACL + "." + id + ".permission", none);
     }
 
 }
