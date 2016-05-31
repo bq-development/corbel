@@ -1,23 +1,23 @@
 package io.corbel.resources.rem.acl.query;
 
-import static org.fest.assertions.api.Assertions.assertThat;
-
-import java.util.*;
-
-import io.corbel.resources.rem.model.AclPermission;
-import io.corbel.resources.rem.service.DefaultAclResourcesService;
-import org.junit.Test;
-
-import io.corbel.lib.queries.BooleanQueryLiteral;
+import io.corbel.lib.queries.ListQueryLiteral;
 import io.corbel.lib.queries.QueryNodeImpl;
 import io.corbel.lib.queries.StringQueryLiteral;
 import io.corbel.lib.queries.request.QueryNode;
 import io.corbel.lib.queries.request.QueryOperator;
 import io.corbel.lib.queries.request.ResourceQuery;
+import io.corbel.resources.rem.model.AclPermission;
+import org.junit.Test;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+
+import static org.fest.assertions.api.Assertions.assertThat;
 
 /**
  * @author Rubén Carrasco
- *
  */
 public class AclQueryBuilderTest {
 
@@ -37,27 +37,27 @@ public class AclQueryBuilderTest {
     public void testWithUserId() {
         AclQueryBuilder builder = new AclQueryBuilder(OPT_USER_ID, Collections.emptyList());
         List<ResourceQuery> queries = builder.build(Collections.emptyList());
-        assertThat(queries.contains(getResourceQuery(getStringQueryLiteral(_ACL_ALL)))).isTrue();
-        assertThat(queries.contains(getResourceQuery(getStringQueryLiteral(_ACL_USER_USER_ID)))).isTrue();
+        assertThat(queries.contains(getResourceQuery(getListQueryLiteral(_ACL_ALL)))).isTrue();
+        assertThat(queries.contains(getResourceQuery(getListQueryLiteral(_ACL_USER_USER_ID)))).isTrue();
     }
 
     @Test
     public void testWithGroups() {
         AclQueryBuilder builder = new AclQueryBuilder(Optional.empty(), GROUPS);
         List<ResourceQuery> queries = builder.build(Collections.emptyList());
-        assertThat(queries.contains(getResourceQuery(getStringQueryLiteral(_ACL_ALL)))).isTrue();
-        assertThat(queries.contains(getResourceQuery(getStringQueryLiteral(_ACL_GROUP_GROUP1)))).isTrue();
-        assertThat(queries.contains(getResourceQuery(getStringQueryLiteral(_ACL_GROUP_GROUP2)))).isTrue();
+        assertThat(queries.contains(getResourceQuery(getListQueryLiteral(_ACL_ALL)))).isTrue();
+        assertThat(queries.contains(getResourceQuery(getListQueryLiteral(_ACL_GROUP_GROUP1)))).isTrue();
+        assertThat(queries.contains(getResourceQuery(getListQueryLiteral(_ACL_GROUP_GROUP2)))).isTrue();
     }
 
     @Test
     public void testWithQueries() {
         List<QueryNode> nodes = Arrays.asList(
-            getStringQueryLiteral(_ACL_ALL),
-            getStringQueryLiteral(_ACL_USER_USER_ID),
-            getStringQueryLiteral(_ACL_GROUP_GROUP1),
-            getStringQueryLiteral(_ACL_GROUP_GROUP2),
-            getTestQueryLiteral());
+                getListQueryLiteral(_ACL_ALL),
+                getListQueryLiteral(_ACL_USER_USER_ID),
+                getListQueryLiteral(_ACL_GROUP_GROUP1),
+                getListQueryLiteral(_ACL_GROUP_GROUP2),
+                getTestQueryLiteral());
 
         AclQueryBuilder builder = new AclQueryBuilder(OPT_USER_ID, GROUPS);
         List<ResourceQuery> queries = builder
@@ -74,9 +74,11 @@ public class AclQueryBuilderTest {
         return query;
     }
 
-    private QueryNodeImpl getStringQueryLiteral(String field) {
-        StringQueryLiteral none = new StringQueryLiteral(AclPermission.NONE.name());
-        return new QueryNodeImpl(QueryOperator.$NE, field, none);
+    private QueryNodeImpl getListQueryLiteral(String field) {
+        return new QueryNodeImpl(QueryOperator.$IN, field, new ListQueryLiteral(Arrays.asList(
+                new StringQueryLiteral(AclPermission.READ.name()),
+                new StringQueryLiteral(AclPermission.WRITE.name()),
+                new StringQueryLiteral(AclPermission.ADMIN.name()))));
     }
 
     private QueryNodeImpl getTestQueryLiteral() {

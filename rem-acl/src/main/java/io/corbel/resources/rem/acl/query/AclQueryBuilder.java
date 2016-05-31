@@ -1,9 +1,6 @@
 package io.corbel.resources.rem.acl.query;
 
-import java.util.*;
-import java.util.stream.Collectors;
-
-import io.corbel.lib.queries.BooleanQueryLiteral;
+import io.corbel.lib.queries.ListQueryLiteral;
 import io.corbel.lib.queries.QueryNodeImpl;
 import io.corbel.lib.queries.StringQueryLiteral;
 import io.corbel.lib.queries.request.QueryNode;
@@ -12,9 +9,11 @@ import io.corbel.lib.queries.request.ResourceQuery;
 import io.corbel.resources.rem.model.AclPermission;
 import io.corbel.resources.rem.service.DefaultAclResourcesService;
 
+import java.util.*;
+import java.util.stream.Collectors;
+
 /**
  * @author Rubén Carrasco
- *
  */
 public class AclQueryBuilder {
 
@@ -22,9 +21,9 @@ public class AclQueryBuilder {
 
     public AclQueryBuilder(Optional<String> userId, Collection<String> groupIds) {
         existsQueryNodes = Optional.ofNullable(groupIds).orElseGet(Collections::emptyList).stream()
-                .map(groupId -> buildQueryNodeExistInAcl(DefaultAclResourcesService.GROUP_PREFIX + groupId)).collect(Collectors.toList());
-        existsQueryNodes.add(buildQueryNodeExistInAcl(DefaultAclResourcesService.ALL));
-        userId.ifPresent(id -> existsQueryNodes.add(buildQueryNodeExistInAcl(DefaultAclResourcesService.USER_PREFIX + id)));
+                .map(groupId -> buildPermissionsInAclQueryNode(DefaultAclResourcesService.GROUP_PREFIX + groupId)).collect(Collectors.toList());
+        existsQueryNodes.add(buildPermissionsInAclQueryNode(DefaultAclResourcesService.ALL));
+        userId.ifPresent(id -> existsQueryNodes.add(buildPermissionsInAclQueryNode(DefaultAclResourcesService.USER_PREFIX + id)));
     }
 
     public List<ResourceQuery> build(List<ResourceQuery> queries) {
@@ -49,9 +48,10 @@ public class AclQueryBuilder {
         }).collect(Collectors.toList());
     }
 
-    private static QueryNodeImpl buildQueryNodeExistInAcl(String id) {
-        StringQueryLiteral none = new StringQueryLiteral(AclPermission.NONE.name());
-        return new QueryNodeImpl(QueryOperator.$NE, DefaultAclResourcesService._ACL + "." + id + ".permission", none);
+    private static QueryNodeImpl buildPermissionsInAclQueryNode(String id) {
+        return new QueryNodeImpl(QueryOperator.$IN, DefaultAclResourcesService._ACL + "." + id + ".permission",
+                new ListQueryLiteral(Arrays.asList(new StringQueryLiteral(AclPermission.READ.name()),
+                        new StringQueryLiteral(AclPermission.WRITE.name()), new StringQueryLiteral(AclPermission.ADMIN.name()))));
     }
 
 }
