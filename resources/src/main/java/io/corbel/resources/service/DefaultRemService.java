@@ -65,7 +65,7 @@ public class DefaultRemService implements RemService {
             if (remsExcludedForUri.containsKey(uri)) {
                 remsExcludedForUri.get(uri).addAll(excludedRems);
             } else {
-                remsExcludedForUri.put(uri, excludedRems);
+                remsExcludedForUri.put(uri, new ArrayList<>(excludedRems));
             }
         }
     }
