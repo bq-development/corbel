@@ -49,6 +49,17 @@ class ResmiShell {
         resmiService.saveResource(new ResourceUri(domain, collection), json, Optional.empty())
     }
 
+    @Description("Upsert a relation in RESMI.")
+    def upsertRelation(String domain, String collection, String collectionId, String relation, String relationId, JsonObject json) {
+        assert domain: "domain is required"
+        assert collection: "collection is required"
+        assert collectionId: "collectionId is required"
+        assert relation: "relation is required"
+        assert relation: "relationId is required"
+        resmiService.createRelation(new ResourceUri(domain, collection, collectionId, relation, relationId), json)
+    }
+
+
     @Description("Construct a json object from string. Example: resmi.json('{\"a\", \"b\"}')")
     def json(String json) {
         new JsonParser().parse(json)
