@@ -1,6 +1,7 @@
 package io.corbel.notifications.handler;
 
 import io.corbel.event.NotificationEvent;
+import io.corbel.notifications.model.Domain;
 import io.corbel.notifications.model.NotificationTemplate;
 import io.corbel.notifications.repository.DomainRepository;
 import io.corbel.notifications.repository.NotificationRepository;
@@ -50,22 +51,23 @@ public class DefaultSenderNotificationsServiceTest {
 
 	@Test
 	public void testTreatEvent() {
-		String domain = "domain";
+		String domainId = "domain";
 		String id = "id";
-		String templateId = DomainNameIdGenerator.generateNotificationTemplateId(domain, id);
-
+		String templateId = DomainNameIdGenerator.generateNotificationTemplateId(domainId, id);
+		Domain domain = new Domain();
 		NotificationEvent notificationEvent = new NotificationEvent(id, "recipient");
-		notificationEvent.setDomain(domain);
+		notificationEvent.setDomain(domainId);
 		notificationEvent.setProperties(properties);
 		NotificationTemplate notificationTemplate = new NotificationTemplate();
+		when(domainRepository.findOne(domainId)).thenReturn(domain);
 		when(notificationRepository.findOne(templateId)).thenReturn(notificationTemplate);
 		when(notificationFiller.fill(notificationTemplate, properties)).thenReturn(notificationTemplate);
 
-		senderNotificationsService.sendNotification(domain, notificationEvent.getNotificationId(),
+		senderNotificationsService.sendNotification(domainId, notificationEvent.getNotificationId(),
 				notificationEvent.getProperties(), notificationEvent.getRecipient());
 
 		verify(notificationFiller, times(1)).fill(notificationTemplate, properties);
-		verify(notificationsDispatcher, times(1)).send(notificationTemplate, "recipient");
+		verify(notificationsDispatcher, times(1)).send(domain, notificationTemplate, "recipient");
 	}
 
 }

@@ -1,5 +1,6 @@
 package io.corbel.notifications.service;
 
+import io.corbel.notifications.model.Domain;
 import io.corbel.notifications.model.NotificationTemplate;
 import com.phonedeck.gcm4j.DefaultGcm;
 import com.phonedeck.gcm4j.Gcm;
@@ -18,7 +19,7 @@ public class AndroidPushNotificationsService implements NotificationsService {
 	private static final Logger LOG = LoggerFactory.getLogger(AndroidPushNotificationsService.class);
 
 	@Override
-	public void send(NotificationTemplate notificationTemplate, String... recipients) {
+	public void send(Domain domain, NotificationTemplate notificationTemplate, String... recipients) {
 		try {
 			Gcm gcm = new DefaultGcm(new GcmConfig().withKey(notificationTemplate.getSender()));
 			GcmRequest request = new GcmRequest().withRegistrationIds(Arrays.asList(recipients))

@@ -1,12 +1,18 @@
 package io.corbel.notifications.service;
 
-import io.corbel.notifications.model.NotificationTemplate;
 import com.notnoop.apns.APNS;
 import com.notnoop.apns.ApnsService;
+import com.notnoop.apns.ApnsServiceBuilder;
+import io.corbel.notifications.model.Domain;
+import io.corbel.notifications.model.NotificationTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Map;
 
 /**
  * Created by Alberto J. Rubio
@@ -15,21 +21,32 @@ public class ApplePushNotificationsService implements NotificationsService {
 
     private static final Logger LOG = LoggerFactory.getLogger(ApplePushNotificationsService.class);
 
-    private final ApnsService apnsService;
-
-    public ApplePushNotificationsService(ApnsService apnsService) {
-        this.apnsService = apnsService;
-    }
+    private final Map<String, ApnsService> apnsServices = Collections.emptyMap();
 
     @Override
-    public void send(NotificationTemplate notificationTemplate, String... recipients) {
+    public void send(Domain domain, NotificationTemplate notificationTemplate, String... recipients) {
         try {
+            if (!apnsServices.containsKey(domain.getId())) {
+                createApnsService(domain);
+            }
             String payload = APNS.newPayload().badge(1).alertTitle(notificationTemplate.getTitle())
                     .alertBody(notificationTemplate.getText()).build();
-            apnsService.push(Arrays.asList(recipients), payload);
+            apnsServices.get(domain.getId()).push(Arrays.asList(recipients), payload);
             LOG.info("Apple push notification sent to: " + Arrays.toString(recipients));
         } catch (Exception e) {
             LOG.error("Sending apple push notification error: {}", e.getMessage(), e);
         }
+    }
+
+    private void createApnsService(Domain domain) {
+        ApnsServiceBuilder apnsServiceBuilder = APNS.newService().withCert(new ByteArrayInputStream(
+                        domain.getAppleNotificationsCertificate().getBytes(StandardCharsets.UTF_8)),
+                domain.getAppleNotificationsPassword());
+        if (domain.isProductionEnvironment()) {
+            apnsServiceBuilder.withProductionDestination();
+        } else {
+            apnsServiceBuilder.withSandboxDestination();
+        }
+        apnsServices.put(domain.getId(), apnsServiceBuilder.build());
     }
 }

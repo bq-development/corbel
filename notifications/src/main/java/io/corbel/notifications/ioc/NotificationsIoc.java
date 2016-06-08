@@ -116,18 +116,7 @@ import com.notnoop.apns.ApnsServiceBuilder;
     @Bean(name = "apple")
     @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
     public NotificationsService getApplePushNotificationService() {
-        return new ApplePushNotificationsService(getApnsService());
-    }
-
-    public ApnsService getApnsService() {
-        InputStream certificate = this.getClass().getClassLoader().getResourceAsStream("certs/" + env.getProperty("apple.cert.name"));
-        ApnsServiceBuilder apnsServiceBuilder = APNS.newService().withCert(certificate, env.getProperty("apple.cert.password"));
-        if (env.getProperty("apple.cert.production", Boolean.class)) {
-            apnsServiceBuilder.withProductionDestination();
-        } else {
-            apnsServiceBuilder.withSandboxDestination();
-        }
-        return apnsServiceBuilder.build();
+        return new ApplePushNotificationsService();
     }
 
     @Bean

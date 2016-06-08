@@ -1,5 +1,6 @@
 package io.corbel.notifications.service;
 
+import io.corbel.notifications.model.Domain;
 import io.corbel.notifications.model.NotificationTemplate;
 
 /**
@@ -13,9 +14,9 @@ public class NotificationsDispatcher {
         this.notificationsServiceFactory = notificationsServiceFactory;
     }
 
-    public void send(NotificationTemplate notificationTemplate, String recipient) {
+    public void send(Domain domain, NotificationTemplate notificationTemplate, String ... recipients) {
         NotificationsService notificationsService =
                 notificationsServiceFactory.getNotificationService(notificationTemplate.getType());
-        notificationsService.send(notificationTemplate, recipient);
+        notificationsService.send(domain, notificationTemplate, recipients);
     }
 }

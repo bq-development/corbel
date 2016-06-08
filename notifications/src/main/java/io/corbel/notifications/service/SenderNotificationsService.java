@@ -7,5 +7,5 @@ import java.util.Map;
  */
 public interface SenderNotificationsService {
 
-    void sendNotification(String domainId, String notificationId, Map<String, String> customProperties, String recipient);
+    void sendNotification(String domainId, String notificationId, Map<String, String> customProperties, String ... recipients);
 }

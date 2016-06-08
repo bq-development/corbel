@@ -33,13 +33,13 @@ public class DefaultSenderNotificationsService implements SenderNotificationsSer
     }
 
     @Override
-    public void sendNotification(String domainId, String notificationId, Map<String, String> customProperties, String recipient) {
+    public void sendNotification(String domainId, String notificationId, Map<String, String> customProperties, String ... recipients) {
         String currentNotificationId = DomainNameIdGenerator.generateNotificationTemplateId(domainId, notificationId);
 
         Domain domain = domainRepository.findOne(domainId);
 
         String notificationTemplateId = Optional.ofNullable(domain)
-                .map(currentDomain -> currentDomain.getTemplates())
+                .map(Domain::getTemplates)
                 .map(currentTemplate -> currentTemplate.get(currentNotificationId))
                 .orElse(currentNotificationId);
 
@@ -51,9 +51,8 @@ public class DefaultSenderNotificationsService implements SenderNotificationsSer
         NotificationTemplate notificationTemplate = notificationRepository.findOne(notificationTemplateId);
         if (notificationTemplate != null) {
             NotificationTemplate notificationTemplateFilled = notificationFiller.fill(notificationTemplate, properties);
-            notificationsDispatcher.send(notificationTemplateFilled, recipient);
+            notificationsDispatcher.send(domain, notificationTemplateFilled, recipients);
         }
-
     }
 
     private Map<String, String> getProperties(Domain domain, Map<String, String> customProperties) {

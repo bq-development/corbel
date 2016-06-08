@@ -1,5 +1,6 @@
 package io.corbel.notifications.service;
 
+import io.corbel.notifications.model.Domain;
 import io.corbel.notifications.model.NotificationTemplate;
 
 /**
@@ -7,5 +8,5 @@ import io.corbel.notifications.model.NotificationTemplate;
  */
 public interface NotificationsService {
 
-    void send(NotificationTemplate notificationTemplate, String ... recipient);
+    void send(Domain domain, NotificationTemplate notificationTemplate, String ... recipient);
 }
