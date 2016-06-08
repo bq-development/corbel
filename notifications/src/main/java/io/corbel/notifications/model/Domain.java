@@ -90,6 +90,8 @@ public class Domain {
         if (id != null ? !id.equals(domain.id) : domain.id != null) return false;
         if (properties != null ? !properties.equals(domain.properties) : domain.properties != null) return false;
         if (templates != null ? !templates.equals(domain.templates) : domain.templates != null) return false;
+        if (productionEnvironment != null ? !productionEnvironment.equals(domain.productionEnvironment) : domain.productionEnvironment != null)
+            return false;
         if (appleNotificationsCertificate != null ? !appleNotificationsCertificate.equals(domain.appleNotificationsCertificate) : domain.appleNotificationsCertificate != null)
             return false;
         return appleNotificationsPassword != null ? appleNotificationsPassword.equals(domain.appleNotificationsPassword) : domain.appleNotificationsPassword == null;
@@ -101,6 +103,7 @@ public class Domain {
         int result = id != null ? id.hashCode() : 0;
         result = 31 * result + (properties != null ? properties.hashCode() : 0);
         result = 31 * result + (templates != null ? templates.hashCode() : 0);
+        result = 31 * result + (productionEnvironment != null ? productionEnvironment.hashCode() : 0);
         result = 31 * result + (appleNotificationsCertificate != null ? appleNotificationsCertificate.hashCode() : 0);
         result = 31 * result + (appleNotificationsPassword != null ? appleNotificationsPassword.hashCode() : 0);
         return result;
