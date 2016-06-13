@@ -17,7 +17,7 @@ public class Domain {
     @NotNull
     private Map<String, String> templates;
 
-    private Boolean productionEnvironment;
+    private Boolean production;
 
     private String appleNotificationsCertificate;
 
@@ -48,11 +48,11 @@ public class Domain {
     }
 
     public Boolean isProductionEnvironment() {
-        return productionEnvironment;
+        return production;
     }
 
-    public void setProductionEnvironment(Boolean productionEnvironment) {
-        this.productionEnvironment = productionEnvironment;
+    public void setProduction(Boolean production) {
+        this.production = production;
     }
 
     public String getAppleNotificationsCertificate() {
@@ -90,7 +90,7 @@ public class Domain {
         if (id != null ? !id.equals(domain.id) : domain.id != null) return false;
         if (properties != null ? !properties.equals(domain.properties) : domain.properties != null) return false;
         if (templates != null ? !templates.equals(domain.templates) : domain.templates != null) return false;
-        if (productionEnvironment != null ? !productionEnvironment.equals(domain.productionEnvironment) : domain.productionEnvironment != null)
+        if (production != null ? !production.equals(domain.production) : domain.production != null)
             return false;
         if (appleNotificationsCertificate != null ? !appleNotificationsCertificate.equals(domain.appleNotificationsCertificate) : domain.appleNotificationsCertificate != null)
             return false;
@@ -103,7 +103,7 @@ public class Domain {
         int result = id != null ? id.hashCode() : 0;
         result = 31 * result + (properties != null ? properties.hashCode() : 0);
         result = 31 * result + (templates != null ? templates.hashCode() : 0);
-        result = 31 * result + (productionEnvironment != null ? productionEnvironment.hashCode() : 0);
+        result = 31 * result + (production != null ? production.hashCode() : 0);
         result = 31 * result + (appleNotificationsCertificate != null ? appleNotificationsCertificate.hashCode() : 0);
         result = 31 * result + (appleNotificationsPassword != null ? appleNotificationsPassword.hashCode() : 0);
         return result;

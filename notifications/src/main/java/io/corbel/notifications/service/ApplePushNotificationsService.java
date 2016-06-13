@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.Map;
 
@@ -39,8 +40,9 @@ public class ApplePushNotificationsService implements NotificationsService {
     }
 
     private void createApnsService(Domain domain) {
-        ApnsServiceBuilder apnsServiceBuilder = APNS.newService().withCert(new ByteArrayInputStream(
-                        domain.getAppleNotificationsCertificate().getBytes(StandardCharsets.UTF_8)),
+        byte[] certificate = domain.getAppleNotificationsCertificate().getBytes(StandardCharsets.UTF_8);
+        ApnsServiceBuilder apnsServiceBuilder = APNS.newService()
+                .withCert(new ByteArrayInputStream(Base64.getDecoder().decode(certificate)),
                 domain.getAppleNotificationsPassword());
         if (domain.isProductionEnvironment()) {
             apnsServiceBuilder.withProductionDestination();

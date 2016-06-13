@@ -47,7 +47,7 @@ class NotificationsShell {
         domain.id = domainFields.id
         domain.templates = domainFields.templates
         domain.properties = domainFields.properties
-        domain.productionEnvironment = domainFields.productionEnvironment
+        domain.production = domainFields.production
         domain.appleNotificationsCertificate = domainFields.appleNotificationsCertificate
         domain.appleNotificationsPassword = domainFields.appleNotificationsPassword
         domainRepository.save(domain)
