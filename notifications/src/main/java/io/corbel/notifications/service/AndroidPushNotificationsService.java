@@ -1,14 +1,13 @@
 package io.corbel.notifications.service;
 
+import com.google.android.gcm.server.Message;
+import com.google.android.gcm.server.Sender;
 import io.corbel.notifications.model.Domain;
 import io.corbel.notifications.model.NotificationTemplate;
-import com.phonedeck.gcm4j.DefaultGcm;
-import com.phonedeck.gcm4j.Gcm;
-import com.phonedeck.gcm4j.GcmConfig;
-import com.phonedeck.gcm4j.GcmRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.Arrays;
 
 /**
@@ -16,19 +15,19 @@ import java.util.Arrays;
  */
 public class AndroidPushNotificationsService implements NotificationsService {
 
-	private static final Logger LOG = LoggerFactory.getLogger(AndroidPushNotificationsService.class);
+    private final int PUSH_NOTIFICATIONS_RETRIES = 5;
 
-	@Override
-	public void send(Domain domain, NotificationTemplate notificationTemplate, String... recipients) {
-		try {
-			Gcm gcm = new DefaultGcm(new GcmConfig().withKey(notificationTemplate.getSender()));
-			GcmRequest request = new GcmRequest().withRegistrationIds(Arrays.asList(recipients))
-					.withCollapseKey(notificationTemplate.getTitle()).withDelayWhileIdle(true)
-					.withDataItem("text", notificationTemplate.getText());
-			gcm.send(request);
-			LOG.info("Android push notification sent to: " + Arrays.toString(recipients));
-		} catch (Exception e) {
-			LOG.error("Sending android push notification error: {}", e.getMessage(), e);
-		}
-	}
+    private static final Logger LOG = LoggerFactory.getLogger(AndroidPushNotificationsService.class);
+
+    @Override
+    public void send(Domain domain, NotificationTemplate notificationTemplate, String... recipients) {
+        Sender sender = new Sender(notificationTemplate.getSender());
+        Message msg = new Message.Builder().addData("message", notificationTemplate.getText()).build();
+        try {
+            sender.send(msg, Arrays.asList(recipients), PUSH_NOTIFICATIONS_RETRIES);
+            LOG.info("Android push notification sent to: " + Arrays.toString(recipients));
+        } catch (IOException e) {
+            LOG.error("Sending android push notification error: {}", e.getMessage(), e);
+        }
+    }
 }

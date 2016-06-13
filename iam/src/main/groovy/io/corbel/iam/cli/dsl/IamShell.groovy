@@ -1,5 +1,6 @@
 package io.corbel.iam.cli.dsl
 
+import com.google.common.collect.Sets
 import io.corbel.iam.model.*
 import io.corbel.iam.repository.*
 import com.google.gson.Gson
@@ -12,6 +13,7 @@ import org.bouncycastle.util.encoders.Base64
 import org.joda.time.Instant
 
 import java.util.regex.Pattern
+import java.util.stream.Collectors
 
 /**
  * @author Alexander De Leon
@@ -159,6 +161,8 @@ class IamShell {
         user.setScopes(userFields.scopes)
         user.setUsername(userFields.username)
         user.setPassword(userFields.password)
+        Set<String> groupsSet = new HashSet<String>(userFields.groups);
+        user.setGroups(groupsSet)
         addTrace(user)
         userRepository.save(user)
     }
