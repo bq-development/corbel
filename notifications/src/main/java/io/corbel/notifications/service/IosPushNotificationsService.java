@@ -10,10 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by Alberto J. Rubio
@@ -22,7 +19,7 @@ public class IosPushNotificationsService implements NotificationsService {
 
     private static final Logger LOG = LoggerFactory.getLogger(IosPushNotificationsService.class);
 
-    private final Map<String, ApnsService> apnsServices = Collections.emptyMap();
+    private final Map<String, ApnsService> apnsServices = new HashMap<>();
 
     @Override
     public void send(Domain domain, NotificationTemplate notificationTemplate, String... recipients) {
