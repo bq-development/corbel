@@ -41,7 +41,11 @@ public class IosPushNotificationsService implements NotificationsService {
         ApnsServiceBuilder apnsServiceBuilder = APNS.newService()
                 .withCert(new ByteArrayInputStream(Base64.getDecoder().decode(certificate)),
                 domain.getIosNotificationsPassword());
-        apnsServiceBuilder.withProductionDestination();
+        if (domain.isDevelopmentMode()) {
+            apnsServiceBuilder.withSandboxDestination();
+        } else {
+            apnsServiceBuilder.withProductionDestination();
+        }
         apnsServices.put(domain.getId(), apnsServiceBuilder.build());
     }
 }

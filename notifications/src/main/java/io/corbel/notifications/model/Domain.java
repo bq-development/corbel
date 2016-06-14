@@ -17,7 +17,7 @@ public class Domain {
     @NotNull
     private Map<String, String> templates;
 
-    private Boolean production;
+    private Boolean developmentMode;
 
     private String iosNotificationsCertificate;
 
@@ -47,12 +47,12 @@ public class Domain {
         this.templates = templates;
     }
 
-    public Boolean isProductionEnvironment() {
-        return production;
+    public Boolean isDevelopmentMode() {
+        return developmentMode;
     }
 
-    public void setProduction(Boolean production) {
-        this.production = production;
+    public void setDevelopmentMode(Boolean developmentMode) {
+        this.developmentMode = developmentMode;
     }
 
     public String getIosNotificationsCertificate() {
@@ -90,7 +90,7 @@ public class Domain {
         if (id != null ? !id.equals(domain.id) : domain.id != null) return false;
         if (properties != null ? !properties.equals(domain.properties) : domain.properties != null) return false;
         if (templates != null ? !templates.equals(domain.templates) : domain.templates != null) return false;
-        if (production != null ? !production.equals(domain.production) : domain.production != null)
+        if (developmentMode != null ? !developmentMode.equals(domain.developmentMode) : domain.developmentMode != null)
             return false;
         if (iosNotificationsCertificate != null ? !iosNotificationsCertificate.equals(domain.iosNotificationsCertificate) : domain.iosNotificationsCertificate != null)
             return false;
@@ -103,7 +103,7 @@ public class Domain {
         int result = id != null ? id.hashCode() : 0;
         result = 31 * result + (properties != null ? properties.hashCode() : 0);
         result = 31 * result + (templates != null ? templates.hashCode() : 0);
-        result = 31 * result + (production != null ? production.hashCode() : 0);
+        result = 31 * result + (developmentMode != null ? developmentMode.hashCode() : 0);
         result = 31 * result + (iosNotificationsCertificate != null ? iosNotificationsCertificate.hashCode() : 0);
         result = 31 * result + (iosNotificationsPassword != null ? iosNotificationsPassword.hashCode() : 0);
         return result;
