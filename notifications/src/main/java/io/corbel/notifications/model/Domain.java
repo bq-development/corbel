@@ -19,9 +19,9 @@ public class Domain {
 
     private Boolean production;
 
-    private String appleNotificationsCertificate;
+    private String iosNotificationsCertificate;
 
-    private String appleNotificationsPassword;
+    private String iosNotificationsPassword;
 
     public String getId() {
         return id;
@@ -55,20 +55,20 @@ public class Domain {
         this.production = production;
     }
 
-    public String getAppleNotificationsCertificate() {
-        return appleNotificationsCertificate;
+    public String getIosNotificationsCertificate() {
+        return iosNotificationsCertificate;
     }
 
-    public void setAppleNotificationsCertificate(String appleNotificationsCertificate) {
-        this.appleNotificationsCertificate = appleNotificationsCertificate;
+    public void setIosNotificationsCertificate(String iosNotificationsCertificate) {
+        this.iosNotificationsCertificate = iosNotificationsCertificate;
     }
 
-    public String getAppleNotificationsPassword() {
-        return appleNotificationsPassword;
+    public String getIosNotificationsPassword() {
+        return iosNotificationsPassword;
     }
 
-    public void setAppleNotificationsPassword(String appleNotificationsPassword) {
-        this.appleNotificationsPassword = appleNotificationsPassword;
+    public void setIosNotificationsPassword(String iosNotificationsPassword) {
+        this.iosNotificationsPassword = iosNotificationsPassword;
     }
 
     public void updateDomain(Domain domain) {
@@ -92,9 +92,9 @@ public class Domain {
         if (templates != null ? !templates.equals(domain.templates) : domain.templates != null) return false;
         if (production != null ? !production.equals(domain.production) : domain.production != null)
             return false;
-        if (appleNotificationsCertificate != null ? !appleNotificationsCertificate.equals(domain.appleNotificationsCertificate) : domain.appleNotificationsCertificate != null)
+        if (iosNotificationsCertificate != null ? !iosNotificationsCertificate.equals(domain.iosNotificationsCertificate) : domain.iosNotificationsCertificate != null)
             return false;
-        return appleNotificationsPassword != null ? appleNotificationsPassword.equals(domain.appleNotificationsPassword) : domain.appleNotificationsPassword == null;
+        return iosNotificationsPassword != null ? iosNotificationsPassword.equals(domain.iosNotificationsPassword) : domain.iosNotificationsPassword == null;
 
     }
 
@@ -104,8 +104,8 @@ public class Domain {
         result = 31 * result + (properties != null ? properties.hashCode() : 0);
         result = 31 * result + (templates != null ? templates.hashCode() : 0);
         result = 31 * result + (production != null ? production.hashCode() : 0);
-        result = 31 * result + (appleNotificationsCertificate != null ? appleNotificationsCertificate.hashCode() : 0);
-        result = 31 * result + (appleNotificationsPassword != null ? appleNotificationsPassword.hashCode() : 0);
+        result = 31 * result + (iosNotificationsCertificate != null ? iosNotificationsCertificate.hashCode() : 0);
+        result = 31 * result + (iosNotificationsPassword != null ? iosNotificationsPassword.hashCode() : 0);
         return result;
     }
 }

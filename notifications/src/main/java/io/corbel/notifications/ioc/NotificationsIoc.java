@@ -1,7 +1,5 @@
 package io.corbel.notifications.ioc;
 
-import java.io.InputStream;
-
 import io.corbel.lib.mongo.IdGenerator;
 import io.corbel.lib.mongo.IdGeneratorMongoEventListener;
 import io.corbel.notifications.api.DomainResource;
@@ -33,7 +31,7 @@ import io.corbel.notifications.api.NotificationsResource;
 import io.corbel.notifications.cli.dsl.NotificationsShell;
 import io.corbel.notifications.repository.NotificationRepository;
 import io.corbel.notifications.service.AndroidPushNotificationsService;
-import io.corbel.notifications.service.ApplePushNotificationsService;
+import io.corbel.notifications.service.IosPushNotificationsService;
 import io.corbel.notifications.service.DefaultSenderNotificationsService;
 import io.corbel.notifications.service.EmailNotificationsService;
 import io.corbel.notifications.service.NotificationsDispatcher;
@@ -43,9 +41,6 @@ import io.corbel.notifications.service.SenderNotificationsService;
 import io.corbel.notifications.service.SpringNotificationsServiceFactory;
 import io.corbel.notifications.template.DefaultNotificationFiller;
 import io.corbel.notifications.template.NotificationFiller;
-import com.notnoop.apns.APNS;
-import com.notnoop.apns.ApnsService;
-import com.notnoop.apns.ApnsServiceBuilder;
 
 /**
  * Created by Alberto J. Rubio
@@ -113,10 +108,10 @@ import com.notnoop.apns.ApnsServiceBuilder;
         return new AndroidPushNotificationsService();
     }
 
-    @Bean(name = "apple")
+    @Bean(name = "ios")
     @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
-    public NotificationsService getApplePushNotificationService() {
-        return new ApplePushNotificationsService();
+    public NotificationsService getIosPushNotificationService() {
+        return new IosPushNotificationsService();
     }
 
     @Bean

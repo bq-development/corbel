@@ -18,9 +18,9 @@ import java.util.Map;
 /**
  * Created by Alberto J. Rubio
  */
-public class ApplePushNotificationsService implements NotificationsService {
+public class IosPushNotificationsService implements NotificationsService {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ApplePushNotificationsService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(IosPushNotificationsService.class);
 
     private final Map<String, ApnsService> apnsServices = Collections.emptyMap();
 
@@ -33,17 +33,17 @@ public class ApplePushNotificationsService implements NotificationsService {
             String payload = APNS.newPayload().badge(1).alertTitle(notificationTemplate.getTitle())
                     .alertBody(notificationTemplate.getText()).build();
             apnsServices.get(domain.getId()).push(Arrays.asList(recipients), payload);
-            LOG.info("Apple push notification sent to: " + Arrays.toString(recipients));
+            LOG.info("Ios push notification sent to: " + Arrays.toString(recipients));
         } catch (Exception e) {
-            LOG.error("Sending apple push notification error: {}", e.getMessage(), e);
+            LOG.error("Sending Ios push notification error: {}", e.getMessage(), e);
         }
     }
 
     private void createApnsService(Domain domain) {
-        byte[] certificate = domain.getAppleNotificationsCertificate().getBytes(StandardCharsets.UTF_8);
+        byte[] certificate = domain.getIosNotificationsCertificate().getBytes(StandardCharsets.UTF_8);
         ApnsServiceBuilder apnsServiceBuilder = APNS.newService()
                 .withCert(new ByteArrayInputStream(Base64.getDecoder().decode(certificate)),
-                domain.getAppleNotificationsPassword());
+                domain.getIosNotificationsPassword());
         if (domain.isProductionEnvironment()) {
             apnsServiceBuilder.withProductionDestination();
         } else {
