@@ -6,6 +6,7 @@ import java.util.*;
 
 import io.corbel.iam.model.Client;
 import io.corbel.iam.model.Scope;
+import io.corbel.iam.model.User;
 import io.corbel.iam.repository.ClientRepository;
 import io.corbel.lib.token.TokenInfo;
 import io.corbel.lib.token.factory.TokenFactory;
@@ -14,6 +15,7 @@ import io.corbel.lib.token.model.TokenType;
 public class DefaultMailResetPasswordService implements MailResetPasswordService {
     private final EventsService eventsService;
     private final ScopeService scopeService;
+    private final UserService userService;
     private final TokenFactory tokenFactory;
     private final ClientRepository clientRepository;
     private final String resetPasswordTokenScope;
@@ -22,11 +24,13 @@ public class DefaultMailResetPasswordService implements MailResetPasswordService
     private final String defaultNotificationId;
     private final String defaultResetUrl;
 
-    public DefaultMailResetPasswordService(EventsService eventsService, ScopeService scopeService, TokenFactory tokenFactory,
+
+    public DefaultMailResetPasswordService(EventsService eventsService, ScopeService scopeService, UserService userService, TokenFactory tokenFactory,
             ClientRepository clientRepository, String resetPasswordTokenScope, Clock clock, long tokenDurationInSeconds,
             String notificationId, String defaultResetUrl) {
         this.eventsService = eventsService;
         this.scopeService = scopeService;
+        this.userService = userService;
         this.tokenFactory = tokenFactory;
         this.clientRepository = clientRepository;
         this.resetPasswordTokenScope = resetPasswordTokenScope;
@@ -53,8 +57,13 @@ public class DefaultMailResetPasswordService implements MailResetPasswordService
         String resetUrl = Optional.ofNullable(client.getResetUrl()).orElse(defaultResetUrl);
         String clientUrl = resetUrl.replace("{token}", token);
 
+        User user = userService.findById(userId);
+
         Map<String, String> properties = new HashMap<>();
         properties.put("clientUrl", clientUrl);
+        properties.put("email", email);
+        properties.put("firstName", Optional.ofNullable(user.getFirstName()).orElse(""));
+        properties.put("lastName", Optional.ofNullable(user.getLastName()).orElse(""));
 
         eventsService.sendNotificationEvent(domainId, notificationId, email, properties);
     }
@@ -72,4 +81,5 @@ public class DefaultMailResetPasswordService implements MailResetPasswordService
         Set<Scope> filledScopes = scopeService.fillScopes(scopeService.expandScopes(scopes), userId, clientId, domainId);
         scopeService.publishAuthorizationRules(token, expireAt, filledScopes);
     }
+
 }

@@ -220,9 +220,9 @@ public class IamIoc {
     }
 
     @Bean
-    public MailResetPasswordService getMailResetPasswordService(EventsService eventsService, ScopeService scopeService,
+    public MailResetPasswordService getMailResetPasswordService(EventsService eventsService, ScopeService scopeService, UserService userService,
                                                                 TokenFactory tokenFactory, ClientRepository clientRepository) {
-        return new DefaultMailResetPasswordService(eventsService, scopeService, tokenFactory, clientRepository, env.getProperty(
+        return new DefaultMailResetPasswordService(eventsService, scopeService, userService, tokenFactory, clientRepository, env.getProperty(
                 "iam.token.resetPasswordTokenScope", String.class), Clock.systemUTC(), env.getProperty(
                 "iam.token.resetPasswordTokenDurationInSec", Long.class),
                 env.getProperty("email.resetPassword.notification", String.class), env.getProperty("email.resetPassword.clientUrl",

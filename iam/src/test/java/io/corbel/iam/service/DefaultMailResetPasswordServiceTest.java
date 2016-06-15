@@ -6,6 +6,7 @@ import static org.mockito.Mockito.*;
 
 import java.time.Clock;
 
+import io.corbel.iam.model.User;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -22,6 +23,8 @@ import io.corbel.lib.token.factory.TokenFactory;
     private static final String CLIENT_ID = "jasdjklrjaskl";
     private static final String USER_ID = "asdfbieubizr";
     private static final String EMAIL = "sruiaesrhi@nsjfneira.sdf";
+    private static final String USER_FIRSTNAME = "Pepe";
+    private static final String USER_LASTNAME = "Jones";
     private static final String RESET_NOTIFICATION_ID = "nszduirnewaijnfaj";
     private static final String ACCESS_TOKEN = "nsuirneianrea";
     private static final long RESET_PASSWORD_TOKEN_DURATION = 300;
@@ -31,6 +34,7 @@ import io.corbel.lib.token.factory.TokenFactory;
 
     @Mock private EventsService eventsService;
     @Mock private ScopeService scopeService;
+    @Mock private UserService userService;
     @Mock private TokenFactory tokenFactory;
     @Mock private ClientRepository clientRepository;
 
@@ -38,7 +42,14 @@ import io.corbel.lib.token.factory.TokenFactory;
 
     @Before
     public void setup() {
-        defaultMailResetPasswordService = new DefaultMailResetPasswordService(eventsService, scopeService, tokenFactory, clientRepository,
+        User testUser = new User();
+        testUser.setId(USER_ID);
+        testUser.setFirstName(USER_FIRSTNAME);
+        testUser.setLastName(USER_LASTNAME);
+        testUser.setEmail(EMAIL);
+        when(userService.findById(USER_ID)).thenReturn(testUser);
+
+        defaultMailResetPasswordService = new DefaultMailResetPasswordService(eventsService, scopeService, userService, tokenFactory, clientRepository,
                 RESET_PASSWORD_TOKEN_SCOPE, Clock.systemUTC(), RESET_PASSWORD_TOKEN_DURATION, RESET_NOTIFICATION_ID, RESET_URL);
     }
 
