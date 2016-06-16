@@ -15,7 +15,6 @@ import io.corbel.lib.token.model.TokenType;
 public class DefaultMailResetPasswordService implements MailResetPasswordService {
     private final EventsService eventsService;
     private final ScopeService scopeService;
-    private final UserService userService;
     private final TokenFactory tokenFactory;
     private final ClientRepository clientRepository;
     private final String resetPasswordTokenScope;
@@ -25,12 +24,11 @@ public class DefaultMailResetPasswordService implements MailResetPasswordService
     private final String defaultResetUrl;
 
 
-    public DefaultMailResetPasswordService(EventsService eventsService, ScopeService scopeService, UserService userService, TokenFactory tokenFactory,
+    public DefaultMailResetPasswordService(EventsService eventsService, ScopeService scopeService, TokenFactory tokenFactory,
             ClientRepository clientRepository, String resetPasswordTokenScope, Clock clock, long tokenDurationInSeconds,
             String notificationId, String defaultResetUrl) {
         this.eventsService = eventsService;
         this.scopeService = scopeService;
-        this.userService = userService;
         this.tokenFactory = tokenFactory;
         this.clientRepository = clientRepository;
         this.resetPasswordTokenScope = resetPasswordTokenScope;
@@ -42,22 +40,20 @@ public class DefaultMailResetPasswordService implements MailResetPasswordService
     }
 
     @Override
-    public void sendMailResetPassword(String clientId, String userId, String email, String domainId) {
+    public void sendMailResetPassword(String clientId, User user, String email, String domainId) {
         Optional.ofNullable(clientRepository.findOne(clientId)).ifPresent(client -> {
             String notificationId = Optional.ofNullable(client.getResetNotificationId()).orElse(defaultNotificationId);
-            sendMailResetPasswordEvent(notificationId, client, userId, email, domainId);
+            sendMailResetPasswordEvent(notificationId, client, user, email, domainId);
         });
     }
 
-    private void sendMailResetPasswordEvent(String notificationId, Client client, String userId, String email, String domainId) {
+    private void sendMailResetPasswordEvent(String notificationId, Client client, User user, String email, String domainId) {
 
-        String token = createEmailResetPasswordToken(client.getId(), userId, domainId);
-        setTokenScope(token, client.getId(), userId, domainId);
+        String token = createEmailResetPasswordToken(client.getId(), user.getId(), domainId);
+        setTokenScope(token, client.getId(), user.getId(), domainId);
 
         String resetUrl = Optional.ofNullable(client.getResetUrl()).orElse(defaultResetUrl);
         String clientUrl = resetUrl.replace("{token}", token);
-
-        User user = userService.findById(userId);
 
         Map<String, String> properties = new HashMap<>();
         properties.put("clientUrl", clientUrl);

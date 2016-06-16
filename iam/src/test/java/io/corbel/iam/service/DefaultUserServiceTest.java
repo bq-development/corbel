@@ -152,7 +152,7 @@ import com.google.gson.Gson;
 
         service.sendMailResetPassword(TEST_USER_EMAIL, CLIENT_ID, TEST_DOMAIN);
 
-        verify(mailResetPasswordServiceMock).sendMailResetPassword(CLIENT_ID, TEST_USER, TEST_USER_EMAIL, TEST_DOMAIN);
+        verify(mailResetPasswordServiceMock).sendMailResetPassword(CLIENT_ID, testUser, TEST_USER_EMAIL, TEST_DOMAIN);
         verifyNoMoreInteractions(mailResetPasswordServiceMock);
     }
 
