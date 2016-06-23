@@ -58,6 +58,7 @@ public class MongoResmiDao implements ResmiDao {
     private static final String COUNT = "count";
     private static final String AVERAGE = "average";
     private static final String SUM = "sum";
+    public static final String $INC = "$inc";
 
     private static final int MONGO_DOUBLE_TYPE = 1;
     private static final int MONGO_INT_TYPE = 16;
@@ -241,6 +242,13 @@ public class MongoResmiDao implements ResmiDao {
             JsonPrimitive createdAt = entity.get(CREATED_AT).getAsJsonPrimitive();
             entity.remove(CREATED_AT);
             update.setOnInsert(CREATED_AT, GsonUtil.getPrimitive(createdAt));
+        }
+
+        if (entity.has($INC) && entity.get($INC).isJsonObject()) {
+            for (Map.Entry<String, JsonElement> entry : entity.getAsJsonObject($INC).entrySet()) {
+                update.inc(entry.getKey(), entry.getValue().getAsLong());
+            }
+            entity.remove($INC);
         }
 
         jsonObjectMongoWriteConverter.convert(entity).toMap().forEach((key, value) -> update.set((String) key, value));

@@ -207,6 +207,9 @@ import static org.mockito.Mockito.*;
         json.addProperty("a", "abc");
         json.addProperty("b", 1);
         json.add("c", null);
+        JsonObject incObject = new JsonObject();
+        incObject.add("d", new JsonPrimitive(2));
+        json.add("$inc", incObject);
 
         when(mongoOperations.findAndModify(any(), any(), any(), eq(JsonObject.class), eq(TEST_COLLECTION))).thenAnswer(answerWithId(json));
 
@@ -226,6 +229,10 @@ import static org.mockito.Mockito.*;
         assertThat(updateCaptor.getValue().getUpdateObject().containsField("$unset")).isEqualTo(true);
         DBObject dbObjectUnSet = (DBObject) updateCaptor.getValue().getUpdateObject().get("$unset");
         assertThat(dbObjectUnSet.containsField("c"));
+
+        assertThat(updateCaptor.getValue().getUpdateObject().containsField("$inc")).isEqualTo(true);
+        DBObject dbObjectInc = (DBObject) updateCaptor.getValue().getUpdateObject().get("$inc");
+        assertThat(dbObjectInc.containsField("d"));
     }
 
     private Answer<JsonObject> answerWithId(JsonObject json) {
