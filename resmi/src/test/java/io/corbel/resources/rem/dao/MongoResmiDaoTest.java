@@ -232,7 +232,7 @@ import static org.mockito.Mockito.*;
 
         assertThat(updateCaptor.getValue().getUpdateObject().containsField("$inc")).isEqualTo(true);
         DBObject dbObjectInc = (DBObject) updateCaptor.getValue().getUpdateObject().get("$inc");
-        assertThat(dbObjectUnSet.containsField("d"));
+        assertThat(dbObjectInc.containsField("d"));
     }
 
     private Answer<JsonObject> answerWithId(JsonObject json) {
@@ -906,40 +906,5 @@ import static org.mockito.Mockito.*;
         assertThat(actualSort.get("count").asInt()).isEqualTo(-1);
         assertThat(actualOffset.asInt()).isEqualTo(0);
         assertThat(actualLimit.asInt()).isEqualTo(n);
-    }
-
-    @Test
-    public void incTest() {
-        ResourceUri resourceUri = new ResourceUri(DOMAIN, TEST_COLLECTION, TEST_ID);
-
-        ArgumentCaptor<Query> queryCaptor = ArgumentCaptor.forClass(Query.class);
-        ArgumentCaptor<Update> updateCaptor = ArgumentCaptor.forClass(Update.class);
-        WriteResult writeResultMock = mock(WriteResult.class);
-        when(writeResultMock.getN()).thenReturn(1);
-        ArgumentCaptor<FindAndModifyOptions> optionsCaptor = ArgumentCaptor.forClass(FindAndModifyOptions.class);
-
-        JsonObject json = new JsonObject();
-        json.addProperty("$inc", 2);
-        json.addProperty("b", 1);
-        json.add("c", null);
-
-        when(mongoOperations.findAndModify(any(), any(), any(), eq(JsonObject.class), eq(TEST_COLLECTION))).thenAnswer(answerWithId(json));
-
-        mongoResmiDao.updateResource(resourceUri, json);
-
-        verify(mongoOperations).findAndModify(queryCaptor.capture(), updateCaptor.capture(), optionsCaptor.capture(),
-                Mockito.eq(JsonObject.class), Mockito.eq(TEST_COLLECTION_NAME_IN_DB));
-
-        assertThat(optionsCaptor.getValue().isUpsert()).isTrue();
-        assertThat(queryCaptor.getValue().getQueryObject().get("_id")).isEqualTo(TEST_ID);
-
-        assertThat(updateCaptor.getValue().getUpdateObject().containsField("$set")).isEqualTo(true);
-        DBObject dbObjectSet = (DBObject) updateCaptor.getValue().getUpdateObject().get("$set");
-        assertThat(dbObjectSet.get("a")).isEqualTo("abc");
-        assertThat(dbObjectSet.get("b")).isEqualTo(1);
-
-        assertThat(updateCaptor.getValue().getUpdateObject().containsField("$unset")).isEqualTo(true);
-        DBObject dbObjectUnSet = (DBObject) updateCaptor.getValue().getUpdateObject().get("$unset");
-        assertThat(dbObjectUnSet.containsField("c"));
     }
 }
