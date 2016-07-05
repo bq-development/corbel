@@ -738,7 +738,7 @@ public class RemResourceTest {
                 RULE.client().target(RELATION_URI).request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN)
                         .post(Entity.json(jsonTest), String.class)).isEqualTo(TEST_OK);
         assertThat(parametersCaptor.getValue().getTokenInfo().getUserId()).isSameAs(TEST_USER_ID);
-        verifyZeroInteractions(eventBusMock);
+        verify(eventBusMock).dispatch(ResourceEvent.updateResourceEvent(TEST_TYPE+"/"+RESOURCE_ID.getId()+"/"+TEST_REL, null, DOMAIN, TEST_USER_ID));
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -756,6 +756,7 @@ public class RemResourceTest {
                 RULE.client().target(uri).request().header(AUTHORIZATION, "Bearer " + TEST_TOKEN).put(Entity.json(""), Response.class)
                         .getStatus()).isEqualTo(204);
         assertThat(parametersCaptor.getValue().getTokenInfo().getUserId()).isSameAs(TEST_USER_ID);
+        verify(eventBusMock).dispatch(ResourceEvent.updateResourceEvent(TEST_TYPE+"/"+RESOURCE_ID.getId()+"/"+TEST_REL, null, DOMAIN, TEST_USER_ID));
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
