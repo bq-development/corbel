@@ -135,17 +135,7 @@ public class DefaultResourcesService implements ResourcesService {
             result = ErrorResponseFactory.getInstance().badRequest(e);
         }
 
-        if (method != HttpMethod.GET
-                && tokenInfo != null
-                && (result.getStatus() == org.eclipse.jetty.http.HttpStatus.NO_CONTENT_204 || result.getStatus() == org.eclipse.jetty.http.HttpStatus.OK_200)) {
-            ResourceEvent event;
-            if (method == HttpMethod.PUT) {
-                event = ResourceEvent.updateResourceEvent(type, id.getId(), tokenInfo.getDomainId(), tokenInfo.getUserId());
-            } else {
-                event = ResourceEvent.deleteResourceEvent(type, id.getId(), tokenInfo.getDomainId(), tokenInfo.getUserId());
-            }
-            eventBus.dispatch(event);
-        }
+        sendEvent(method, tokenInfo, result, HttpStatus.NO_CONTENT_204, type, id.getId(), method == HttpMethod.PUT);
         return result;
     }
 
@@ -155,7 +145,7 @@ public class DefaultResourcesService implements ResourcesService {
             MediaType contentType) {
 
         Response result;
-        String relId;
+        String relationId;
         try {
             List<org.springframework.http.MediaType> acceptedMediaTypes = getRequestAcceptedMediaTypes(request);
             Rem rem = remService.getRem(type + "/" + id.getId() + "/" + rel, acceptedMediaTypes, method);
@@ -166,7 +156,7 @@ public class DefaultResourcesService implements ResourcesService {
             Optional<?> entity = getEntity(Optional.ofNullable(inputStream), rem, contentType);
 
             result = remService.relation(rem, type, id, rel, parameters, entity);
-            relId = parameters.getOptionalApiParameters().flatMap(RelationParameters::getPredicateResource).orElse(null);
+            relationId = parameters.getOptionalApiParameters().flatMap(RelationParameters::getPredicateResource).orElse(null);
 
         } catch (JsonParseException e) {
             return ErrorResponseFactory.getInstance().invalidEntity(e.getOriginalMessage());
@@ -177,18 +167,22 @@ public class DefaultResourcesService implements ResourcesService {
             return ErrorResponseFactory.getInstance().badRequest(e);
         }
 
+        sendEvent(method, tokenInfo, result, HttpStatus.CREATED_201, type + "/" + id.getId() + "/" + rel, relationId, method != HttpMethod.DELETE);
+        return result;
+    }
+
+    private void sendEvent(HttpMethod method, TokenInfo tokenInfo, Response result, int expectedStatus, String type, String id, boolean updateCondition) {
         if (method != HttpMethod.GET
                 && tokenInfo != null
-                && (result.getStatus() == HttpStatus.CREATED_201 || result.getStatus() == HttpStatus.OK_200)) {
+                && (result.getStatus() == expectedStatus || result.getStatus() == HttpStatus.OK_200)) {
             ResourceEvent event;
-            if (method == HttpMethod.DELETE) {
-                event = ResourceEvent.deleteResourceEvent(type + "/" + id.getId() + "/" + rel, relId, tokenInfo.getDomainId(), tokenInfo.getUserId());
+            if (updateCondition) {
+                event = ResourceEvent.updateResourceEvent(type, id, tokenInfo.getDomainId(), tokenInfo.getUserId());
             } else {
-                event = ResourceEvent.updateResourceEvent(type + "/" + id.getId() + "/" + rel, relId, tokenInfo.getDomainId(), tokenInfo.getUserId());
+                event = ResourceEvent.deleteResourceEvent(type, id, tokenInfo.getDomainId(), tokenInfo.getUserId());
             }
             eventBus.dispatch(event);
         }
-        return result;
     }
 
     private RequestParameters<CollectionParameters> collectionParameters(String domain, QueryParameters queryParameters,
