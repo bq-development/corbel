@@ -1,6 +1,7 @@
 package io.corbel.resources.rem.acl;
 
 import com.google.common.collect.Lists;
+import io.corbel.lib.ws.api.error.ErrorResponseFactory;
 import io.corbel.resources.rem.BaseRem;
 import io.corbel.resources.rem.Rem;
 import io.corbel.resources.rem.request.*;
@@ -38,20 +39,49 @@ abstract public class AclBaseRem extends BaseRem<InputStream> {
     }
 
     @Override
-    public Response collection(String type, RequestParameters<CollectionParameters> parameters, URI uri, Optional<InputStream> entity) {
+    final public Response collection(String type, RequestParameters<CollectionParameters> parameters, URI uri, Optional<InputStream> entity) {
         return collection(type, parameters, uri, entity, Optional.empty());
     }
 
     @Override
-    public Response resource(String type, ResourceId id, RequestParameters<ResourceParameters> parameters, Optional<InputStream> entity) {
+    final public Response resource(String type, ResourceId id, RequestParameters<ResourceParameters> parameters, Optional<InputStream> entity) {
         return resource(type, id, parameters, entity, Optional.empty());
     }
 
     @Override
-    public Response relation(String type, ResourceId id, String relation, RequestParameters<RelationParameters> parameters,
+    final public Response relation(String type, ResourceId id, String relation, RequestParameters<RelationParameters> parameters,
                              Optional<InputStream> entity) {
         return relation(type, id, relation, parameters, entity, Optional.empty());
     }
+
+    @Override
+    final public Response collection(String type, RequestParameters<CollectionParameters> parameters, URI uri, Optional<InputStream> entity, Optional<List<Rem>> excludedRems) {
+        return collectionWithAcl(type, parameters, uri, entity, excludedRems);
+    }
+
+    @Override
+    final public Response relation(String type, ResourceId id, String relation, RequestParameters<RelationParameters> parameters, Optional<InputStream> entity, Optional<List<Rem>> excludedRems) {
+        return relationWithAcl(type, id, relation, parameters, entity, excludedRems);
+    }
+
+    @Override
+    final public Response resource(String type, ResourceId id, RequestParameters<ResourceParameters> parameters, Optional<InputStream> entity, Optional<List<Rem>> excludedRems) {
+        return resourceWithAcl(type, id, parameters, entity, excludedRems);
+    }
+
+    //Default implementations assume that if subclass does not override it is because that HTTP Method is not supported for this type of request
+    protected Response collectionWithAcl(String type, RequestParameters<CollectionParameters> parameters, URI uri, Optional<InputStream> entity, Optional<List<Rem>> excludedRems){
+        return ErrorResponseFactory.getInstance().methodNotAllowed();
+    }
+
+    protected Response resourceWithAcl(String type, ResourceId id, RequestParameters<ResourceParameters> parameters, Optional<InputStream> entity, Optional<List<Rem>> excludedRems){
+        return ErrorResponseFactory.getInstance().methodNotAllowed();
+    }
+
+    protected Response relationWithAcl(String type, ResourceId id, String relation, RequestParameters<RelationParameters> parameters, Optional<InputStream> entity, Optional<List<Rem>> excludedRems){
+        return ErrorResponseFactory.getInstance().methodNotAllowed();
+    }
+
 
     @Override
     public Class<InputStream> getType() {

@@ -33,7 +33,7 @@ public class AclPostRem extends AclBaseRem {
     }
 
     @Override
-    public Response collection(String type, RequestParameters<CollectionParameters> parameters, URI uri, Optional<InputStream> entity, Optional<List<Rem>> excludedRems) {
+    public Response collectionWithAcl(String type, RequestParameters<CollectionParameters> parameters, URI uri, Optional<InputStream> entity, Optional<List<Rem>> excludedRems) {
 
         Optional<String> userId = Optional.ofNullable(parameters.getTokenInfo().getUserId());
 

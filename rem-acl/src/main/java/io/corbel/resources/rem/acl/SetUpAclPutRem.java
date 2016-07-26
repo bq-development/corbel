@@ -52,7 +52,7 @@ public class SetUpAclPutRem extends AclBaseRem {
     }
 
     @Override
-    public Response resource(String type, ResourceId id, RequestParameters<ResourceParameters> parameters, Optional<InputStream> entity,
+    public Response resourceWithAcl(String type, ResourceId id, RequestParameters<ResourceParameters> parameters, Optional<InputStream> entity,
             Optional<List<Rem>> excludedRems) {
 
         TokenInfo tokenInfo = parameters.getTokenInfo();
