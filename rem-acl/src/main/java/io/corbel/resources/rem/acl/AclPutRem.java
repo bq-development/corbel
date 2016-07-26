@@ -38,7 +38,7 @@ public class AclPutRem extends AclBaseRem {
     }
 
     @Override
-    public Response resource(String type, ResourceId id, RequestParameters<ResourceParameters> parameters, Optional<InputStream> entity, Optional<List<Rem>> excludedRems) {
+    public Response resourceWithAcl(String type, ResourceId id, RequestParameters<ResourceParameters> parameters, Optional<InputStream> entity, Optional<List<Rem>> excludedRems) {
 
         TokenInfo tokenInfo = parameters.getTokenInfo();
         Optional<String> userId = Optional.ofNullable(tokenInfo.getUserId());
@@ -110,7 +110,7 @@ public class AclPutRem extends AclBaseRem {
     }
 
     @Override
-    public Response relation(String type, ResourceId id, String relation, RequestParameters<RelationParameters> parameters,
+    public Response relationWithAcl(String type, ResourceId id, String relation, RequestParameters<RelationParameters> parameters,
                              Optional<InputStream> entity, Optional<List<Rem>> excludedRems) {
 
         TokenInfo tokenInfo = parameters.getTokenInfo();

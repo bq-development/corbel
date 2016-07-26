@@ -39,7 +39,7 @@ public class AclGetRem extends AclBaseRem {
     }
 
     @Override
-    public Response resource(String type, ResourceId id, RequestParameters<ResourceParameters> parameters, Optional<InputStream> entity, Optional<List<Rem>> excludedRems) {
+    public Response resourceWithAcl(String type, ResourceId id, RequestParameters<ResourceParameters> parameters, Optional<InputStream> entity, Optional<List<Rem>> excludedRems) {
 
         try {
             List<Rem> excluded = getExcludedRems(excludedRems);
@@ -60,7 +60,7 @@ public class AclGetRem extends AclBaseRem {
     }
 
     @Override
-    public Response collection(String type, RequestParameters<CollectionParameters> parameters, URI uri, Optional<InputStream> entity, Optional<List<Rem>> excludedRems) {
+    public Response collectionWithAcl(String type, RequestParameters<CollectionParameters> parameters, URI uri, Optional<InputStream> entity, Optional<List<Rem>> excludedRems) {
         if (!parameters.getAcceptedMediaTypes().contains(MediaType.APPLICATION_JSON)) {
             return ErrorResponseFactory.getInstance().methodNotAllowed();
         }
@@ -83,7 +83,7 @@ public class AclGetRem extends AclBaseRem {
     }
 
     @Override
-    public Response relation(String type, ResourceId id, String relation, RequestParameters<RelationParameters> parameters,
+    public Response relationWithAcl(String type, ResourceId id, String relation, RequestParameters<RelationParameters> parameters,
             Optional<InputStream> entity, Optional<List<Rem>> excludedRems) {
 
         if (id.isWildcard()) {

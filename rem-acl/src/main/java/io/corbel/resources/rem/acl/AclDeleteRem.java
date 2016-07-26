@@ -30,7 +30,7 @@ public class AclDeleteRem extends AclBaseRem {
     }
 
     @Override
-    public Response resource(String type, ResourceId id, RequestParameters<ResourceParameters> parameters, Optional<InputStream> entity, Optional<List<Rem>> excludedRems) {
+    public Response resourceWithAcl(String type, ResourceId id, RequestParameters<ResourceParameters> parameters, Optional<InputStream> entity, Optional<List<Rem>> excludedRems) {
         try {
             if (!aclResourcesService.isAuthorized(parameters.getRequestedDomain(), parameters.getTokenInfo(), type, id, AclPermission.ADMIN)) {
                 return ErrorResponseFactory.getInstance().unauthorized(AclUtils.buildMessage(AclPermission.ADMIN));
@@ -45,7 +45,7 @@ public class AclDeleteRem extends AclBaseRem {
     }
 
     @Override
-    public Response relation(String type, ResourceId id, String relation, RequestParameters<RelationParameters> parameters,
+    public Response relationWithAcl(String type, ResourceId id, String relation, RequestParameters<RelationParameters> parameters,
             Optional<InputStream> entity, Optional<List<Rem>> excludedRems) {
 
         if (id.isWildcard()) {

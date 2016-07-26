@@ -1,6 +1,7 @@
 package io.corbel.resources.rem;
 
 import java.net.URI;
+import java.util.List;
 import java.util.Optional;
 
 import javax.ws.rs.core.MediaType;

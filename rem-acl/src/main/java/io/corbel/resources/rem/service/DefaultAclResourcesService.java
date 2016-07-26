@@ -116,7 +116,7 @@ public class DefaultAclResourcesService implements AclResourcesService {
     @Override
     public boolean isAuthorized(String requestedDomain, TokenInfo tokenInfo, String type, ResourceId resourceId, AclPermission operation)
             throws AclFieldNotPresentException {
-        return isAuthorized(requestedDomain, tokenInfo.getDomainId(), Optional.ofNullable(tokenInfo.getUserId()), tokenInfo.getGroups(),
+        return tokenInfo != null && isAuthorized(requestedDomain, tokenInfo.getDomainId(), Optional.ofNullable(tokenInfo.getUserId()), tokenInfo.getGroups(),
                 type, resourceId, operation);
     }
 
