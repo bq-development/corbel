@@ -14,10 +14,7 @@ import io.corbel.resources.rem.dao.NamespaceNormalizer;
 import io.corbel.resources.rem.dao.ResmiDao;
 import io.corbel.resources.rem.dao.ResmiOrder;
 import io.corbel.resources.rem.health.ElasticSearchHealthCheck;
-import io.corbel.resources.rem.resmi.ResmiDeleteRem;
-import io.corbel.resources.rem.resmi.ResmiGetRem;
-import io.corbel.resources.rem.resmi.ResmiPostRem;
-import io.corbel.resources.rem.resmi.ResmiPutRem;
+import io.corbel.resources.rem.resmi.*;
 import io.corbel.resources.rem.search.DefaultElasticSearchService;
 import io.corbel.resources.rem.search.DefaultResmiSearch;
 import io.corbel.resources.rem.search.ElasticSearchService;
@@ -97,6 +94,11 @@ public class ResmiIoc extends DefaultMongoConfiguration {
     @Bean(name = ResmiRemNames.RESMI_DELETE)
     public Rem getResmiDeleteRem(ResmiService resmiService) throws Exception {
         return new ResmiDeleteRem(resmiService);
+    }
+
+    @Bean(name = ResmiRemNames.RESMI_INDEX)
+    public Rem getResmiIndexRem(ResmiService resmiService) throws Exception {
+        return new ResmiIndexRem(resmiService);
     }
 
     @Bean
