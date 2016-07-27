@@ -8,6 +8,8 @@ import java.util.*;
 import javax.ws.rs.core.Response;
 
 import com.google.gson.JsonIOException;
+import io.corbel.lib.token.TokenInfo;
+import io.corbel.resources.rem.acl.exception.AclFieldNotPresentException;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 
@@ -91,6 +93,42 @@ public class AclPostRem extends AclBaseRem {
 
         return response;
 
+    }
+
+    @Override
+    public Response relationWithAcl(String type, ResourceId id, String relation, RequestParameters<RelationParameters> parameters,
+                                    Optional<InputStream> entity, Optional<List<Rem>> excludedRems) {
+
+        TokenInfo tokenInfo = parameters.getTokenInfo();
+
+        if (tokenInfo.getUserId() == null || id.isWildcard()) {
+            return ErrorResponseFactory.getInstance().methodNotAllowed();
+        }
+
+        if (!entity.isPresent()) {
+            return ErrorResponseFactory.getInstance().badRequest();
+        }
+
+        try {
+            if (!aclResourcesService.isAuthorized(parameters.getRequestedDomain(), tokenInfo, type, id, AclPermission.WRITE)) {
+                return ErrorResponseFactory.getInstance().unauthorized(AclUtils.buildMessage(AclPermission.WRITE));
+            }
+        } catch (AclFieldNotPresentException e) {
+            return ErrorResponseFactory.getInstance().forbidden();
+        }
+
+        List<Rem> excluded = getExcludedRems(excludedRems);
+        Rem rem = remService.getRem(type, parameters.getAcceptedMediaTypes(), HttpMethod.POST, excluded);
+        JsonObject jsonObject;
+
+        try {
+            JsonReader reader = new JsonReader(new InputStreamReader(entity.get()));
+            jsonObject = new JsonParser().parse(reader).getAsJsonObject();
+        } catch (JsonIOException | IllegalStateException ignored) {
+            return ErrorResponseFactory.getInstance().badRequest();
+        }
+
+        return aclResourcesService.putRelation(rem, type, id, relation, parameters, jsonObject, excluded);
     }
 
 }
